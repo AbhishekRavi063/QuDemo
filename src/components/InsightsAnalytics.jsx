@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import {
   BarChart,
   Bar,
@@ -26,9 +27,11 @@ export default function AnalyticsPage() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-semibold">Insights & Analytics</h2>
-        <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center gap-2">
-          + Create Qudemo
-        </button>
+        <Link to="/createQuDemo">
+          <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center gap-2">
+            + Create Qudemo
+          </button>
+        </Link>
       </div>
 
       {/* Metrics */}
@@ -67,18 +70,27 @@ export default function AnalyticsPage() {
             <div className="text-sm text-gray-600">{metric.title}</div>
             <div className="text-2xl font-bold">{metric.value}</div>
             <div className="text-sm text-gray-500">{metric.sub}</div>
-            <div className={`text-sm font-medium ${metric.color}`}>{metric.change}</div>
+            <div className={`text-sm font-medium ${metric.color}`}>
+              {metric.change}
+            </div>
           </div>
         ))}
       </div>
 
       {/* Tabs */}
       <div className="flex flex-wrap gap-2">
-        {["Performance", "Questions", "Drop-off Points", "Suggested Improvements"].map((tab, i) => (
+        {[
+          "Performance",
+          "Questions",
+          "Drop-off Points",
+          "Suggested Improvements",
+        ].map((tab, i) => (
           <button
             key={i}
             className={`px-4 py-2 rounded ${
-              i === 0 ? "bg-gray-200 text-black" : "text-gray-600 hover:bg-gray-100"
+              i === 0
+                ? "bg-gray-200 text-black"
+                : "text-gray-600 hover:bg-gray-100"
             }`}
           >
             {tab}
@@ -89,10 +101,15 @@ export default function AnalyticsPage() {
       {/* Weekly Activity Bar Chart */}
       <div className="bg-white p-4 rounded shadow-sm border">
         <h3 className="text-xl font-semibold mb-1">Weekly Activity</h3>
-        <p className="text-sm text-gray-500 mb-4">Demo views, questions and meetings over the past week</p>
+        <p className="text-sm text-gray-500 mb-4">
+          Demo views, questions and meetings over the past week
+        </p>
         <div className="h-72">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={weeklyData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
+            <BarChart
+              data={weeklyData}
+              margin={{ top: 20, right: 30, left: 0, bottom: 5 }}
+            >
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="day" />
               <YAxis />

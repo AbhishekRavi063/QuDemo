@@ -7,6 +7,8 @@ import {
   MagnifyingGlassIcon,
   ArrowUpTrayIcon,
 } from "@heroicons/react/24/outline";
+import { Link } from 'react-router-dom';
+
 
 const qudemos = [
   {
@@ -58,10 +60,12 @@ const QudemoLibrary = () => {
     <div className="p-6 flex-1 bg-gray-50 min-h-screen">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">Qudemo Library</h2>
-        <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center gap-2">
-          <ArrowUpTrayIcon className="h-4 w-4" />
-          Create Qudemo
-        </button>
+        <Link to="/createQuDemo">
+          <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center gap-2">
+            <ArrowUpTrayIcon className="h-4 w-4" />
+            Create Qudemo
+          </button>
+        </Link>
       </div>
 
       <div className="relative mb-6 w-full">

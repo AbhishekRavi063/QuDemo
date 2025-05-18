@@ -1,10 +1,12 @@
-import React from "react";
 import {
   EyeIcon,
   ChatBubbleLeftEllipsisIcon,
   UsersIcon,
   ChartBarIcon,
 } from "@heroicons/react/24/outline";
+
+import { Link } from 'react-router-dom';
+
 
 const funnelData = [
   { label: "Completed (>80%)", value: 1873, total: 2438 },
@@ -47,15 +49,19 @@ const activity = [
   },
 ];
 
+
+
 const Overview = () => {
   return (
     <div className="p-6 space-y-6">
-    <div className="flex items-center justify-between">
-  <h2 className="text-2xl font-semibold">Overview</h2>
-  <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center gap-2">
-    Create Qudemo
-  </button>
-</div>
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-semibold">Overview</h2>
+        <Link to="/createQuDemo">
+          <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center gap-2">
+            Create Qudemo
+          </button>
+        </Link>
+      </div>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
