@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { PaperAirplaneIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { useNavigate } from "react-router-dom";
 
 const VideoDemoChatPopup = () => {
   const [messages, setMessages] = useState([
@@ -11,6 +12,8 @@ const VideoDemoChatPopup = () => {
   ]);
   const [input, setInput] = useState("");
 
+  const navigate = useNavigate();
+
   const sendMessage = () => {
     if (!input.trim()) return;
     const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -18,9 +21,19 @@ const VideoDemoChatPopup = () => {
     setInput("");
   };
 
+  const handleClose = () => {
+    navigate("/home"); // Redirect to home when modal is closed
+  };
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center">
-      <div className="w-[80vw] h-[90vh] bg-white rounded-lg shadow-2xl flex overflow-hidden relative">
+    <div
+      className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center"
+      onClick={handleClose}
+    >
+      <div
+        className="w-[80vw] h-[90vh] bg-white rounded-lg shadow-2xl flex overflow-hidden relative"
+        onClick={(e) => e.stopPropagation()} // Prevent click propagation
+      >
         {/* Left: Video Section */}
         <div className="w-2/3 bg-black relative">
           <video
@@ -43,7 +56,7 @@ const VideoDemoChatPopup = () => {
                 Our AI assistant will answer in real-time
               </div>
             </div>
-            <XMarkIcon className="h-5 w-5 cursor-pointer" />
+            <XMarkIcon className="h-5 w-5 cursor-pointer" onClick={handleClose} />
           </div>
 
           {/* Chat Messages */}
@@ -98,7 +111,7 @@ const VideoDemoChatPopup = () => {
           </div>
 
           {/* Footer Buttons */}
-          <div className="p-6 flex justify-between text-xs  bg-white">
+          <div className="p-6 flex justify-between text-xs bg-white">
             <span className="text-gray-500 py-2">Powered by Qudemo AI</span>
             <div className="flex gap-2">
               <button className="text-blue-600 font-semibold hover:underline border border-gray-300 rounded px-4 py-2">
