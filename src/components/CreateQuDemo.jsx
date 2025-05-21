@@ -11,7 +11,7 @@ const CreateQuDemo = () => {
       </p>
 
       {/* Demo Title */}
-      <div>
+      {/* <div>
         <label className="block font-medium text-gray-700 mb-1">
           Demo Title
         </label>
@@ -23,10 +23,10 @@ const CreateQuDemo = () => {
         <p className="text-sm text-gray-500 mt-1">
           This is the name that will be displayed to your buyers.
         </p>
-      </div>
+      </div> */}
 
       {/* Description */}
-      <div>
+      {/* <div>
         <label className="block font-medium text-gray-700 mb-1">
           Description
         </label>
@@ -38,7 +38,7 @@ const CreateQuDemo = () => {
         <p className="text-sm text-gray-500 mt-1">
           A detailed description helps buyers understand what they'll learn.
         </p>
-      </div>
+      </div> */}
 
       {/* Video URL & Thumbnail Image URL */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -102,11 +102,26 @@ const CreateQuDemo = () => {
           </button>
         </div>
       </div>
+
+      <div>
+        <label className="block font-medium text-gray-700 mb-1">
+          Meeting Link
+        </label>
+        <div className="flex">
+          <input
+            type="text"
+            placeholder="https://docs.example.com/product-info"
+            className="flex-1 border border-gray-300 px-4 py-2 rounded-l-lg"
+          />
+
+        </div>
+      </div>
+
       <button
         type="button"
         className="bg-blue-600 hover:bg-blue-700 transition text-white px-6 py-2 rounded font-medium"
       >
-        Save Demo
+        Save QuDemo
       </button>
     </div>
   );
