@@ -1,7 +1,29 @@
-import React from "react";
-import { ArrowUpTrayIcon, FolderOpenIcon } from "@heroicons/react/24/outline";
+import React, { useState } from "react";
+import {
+  ArrowUpTrayIcon,
+  FolderOpenIcon,
+  PlusIcon,
+  XMarkIcon,
+} from "@heroicons/react/24/outline";
 
 const CreateQuDemo = () => {
+  const [sources, setSources] = useState([""]);
+
+  const handleSourceChange = (index, value) => {
+    const updated = [...sources];
+    updated[index] = value;
+    setSources(updated);
+  };
+
+  const addSourceField = () => {
+    setSources([...sources, ""]);
+  };
+
+  const removeSourceField = (index) => {
+    const updated = sources.filter((_, i) => i !== index);
+    setSources(updated);
+  };
+
   return (
     <div className="max-w-6xl mx-auto p-8 space-y-6 bg-white rounded-lg shadow-lg">
       <h2 className="text-2xl font-semibold">Qudemo Details</h2>
@@ -85,24 +107,48 @@ const CreateQuDemo = () => {
         </div>
       </div>
 
-      {/* Product Knowledge Source */}
+      {/* Product Knowledge Sources */}
       <div>
-        <label className="block font-medium text-gray-700 mb-1">
+        <label className="block font-medium text-gray-700 mb-2">
           Product Knowledge Source
         </label>
-        <div className="flex">
-          <input
-            type="text"
-            placeholder="https://docs.example.com/product-info"
-            className="flex-1 border border-gray-300 px-4 py-2 rounded-l-lg"
-          />
-          <button className="flex items-center px-3 border border-l-0 border-gray-300 rounded-r-lg bg-gray-100 hover:bg-gray-200">
-            <FolderOpenIcon className="h-5 w-5 text-gray-600" />
-            <span className="ml-1">Browse</span>
-          </button>
-        </div>
+
+        {sources.map((source, index) => (
+          <div className="flex items-center mb-2" key={index}>
+            <input
+              type="text"
+              value={source}
+              onChange={(e) => handleSourceChange(index, e.target.value)}
+              placeholder="https://docs.example.com/product-info"
+              className="flex-1 border border-gray-300 px-4 py-2 rounded-l-lg"
+            />
+            <button className="flex items-center px-3 border border-l-0 border-gray-300 rounded-r-lg bg-gray-100 hover:bg-gray-200">
+              <ArrowUpTrayIcon className="h-10 w-5 text-gray-600" />
+              <span className="ml-1">Upload</span>
+            </button>
+            {sources.length > 1 && (
+              <button
+                type="button"
+                onClick={() => removeSourceField(index)}
+                className="ml-2 text-red-500 hover:text-red-700"
+              >
+                <XMarkIcon className="h-5 w-5" />
+              </button>
+            )}
+          </div>
+        ))}
+
+        <button
+          type="button"
+          onClick={addSourceField}
+          className="flex items-center text-sm text-blue-600 hover:underline mt-1"
+        >
+          <PlusIcon className="h-4 w-4 mr-1" />
+          Add another source
+        </button>
       </div>
 
+      {/* Meeting Link */}
       <div>
         <label className="block font-medium text-gray-700 mb-1">
           Meeting Link
@@ -110,10 +156,9 @@ const CreateQuDemo = () => {
         <div className="flex">
           <input
             type="text"
-            placeholder="https://docs.example.com/product-info"
+            placeholder="https://meet.example.com/session"
             className="flex-1 border border-gray-300 px-4 py-2 rounded-l-lg"
           />
-
         </div>
       </div>
 
