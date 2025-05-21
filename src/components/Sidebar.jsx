@@ -24,13 +24,14 @@ const Sidebar = () => {
   return (
     <>
       {/* Hamburger toggle button - visible on mobile */}
-      <div className="md:hidden fixed top-4 left-4 z-50">
+      <div className="md:hidden fixed top-16 left-4 z-50">
         <button
           onClick={() => setIsOpen(true)}
-          className="text-gray-700 p-2 rounded focus:outline-none focus:ring"
+          className="bg-blue-600 text-white p-2 rounded-full shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
         >
-          <Bars3Icon className="h-6 w-6" />
+          <Bars3Icon className="h-5 w-5" />
         </button>
+
       </div>
 
       {/* Sidebar Overlay for mobile */}
@@ -66,10 +67,9 @@ const Sidebar = () => {
               to={path}
               onClick={() => setIsOpen(false)} // Close menu on mobile after click
               className={({ isActive }) =>
-                `flex items-center space-x-2 px-3 py-2 rounded ${
-                  isActive
-                    ? 'bg-gray-200 font-semibold text-blue-600'
-                    : 'hover:bg-gray-100 text-gray-600'
+                `flex items-center space-x-2 px-3 py-2 rounded ${isActive
+                  ? 'bg-gray-200 font-semibold text-blue-600'
+                  : 'hover:bg-gray-100 text-gray-600'
                 }`
               }
             >
