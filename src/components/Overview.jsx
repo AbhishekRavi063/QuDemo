@@ -4,9 +4,7 @@ import {
   UsersIcon,
   ChartBarIcon,
 } from "@heroicons/react/24/outline";
-
-import { Link } from 'react-router-dom';
-
+import { Link } from "react-router-dom";
 
 const funnelData = [
   { label: "Completed (>80%)", value: 1873, total: 2438 },
@@ -49,15 +47,14 @@ const activity = [
   },
 ];
 
-
-
 const Overview = () => {
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-semibold">Overview</h2>
-        <Link to="/createQuDemo">
-          <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center gap-2">
+    <div className="p-4 sm:p-6 space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <h2 className="text-xl sm:text-2xl font-semibold">Overview</h2>
+        <Link to="/createQuDemo" className="w-full sm:w-auto">
+          <button className="w-full sm:w-auto bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center justify-center gap-2">
             Create Qudemo
           </button>
         </Link>
@@ -97,10 +94,10 @@ const Overview = () => {
         />
       </div>
 
-      {/* Funnel + Recent Activity */}
+      {/* Funnel and Activity Sections */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Conversion Funnel */}
-        <div className="bg-white p-6 rounded-xl border">
+        <div className="bg-white p-4 sm:p-6 rounded-xl border">
           <h3 className="text-lg font-semibold mb-1">Conversion Funnel</h3>
           <p className="text-gray-500 mb-4 text-sm">
             How users progress through your demos
@@ -125,7 +122,7 @@ const Overview = () => {
         </div>
 
         {/* Recent Activity */}
-        <div className="bg-white p-6 rounded-xl border">
+        <div className="bg-white p-4 sm:p-6 rounded-xl border">
           <h3 className="text-lg font-semibold mb-1">Recent Activity</h3>
           <p className="text-gray-500 mb-4 text-sm">
             Latest interactions with your demos
@@ -138,8 +135,9 @@ const Overview = () => {
                   {user.initial}
                 </div>
                 <div className="text-sm">
-                  <span className="font-medium">{user.name}</span> {user.action}{" "}
-                  demo <span className="font-semibold">{user.demo}</span>
+                  <span className="font-medium">{user.name}</span>{" "}
+                  {user.action} demo{" "}
+                  <span className="font-semibold">{user.demo}</span>
                   <div className="text-gray-500 text-xs mt-1">
                     {user.time} • {user.questions} questions asked
                   </div>
@@ -153,14 +151,14 @@ const Overview = () => {
   );
 };
 
-// Updated Card component with icon on the right
+// Card component
 const Card = ({ title, value, change, icon, bg }) => (
-  <div className="bg-white p-5 rounded-xl border shadow-sm">
+  <div className="bg-white p-4 sm:p-5 rounded-xl border shadow-sm">
     <div className="flex items-center mb-1">
       <h4 className="text-sm text-gray-500 font-medium">{title}</h4>
       <div className={`p-2 rounded-full ${bg} ml-auto`}>{icon}</div>
     </div>
-    <div className="text-2xl font-bold">{value}</div>
+    <div className="text-xl sm:text-2xl font-bold">{value}</div>
     <div className="text-green-600 text-sm font-medium mt-1">
       {change} vs last month
     </div>
