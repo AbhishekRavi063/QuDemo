@@ -38,16 +38,18 @@ const VideoDemoChatPopup = () => {
         onClick={(e) => e.stopPropagation()}
       >
         {/* Video Section */}
-        <div className="w-full md:w-2/3 h-[40vh] md:h-auto bg-black relative">
-          <video
-            controls
-            className="w-full h-full object-cover"
-            poster="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80"
-          >
-            <source src="your-video-url.mp4" type="video/mp4" />
-            Your browser does not support the video tag.
-          </video>
+        <div className="w-full md:w-2/3 aspect-video bg-black rounded-lg overflow-hidden">
+          <iframe
+            className="w-full h-full"
+            src="https://www.youtube.com/embed/p8RByfUD7qM?rel=0"
+            title="YouTube video"
+            frameBorder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          ></iframe>
         </div>
+
+
 
         {/* Chat Section */}
         <div className="w-full md:w-1/3 flex flex-col bg-white border-l">
@@ -67,9 +69,8 @@ const VideoDemoChatPopup = () => {
             {messages.map((msg, idx) => (
               <div
                 key={idx}
-                className={`flex items-start gap-2 ${
-                  msg.sender === "AI" ? "justify-start" : "justify-end"
-                }`}
+                className={`flex items-start gap-2 ${msg.sender === "AI" ? "justify-start" : "justify-end"
+                  }`}
               >
                 {msg.sender === "AI" && (
                   <div className="flex-shrink-0 w-7 h-7 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center text-xs font-semibold">
@@ -78,11 +79,10 @@ const VideoDemoChatPopup = () => {
                 )}
 
                 <div
-                  className={`rounded-xl px-4 py-2 max-w-[80%] ${
-                    msg.sender === "AI"
-                      ? "bg-white border text-gray-800"
-                      : "bg-blue-600 text-white"
-                  }`}
+                  className={`rounded-xl px-4 py-2 max-w-[80%] ${msg.sender === "AI"
+                    ? "bg-white border text-gray-800"
+                    : "bg-blue-600 text-white"
+                    }`}
                 >
                   {msg.text}
                 </div>
