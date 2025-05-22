@@ -34,7 +34,7 @@ const VideoDemoChatPopup = () => {
       onClick={handleClose}
     >
       <div
-        className="w-full max-w-6xl h-full max-h-[95vh] bg-white rounded-lg shadow-2xl flex flex-col md:flex-row overflow-hidden relative"
+        className="w-full max-w-6xl h-full max-h-[85vh] bg-white rounded-lg shadow-2xl flex flex-col md:flex-row overflow-hidden relative"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Video Section */}
@@ -42,7 +42,7 @@ const VideoDemoChatPopup = () => {
           <video
             controls
             className="w-full h-full object-cover"
-            poster="https://via.placeholder.com/800x450"
+            poster="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80"
           >
             <source src="your-video-url.mp4" type="video/mp4" />
             Your browser does not support the video tag.
