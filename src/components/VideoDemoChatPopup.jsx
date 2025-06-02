@@ -1,32 +1,54 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
+import ReactPlayer from "react-player/youtube";
 import { PaperAirplaneIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const VideoDemoChatPopup = () => {
   const [messages, setMessages] = useState([
     {
       sender: "AI",
-      text: "Hello! I'm your AI assistant. Feel free to ask any questions about the product while watching the demo.",
-      time: "7:34 PM",
+      text: "Hello! I'm your AI assistant. Ask any questions related to this demo.",
+      time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     },
   ]);
   const [input, setInput] = useState("");
-
   const navigate = useNavigate();
+  const playerRef = useRef();
 
-  const sendMessage = () => {
+  const sendMessage = async () => {
     if (!input.trim()) return;
-    const now = new Date().toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-    setMessages([...messages, { sender: "You", text: input, time: now }]);
+
+    const now = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    const userMsg = { sender: "You", text: input, time: now };
+    setMessages((prev) => [...prev, userMsg]);
     setInput("");
+
+    try {
+      const res = await axios.post("https://qudemoo-backend.onrender.com/ask", { question: input });
+
+      // Extract first timestamp from source string
+      const firstTimestamp = res.data.sources?.[0]?.match(/\[(\d{2}):(\d{2}):(\d{2}),/);
+      if (firstTimestamp) {
+        const [ , h, m, s ] = firstTimestamp.map(Number);
+        const seconds = h * 3600 + m * 60 + s;
+        if (playerRef.current) {
+          playerRef.current.seekTo(seconds, "seconds");
+        }
+      }
+
+      const aiMsg = {
+        sender: "AI",
+        text: res.data.answer,
+        time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      };
+      setMessages((prev) => [...prev, aiMsg]);
+    } catch (err) {
+      console.error("API error", err);
+    }
   };
 
-  const handleClose = () => {
-    navigate("/home");
-  };
+  const handleClose = () => navigate("/home");
 
   return (
     <div
@@ -38,18 +60,15 @@ const VideoDemoChatPopup = () => {
         onClick={(e) => e.stopPropagation()}
       >
         {/* Video Section */}
-        <div className="w-full md:w-2/3 aspect-video bg-black rounded-lg overflow-hidden">
-          <iframe
-            className="w-full h-full"
-            src="https://www.youtube.com/embed/p8RByfUD7qM?rel=0"
-            title="YouTube video"
-            frameBorder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-          ></iframe>
+        <div className="w-full md:w-2/3 relative">
+          <ReactPlayer
+            ref={playerRef}
+            url="https://youtu.be/_zRaJOF-trE?si=sVMbw7ORYA3W7YwX"
+            controls
+            width="100%"
+            height="100%"
+          />
         </div>
-
-
 
         {/* Chat Section */}
         <div className="w-full md:w-1/3 flex flex-col bg-white border-l">
@@ -69,29 +88,17 @@ const VideoDemoChatPopup = () => {
             {messages.map((msg, idx) => (
               <div
                 key={idx}
-                className={`flex items-start gap-2 ${msg.sender === "AI" ? "justify-start" : "justify-end"
-                  }`}
+                className={`flex ${msg.sender === "AI" ? "justify-start" : "justify-end"}`}
               >
-                {msg.sender === "AI" && (
-                  <div className="flex-shrink-0 w-7 h-7 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center text-xs font-semibold">
-                    AI
-                  </div>
-                )}
-
                 <div
-                  className={`rounded-xl px-4 py-2 max-w-[80%] ${msg.sender === "AI"
-                    ? "bg-white border text-gray-800"
-                    : "bg-blue-600 text-white"
-                    }`}
+                  className={`rounded-xl px-4 py-2 max-w-[80%] ${
+                    msg.sender === "AI"
+                      ? "bg-white border text-gray-800"
+                      : "bg-blue-600 text-white"
+                  }`}
                 >
                   {msg.text}
                 </div>
-
-                {msg.sender === "You" && (
-                  <div className="flex-shrink-0 w-7 h-7 bg-gray-300 text-white rounded-full flex items-center justify-center text-xs font-semibold">
-                    Y
-                  </div>
-                )}
               </div>
             ))}
           </div>
@@ -105,10 +112,7 @@ const VideoDemoChatPopup = () => {
               placeholder="Ask a question about this product..."
               className="flex-1 px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-            <button
-              onClick={sendMessage}
-              className="text-blue-600 hover:text-blue-800"
-            >
+            <button onClick={sendMessage} className="text-blue-600 hover:text-blue-800">
               <PaperAirplaneIcon className="h-7 w-8" />
             </button>
           </div>
