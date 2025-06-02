@@ -1,123 +1,242 @@
-import React, { useState, useEffect, useRef } from "react";
+// import React, { useState, useRef } from "react";
+// import ReactPlayer from "react-player/youtube";
+// import { PaperAirplaneIcon, XMarkIcon } from "@heroicons/react/24/outline";
+// import { useNavigate } from "react-router-dom";
+// import axios from "axios";
+
+// const VideoDemoChatPopup = () => {
+//   const [messages, setMessages] = useState([
+//     {
+//       sender: "AI",
+//       text: "Hello! I'm your AI assistant. Ask any questions related to this demo.",
+//       time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+//     },
+//   ]);
+//   const [input, setInput] = useState("");
+//   const navigate = useNavigate();
+//   const playerRef = useRef();
+
+//   const sendMessage = async () => {
+//     if (!input.trim()) return;
+
+//     const now = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+//     const userMsg = { sender: "You", text: input, time: now };
+//     setMessages((prev) => [...prev, userMsg]);
+//     setInput("");
+
+//     try {
+//       const res = await axios.post("http://127.0.0.1:8000/ask", { question: input });
+
+//       // Extract first timestamp from source string
+//       const firstTimestamp = res.data.sources?.[0]?.match(/\[(\d{2}):(\d{2}):(\d{2}),/);
+//       if (firstTimestamp) {
+//         const [ , h, m, s ] = firstTimestamp.map(Number);
+//         const seconds = h * 3600 + m * 60 + s;
+//         if (playerRef.current) {
+//           playerRef.current.seekTo(seconds, "seconds");
+//         }
+//       }
+
+//       const aiMsg = {
+//         sender: "AI",
+//         text: res.data.answer,
+//         time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+//       };
+//       setMessages((prev) => [...prev, aiMsg]);
+//     } catch (err) {
+//       console.error("API error", err);
+//     }
+//   };
+
+//   const handleClose = () => navigate("/home");
+
+//   return (
+//     <div
+//       className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center p-4"
+//       onClick={handleClose}
+//     >
+//       <div
+//         className="w-full max-w-7xl h-full max-h-[85vh] bg-white rounded-lg shadow-2xl flex flex-col md:flex-row overflow-hidden relative"
+//         onClick={(e) => e.stopPropagation()}
+//       >
+//         {/* Video Section */}
+//         <div className="w-full md:w-2/3 relative">
+//           <ReactPlayer
+//             ref={playerRef}
+//             url="https://youtu.be/_zRaJOF-trE?si=sVMbw7ORYA3W7YwX"
+//             controls
+//             width="100%"
+//             height="100%"
+//           />
+//         </div>
+
+//         {/* Chat Section */}
+//         <div className="w-full md:w-2/4 flex flex-col bg-white border-l">
+//           {/* Header */}
+//           <div className="bg-blue-600 text-white px-4 py-3 flex justify-between items-center">
+//             <div>
+//               <div className="font-semibold text-sm sm:text-base">Ask questions about this demo</div>
+//               <div className="text-xs text-white/80">
+//                 Our AI assistant will answer in real-time
+//               </div>
+//             </div>
+//             <XMarkIcon className="h-5 w-5 cursor-pointer" onClick={handleClose} />
+//           </div>
+
+//           {/* Chat Messages */}
+//           <div className="flex-1 p-3 overflow-y-auto space-y-3 bg-gray-50 text-sm">
+//             {messages.map((msg, idx) => (
+//               <div
+//                 key={idx}
+//                 className={`flex ${msg.sender === "AI" ? "justify-start" : "justify-end"}`}
+//               >
+//                 <div
+//                   className={`rounded-xl px-4 py-2 max-w-[80%] ${
+//                     msg.sender === "AI"
+//                       ? "bg-white border text-gray-800"
+//                       : "bg-blue-600 text-white"
+//                   }`}
+//                 >
+//                   {msg.text}
+//                 </div>
+//               </div>
+//             ))}
+//           </div>
+
+//           {/* Input */}
+//           <div className="p-3 border-t flex items-center gap-2">
+//             <input
+//               value={input}
+//               onChange={(e) => setInput(e.target.value)}
+//               type="text"
+//               placeholder="Ask a question about this product..."
+//               className="flex-1 px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+//             />
+//             <button onClick={sendMessage} className="text-blue-600 hover:text-blue-800">
+//               <PaperAirplaneIcon className="h-7 w-8" />
+//             </button>
+//           </div>
+
+//           {/* Footer */}
+//           <div className="p-4 flex flex-col sm:flex-row sm:justify-between items-center text-xs gap-2 bg-white border-t">
+//             <span className="text-gray-500">Powered by Qudemo AI</span>
+//             <div className="flex gap-2">
+//               <button className="text-blue-600 font-semibold hover:underline border border-gray-300 rounded px-3 py-1.5">
+//                 FAQs
+//               </button>
+//               <button className="text-blue-600 font-semibold hover:underline border border-gray-300 rounded px-3 py-1.5">
+//                 Schedule Meeting
+//               </button>
+//             </div>
+//           </div>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default VideoDemoChatPopup;
+
+
+import React, { useState, useRef, useEffect } from "react";
+import ReactPlayer from "react-player/youtube";
 import { PaperAirplaneIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const VideoDemoChatPopup = () => {
   const [messages, setMessages] = useState([
     {
       sender: "AI",
-      text: "Hello! I'm your AI assistant. Feel free to ask any questions about the product while watching the demo.",
+      text: "Hello! I'm your AI assistant. Ask any questions related to this demo.",
       time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     },
   ]);
   const [input, setInput] = useState("");
+  const [videoUrl, setVideoUrl] = useState(
+    "https://youtu.be/_zRaJOF-trE?si=-49QCSw2FbrTxpvi&t=0"
+  ); // Default video URL including t=0 for consistency
+  const playerRef = useRef();
   const navigate = useNavigate();
-  const videoRef = useRef(null);
-  const messagesEndRef = useRef(null);
 
-  // Scroll to bottom when new message arrives
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
-  const handleClose = () => {
-    navigate("/home"); // Adjust your home route accordingly
+  // Function to parse timestamp from YouTube URL query param `t`
+  const getTimestampFromUrl = (url) => {
+    try {
+      const urlObj = new URL(url);
+      const tParam = urlObj.searchParams.get("t");
+      return tParam ? parseInt(tParam, 10) : 0;
+    } catch {
+      return 0;
+    }
   };
+
+  // Seek video to timestamp when videoUrl changes or player is ready
+  useEffect(() => {
+    if (videoUrl && playerRef.current) {
+      const seconds = getTimestampFromUrl(videoUrl);
+      // Delay seek to ensure player is ready
+      const timer = setTimeout(() => {
+        playerRef.current.seekTo(seconds, "seconds");
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [videoUrl]);
 
   const sendMessage = async () => {
     if (!input.trim()) return;
 
     const now = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-
-    // Add user's message
-    setMessages((prev) => [...prev, { sender: "You", text: input, time: now }]);
-    const question = input;
+    const userMsg = { sender: "You", text: input, time: now };
+    setMessages((prev) => [...prev, userMsg]);
     setInput("");
 
     try {
-      const res = await fetch("http://localhost:8000/ask", { // Change URL to your backend endpoint
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question }),
-      });
+      const res = await axios.post("https://qudemoo-backend.onrender.com/ask", { question: input });
 
-      if (!res.ok) {
-        throw new Error(`Backend error: ${res.statusText}`);
+      // If backend returns a new video URL, update the player URL with full timestamp
+      if (res.data.video_url) {
+        setVideoUrl(res.data.video_url);
       }
 
-      const data = await res.json();
-
-      // Format answer with optional timestamp and pdf sources
-      let answerText = data.answer || "Sorry, I couldn't find an answer.";
-
-      if (data.video_timestamp) {
-        answerText += `\n\n📹 Related video moment: ${data.video_timestamp}`;
-      }
-      if (data.pdf_sources && data.pdf_sources.length > 0) {
-        const pdfTitles = data.pdf_sources.map((p) => p.title).join(", ");
-        answerText += `\n\n📄 Related docs: ${pdfTitles}`;
-      }
-
-      const aiTime = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-
-      setMessages((prev) => [...prev, { sender: "AI", text: answerText, time: aiTime }]);
-
-      // Seek video if timestamp provided
-      if (data.video_timestamp && videoRef.current) {
-        // Expect format hh:mm:ss or mm:ss
-        const parts = data.video_timestamp.split(":").map(Number);
-        let seconds = 0;
-        if (parts.length === 3) {
-          seconds = parts[0] * 3600 + parts[1] * 60 + parts[2];
-        } else if (parts.length === 2) {
-          seconds = parts[0] * 60 + parts[1];
-        }
-        videoRef.current.currentTime = seconds;
-        videoRef.current.play();
-      }
-    } catch (error) {
-      setMessages((prev) => [
-        ...prev,
-        { sender: "AI", text: `Error: ${error.message}`, time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) },
-      ]);
+      const aiMsg = {
+        sender: "AI",
+        text: res.data.answer,
+        time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      };
+      setMessages((prev) => [...prev, aiMsg]);
+    } catch (err) {
+      console.error("API error", err);
     }
   };
 
-  const onEnterPress = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
-  };
+  const handleClose = () => navigate("/home");
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center"
+      className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center p-4"
       onClick={handleClose}
     >
       <div
-        className="w-[80vw] h-[90vh] bg-white rounded-lg shadow-2xl flex overflow-hidden relative"
-        onClick={(e) => e.stopPropagation()} // prevent closing popup on click inside
+        className="w-full max-w-7xl h-full max-h-[85vh] bg-white rounded-lg shadow-2xl flex flex-col md:flex-row overflow-hidden relative"
+        onClick={(e) => e.stopPropagation()}
       >
-        {/* Left: Video Section */}
-        <div className="w-2/3 bg-black relative">
-          <video
-            ref={videoRef}
+        {/* Video Section */}
+        <div className="w-full md:w-2/3 relative">
+          <ReactPlayer
+            ref={playerRef}
+            url={videoUrl}
             controls
-            className="w-full h-full object-cover"
-            poster="https://via.placeholder.com/800x450"
-          >
-            <source src="your-video-url.mp4" type="video/mp4" />
-            Your browser does not support the video tag.
-          </video>
+            width="100%"
+            height="100%"
+          />
         </div>
 
-        {/* Right: Chat Section */}
-        <div className="w-1/3 flex flex-col bg-white border-l">
+        {/* Chat Section */}
+        <div className="w-full md:w-2/4 flex flex-col bg-white border-l">
           {/* Header */}
           <div className="bg-blue-600 text-white px-4 py-3 flex justify-between items-center">
             <div>
-              <div className="font-semibold">Ask questions about this demo</div>
+              <div className="font-semibold text-sm sm:text-base">Ask questions about this demo</div>
               <div className="text-xs text-white/80">
                 Our AI assistant will answer in real-time
               </div>
@@ -126,22 +245,14 @@ const VideoDemoChatPopup = () => {
           </div>
 
           {/* Chat Messages */}
-          <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-gray-50">
+          <div className="flex-1 p-3 overflow-y-auto space-y-3 bg-gray-50 text-sm">
             {messages.map((msg, idx) => (
               <div
                 key={idx}
-                className={`flex items-start gap-2 ${
-                  msg.sender === "AI" ? "justify-start" : "justify-end"
-                }`}
+                className={`flex ${msg.sender === "AI" ? "justify-start" : "justify-end"}`}
               >
-                {msg.sender === "AI" && (
-                  <div className="flex-shrink-0 w-8 h-8 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center text-sm font-semibold">
-                    AI
-                  </div>
-                )}
-
                 <div
-                  className={`rounded-xl px-4 py-2 max-w-[70%] text-sm whitespace-pre-wrap ${
+                  className={`rounded-xl px-4 py-2 max-w-[80%] ${
                     msg.sender === "AI"
                       ? "bg-white border text-gray-800"
                       : "bg-blue-600 text-white"
@@ -149,44 +260,33 @@ const VideoDemoChatPopup = () => {
                 >
                   {msg.text}
                 </div>
-
-                {msg.sender === "You" && (
-                  <div className="flex-shrink-0 w-8 h-8 bg-gray-300 text-white rounded-full flex items-center justify-center text-sm font-semibold">
-                    Y
-                  </div>
-                )}
               </div>
             ))}
-            <div ref={messagesEndRef} />
           </div>
 
-          {/* Chat Input */}
-          <div className="p-4 border-t flex items-center gap-2">
-            <textarea
+          {/* Input */}
+          <div className="p-3 border-t flex items-center gap-2">
+            <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyDown={onEnterPress}
+              type="text"
               placeholder="Ask a question about this product..."
-              className="flex-1 px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-              rows={2}
+              className="flex-1 px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              onKeyDown={(e) => e.key === "Enter" && sendMessage()}
             />
-            <button
-              onClick={sendMessage}
-              className="text-blue-600 hover:text-blue-800"
-              aria-label="Send message"
-            >
-              <PaperAirplaneIcon className="h-8 w-10 rotate-90" />
+            <button onClick={sendMessage} className="text-blue-600 hover:text-blue-800">
+              <PaperAirplaneIcon className="h-7 w-8" />
             </button>
           </div>
 
-          {/* Footer Buttons */}
-          <div className="p-6 flex justify-between text-xs bg-white">
-            <span className="text-gray-500 py-2">Powered by Qudemo AI</span>
+          {/* Footer */}
+          <div className="p-4 flex flex-col sm:flex-row sm:justify-between items-center text-xs gap-2 bg-white border-t">
+            <span className="text-gray-500">Powered by Qudemo AI</span>
             <div className="flex gap-2">
-              <button className="text-blue-600 font-semibold hover:underline border border-gray-300 rounded px-4 py-2">
+              <button className="text-blue-600 font-semibold hover:underline border border-gray-300 rounded px-3 py-1.5">
                 FAQs
               </button>
-              <button className="text-blue-600 font-semibold hover:underline border border-gray-300 rounded px-4 py-2">
+              <button className="text-blue-600 font-semibold hover:underline border border-gray-300 rounded px-3 py-1.5">
                 Schedule Meeting
               </button>
             </div>
