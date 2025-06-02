@@ -56,7 +56,7 @@ const VideoDemoChatPopup = () => {
       onClick={handleClose}
     >
       <div
-        className="w-full max-w-6xl h-full max-h-[85vh] bg-white rounded-lg shadow-2xl flex flex-col md:flex-row overflow-hidden relative"
+        className="w-full max-w-7xl h-full max-h-[85vh] bg-white rounded-lg shadow-2xl flex flex-col md:flex-row overflow-hidden relative"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Video Section */}
@@ -71,7 +71,7 @@ const VideoDemoChatPopup = () => {
         </div>
 
         {/* Chat Section */}
-        <div className="w-full md:w-1/3 flex flex-col bg-white border-l">
+        <div className="w-full md:w-2/4 flex flex-col bg-white border-l">
           {/* Header */}
           <div className="bg-blue-600 text-white px-4 py-3 flex justify-between items-center">
             <div>
