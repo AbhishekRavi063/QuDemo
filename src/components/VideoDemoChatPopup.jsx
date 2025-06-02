@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { PaperAirplaneIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useNavigate } from "react-router-dom";
 
@@ -7,22 +7,87 @@ const VideoDemoChatPopup = () => {
     {
       sender: "AI",
       text: "Hello! I'm your AI assistant. Feel free to ask any questions about the product while watching the demo.",
-      time: "7:34 PM",
+      time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     },
   ]);
   const [input, setInput] = useState("");
-
   const navigate = useNavigate();
+  const videoRef = useRef(null);
+  const messagesEndRef = useRef(null);
 
-  const sendMessage = () => {
-    if (!input.trim()) return;
-    const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    setMessages([...messages, { sender: "You", text: input, time: now }]);
-    setInput("");
-  };
+  // Scroll to bottom when new message arrives
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   const handleClose = () => {
-    navigate("/home"); // Redirect to home when modal is closed
+    navigate("/home"); // Adjust your home route accordingly
+  };
+
+  const sendMessage = async () => {
+    if (!input.trim()) return;
+
+    const now = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
+    // Add user's message
+    setMessages((prev) => [...prev, { sender: "You", text: input, time: now }]);
+    const question = input;
+    setInput("");
+
+    try {
+      const res = await fetch("http://localhost:8000/ask", { // Change URL to your backend endpoint
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question }),
+      });
+
+      if (!res.ok) {
+        throw new Error(`Backend error: ${res.statusText}`);
+      }
+
+      const data = await res.json();
+
+      // Format answer with optional timestamp and pdf sources
+      let answerText = data.answer || "Sorry, I couldn't find an answer.";
+
+      if (data.video_timestamp) {
+        answerText += `\n\n📹 Related video moment: ${data.video_timestamp}`;
+      }
+      if (data.pdf_sources && data.pdf_sources.length > 0) {
+        const pdfTitles = data.pdf_sources.map((p) => p.title).join(", ");
+        answerText += `\n\n📄 Related docs: ${pdfTitles}`;
+      }
+
+      const aiTime = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
+      setMessages((prev) => [...prev, { sender: "AI", text: answerText, time: aiTime }]);
+
+      // Seek video if timestamp provided
+      if (data.video_timestamp && videoRef.current) {
+        // Expect format hh:mm:ss or mm:ss
+        const parts = data.video_timestamp.split(":").map(Number);
+        let seconds = 0;
+        if (parts.length === 3) {
+          seconds = parts[0] * 3600 + parts[1] * 60 + parts[2];
+        } else if (parts.length === 2) {
+          seconds = parts[0] * 60 + parts[1];
+        }
+        videoRef.current.currentTime = seconds;
+        videoRef.current.play();
+      }
+    } catch (error) {
+      setMessages((prev) => [
+        ...prev,
+        { sender: "AI", text: `Error: ${error.message}`, time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) },
+      ]);
+    }
+  };
+
+  const onEnterPress = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
   };
 
   return (
@@ -32,11 +97,12 @@ const VideoDemoChatPopup = () => {
     >
       <div
         className="w-[80vw] h-[90vh] bg-white rounded-lg shadow-2xl flex overflow-hidden relative"
-        onClick={(e) => e.stopPropagation()} // Prevent click propagation
+        onClick={(e) => e.stopPropagation()} // prevent closing popup on click inside
       >
         {/* Left: Video Section */}
         <div className="w-2/3 bg-black relative">
           <video
+            ref={videoRef}
             controls
             className="w-full h-full object-cover"
             poster="https://via.placeholder.com/800x450"
@@ -75,7 +141,7 @@ const VideoDemoChatPopup = () => {
                 )}
 
                 <div
-                  className={`rounded-xl px-4 py-2 max-w-[70%] text-sm ${
+                  className={`rounded-xl px-4 py-2 max-w-[70%] text-sm whitespace-pre-wrap ${
                     msg.sender === "AI"
                       ? "bg-white border text-gray-800"
                       : "bg-blue-600 text-white"
@@ -91,22 +157,25 @@ const VideoDemoChatPopup = () => {
                 )}
               </div>
             ))}
+            <div ref={messagesEndRef} />
           </div>
 
           {/* Chat Input */}
           <div className="p-4 border-t flex items-center gap-2">
-            <input
+            <textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              type="text"
+              onKeyDown={onEnterPress}
               placeholder="Ask a question about this product..."
-              className="flex-1 px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex-1 px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              rows={2}
             />
             <button
               onClick={sendMessage}
               className="text-blue-600 hover:text-blue-800"
+              aria-label="Send message"
             >
-              <PaperAirplaneIcon className="h-8 w-10 " />
+              <PaperAirplaneIcon className="h-8 w-10 rotate-90" />
             </button>
           </div>
 
