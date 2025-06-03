@@ -17,7 +17,7 @@ const TypingIndicator = () => (
       .dot {
         width: 8px;
         height: 8px;
-        background-color: #2563eb; /* blue-600 */
+        background-color: #2563eb;
         border-radius: 50%;
         display: inline-block;
         animation-duration: 1s;
@@ -51,11 +51,29 @@ const TypingIndicator = () => (
   </div>
 );
 
+const cleanMessageText = (text) => {
+  const cleaned = text
+    .replace(/\*\*/g, "")
+    .replace(/^- /gm, "")
+    .replace(/\* /g, "")
+    .replace(/\(.*?page.*?\)/gi, "")
+    .replace(/help\.puzzle\.io.*?\.pdf/gi, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+
+  // Convert URLs to clickable links
+  return cleaned.replace(
+    /(https?:\/\/[^\s]+)/g,
+    (url) =>
+      `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-blue-600 underline">${url}</a>`
+  );
+};
+
 const VideoDemoChatPopup = () => {
   const [messages, setMessages] = useState([
     {
       sender: "AI",
-      text: "Hello! I'm your AI assistant. Ask any questions related to this demo.",
+      text: cleanMessageText("Hello! I'm your AI assistant. Ask any questions related to this demo."),
       time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     },
   ]);
@@ -90,17 +108,6 @@ const VideoDemoChatPopup = () => {
     }
   }, [videoUrl]);
 
-  const cleanMessageText = (text) => {
-    return text
-      .replace(/\*\*/g, "") // remove bold
-      .replace(/^- /gm, "") // remove list dash
-      .replace(/\* /g, "") // remove bullets
-      .replace(/\(.*?page.*?\)/gi, "") // remove (page x)
-      .replace(/help\.puzzle\.io.*?\.pdf/gi, "") // remove file names
-      .replace(/\s{2,}/g, " ") // collapse multiple spaces
-      .trim();
-  };
-
   const sendMessage = async () => {
     if (!input.trim()) return;
 
@@ -112,7 +119,9 @@ const VideoDemoChatPopup = () => {
     setIsTyping(true);
 
     try {
-      const res = await axios.post("https://qudemoo-backend.onrender.com/ask", { question: input });
+      const res = await axios.post("https://qudemoo-backend.onrender.com/ask", {
+        question: input,
+      });
 
       if (res.data.video_url) {
         setVideoUrl(res.data.video_url);
@@ -179,7 +188,9 @@ const VideoDemoChatPopup = () => {
                       : "bg-blue-600 text-white"
                   }`}
                 >
-                  {msg.text}
+                  <span
+                    dangerouslySetInnerHTML={{ __html: msg.text }}
+                  />
                 </div>
               </div>
             ))}
