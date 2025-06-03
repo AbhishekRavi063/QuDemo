@@ -101,7 +101,7 @@ const VideoDemoChatPopup = () => {
     setIsTyping(true);
 
     try {
-      const res = await axios.post("http://localhost:8000/ask", { question: input });
+      const res = await axios.post("https://qudemoo-backend.onrender.com/ask", { question: input });
 
       if (res.data.video_url) {
         setVideoUrl(res.data.video_url);
