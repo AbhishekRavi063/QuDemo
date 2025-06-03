@@ -137,7 +137,6 @@
 
 // export default VideoDemoChatPopup;
 
-
 import React, { useState, useRef, useEffect } from "react";
 import ReactPlayer from "react-player/youtube";
 import { PaperAirplaneIcon, XMarkIcon } from "@heroicons/react/24/outline";
@@ -156,6 +155,8 @@ const VideoDemoChatPopup = () => {
   const [videoUrl, setVideoUrl] = useState(
     "https://youtu.be/_zRaJOF-trE?si=-49QCSw2FbrTxpvi&t=0"
   ); // Default video URL including t=0 for consistency
+  const [playing, setPlaying] = useState(false); // Control autoplay
+
   const playerRef = useRef();
   const navigate = useNavigate();
 
@@ -174,9 +175,9 @@ const VideoDemoChatPopup = () => {
   useEffect(() => {
     if (videoUrl && playerRef.current) {
       const seconds = getTimestampFromUrl(videoUrl);
-      // Delay seek to ensure player is ready
       const timer = setTimeout(() => {
         playerRef.current.seekTo(seconds, "seconds");
+        setPlaying(true);  // Start autoplay after seeking
       }, 500);
       return () => clearTimeout(timer);
     }
@@ -189,6 +190,7 @@ const VideoDemoChatPopup = () => {
     const userMsg = { sender: "You", text: input, time: now };
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
+    setPlaying(false); // Pause while waiting for answer
 
     try {
       const res = await axios.post("https://qudemoo-backend.onrender.com/ask", { question: input });
@@ -226,6 +228,7 @@ const VideoDemoChatPopup = () => {
             ref={playerRef}
             url={videoUrl}
             controls
+            playing={playing}    // <-- autoplay control
             width="100%"
             height="100%"
           />
