@@ -17,7 +17,7 @@ const TypingIndicator = () => (
       .dot {
         width: 8px;
         height: 8px;
-        background-color: #2563eb; /* gray-500 */
+        background-color: #2563eb; /* blue-600 */
         border-radius: 50%;
         display: inline-block;
         animation-duration: 1s;
@@ -90,6 +90,17 @@ const VideoDemoChatPopup = () => {
     }
   }, [videoUrl]);
 
+  const cleanMessageText = (text) => {
+    return text
+      .replace(/\*\*/g, "") // remove bold
+      .replace(/^- /gm, "") // remove list dash
+      .replace(/\* /g, "") // remove bullets
+      .replace(/\(.*?page.*?\)/gi, "") // remove (page x)
+      .replace(/help\.puzzle\.io.*?\.pdf/gi, "") // remove file names
+      .replace(/\s{2,}/g, " ") // collapse multiple spaces
+      .trim();
+  };
+
   const sendMessage = async () => {
     if (!input.trim()) return;
 
@@ -109,7 +120,7 @@ const VideoDemoChatPopup = () => {
 
       const aiMsg = {
         sender: "AI",
-        text: res.data.answer,
+        text: cleanMessageText(res.data.answer),
         time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       };
       setMessages((prev) => [...prev, aiMsg]);
