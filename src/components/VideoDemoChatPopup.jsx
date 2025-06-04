@@ -38,7 +38,9 @@ const TypingIndicator = () => (
       }
 
       @keyframes bounce-dot {
-        0%, 80%, 100% {
+        0%,
+        80%,
+        100% {
           transform: translateY(0);
           opacity: 0.3;
         }
@@ -73,8 +75,13 @@ const VideoDemoChatPopup = () => {
   const [messages, setMessages] = useState([
     {
       sender: "AI",
-      text: cleanMessageText("Hello! I'm your AI assistant. Ask any questions related to this demo."),
-      time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      text: cleanMessageText(
+        "Hello! I'm your AI assistant. Ask any questions related to this demo."
+      ),
+      time: new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
     },
   ]);
   const [input, setInput] = useState("");
@@ -111,7 +118,10 @@ const VideoDemoChatPopup = () => {
   const sendMessage = async () => {
     if (!input.trim()) return;
 
-    const now = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    const now = new Date().toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
     const userMsg = { sender: "You", text: input, time: now };
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
@@ -130,7 +140,10 @@ const VideoDemoChatPopup = () => {
       const aiMsg = {
         sender: "AI",
         text: cleanMessageText(res.data.answer),
-        time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        time: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
       };
       setMessages((prev) => [...prev, aiMsg]);
     } catch (err) {
@@ -168,10 +181,17 @@ const VideoDemoChatPopup = () => {
           {/* Header */}
           <div className="bg-blue-600 text-white px-4 py-3 flex justify-between items-center">
             <div>
-              <div className="font-semibold text-sm sm:text-base">Ask questions about this demo</div>
-              <div className="text-xs text-white/80">Our AI assistant will answer in real-time</div>
+              <div className="font-semibold text-sm sm:text-base">
+                Ask questions about this demo
+              </div>
+              <div className="text-xs text-white/80">
+                Our AI assistant will answer in real-time
+              </div>
             </div>
-            <XMarkIcon className="h-5 w-5 cursor-pointer" onClick={handleClose} />
+            <XMarkIcon
+              className="h-5 w-5 cursor-pointer"
+              onClick={handleClose}
+            />
           </div>
 
           {/* Chat Messages */}
@@ -179,7 +199,9 @@ const VideoDemoChatPopup = () => {
             {messages.map((msg, idx) => (
               <div
                 key={idx}
-                className={`flex ${msg.sender === "AI" ? "justify-start" : "justify-end"}`}
+                className={`flex ${
+                  msg.sender === "AI" ? "justify-start" : "justify-end"
+                }`}
               >
                 <div
                   className={`rounded-xl px-4 py-2 max-w-[80%] ${
@@ -189,7 +211,11 @@ const VideoDemoChatPopup = () => {
                   }`}
                 >
                   <span
-                    dangerouslySetInnerHTML={{ __html: msg.text }}
+                    dangerouslySetInnerHTML={{
+                      __html: msg.text
+                        .replace(/^- /gm, "• ")
+                        .replace(/\n/g, "<br/>"),
+                    }}
                   />
                 </div>
               </div>
@@ -215,7 +241,10 @@ const VideoDemoChatPopup = () => {
               className="flex-1 px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               onKeyDown={(e) => e.key === "Enter" && sendMessage()}
             />
-            <button onClick={sendMessage} className="text-blue-600 hover:text-blue-800">
+            <button
+              onClick={sendMessage}
+              className="text-blue-600 hover:text-blue-800"
+            >
               <PaperAirplaneIcon className="h-7 w-8" />
             </button>
           </div>
