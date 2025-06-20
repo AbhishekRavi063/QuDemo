@@ -11,6 +11,28 @@ import {
   BuildingOffice2Icon,
 } from "@heroicons/react/24/outline";
 
+
+
+const pendingFollowUps = [
+  {
+    name: "Michael Davis",
+    company: "GlobalSoft",
+    demo: "Security Features",
+    messages: 2,
+    time: "4:53",
+    engagement: 68,
+    status: "Pending",
+  },
+  {
+    name: "Robert Chen",
+    company: "Future Systems",
+    demo: "Product Overview",
+    messages: 1,
+    time: "3:42",
+    engagement: 45,
+    status: "Pending",
+  },
+];
 const data = [
   {
     name: "John Smith",
@@ -525,6 +547,25 @@ const BuyerDetailsModal = ({ buyer, onClose }) => {
 
 const BuyerInteractions = () => {
   const [selectedBuyer, setSelectedBuyer] = useState(null);
+  const [activeTab, setActiveTab] = useState("all"); // NEW: tab state
+
+  // Helper to get buyer object for PendingFollowUpTab (since it lacks email)
+  const getBuyerFromPending = (item) => {
+    // Try to find matching buyer in 'data' by name and company
+    const found = data.find(
+      (d) => d.name === item.name && d.company === item.company
+    );
+    return found || { ...item, email: "" };
+  };
+
+  // Helper to get buyer object for HighEngagementTab
+  const getBuyerFromHigh = (item) => {
+    // Try to find matching buyer in 'data' by name and company
+    const found = data.find(
+      (d) => d.name === item.name && d.company === item.company
+    );
+    return found || { ...item, email: "" };
+  };
 
   return (
     <div className="p-4 sm:p-6">
@@ -557,102 +598,119 @@ const BuyerInteractions = () => {
 
       {/* Tabs */}
       <div className="mb-4 flex flex-wrap gap-2">
-        <button className="bg-gray-200 px-4 py-2 rounded-md font-medium text-sm">
+        <button
+          className={`px-4 py-2 rounded-md font-medium text-sm ${activeTab === "all" ? "bg-gray-200" : "hover:bg-gray-100"}`}
+          onClick={() => setActiveTab("all")}
+        >
           All Interactions
         </button>
-        <button className="hover:bg-gray-100 px-4 py-2 rounded-md text-sm">
+        <button
+          className={`px-4 py-2 rounded-md text-sm ${activeTab === "pending" ? "bg-gray-200 font-medium" : "hover:bg-gray-100"}`}
+          onClick={() => setActiveTab("pending")}
+        >
           Pending Follow-up
         </button>
-        <button className="hover:bg-gray-100 px-4 py-2 rounded-md text-sm">
+        <button
+          className={`px-4 py-2 rounded-md text-sm ${activeTab === "high" ? "bg-gray-200 font-medium" : "hover:bg-gray-100"}`}
+          onClick={() => setActiveTab("high")}
+        >
           High Engagement
         </button>
       </div>
 
-      {/* Subheading */}
-      <h3 className="text-lg font-semibold mb-2">Recent Interactions</h3>
-
-      {/* Table */}
-      <div className="overflow-x-auto rounded-lg border border-gray-200">
-        <table className="min-w-full bg-white">
-          <thead className="bg-gray-50 text-left text-sm font-medium text-gray-600">
-            <tr>
-              <th className="px-4 sm:px-6 py-3">Buyer</th>
-              <th className="px-4 sm:px-6 py-3">Demo Watched</th>
-              <th className="px-4 sm:px-6 py-3">
-                <ChatBubbleLeftEllipsisIcon className="w-4 h-4 mx-auto" />
-              </th>
-              <th className="px-4 sm:px-6 py-3">
-                <ClockIcon className="w-4 h-4 mx-auto" />
-              </th>
-              <th className="px-4 sm:px-6 py-3">
-                <div className="flex items-center">
-                  Engagement <span className="ml-1">⇅</span>
-                </div>
-              </th>
-              <th className="px-4 sm:px-6 py-3">Follow-up Status</th>
-              <th className="px-4 sm:px-6 py-3">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="text-sm divide-y divide-gray-100">
-            {data.map((item, idx) => (
-              <tr key={idx} className="hover:bg-gray-50">
-                <td className="px-4 sm:px-6 py-4">
-                  <div className="font-semibold">{item.name}</div>
-                  <div className="text-gray-500">{item.company}</div>
-                </td>
-                <td className="px-4 sm:px-6 py-4">{item.demo}</td>
-                <td className="px-4 sm:px-6 py-4 text-center">
-                  {item.messages}
-                </td>
-                <td className="px-4 sm:px-6 py-4 text-center font-medium">
-                  {item.time}
-                </td>
-                <td className="px-4 sm:px-6 py-4">
-                  <div className="flex items-center space-x-2">
-                    <div className="h-2 w-24 bg-gray-200 rounded">
-                      <div
-                        className={`h-2 rounded ${
-                          item.engagement >= 80
-                            ? "bg-green-500"
-                            : item.engagement >= 70
-                            ? "bg-yellow-500"
-                            : "bg-orange-500"
+      {/* Subheading & Content */}
+      {activeTab === "all" && (
+        <>
+          <h3 className="text-lg font-semibold mb-2">Recent Interactions</h3>
+          {/* Table */}
+          <div className="overflow-x-auto rounded-lg border border-gray-200">
+            <table className="min-w-full bg-white">
+              <thead className="bg-gray-50 text-left text-sm font-medium text-gray-600">
+                <tr>
+                  <th className="px-4 sm:px-6 py-3">Buyer</th>
+                  <th className="px-4 sm:px-6 py-3">Demo Watched</th>
+                  <th className="px-4 sm:px-6 py-3">
+                    <ChatBubbleLeftEllipsisIcon className="w-4 h-4 mx-auto" />
+                  </th>
+                  <th className="px-4 sm:px-6 py-3">
+                    <ClockIcon className="w-4 h-4 mx-auto" />
+                  </th>
+                  <th className="px-4 sm:px-6 py-3">
+                    <div className="flex items-center">
+                      Engagement <span className="ml-1">⇅</span>
+                    </div>
+                  </th>
+                  <th className="px-4 sm:px-6 py-3">Follow-up Status</th>
+                  <th className="px-4 sm:px-6 py-3">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="text-sm divide-y divide-gray-100">
+                {data.map((item, idx) => (
+                  <tr key={idx} className="hover:bg-gray-50">
+                    <td className="px-4 sm:px-6 py-4">
+                      <div className="font-semibold">{item.name}</div>
+                      <div className="text-gray-500">{item.company}</div>
+                    </td>
+                    <td className="px-4 sm:px-6 py-4">{item.demo}</td>
+                    <td className="px-4 sm:px-6 py-4 text-center">
+                      {item.messages}
+                    </td>
+                    <td className="px-4 sm:px-6 py-4 text-center font-medium">
+                      {item.time}
+                    </td>
+                    <td className="px-4 sm:px-6 py-4">
+                      <div className="flex items-center space-x-2">
+                        <div className="h-2 w-24 bg-gray-200 rounded">
+                          <div
+                            className={`h-2 rounded ${
+                              item.engagement >= 80
+                                ? "bg-green-500"
+                                : item.engagement >= 70
+                                ? "bg-yellow-500"
+                                : "bg-orange-500"
+                            }`}
+                            style={{ width: `${item.engagement}%` }}
+                          />
+                        </div>
+                        <div className="text-sm font-medium">
+                          {item.engagement}%
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 sm:px-6 py-4">
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                          item.status === "Meeting Booked"
+                            ? "bg-green-100 text-green-700"
+                            : item.status === "Pending"
+                            ? "bg-yellow-100 text-yellow-700"
+                            : "bg-blue-100 text-blue-700"
                         }`}
-                        style={{ width: `${item.engagement}%` }}
-                      />
-                    </div>
-                    <div className="text-sm font-medium">
-                      {item.engagement}%
-                    </div>
-                  </div>
-                </td>
-                <td className="px-4 sm:px-6 py-4">
-                  <span
-                    className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                      item.status === "Meeting Booked"
-                        ? "bg-green-100 text-green-700"
-                        : item.status === "Pending"
-                        ? "bg-yellow-100 text-yellow-700"
-                        : "bg-blue-100 text-blue-700"
-                    }`}
-                  >
-                    {item.status}
-                  </span>
-                </td>
-                <td className="px-4 sm:px-6 py-4">
-                  <button
-                    className="text-blue-600 text-sm hover:underline"
-                    onClick={() => setSelectedBuyer(item)}
-                  >
-                    View Details
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
+                      >
+                        {item.status}
+                      </span>
+                    </td>
+                    <td className="px-4 sm:px-6 py-4">
+                      <button
+                        className="px-4 py-1 border border-gray-300 rounded-md text-sm font-medium hover:bg-gray-50"
+                        onClick={() => setSelectedBuyer(item)}
+                      >
+                        View Details
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+      {activeTab === "pending" && (
+        <PendingFollowUpTab setSelectedBuyer={setSelectedBuyer} getBuyerFromPending={getBuyerFromPending} />
+      )}
+      {activeTab === "high" && (
+        <HighEngagementTab setSelectedBuyer={setSelectedBuyer} getBuyerFromHigh={getBuyerFromHigh} />
+      )}
       {/* Modal */}
       {selectedBuyer && (
         <BuyerDetailsModal
@@ -665,3 +723,137 @@ const BuyerInteractions = () => {
 };
 
 export default BuyerInteractions;
+
+
+
+const PendingFollowUpTab = ({ setSelectedBuyer, getBuyerFromPending }) => {
+  return (
+    <div className="bg-white p-6 rounded-xl shadow-sm">
+      <h2 className="text-2xl font-semibold mb-4">Pending Follow-up</h2>
+      <table className="w-full text-sm">
+        <thead className="text-gray-500 border-b">
+          <tr>
+            <th className="text-left py-2">Buyer</th>
+            <th className="text-left py-2">Demo Watched</th>
+            <th className="text-center py-2">
+              <ChatBubbleLeftEllipsisIcon className="w-4 h-4 mx-auto" />
+            </th>
+            <th className="text-center py-2">
+              <ClockIcon className="w-4 h-4 mx-auto" />
+            </th>
+            <th className="text-left py-2">Engagement ⬍</th>
+            <th className="text-left py-2">Follow-up Status</th>
+            <th className="text-left py-2">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {pendingFollowUps.map((item, idx) => (
+            <tr key={idx} className="border-b">
+              <td className="py-4">
+                <div className="font-medium">{item.name}</div>
+                <div className="text-gray-400">{item.company}</div>
+              </td>
+              <td className="py-4">{item.demo}</td>
+              <td className="py-4 text-center">{item.messages}</td>
+              <td className="py-4 text-center">{item.time}</td>
+              <td className="py-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-24 h-2 rounded-full bg-gray-200">
+                    <div
+                      className={`h-2 rounded-full ${
+                        item.engagement >= 60
+                          ? "bg-yellow-500"
+                          : "bg-red-500"
+                      }`}
+                      style={{ width: `${item.engagement}%` }}
+                    />
+                  </div>
+                  <span className="text-gray-700">{item.engagement}%</span>
+                </div>
+              </td>
+              <td className="py-4">
+                <span className="px-3 py-1 bg-yellow-100 text-yellow-700 text-xs font-semibold rounded-full">
+                  {item.status}
+                </span>
+              </td>
+              <td className="py-4">
+                <button
+                  className="px-4 py-1 border border-gray-300 rounded-md text-sm font-medium hover:bg-gray-50"
+                  onClick={() => setSelectedBuyer(getBuyerFromPending(item))}
+                >
+                  View Details
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
+const HighEngagementTab = ({ setSelectedBuyer, getBuyerFromHigh }) => {
+  // Only show high engagement (>= 80)
+  const highEngagementRows = data.filter((item) => item.engagement >= 80);
+  return (
+    <div className="bg-white p-6 rounded-xl shadow-sm">
+      <h2 className="text-2xl font-semibold mb-4">High Engagement</h2>
+      <table className="w-full text-sm">
+        <thead className="text-gray-500 border-b">
+          <tr>
+            <th className="text-left py-2">Buyer</th>
+            <th className="text-left py-2">Demo Watched</th>
+            <th className="text-center py-2">
+              <ChatBubbleLeftEllipsisIcon className="w-4 h-4 mx-auto" />
+            </th>
+            <th className="text-center py-2">
+              <ClockIcon className="w-4 h-4 mx-auto" />
+            </th>
+            <th className="text-left py-2">Engagement ⬍</th>
+            <th className="text-left py-2">Follow-up Status</th>
+            <th className="text-left py-2">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {highEngagementRows.map((item, idx) => (
+            <tr key={idx} className="border-b">
+              <td className="py-4">
+                <div className="font-medium">{item.name}</div>
+                <div className="text-gray-400">{item.company}</div>
+              </td>
+              <td className="py-4">{item.demo}</td>
+              <td className="py-4 text-center">{item.messages}</td>
+              <td className="py-4 text-center">{item.time}</td>
+              <td className="py-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-24 h-2 rounded-full bg-gray-200">
+                    <div
+                      className="h-2 rounded-full bg-green-500"
+                      style={{ width: `${item.engagement}%` }}
+                    />
+                  </div>
+                  <span className="text-gray-700">{item.engagement}%</span>
+                </div>
+              </td>
+              <td className="py-4">
+                <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full">
+                  {item.status}
+                </span>
+              </td>
+              <td className="py-4">
+                <button
+                  className="px-4 py-1 border border-gray-300 rounded-md text-sm font-medium hover:bg-gray-50"
+                  onClick={() => setSelectedBuyer(getBuyerFromHigh(item))}
+                >
+                  View Details
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
+
