@@ -56,19 +56,20 @@ const TypingIndicator = () => (
 const cleanMessageText = (text) => {
   const cleaned = text
     .replace(/\*\*/g, "")
-    .replace(/^- /gm, "")
-    .replace(/\* /g, "")
     .replace(/\(.*?page.*?\)/gi, "")
     .replace(/help\.puzzle\.io.*?\.pdf/gi, "")
     .replace(/\s{2,}/g, " ")
     .trim();
 
   // Convert URLs to clickable links
-  return cleaned.replace(
+  const withLinks = cleaned.replace(
     /(https?:\/\/[^\s]+)/g,
     (url) =>
       `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-blue-600 underline">${url}</a>`
   );
+
+  // 🟩 Wrap each line in a <p> for spacing instead of using <br/>
+  return `<p>${withLinks.replace(/\n/g, "</p><p>")}</p>`;
 };
 
 const VideoDemoChatPopup = () => {
@@ -132,7 +133,7 @@ const VideoDemoChatPopup = () => {
       const res = await axios.post("https://qudemoo-backend.onrender.com/ask", {
         question: input,
       });
-
+      //  https://qudemoo-backend.onrender.com
       if (res.data.video_url) {
         setVideoUrl(res.data.video_url);
       }
@@ -167,6 +168,7 @@ const VideoDemoChatPopup = () => {
         {/* Video Section */}
         <div className="w-full md:w-2/3 relative">
           <ReactPlayer
+            key={videoUrl} // <-- add this line
             ref={playerRef}
             url={videoUrl}
             controls
@@ -212,9 +214,9 @@ const VideoDemoChatPopup = () => {
                 >
                   <span
                     dangerouslySetInnerHTML={{
-                      __html: msg.text
-                        .replace(/^- /gm, "• ")
-                        .replace(/\n/g, "<br/>"),
+                      __html: msg.text,
+                      // .replace(/^- /gm, "• ")
+                      // .replace(/\n/g, "<br/>"),
                     }}
                   />
                 </div>

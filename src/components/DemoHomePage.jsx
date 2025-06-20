@@ -8,6 +8,7 @@ import {
   ArrowTrendingUpIcon,
   UsersIcon,
 } from "@heroicons/react/24/solid";
+import { NavLink } from "react-router-dom";
 
 const DemoHomePage = () => {
   const [showHeroDropdown, setShowHeroDropdown] = useState(false);
@@ -76,13 +77,15 @@ const DemoHomePage = () => {
 
             {showHeroDropdown && (
               <div className="absolute right-0 md:left-0 top-full mt-2 w-56 bg-white shadow-lg rounded-lg text-sm text-gray-800 z-10">
+                <NavLink  to="/VideoDemoChatPopup">
                 <button
-                  onClick={openInteractivePopup}
+                  // onClick={openInteractivePopup}
                   className="w-full text-left px-4 py-2 hover:bg-gray-100"
                 >
                   <div className="font-semibold">Quick Demo</div>
                   <div className="text-xs text-gray-500">Explore with AI assistant</div>
                 </button>
+                </NavLink>
                 <button
                   onClick={openModal}
                   className="w-full text-left px-4 py-2 hover:bg-gray-100 border-t"
