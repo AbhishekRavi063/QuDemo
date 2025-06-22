@@ -154,7 +154,16 @@ const VideoDemoChatPopup = () => {
     }
   };
 
-  const handleClose = () => navigate("/home");
+  const handleClose = () => navigate("/");
+
+  const handleSourceChange = async (e) => {
+    const selectedSource = e.target.value;
+    try {
+      await axios.post("https://qudemoo-backend.onrender.com/bucket", { source: selectedSource });
+    } catch (err) {
+      console.error("Error posting to /bucket:", err);
+    }
+  };
 
   return (
     <div
@@ -182,13 +191,15 @@ const VideoDemoChatPopup = () => {
         <div className="w-full md:w-2/4 flex flex-col bg-white border-l">
           {/* Header */}
           <div className="bg-blue-600 text-white px-4 py-3 flex justify-between items-center">
-            <div>
+            <div className="flex items-center gap-4">
               <div className="font-semibold text-sm sm:text-base">
                 Ask questions about this demo
               </div>
-              <div className="text-xs text-white/80">
-                Our AI assistant will answer in real-time
-              </div>
+              {/* Dropdown */}
+              <select className="ml-2 px-2 py-1 rounded text-blue-700 text-xs sm:text-sm focus:outline-none cursor-pointer" onChange={handleSourceChange}>
+                <option value="puzzle.io">puzzle</option>
+                <option value="mixpanel">mixpanel</option>
+              </select>
             </div>
             <XMarkIcon
               className="h-5 w-5 cursor-pointer"
