@@ -130,7 +130,7 @@ const VideoDemoChatPopup = () => {
     setIsTyping(true);
 
     try {
-      const res = await axios.post("https://qudemoo-backend.onrender.com/ask", {
+      const res = await axios.post("https://qudemo-backend.onrender.com/ask", {
         question: input,
       });
       //  https://qudemoo-backend.onrender.com
@@ -159,7 +159,7 @@ const VideoDemoChatPopup = () => {
   const handleSourceChange = async (e) => {
     const selectedSource = e.target.value;
     try {
-      await axios.post("https://qudemoo-backend.onrender.com/bucket", { source: selectedSource });
+      await axios.post("https://qudemo-backend.onrender.com/bucket", { source: selectedSource });
     } catch (err) {
       console.error("Error posting to /bucket:", err);
     }
