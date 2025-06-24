@@ -54,7 +54,8 @@ const TypingIndicator = () => (
 );
 
 const cleanMessageText = (text) => {
-  const cleaned = text
+  // Remove unwanted patterns
+  let cleaned = text
     .replace(/\*\*/g, "")
     .replace(/\(.*?page.*?\)/gi, "")
     .replace(/help\.puzzle\.io.*?\.pdf/gi, "")
@@ -62,29 +63,45 @@ const cleanMessageText = (text) => {
     .trim();
 
   // Convert URLs to clickable links
-  const withLinks = cleaned.replace(
+  cleaned = cleaned.replace(
     /(https?:\/\/[^\s]+)/g,
     (url) =>
       `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-blue-600 underline">${url}</a>`
   );
 
-  // 🟩 Wrap each line in a <p> for spacing instead of using <br/>
-  return `<p>${withLinks.replace(/\n/g, "</p><p>")}</p>`;
+  // Split at each '– ' and wrap each in <p> tags, preserving the intro as its own paragraph
+  const parts = cleaned.split(/(?=– )/g);
+  return parts.map(part => `<p>${part.trim()}</p>`).join("");
 };
 
 const VideoDemoChatPopup = () => {
-  const [messages, setMessages] = useState([
-    {
-      sender: "AI",
-      text: cleanMessageText(
-        "Hello! I'm your AI assistant. Ask any questions related to this demo."
-      ),
-      time: new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-    },
-  ]);
+    const [source, setSource] = useState("puzzle.io");
+    const [messages, setMessages] = useState([
+      {
+        sender: "AI",
+        text: cleanMessageText(`
+    Hello! I'm your AI Assistant for this product demo.
+    
+    Try these questions for better answers and a smoother demo experience:
+    
+    – How to integrate with Stripe?  
+    – Explain the Spotlight feature.  
+    – How do I upload my invoices?  
+    – How does the real-time dashboard calculate metrics like net burn and runway?  
+    – How to do reconciliations?  
+    – What is the general ledger in Puzzle?  
+    – How can I view or add fixed assets?  
+    – How can I manage my prepaid accounts?  
+    – How can I add manual journals?  
+    – How does Puzzle handle charts of accounts?
+        `),
+        time: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      },
+    ]);
+    
   const [input, setInput] = useState("");
   const [videoUrl, setVideoUrl] = useState(
     "https://youtu.be/_zRaJOF-trE?si=-49QCSw2FbrTxpvi&t=0"
@@ -158,6 +175,42 @@ const VideoDemoChatPopup = () => {
 
   const handleSourceChange = async (e) => {
     const selectedSource = e.target.value;
+    setSource(selectedSource);
+    // Update the initial message based on the dropdown
+    setMessages([
+      {
+        sender: "AI",
+        text:
+          selectedSource === "mixpanel"
+            ? cleanMessageText("Hello! I'm your AI Assistant for mixpanel demo")
+            : cleanMessageText(`
+        Hello! I'm your AI Assistant for this product demo.
+        
+        Try these questions for better answers and a smoother demo experience:
+        
+        – How to integrate with Stripe?  
+        – Explain the Spotlight feature.  
+        – How do I upload my invoices?  
+        – How does the real-time dashboard calculate metrics like net burn and runway?  
+        – How to do reconciliations?  
+        – What is the general ledger in Puzzle?  
+        – How can I view or add fixed assets?  
+        – How can I manage my prepaid accounts?  
+        – How can I add manual journals?  
+        – How does Puzzle handle charts of accounts?
+      `),
+        time: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      },
+    ]);
+    // Update the video based on the dropdown
+    setVideoUrl(
+      selectedSource === "mixpanel"
+        ? "https://youtu.be/c7SfDNFhD0E?si=1oD7SVquYz2R7i4R"
+        : "https://youtu.be/_zRaJOF-trE?si=-49QCSw2FbrTxpvi&t=0"
+    );
     try {
       await axios.post("https://qudemo-backend.onrender.com/bucket", { source: selectedSource });
     } catch (err) {
@@ -212,37 +265,31 @@ const VideoDemoChatPopup = () => {
             {messages.map((msg, idx) => (
               <div
                 key={idx}
-                className={`flex ${
-                  msg.sender === "AI" ? "justify-start" : "justify-end"
-                }`}
+                className={`flex ${msg.sender === "AI" ? "justify-start" : "justify-end"}`}
               >
                 <div
                   className={`rounded-xl px-4 py-2 max-w-[80%] ${
-                    msg.sender === "AI"
-                      ? "bg-white border text-gray-800"
-                      : "bg-blue-600 text-white"
+                    msg.sender === "AI" ? "bg-white border text-gray-800" : "bg-blue-600 text-white"
                   }`}
                 >
                   <span
                     dangerouslySetInnerHTML={{
-                      __html: msg.text,
-                      // .replace(/^- /gm, "• ")
-                      // .replace(/\n/g, "<br/>"),
+                      __html: msg.text, // already cleaned before storing
                     }}
                   />
                 </div>
               </div>
             ))}
-
-            {/* Typing indicator */}
-            {isTyping && (
-              <div className="flex justify-start">
-                <div className="rounded-xl px-4 py-2 max-w-[80%] bg-white border text-gray-800 select-none">
-                  <TypingIndicator />
-                </div>
-              </div>
-            )}
           </div>
+
+          {/* Typing indicator */}
+          {isTyping && (
+            <div className="flex justify-start">
+              <div className="rounded-xl px-4 py-2 max-w-[80%] bg-white border text-gray-800 select-none">
+                <TypingIndicator />
+              </div>
+            </div>
+          )}
 
           {/* Input */}
           <div className="p-3 border-t flex items-center gap-2">
