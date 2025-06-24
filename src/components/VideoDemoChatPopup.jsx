@@ -75,26 +75,11 @@ const cleanMessageText = (text) => {
 };
 
 const VideoDemoChatPopup = () => {
-    const [source, setSource] = useState("puzzle.io");
+    const [source, setSource] = useState("puzzle");
     const [messages, setMessages] = useState([
       {
         sender: "AI",
-        text: cleanMessageText(`
-    Hello! I'm your AI Assistant for this product demo.
-    
-    Try these questions for better answers and a smoother demo experience:
-    
-    – How to integrate with Stripe?  
-    – Explain the Spotlight feature.  
-    – How do I upload my invoices?  
-    – How does the real-time dashboard calculate metrics like net burn and runway?  
-    – How to do reconciliations?  
-    – What is the general ledger in Puzzle?  
-    – How can I view or add fixed assets?  
-    – How can I manage my prepaid accounts?  
-    – How can I add manual journals?  
-    – How does Puzzle handle charts of accounts?
-        `),
+        text: cleanMessageText(`Hello! I'm your AI Assistant for this puzzle demo.`),
         time: new Date().toLocaleTimeString([], {
           hour: "2-digit",
           minute: "2-digit",
@@ -180,25 +165,7 @@ const VideoDemoChatPopup = () => {
     setMessages([
       {
         sender: "AI",
-        text:
-          selectedSource === "mixpanel"
-            ? cleanMessageText("Hello! I'm your AI Assistant for mixpanel demo")
-            : cleanMessageText(`
-        Hello! I'm your AI Assistant for this product demo.
-        
-        Try these questions for better answers and a smoother demo experience:
-        
-        – How to integrate with Stripe?  
-        – Explain the Spotlight feature.  
-        – How do I upload my invoices?  
-        – How does the real-time dashboard calculate metrics like net burn and runway?  
-        – How to do reconciliations?  
-        – What is the general ledger in Puzzle?  
-        – How can I view or add fixed assets?  
-        – How can I manage my prepaid accounts?  
-        – How can I add manual journals?  
-        – How does Puzzle handle charts of accounts?
-      `),
+        text: getInitialMessage(selectedSource),
         time: new Date().toLocaleTimeString([], {
           hour: "2-digit",
           minute: "2-digit",
@@ -216,6 +183,41 @@ const VideoDemoChatPopup = () => {
     } catch (err) {
       console.error("Error posting to /bucket:", err);
     }
+  };
+
+  const getInitialMessage = (source) => {
+    if (source === "mixpanel") {
+      return cleanMessageText(`
+    Hello! I'm your AI Assistant for mixpanel demo.
+      `);
+    } else {
+      return cleanMessageText(`
+    Hello! I'm your AI Assistant for this product demo.
+      `);
+    }
+  };
+
+  // List of suggested questions for puzzle
+  const puzzleQuestions = [
+    "How to integrate with Stripe?",
+    "Explain the Spotlight feature.",
+    "How do I upload my invoices?",
+    "How does the real-time dashboard calculate metrics like net burn and runway?",
+    "How to do reconciliations?",
+    "What is the general ledger in Puzzle?",
+    "How can I view or add fixed assets?",
+    "How can I manage my prepaid accounts?",
+    "How can I add manual journals?",
+    "How does Puzzle handle charts of accounts?"
+  ];
+
+  // Handle clicking a question bubble
+  const handleQuestionClick = async (question) => {
+    setInput(question);
+    // Wait for input to update, then send
+    setTimeout(() => {
+      sendMessage(question);
+    }, 0);
   };
 
   return (
@@ -280,6 +282,20 @@ const VideoDemoChatPopup = () => {
                 </div>
               </div>
             ))}
+            {/* Show question bubbles for puzzle source */}
+            {source === "puzzle" && (
+              <div className="flex flex-wrap gap-2 mb-3">
+                {puzzleQuestions.map((q, i) => (
+                  <button
+                    key={i}
+                    className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs hover:bg-blue-200 transition border border-blue-200"
+                    onClick={() => handleQuestionClick(q)}
+                  >
+                    {q}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Typing indicator */}
