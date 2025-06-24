@@ -251,10 +251,10 @@ const VideoDemoChatPopup = () => {
                 Ask questions about this demo
               </div>
               {/* Dropdown */}
-              <select className="ml-2 px-2 py-1 rounded text-blue-700 text-xs sm:text-sm focus:outline-none cursor-pointer" onChange={handleSourceChange}>
+              {/* <select className="ml-2 px-2 py-1 rounded text-blue-700 text-xs sm:text-sm focus:outline-none cursor-pointer" onChange={handleSourceChange}>
                 <option value="puzzle">puzzle</option>
                 <option value="mixpanel">mixpanel</option>
-              </select>
+              </select> */}
             </div>
             <XMarkIcon
               className="h-5 w-5 cursor-pointer"
