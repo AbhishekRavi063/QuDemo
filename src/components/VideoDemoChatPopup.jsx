@@ -132,14 +132,17 @@ const VideoDemoChatPopup = () => {
     setIsTyping(true);
 
     try {
-      const res = await axios.post("https://qudemo-backend.onrender.com/ask", {
+      // Choose endpoint based on source
+      let endpoint = "https://qudemo-backend.onrender.com/ask/puzzle";
+      if (source === "mixpanel") {
+        endpoint = "https://qudemo-backend.onrender.com/ask/mixpanel";
+      }
+      const res = await axios.post(endpoint, {
         question: input,
       });
-      //  https://qudemoo-backend.onrender.com
       if (res.data.video_url) {
         setVideoUrl(res.data.video_url);
       }
-
       const aiMsg = {
         sender: "AI",
         text: cleanMessageText(res.data.answer),
@@ -251,10 +254,14 @@ const VideoDemoChatPopup = () => {
                 Ask questions about this demo
               </div>
               {/* Dropdown */}
-              {/* <select className="ml-2 px-2 py-1 rounded text-blue-700 text-xs sm:text-sm focus:outline-none cursor-pointer" onChange={handleSourceChange}>
-                <option value="puzzle">puzzle</option>
-                <option value="mixpanel">mixpanel</option>
-              </select> */}
+              <select
+                className="ml-2 px-2 py-1 rounded text-blue-700 text-xs sm:text-sm focus:outline-none cursor-pointer"
+                value={source}
+                onChange={handleSourceChange}
+              >
+                <option value="puzzle">Puzzle</option>
+                <option value="mixpanel">Mixpanel</option>
+              </select>
             </div>
             <XMarkIcon
               className="h-5 w-5 cursor-pointer"
