@@ -6,7 +6,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { NavLink } from "react-router-dom";
 
-const InteractiveDemoPopup = ({ onClose }) => {
+const InteractiveDemoPopup = ({ onClose, onSendRocket }) => {
   const [message, setMessage] = useState("");
   const [chatLog, setChatLog] = useState([
     {
@@ -67,14 +67,15 @@ const InteractiveDemoPopup = ({ onClose }) => {
             onChange={(e) => setMessage(e.target.value)}
             className="flex-1 px-4 py-2 sm:py-3 border rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
-          <NavLink to="/VideoDemoChatPopup">
-            <button
-              onClick={sendMessage}
-              className="text-blue-600 hover:text-blue-800 transition"
-            >
-              <PaperAirplaneIcon className="h-7 w-7 sm:h-8 sm:w-8" />
-            </button>
-          </NavLink>
+          <button
+            onClick={() => {
+              sendMessage();
+              if (typeof onSendRocket === 'function') onSendRocket();
+            }}
+            className="text-blue-600 hover:text-blue-800 transition"
+          >
+            <PaperAirplaneIcon className="h-7 w-7 sm:h-8 sm:w-8" />
+          </button>
         </div>
       </div>
     </div>

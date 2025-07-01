@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import ReactPlayer from "react-player";
 import {
   EyeIcon,
   ChatBubbleLeftIcon,
@@ -8,59 +9,86 @@ import {
   ArrowUpTrayIcon,
 } from "@heroicons/react/24/outline";
 import { Link } from 'react-router-dom';
+import { useCompany } from "../context/CompanyContext";
 
-
-const qudemos = [
-  {
-    id: 1,
-    title: "Product Overview",
-    description: "Complete overview of the product features and benefits",
-    duration: "5:32",
-    views: 827,
-    comments: 142,
-    updated: "2 days ago",
-    image:
-      "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80",
-    active: true,
-  },
-  {
-    id: 2,
-    title: "Enterprise Features",
-    description: "Detailed walkthrough of enterprise-grade features",
-    duration: "8:15",
-    views: 543,
-    comments: 98,
-    updated: "1 week ago",
-    image:
-      "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=800&q=80",
-    active: true,
-  },
-  {
-    id: 3,
-    title: "Integration Options",
-    description: "How to integrate with existing tools and systems",
-    duration: "6:45",
-    views: 412,
-    comments: 76,
-    updated: "3 days ago",
-    image:
-      "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=800&q=80",
-    active: true,
-  },
-];
+// Helper to get the thumbnail URL
+function getThumbnailUrl(q) {
+  if (q.thumbnail_url) return q.thumbnail_url;
+  // If YouTube link, extract video ID and return the default thumbnail
+  const ytMatch = q.video_url && q.video_url.match(
+    /(?:youtube\\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?|shorts)\/|.*[?&]v=)|youtu\\.be\/)([\w-]{11})/
+  );
+  if (ytMatch && ytMatch[1]) {
+    return `https://img.youtube.com/vi/${ytMatch[1]}/hqdefault.jpg`;
+  }
+  return "https://via.placeholder.com/400x200?text=No+Thumbnail";
+}
 
 const QudemoLibrary = () => {
+  const { company, isLoading: companyLoading } = useCompany();
   const [searchTerm, setSearchTerm] = useState("");
+  const [qudemos, setQudemos] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [previewingQudemo, setPreviewingQudemo] = useState(null);
+
+  useEffect(() => {
+    if (!company || companyLoading) return;
+    const fetchQudemos = async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const token = localStorage.getItem('accessToken');
+        const res = await fetch(`${process.env.REACT_APP_API_URL}/api/qudemos?companyId=${company.id}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          setQudemos(data.data || []);
+        } else {
+          setError(data.error || "Failed to fetch demos.");
+        }
+      } catch (err) {
+        setError("Network error. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchQudemos();
+  }, [company, companyLoading]);
 
   const filteredQudemos = qudemos.filter((q) =>
-    q.title.toLowerCase().includes(searchTerm.toLowerCase())
+    q.title?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  if (companyLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
+
+  if (!company) {
+    return (
+      <div className="text-center py-12 px-4 sm:px-6 lg:px-8 bg-white rounded-lg shadow-lg">
+        <h3 className="mt-2 text-lg font-medium text-gray-900">
+          No Company Found
+        </h3>
+        <p className="mt-1 text-sm text-gray-600">
+          You need to create a company before you can view or create QuDemos.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 flex-1 bg-gray-50 min-h-screen">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">Qudemo Library</h2>
-        <Link to="/createQuDemo">
+        <Link to="/create">
           <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center gap-2">
             <ArrowUpTrayIcon className="h-4 w-4" />
             Create Qudemo
@@ -79,82 +107,117 @@ const QudemoLibrary = () => {
         />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {filteredQudemos.map((q) => (
-          <div
-            key={q.id}
-            className="bg-white rounded shadow-md overflow-hidden flex flex-col"
-          >
-            <div className="relative">
-              <img
-                src={q.image}
-                alt={q.title}
-                className="w-full h-40 object-cover"
-              />
-              {q.active && (
-                <span className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-0.5 rounded-full font-semibold">
-                  Active
-                </span>
-              )}
-              <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-0.5 rounded flex items-center">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-4 w-4 mr-1"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M12 6v6l4 2"
-                  />
-                </svg>
-                {q.duration}
-              </div>
-              <h3 className="absolute bottom-2 right-2 text-white font-bold text-lg drop-shadow-lg">
-                {q.title}
-              </h3>
-            </div>
-
-            <div className="p-4 flex flex-col flex-grow">
-              <a
-                href="#"
-                className="text-blue-600 font-semibold hover:underline"
+      {loading ? (
+        <div className="flex justify-center items-center h-40">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
+      ) : error ? (
+        <div className="text-red-600 text-center py-8">{error}</div>
+      ) : qudemos.length === 0 ? (
+        <div className="text-center text-gray-500 py-12">No videos created yet.</div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {filteredQudemos.length === 0 ? (
+            <div className="col-span-full text-center text-gray-500 py-12">No demos found.</div>
+          ) : (
+            filteredQudemos.map((q) => (
+              <div
+                key={q.id}
+                className="bg-white rounded shadow-md overflow-hidden flex flex-col relative"
               >
-                {q.title}
-              </a>
-              <p className="text-gray-600 mt-1 flex-grow">{q.description}</p>
+                <div
+                  className="relative w-full h-40"
+                  style={{ background: `url('${getThumbnailUrl(q)}') center center / cover no-repeat` }}
+                >
+                  {q.video_url && ReactPlayer.canPlay(q.video_url) ? (
+                    <ReactPlayer
+                      url={q.video_url}
+                      width="100%"
+                      height="100%"
+                      controls={false}
+                      playing={false}
+                      muted={true}
+                      light={getThumbnailUrl(q)}
+                      style={{ position: 'absolute', top: 0, left: 0 }}
+                    />
+                  ) : (
+                    <img
+                      src={getThumbnailUrl(q)}
+                      alt={q.title}
+                      className="w-full h-40 object-cover"
+                    />
+                  )}
+                  {q.is_active && (
+                    <span className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-0.5 rounded-full font-semibold">
+                      Active
+                    </span>
+                  )}
+                </div>
 
-              <div className="flex justify-between items-center text-gray-500 text-sm mt-4 border-t pt-3">
-                <div className="flex space-x-4">
-                  <div className="flex items-center">
-                    <EyeIcon className="h-5 w-5 mr-1 text-blue-500" />
-                    {q.views}
+                <div className="p-4 flex flex-col flex-grow">
+                  <div className="text-blue-900 font-semibold text-lg mb-1">
+                    {q.video_name || q.title}
                   </div>
-                  <div className="flex items-center">
-                    <ChatBubbleLeftIcon className="h-5 w-5 mr-1 text-blue-500" />
-                    {q.comments}
+                  <p className="text-gray-600 mt-1 flex-grow">{q.description}</p>
+
+                  <div className="flex justify-between items-center text-gray-500 text-sm mt-4 border-t pt-3">
+                    <div className="flex space-x-4">
+                      <div className="flex items-center">
+                        <EyeIcon className="h-5 w-5 mr-1 text-blue-500" />
+                        {q.views || 0}
+                      </div>
+                      <div className="flex items-center">
+                        <ChatBubbleLeftIcon className="h-5 w-5 mr-1 text-blue-500" />
+                        {q.comments || 0}
+                      </div>
+                    </div>
+                    <div>{q.updated_at ? `Updated ${new Date(q.updated_at).toLocaleDateString()}` : ''}</div>
+                  </div>
+
+                  <div className="mt-4 space-y-2">
+                    <button
+                      className="w-full border border-blue-400 text-blue-600 rounded py-2 flex items-center justify-center gap-2 hover:bg-blue-50"
+                      onClick={() => setPreviewingQudemo(q)}
+                    >
+                      <PlayIcon className="w-5 h-5" />
+                      Preview Qudemo
+                    </button>
+                    <button className="w-full border border-blue-400 text-blue-600 rounded py-2 flex items-center justify-center gap-2 hover:bg-blue-50">
+                      <UserIcon className="w-5 h-5" />
+                      View Interactions
+                    </button>
                   </div>
                 </div>
-                <div>{`Updated ${q.updated}`}</div>
               </div>
+            ))
+          )}
+        </div>
+      )}
 
-              <div className="mt-4 space-y-2">
-                <button className="w-full border border-blue-400 text-blue-600 rounded py-2 flex items-center justify-center gap-2 hover:bg-blue-50">
-                  <PlayIcon className="w-5 h-5" />
-                  Preview Qudemo
-                </button>
-                <button className="w-full border border-blue-400 text-blue-600 rounded py-2 flex items-center justify-center gap-2 hover:bg-blue-50">
-                  <UserIcon className="w-5 h-5" />
-                  View Interactions
-                </button>
-              </div>
-            </div>
+      {/* Modal for video preview */}
+      {previewingQudemo && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
+          <div className="relative bg-white rounded-lg shadow-lg w-[60vw] h-[60vh] flex flex-col items-center justify-center">
+            <button
+              className="absolute top-4 right-4 bg-white text-gray-900 hover:text-red-500 rounded-full p-2 shadow-lg z-10"
+              style={{ fontSize: '2.5rem', fontWeight: 'bold', lineHeight: 1, border: '2px solid #eee' }}
+              onClick={() => setPreviewingQudemo(null)}
+              title="Close"
+            >
+              ×
+            </button>
+            <ReactPlayer
+              url={previewingQudemo.video_url}
+              width="100%"
+              height="100%"
+              controls={true}
+              playing={true}
+              style={{ borderRadius: '0.5rem', background: 'black' }}
+            />
+            <div className="mt-2 text-lg font-semibold">{previewingQudemo.title}</div>
           </div>
-        ))}
-      </div>
+        </div>
+      )}
     </div>
   );
 };

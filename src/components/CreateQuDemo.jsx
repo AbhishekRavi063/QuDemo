@@ -4,9 +4,17 @@ import {
   PlusIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
+import { useCompany } from "../context/CompanyContext";
 
 const CreateQuDemo = () => {
+  const { company, isLoading } = useCompany();
+  const [videoUrls, setVideoUrls] = useState([""]);
+  const [thumbnailUrl, setThumbnailUrl] = useState("");
   const [sources, setSources] = useState([""]);
+  const [meetingLink, setMeetingLink] = useState("");
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSourceChange = (index, value) => {
     const updated = [...sources];
@@ -23,6 +31,84 @@ const CreateQuDemo = () => {
     setSources(updated);
   };
 
+  const handleVideoUrlChange = (index, value) => {
+    const updated = [...videoUrls];
+    updated[index] = value;
+    setVideoUrls(updated);
+  };
+
+  const addVideoUrlField = () => {
+    setVideoUrls([...videoUrls, ""]);
+  };
+
+  const removeVideoUrlField = (index) => {
+    const updated = videoUrls.filter((_, i) => i !== index);
+    setVideoUrls(updated);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+    if (!videoUrls.some(url => url.trim() !== "")) {
+      setError("At least one Video URL is required.");
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      const token = localStorage.getItem('accessToken');
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/video/videos`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          companyId: company.id,
+          videoUrls: videoUrls.filter(url => url.trim() !== ""),
+          thumbnailUrl,
+          sources: sources.filter(s => s.trim() !== ""),
+          meetingLink
+        })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setSuccess("QuDemo created and video(s) submitted for processing!");
+        setVideoUrls([""]);
+        setThumbnailUrl("");
+        setSources([""]);
+        setMeetingLink("");
+      } else {
+        setError(data.error || "Failed to create QuDemo.");
+      }
+    } catch (err) {
+      setError("Network error. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
+
+  if (!company) {
+    return (
+      <div className="text-center py-12 px-4 sm:px-6 lg:px-8 bg-white rounded-lg shadow-lg">
+        <h3 className="mt-2 text-lg font-medium text-gray-900">
+          No Company Found
+        </h3>
+        <p className="mt-1 text-sm text-gray-600">
+          You need to create a company before you can create a QuDemo.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-6 sm:px-6 lg:px-8 space-y-6 bg-white rounded-lg shadow-lg">
       <h2 className="text-2xl font-semibold">Qudemo Details</h2>
@@ -30,118 +116,155 @@ const CreateQuDemo = () => {
         Create an interactive demo that allows buyers to learn about your
         product at their own pace.
       </p>
-
-      {/* Video URL & Thumbnail */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <label className="block font-medium text-gray-700 mb-1">
-            Video URL
-          </label>
-          <div className="flex flex-col sm:flex-row">
-            <input
-              type="text"
-              placeholder="https://example.com/video.mp4"
-              className="flex-1 border border-gray-300 px-4 py-2 rounded-t-lg sm:rounded-l-lg sm:rounded-tr-none"
-            />
-            <button className="flex items-center justify-center px-3 py-2 border border-t-0 sm:border-t border-l-0 sm:border-l border-gray-300 rounded-b-lg sm:rounded-r-lg sm:rounded-bl-none bg-gray-100 hover:bg-gray-200">
-              <ArrowUpTrayIcon className="h-5 w-5 text-gray-600" />
-              <span className="ml-1 text-sm">Upload</span>
+      <form onSubmit={handleSubmit}>
+        {/* Video URL & Thumbnail */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block font-medium text-gray-700 mb-1">
+              Video URL
+            </label>
+            {videoUrls.map((url, index) => (
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 mb-2" key={index}>
+                <div className="flex flex-col sm:flex-row flex-1 w-full">
+                  <input
+                    type="text"
+                    value={url}
+                    onChange={e => handleVideoUrlChange(index, e.target.value)}
+                    placeholder="https://example.com/video.mp4"
+                    className="flex-1 border border-gray-300 px-4 py-2 rounded-t-lg sm:rounded-l-lg sm:rounded-tr-none"
+                  />
+                  <button type="button" className="flex items-center justify-center px-3 py-2 border border-t-0 sm:border-t border-l-0 sm:border-l border-gray-300 rounded-b-lg sm:rounded-r-lg sm:rounded-bl-none bg-gray-100 hover:bg-gray-200">
+                    <ArrowUpTrayIcon className="h-5 w-5 text-gray-600" />
+                    <span className="ml-1 text-sm">Upload</span>
+                  </button>
+                </div>
+                {videoUrls.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => removeVideoUrlField(index)}
+                    className="text-red-500 hover:text-red-700"
+                  >
+                    <XMarkIcon className="h-5 w-5" />
+                  </button>
+                )}
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={addVideoUrlField}
+              className="flex items-center text-sm text-blue-600 hover:underline mt-1"
+            >
+              <PlusIcon className="h-4 w-4 mr-1" />
+              Add another video
             </button>
+            <p className="text-sm text-gray-500 mt-1">
+              Link to your product demo video or upload a new one.
+            </p>
           </div>
-          <p className="text-sm text-gray-500 mt-1">
-            Link to your product demo video or upload a new one.
-          </p>
-        </div>
 
-        <div>
-          <label className="block font-medium text-gray-700 mb-1">
-            Thumbnail Image URL
-          </label>
-          <div className="flex flex-col sm:flex-row">
-            <input
-              type="text"
-              placeholder="https://example.com/thumbnail.jpg"
-              className="flex-1 border border-gray-300 px-4 py-2 rounded-t-lg sm:rounded-l-lg sm:rounded-tr-none"
-            />
-            <button className="flex items-center justify-center px-3 py-2 border border-t-0 sm:border-t border-l-0 sm:border-l border-gray-300 rounded-b-lg sm:rounded-r-lg sm:rounded-bl-none bg-gray-100 hover:bg-gray-200">
-              <ArrowUpTrayIcon className="h-5 w-5 text-gray-600" />
-              <span className="ml-1 text-sm">Upload</span>
-            </button>
-          </div>
-          <p className="text-sm text-gray-500 mt-1">
-            An image that represents your demo (optional).
-          </p>
-        </div>
-      </div>
-
-      {/* Product Knowledge Sources */}
-      <div>
-        <label className="block font-medium text-gray-700 mb-2">
-          Product Knowledge Source
-        </label>
-
-        {sources.map((source, index) => (
-          <div
-            className="flex flex-col sm:flex-row items-start sm:items-center gap-2 mb-2"
-            key={index}
-          >
-            <div className="flex flex-col sm:flex-row flex-1 w-full">
+          <div>
+            <label className="block font-medium text-gray-700 mb-1">
+              Thumbnail Image URL
+            </label>
+            <div className="flex flex-col sm:flex-row">
               <input
                 type="text"
-                value={source}
-                onChange={(e) => handleSourceChange(index, e.target.value)}
-                placeholder="https://docs.example.com/product-info"
+                value={thumbnailUrl}
+                onChange={e => setThumbnailUrl(e.target.value)}
+                placeholder="https://example.com/thumbnail.jpg"
                 className="flex-1 border border-gray-300 px-4 py-2 rounded-t-lg sm:rounded-l-lg sm:rounded-tr-none"
               />
-              <button className="flex items-center justify-center px-3 py-2 border border-t-0 sm:border-t border-l-0 sm:border-l border-gray-300 rounded-b-lg sm:rounded-r-lg sm:rounded-bl-none bg-gray-100 hover:bg-gray-200">
+              <button type="button" className="flex items-center justify-center px-3 py-2 border border-t-0 sm:border-t border-l-0 sm:border-l border-gray-300 rounded-b-lg sm:rounded-r-lg sm:rounded-bl-none bg-gray-100 hover:bg-gray-200">
                 <ArrowUpTrayIcon className="h-5 w-5 text-gray-600" />
                 <span className="ml-1 text-sm">Upload</span>
               </button>
             </div>
-
-            {sources.length > 1 && (
-              <button
-                type="button"
-                onClick={() => removeSourceField(index)}
-                className="text-red-500 hover:text-red-700"
-              >
-                <XMarkIcon className="h-5 w-5" />
-              </button>
-            )}
+            <p className="text-sm text-gray-500 mt-1">
+              An image that represents your demo (optional).
+            </p>
           </div>
-        ))}
+        </div>
 
-        <button
-          type="button"
-          onClick={addSourceField}
-          className="flex items-center text-sm text-blue-600 hover:underline mt-1"
-        >
-          <PlusIcon className="h-4 w-4 mr-1" />
-          Add another source
-        </button>
-      </div>
+        {/* Product Knowledge Sources */}
+        <div className="mt-6">
+          <label className="block font-medium text-gray-700 mb-2">
+            Product Knowledge Source
+          </label>
 
-      {/* Meeting Link */}
-      <div>
-        <label className="block font-medium text-gray-700 mb-1">
-          Meeting Link
-        </label>
-        <input
-          type="text"
-          placeholder="https://meet.example.com/session"
-          className="w-full border border-gray-300 px-4 py-2 rounded-lg"
-        />
-      </div>
+          {sources.map((source, index) => (
+            <div
+              className="flex flex-col sm:flex-row items-start sm:items-center gap-2 mb-2"
+              key={index}
+            >
+              <div className="flex flex-col sm:flex-row flex-1 w-full">
+                <input
+                  type="text"
+                  value={source}
+                  onChange={e => handleSourceChange(index, e.target.value)}
+                  placeholder="https://docs.example.com/product-info"
+                  className="flex-1 border border-gray-300 px-4 py-2 rounded-t-lg sm:rounded-l-lg sm:rounded-tr-none"
+                />
+                <button type="button" className="flex items-center justify-center px-3 py-2 border border-t-0 sm:border-t border-l-0 sm:border-l border-gray-300 rounded-b-lg sm:rounded-r-lg sm:rounded-bl-none bg-gray-100 hover:bg-gray-200">
+                  <ArrowUpTrayIcon className="h-5 w-5 text-gray-600" />
+                  <span className="ml-1 text-sm">Upload</span>
+                </button>
+              </div>
 
-      {/* Save Button */}
-      <div className="pt-4">
-        <button
-          type="button"
-          className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 transition text-white px-6 py-2 rounded font-medium"
-        >
-          Save QuDemo
-        </button>
-      </div>
+              {sources.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => removeSourceField(index)}
+                  className="text-red-500 hover:text-red-700"
+                >
+                  <XMarkIcon className="h-5 w-5" />
+                </button>
+              )}
+            </div>
+          ))}
+
+          <button
+            type="button"
+            onClick={addSourceField}
+            className="flex items-center text-sm text-blue-600 hover:underline mt-1"
+          >
+            <PlusIcon className="h-4 w-4 mr-1" />
+            Add another source
+          </button>
+        </div>
+
+        {/* Meeting Link */}
+        <div className="mt-6">
+          <label className="block font-medium text-gray-700 mb-1">
+            Meeting Link
+          </label>
+          <input
+            type="text"
+            value={meetingLink}
+            onChange={e => setMeetingLink(e.target.value)}
+            placeholder="https://meet.example.com/session"
+            className="w-full border border-gray-300 px-4 py-2 rounded-lg"
+          />
+        </div>
+
+        {/* Save Button */}
+        <div className="pt-4 relative flex flex-col items-center">
+          {isSubmitting && (
+            <div className="absolute -top-16 left-1/2 -translate-x-1/2 bg-blue-100 border border-blue-300 text-blue-800 px-6 py-3 rounded shadow z-20 text-center w-[320px] animate-fade-in">
+              <div className="font-semibold mb-1">Video is being processed...</div>
+              <div className="text-xs">This may take some time. After processing, you will see your video in the library.</div>
+            </div>
+          )}
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 transition text-white px-6 py-2 rounded font-medium"
+          >
+            {isSubmitting ? 'Saving...' : 'Save QuDemo'}
+          </button>
+        </div>
+        {error && <div className="text-red-600 text-sm mt-2">{error}</div>}
+        {success && <div className="text-green-600 text-sm mt-2">{success}</div>}
+      </form>
     </div>
   );
 };

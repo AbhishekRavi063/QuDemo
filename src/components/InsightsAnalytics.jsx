@@ -27,7 +27,7 @@ export default function AnalyticsPage() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-semibold">Insights & Analytics</h2>
-        <Link to="/createQuDemo">
+        <Link to="/create">
           <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center gap-2">
             + Create Qudemo
           </button>

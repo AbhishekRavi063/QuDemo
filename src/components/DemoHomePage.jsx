@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { ChevronDownIcon } from "@heroicons/react/20/solid";
 import InteractiveDemoPopup from "../components/InteractiveDemoPopup"; // Adjust path if needed
+import VideoDemoChatPopup from "../components/VideoDemoChatPopup";
 
 import {
   ChatBubbleLeftRightIcon,
@@ -15,6 +16,7 @@ const DemoHomePage = () => {
   const [showModal, setShowModal] = useState(false);
   const [showInteractiveDemoPopup, setShowInteractiveDemoPopup] =
     useState(false);
+  const [showVideoDemoChatPopup, setShowVideoDemoChatPopup] = useState(false);
 
   const [formData, setFormData] = useState({
     date: "",
@@ -34,12 +36,18 @@ const DemoHomePage = () => {
     setShowInteractiveDemoPopup(true);
   };
 
+  const openVideoDemoChatPopup = () => {
+    setShowInteractiveDemoPopup(false);
+    setShowVideoDemoChatPopup(true);
+  };
+
   const closeModal = () => {
     setShowModal(false);
     setFormData({ date: "", time: "", notes: "" });
   };
 
   const closeInteractivePopup = () => setShowInteractiveDemoPopup(false);
+  const closeVideoDemoChatPopup = () => setShowVideoDemoChatPopup(false);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -77,15 +85,13 @@ const DemoHomePage = () => {
 
             {showHeroDropdown && (
               <div className="absolute right-0 md:left-0 top-full mt-2 w-56 bg-white shadow-lg rounded-lg text-sm text-gray-800 z-10">
-                <NavLink  to="/VideoDemoChatPopup">
                 <button
-                  // onClick={openInteractivePopup}
+                  onClick={openInteractivePopup}
                   className="w-full text-left px-4 py-2 hover:bg-gray-100"
                 >
                   <div className="font-semibold">Quick Demo</div>
                   <div className="text-xs text-gray-500">Explore with AI assistant</div>
                 </button>
-                </NavLink>
                 <button
                   onClick={openModal}
                   className="w-full text-left px-4 py-2 hover:bg-gray-100 border-t"
@@ -182,7 +188,26 @@ const DemoHomePage = () => {
       )}
 
       {/* Interactive Popup */}
-      {showInteractiveDemoPopup && <InteractiveDemoPopup onClose={closeInteractivePopup} />}
+      {showInteractiveDemoPopup && (
+        <InteractiveDemoPopup
+          onClose={closeInteractivePopup}
+          onSendRocket={openVideoDemoChatPopup}
+        />
+      )}
+
+      {showVideoDemoChatPopup && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 px-4">
+          <div className="w-full max-w-3xl">
+            <VideoDemoChatPopup />
+            <button
+              onClick={closeVideoDemoChatPopup}
+              className="absolute top-4 right-4 text-white text-2xl z-60"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Trusted Section */}
       <section className="py-16 bg-white text-center">

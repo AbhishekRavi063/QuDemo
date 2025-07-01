@@ -53,7 +53,7 @@ const Overview = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <h2 className="text-xl sm:text-2xl font-semibold">Overview</h2>
-        <Link to="/createQuDemo" className="w-full sm:w-auto">
+        <Link to="/create" className="w-full sm:w-auto">
           <button className="w-full sm:w-auto bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center justify-center gap-2">
             Create Qudemo
           </button>
