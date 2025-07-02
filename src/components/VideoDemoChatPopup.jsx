@@ -261,13 +261,13 @@ const VideoDemoChatPopup = () => {
               >
                 <option value="puzzle">Puzzle</option>
                 <option value="mixpanel">Mixpanel</option>
-              </select>
+              </select>*/}
             </div>
             <XMarkIcon
               className="h-5 w-5 cursor-pointer"
               onClick={handleClose}
             />
-          </div> */}
+          </div> 
 
           {/* Chat Messages */}
           <div className="flex-1 p-3 overflow-y-auto space-y-3 bg-gray-50 text-sm">
