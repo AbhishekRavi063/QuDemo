@@ -1,0 +1,64 @@
+services:
+  # Node.js Backend for PoToken Service
+  - type: web
+    name: qudemo-node-backend
+    env: node
+    plan: starter
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: PYTHON_API_BASE_URL
+        value: https://qudemo-python-backend.onrender.com
+      - key: DATABASE_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+    healthCheckPath: /health
+    autoDeploy: true
+    scaling:
+      minInstances: 1
+      maxInstances: 2
+
+  # Python Backend for Video Processing with PoToken
+  - type: web
+    name: qudemo-python-backend
+    env: python
+    plan: starter
+    buildCommand: pip install -r requirements-python312.txt
+    startCommand: python main.py
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0
+      - key: PORT
+        value: 5001
+      - key: NODE_BACKEND_URL
+        value: https://qudemo-node-backend.onrender.com
+      - key: DATABASE_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: PINECONE_API_KEY
+        sync: false
+      - key: PINECONE_INDEX
+        sync: false
+    healthCheckPath: /health
+    autoDeploy: true
+    scaling:
+      minInstances: 1
+      maxInstances: 3
+    disk:
+      name: video-cache
+      mountPath: /tmp
+      sizeGB: 10 
