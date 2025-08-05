@@ -4,7 +4,7 @@ services:
     name: qudemo-node-backend
     env: node
     plan: starter
-    buildCommand: npm install && curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o yt-dlp && chmod +x yt-dlp
+    buildCommand: npm install && apt-get update && apt-get install -y yt-dlp
     startCommand: npm start
     envVars:
       - key: NODE_ENV
@@ -20,6 +20,8 @@ services:
       - key: SUPABASE_SERVICE_ROLE_KEY
         sync: false
       - key: OPENAI_API_KEY
+        sync: false
+      - key: YOUTUBE_OAUTH_TOKEN
         sync: false
     healthCheckPath: /health
     autoDeploy: true
@@ -52,6 +54,8 @@ services:
       - key: PINECONE_API_KEY
         sync: false
       - key: PINECONE_INDEX
+        sync: false
+      - key: YOUTUBE_OAUTH_TOKEN
         sync: false
     healthCheckPath: /health
     autoDeploy: true
