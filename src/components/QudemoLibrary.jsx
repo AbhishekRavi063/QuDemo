@@ -189,7 +189,19 @@ const QudemoLibrary = () => {
   };
 
   useEffect(() => {
-    if (!company || isLoading) return;
+    console.log('🔍 QudemoLibrary useEffect triggered:', {
+      hasCompany: !!company,
+      companyId: company?.id,
+      isLoading,
+      companyName: company?.name
+    });
+    
+    if (!company || isLoading) {
+      console.log('🔍 Skipping fetchQudemos - no company or loading');
+      return;
+    }
+    
+    console.log('🔍 Calling fetchQudemos...');
     fetchQudemos();
   }, [company, isLoading]);
 
@@ -217,6 +229,17 @@ const QudemoLibrary = () => {
   const filteredQudemos = qudemos.filter((q) =>
     q.title?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Debug log for component state
+  console.log('🔍 QudemoLibrary render state:', {
+    qudemosCount: qudemos.length,
+    filteredCount: filteredQudemos.length,
+    loading,
+    error,
+    hasCompany: !!company,
+    companyId: company?.id,
+    searchTerm
+  });
 
   if (isLoading) {
     return (
