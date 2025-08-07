@@ -1,4 +1,5 @@
 import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
+import { getNodeApiUrl } from '../config/api';
 
 const CompanyContext = createContext();
 
@@ -17,16 +18,40 @@ export const CompanyProvider = ({ children }) => {
     }
     setIsLoading(true);
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/companies`, {
+      const apiUrl = getNodeApiUrl('/api/companies');
+      console.log('🏢 CompanyContext API call details:');
+      console.log(`   API URL: ${apiUrl}`);
+      console.log(`   Token exists: ${!!token}`);
+      console.log(`   Token length: ${token?.length || 0}`);
+      
+      const response = await fetch(apiUrl, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
+      
+      console.log(`🏢 Company API Response:`, {
+        status: response.status,
+        ok: response.ok,
+        statusText: response.statusText
+      });
+      
       const data = await response.json();
+      console.log(`🏢 Company API Data:`, {
+        success: data.success,
+        dataLength: data.data?.length || 0,
+        error: data.error,
+        company: data.data?.[0]
+      });
+      
       if (data.success && data.data.length > 0) {
         setCompany(data.data[0]); // Assume one company per user for now
+        console.log('✅ Company set successfully:', data.data[0]);
       } else if (!data.success) {
         setError(data.error || 'Failed to fetch company data.');
+        console.log('❌ Company fetch failed:', data.error);
+      } else {
+        console.log('⚠️ No companies found in response');
       }
     } catch (err) {
       setError('An error occurred while fetching company data.');
