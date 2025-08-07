@@ -5,7 +5,7 @@ import { PaperAirplaneIcon, XMarkIcon, SpeakerWaveIcon, SpeakerXMarkIcon } from 
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useCompany } from "../context/CompanyContext";
-import { getVideoApiUrl } from "../config/api";
+import { getVideoApiUrl, getNodeApiUrl } from "../config/api";
 
 const TypingIndicator = () => (
   <div className="typing-indicator flex space-x-1">
@@ -219,7 +219,7 @@ const VideoDemoChatPopup = ({ leadId }) => {
       const fetchVideos = async () => {
         try {
           const token = localStorage.getItem('accessToken');
-          const res = await fetch(`${process.env.REACT_APP_API_URL}/api/qudemos?companyId=${company.id}`, {
+          const res = await fetch(getNodeApiUrl(`/api/qudemos?companyId=${company.id}`), {
             headers: {
               'Authorization': `Bearer ${token}`
             }
@@ -381,7 +381,7 @@ const VideoDemoChatPopup = ({ leadId }) => {
         // Store interaction in backend
         if (leadId && company?.id) {
           try {
-            await fetch(`${process.env.REACT_APP_API_URL}/api/companies/user-interaction`, {
+            await fetch(getNodeApiUrl(`/api/companies/user-interaction`), {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({

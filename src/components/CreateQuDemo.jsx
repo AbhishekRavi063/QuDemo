@@ -5,6 +5,7 @@ import {
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { useCompany } from "../context/CompanyContext";
+import { getNodeApiUrl } from "../config/api";
 import { CompanyContext } from "../context/CompanyContext";
 
 const CreateQuDemo = () => {
@@ -79,7 +80,7 @@ const CreateQuDemo = () => {
       formData.append('video', file);
       formData.append('companyId', company.id);
       // You may want to add more fields as needed
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/video/upload`, {
+      const res = await fetch(getNodeApiUrl('/api/video/upload'), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -149,7 +150,7 @@ const CreateQuDemo = () => {
       console.log('🔍 Token:', token);
       console.log('🔍 Token type:', typeof token);
       console.log('🔍 Token length:', token?.length);
-      console.log('🔍 API URL:', process.env.REACT_APP_API_URL);
+      console.log('🔍 API URL:', getNodeApiUrl(''));
       
       // Process all videos
       const results = [];
@@ -172,7 +173,7 @@ const CreateQuDemo = () => {
         console.log('🔍 Request body:', requestBody);
         
         try {
-          const res = await fetch(`${process.env.REACT_APP_API_URL}/api/video/videos`, {
+          const res = await fetch(getNodeApiUrl('/api/video/videos'), {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

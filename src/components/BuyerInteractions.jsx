@@ -10,7 +10,7 @@ import {
   EnvelopeIcon,
   BuildingOffice2Icon,
 } from "@heroicons/react/24/outline";
-import { getVideoApiUrl } from "../config/api";
+import { getVideoApiUrl, getNodeApiUrl } from "../config/api";
 
 
 
@@ -90,7 +90,7 @@ const BuyerDetailsModal = ({ buyer, onClose }) => {
     if (buyer?.id) {
       setLoadingQuestions(true);
       const token = localStorage.getItem('accessToken');
-      fetch(`${process.env.REACT_APP_API_URL}/api/companies/user-interaction?lead_id=${buyer.id}`, {
+      fetch(getNodeApiUrl(`/api/companies/user-interaction?lead_id=${buyer.id}`), {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -648,7 +648,7 @@ const BuyerInteractions = () => {
       setLoading(true);
       try {
         const token = localStorage.getItem('accessToken');
-        const res = await fetch(`${process.env.REACT_APP_API_URL}/api/companies/leads`, {
+        const res = await fetch(getNodeApiUrl('/api/companies/leads'), {
           headers: {
             'Authorization': `Bearer ${token}`
           }

@@ -6,6 +6,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { NavLink } from "react-router-dom";
 import { useCompany } from '../context/CompanyContext';
+import { getNodeApiUrl } from '../config/api';
 
 const InteractiveDemoPopup = ({ onClose, onSendRocket }) => {
   const { company } = useCompany();
@@ -62,7 +63,7 @@ const InteractiveDemoPopup = ({ onClose, onSendRocket }) => {
       setIsSubmitting(true);
       setTimeout(async () => {
         try {
-          const res = await fetch(`${process.env.REACT_APP_API_URL}/api/companies/leads`, {
+          const res = await fetch(getNodeApiUrl('/api/companies/leads'), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ ...lead, [currentQ.key]: message, company_id: company?.id }),

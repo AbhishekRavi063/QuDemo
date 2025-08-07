@@ -14,6 +14,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { Link } from 'react-router-dom';
 import { useCompany } from "../context/CompanyContext";
+import { getNodeApiUrl } from "../config/api";
 
 // Helper to extract Loom video ID
 const getLoomVideoId = (url) => {
@@ -125,7 +126,7 @@ const QudemoLibrary = () => {
     setError("");
     try {
       const token = localStorage.getItem('accessToken');
-      const apiUrl = `${process.env.REACT_APP_API_URL}/api/qudemos?companyId=${company.id}`;
+      const apiUrl = getNodeApiUrl(`/api/qudemos?companyId=${company.id}`);
       
       console.log('🔍 Frontend API call details:');
       console.log(`   API URL: ${apiUrl}`);

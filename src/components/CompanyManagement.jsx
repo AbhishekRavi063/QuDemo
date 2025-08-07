@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useCompany } from '../context/CompanyContext';
+import { getNodeApiUrl } from '../config/api';
 
 const CompanyManagement = () => {
   const { refreshCompany } = useCompany();
@@ -25,7 +26,7 @@ const CompanyManagement = () => {
   const fetchCompanies = async () => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/companies`, {
+      const response = await fetch(getNodeApiUrl('/api/companies'), {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -102,7 +103,7 @@ const CompanyManagement = () => {
 
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/companies`, {
+      const response = await fetch(getNodeApiUrl('/api/companies'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -143,7 +144,7 @@ const CompanyManagement = () => {
     setError("");
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/companies/${companyId}`, {
+      const response = await fetch(getNodeApiUrl(`/api/companies/${companyId}`), {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`

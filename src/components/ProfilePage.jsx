@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { getNodeApiUrl } from "../config/api";
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState("personal");
@@ -85,7 +86,7 @@ export default function ProfilePage() {
       formData.append('image', file);
       const token = localStorage.getItem('accessToken');
       const res = await axios.put(
-        `${process.env.REACT_APP_API_URL}/api/users/${userId}/profile-picture`,
+        getNodeApiUrl(`/api/users/${userId}/profile-picture`),
         { imageUrl: await toBase64(file) },
         {
           headers: {
