@@ -141,16 +141,7 @@ const CreateQuDemo = () => {
     try {
       const token = localStorage.getItem('accessToken');
       
-      // Debug logging - Enhanced
-      console.log('🔍 === FRONTEND DEBUG START ===');
-      console.log('🔍 Form submitted');
-      console.log('🔍 Video URLs:', videoUrls);
-      console.log('🔍 Valid video URLs:', validVideoUrls);
-      console.log('🔍 Company ID:', company.id);
-      console.log('🔍 Token:', token);
-      console.log('🔍 Token type:', typeof token);
-      console.log('🔍 Token length:', token?.length);
-      console.log('🔍 API URL:', getNodeApiUrl(''));
+
       
       // Process all videos
       const results = [];
@@ -169,8 +160,7 @@ const CreateQuDemo = () => {
           meetingLink: meetingLink || null
         };
         
-        console.log(`🔍 Processing video ${i + 1}/${validVideoUrls.length}:`, videoUrl);
-        console.log('🔍 Request body:', requestBody);
+
         
         try {
           const res = await fetch(getNodeApiUrl('/api/video/videos'), {
@@ -183,7 +173,6 @@ const CreateQuDemo = () => {
           });
           
           const data = await res.json();
-          console.log(`🔍 Response for video ${i + 1}:`, data);
           
           if (res.ok && data.success) {
             successCount++;
@@ -199,8 +188,7 @@ const CreateQuDemo = () => {
         }
       }
       
-      console.log('🔍 === FRONTEND DEBUG END ===');
-      console.log('🔍 Final results:', results);
+
       
       // Show results to user
       if (successCount > 0 && errorCount === 0) {

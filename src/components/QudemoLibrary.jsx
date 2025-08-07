@@ -128,59 +128,24 @@ const QudemoLibrary = () => {
       const token = localStorage.getItem('accessToken');
       const apiUrl = getNodeApiUrl(`/api/qudemos?companyId=${company.id}`);
       
-      console.log('🔍 Frontend API call details:');
-      console.log(`   API URL: ${apiUrl}`);
-      console.log(`   Company ID: ${company.id}`);
-      console.log(`   Token exists: ${!!token}`);
-      console.log(`   Token length: ${token?.length || 0}`);
-      
       const res = await fetch(apiUrl, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
       
-      console.log(`🔍 API Response:`, {
-        status: res.status,
-        ok: res.ok,
-        statusText: res.statusText
-      });
-      
       const data = await res.json();
-      console.log(`🔍 API Data:`, {
-        success: data.success,
-        dataLength: data.data?.length || 0,
-        error: data.error
-      });
       
       if (res.ok && data.success) {
         const newQudemos = data.data || [];
         const currentCount = newQudemos.length;
         
-        // Check if new videos were added
-        if (lastCount > 0 && currentCount > lastCount) {
-          const newCount = currentCount - lastCount;
-          console.log(`🎉 ${newCount} new video(s) detected!`);
-          // You could add a toast notification here
-        }
-        
         setQudemos(newQudemos);
         setLastCount(currentCount);
-        console.log(`✅ Fetched ${currentCount} qudemos from API`);
-        
-        // Log the first few qudemos
-        if (newQudemos.length > 0) {
-          console.log('📋 First 3 qudemos:');
-          newQudemos.slice(0, 3).forEach((qudemo, index) => {
-            console.log(`  ${index + 1}. ${qudemo.id} - ${qudemo.title} - ${qudemo.created_at}`);
-          });
-        }
       } else {
-        console.log('❌ API call failed:', data.error);
         setError(data.error || "Failed to fetch demos.");
       }
     } catch (err) {
-      console.log('❌ Network error:', err.message);
       setError("Network error. Please try again.");
     } finally {
       setLoading(false);
@@ -189,39 +154,13 @@ const QudemoLibrary = () => {
   };
 
   useEffect(() => {
-    console.log('🔍 QudemoLibrary useEffect triggered:', {
-      hasCompany: !!company,
-      companyId: company?.id,
-      isLoading,
-      companyName: company?.name
-    });
-    
-    if (!company || isLoading) {
-      console.log('🔍 Skipping fetchQudemos - no company or loading');
-      return;
-    }
-    
-    console.log('🔍 Calling fetchQudemos...');
+    if (!company || isLoading) return;
     fetchQudemos();
   }, [company, isLoading]);
 
-  // Auto-refresh every 10 seconds when page is active
-  useEffect(() => {
-    if (!company || isLoading) return;
-    
-    const interval = setInterval(() => {
-      // Only refresh if the page is visible
-      if (!document.hidden) {
-        console.log('🔄 Auto-refreshing qudemos...');
-        fetchQudemos();
-      }
-    }, 10000); // 10 seconds
-
-    return () => clearInterval(interval);
-  }, [company, isLoading]);
+  // Auto-refresh removed
 
   const handleRefresh = () => {
-    console.log('🔄 Manual refresh triggered');
     setRefreshing(true);
     fetchQudemos();
   };
@@ -230,16 +169,7 @@ const QudemoLibrary = () => {
     q.title?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Debug log for component state
-  console.log('🔍 QudemoLibrary render state:', {
-    qudemosCount: qudemos.length,
-    filteredCount: filteredQudemos.length,
-    loading,
-    error,
-    hasCompany: !!company,
-    companyId: company?.id,
-    searchTerm
-  });
+
 
   if (isLoading) {
     return (
