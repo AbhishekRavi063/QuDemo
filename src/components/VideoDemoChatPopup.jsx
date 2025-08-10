@@ -391,28 +391,32 @@ const VideoDemoChatPopup = ({ leadId }) => {
         console.log('🎬 Video URL from response:', targetVideoUrl);
         console.log('🎬 Timestamp from response:', timestamp);
       
-      // Convert Loom URLs to embed format first
+      // Add timestamp to the original URL first
       let finalVideoUrl = targetVideoUrl;
+      if (timestamp > 0) {
+        // Only append timestamp if it's a valid number and greater than 0
+        finalVideoUrl = buildVideoUrlWithTimestamp(targetVideoUrl, timestamp);
+        console.log('🎬 Added timestamp to original URL:', finalVideoUrl);
+      }
+      
+      // Convert Loom URLs to embed format (preserving timestamp)
       if (finalVideoUrl && finalVideoUrl.includes('loom.com')) {
         finalVideoUrl = convertLoomToEmbedUrl(finalVideoUrl);
         console.log('🎬 Converted Loom URL to embed format:', finalVideoUrl);
-        }
+      }
         
-        // Convert Vimeo URLs to embed format if needed
+      // Convert Vimeo URLs to embed format if needed
       if (finalVideoUrl && finalVideoUrl.includes('vimeo.com')) {
         finalVideoUrl = convertVimeoToEmbedUrl(finalVideoUrl);
         console.log('🎬 Converted Vimeo URL to embed format:', finalVideoUrl);
       }
       
-      // Now add timestamp to the embed URL
-      if (timestamp > 0) {
-        // Only append timestamp if it's a valid number and greater than 0
-        finalVideoUrl = buildVideoUrlWithTimestamp(finalVideoUrl, timestamp);
-        console.log('🎬 Final video URL with timestamp:', finalVideoUrl);
-      }
-      
       // Update video URL and timestamp
-      if (finalVideoUrl && finalVideoUrl !== ytVideoUrl) {
+      console.log('🎬 Current video URL:', ytVideoUrl);
+      console.log('🎬 Final video URL:', finalVideoUrl);
+      console.log('🎬 URLs are different:', finalVideoUrl !== ytVideoUrl);
+      
+      if (finalVideoUrl) {
         setYtVideoUrl(finalVideoUrl);
         console.log('🎬 Updated video URL to:', finalVideoUrl);
       }
@@ -421,28 +425,36 @@ const VideoDemoChatPopup = ({ leadId }) => {
       if (timestamp > 0) {
         setCurrentTimestamp(timestamp);
         console.log('🎬 Set timestamp for seeking:', timestamp);
-        }
-        
-        // For Loom videos, we can't seek to timestamps, so we'll show the video
-        // and let the user know about the timestamp if available
-        if (!isFallback && finalVideoUrl) {
-          console.log('🎬 Updating video URL to:', finalVideoUrl);
-          setYtVideoUrl(finalVideoUrl);
-          setCurrentTimestamp(timestamp);
-          setPlayingYt(true);
+      }
+      
+      // Handle video playback
+      if (!isFallback && finalVideoUrl) {
+        console.log('🎬 Setting video to play:', finalVideoUrl);
+        setPlayingYt(true);
           
-          // For Loom videos, show timestamp indicator if seeking fails
+          // For Loom videos, attempt automatic seeking
           if (timestamp > 0 && finalVideoUrl.includes('loom.com')) {
-            // Show timestamp indicator as fallback
+            // Extract video ID and trigger seeking
+            const videoId = extractLoomVideoId(finalVideoUrl);
+            if (videoId) {
+              console.log(`🎬 Triggering Loom seeking for video ${videoId} to ${timestamp}s`);
+              
+              // Wait for iframe to load, then seek
+              setTimeout(() => {
+                seekLoomVideoToTimestamp(videoId, timestamp);
+              }, 2000);
+            }
+            
+            // Also show timestamp indicator as fallback
             setShowLoomTimestamp(true);
             const minutes = Math.floor(timestamp / 60);
             const seconds = Math.floor(timestamp % 60);
             setLoomTimestampMessage(`${minutes}:${seconds.toString().padStart(2, '0')}`);
             
-            // Hide indicator after 10 seconds
-              setTimeout(() => {
+            // Hide indicator after 15 seconds
+            setTimeout(() => {
               setShowLoomTimestamp(false);
-            }, 10000);
+            }, 15000);
           }
         } else if (isFallback) {
           console.log('🎬 Fallback detected, clearing video');
@@ -535,7 +547,7 @@ const VideoDemoChatPopup = ({ leadId }) => {
       return match ? match[1] : null;
     };
 
-    // Function to seek Loom video to timestamp using video download approach
+    // Function to seek Loom video to timestamp - non-destructive methods only
     const seekLoomVideoToTimestamp = (videoId, timestamp) => {
       try {
         console.log(`🎬 Attempting to seek Loom video ${videoId} to ${timestamp}s`);
@@ -547,119 +559,103 @@ const VideoDemoChatPopup = ({ leadId }) => {
 
         const iframe = loomIframeRef.current;
         
-        // Method 1: Try to use Loom's direct video URL (if available)
+        // Method 1: Try direct postMessage to existing iframe (non-destructive)
         setTimeout(() => {
           try {
-            // Try to get the direct video URL from Loom
-            const directVideoUrl = `https://www.loom.com/embed/${videoId}`;
-            console.log(`🎬 Trying direct video URL: ${directVideoUrl}`);
+            console.log('🎬 Method 1: Trying postMessage to existing iframe');
+            iframe.contentWindow.postMessage({
+              type: 'seekTo',
+              time: timestamp
+            }, '*');
             
-            // Create a new iframe with the direct video URL
-            const newIframe = document.createElement('iframe');
-            newIframe.src = directVideoUrl;
-            newIframe.style.width = '100%';
-            newIframe.style.height = '100%';
-            newIframe.frameBorder = '0';
-            newIframe.allowFullScreen = true;
-            newIframe.allow = 'autoplay; encrypted-media; fullscreen';
+            // Also try alternative postMessage formats
+            iframe.contentWindow.postMessage({
+              type: 'setCurrentTime',
+              time: timestamp
+            }, '*');
             
-            // Replace the current iframe
-            iframe.parentNode.replaceChild(newIframe, iframe);
-            loomIframeRef.current = newIframe;
+            iframe.contentWindow.postMessage({
+              type: 'seek',
+              seconds: timestamp
+            }, '*');
             
-            // Try to seek after the new iframe loads
-            newIframe.onload = () => {
-              setTimeout(() => {
-                try {
-                  const newIframeWindow = newIframe.contentWindow;
-                  if (newIframeWindow) {
-                    // Try to inject a script that will seek the video
-                    const script = newIframeWindow.document.createElement('script');
-                    script.textContent = `
-                      (function() {
-                        function seekVideo() {
-                          const video = document.querySelector('video');
-                          if (video) {
-                            console.log('🎬 Found video, seeking to ${timestamp}s');
-                            video.currentTime = ${timestamp};
-                            video.play().then(() => {
-                              console.log('🎬 Video started playing at timestamp');
-                            }).catch(e => {
-                              console.log('🎬 Play failed:', e.message);
-                            });
-                          } else {
-                            console.log('🎬 Video not found, retrying...');
-                            setTimeout(seekVideo, 500);
-                          }
-                        }
-                        seekVideo();
-                      })();
-                    `;
-                    newIframeWindow.document.head.appendChild(script);
-                    console.log('🎬 Injected seek script into new iframe');
-                  }
-                } catch (e) {
-                  console.log('🎬 Script injection failed:', e.message);
-                }
-              }, 2000);
-            };
+            // Try Loom-specific commands
+            iframe.contentWindow.postMessage({
+              type: 'loom-seek',
+              timestamp: timestamp
+            }, '*');
             
-            console.log(`🎬 Created new iframe with direct video URL`);
-          } catch (error) {
-            console.log('🎬 Direct video URL approach failed:', error.message);
+            console.log('🎬 Sent postMessage commands to iframe');
+          } catch (e) {
+            console.log('🎬 PostMessage failed:', e.message);
           }
         }, 1000);
 
-        // Method 2: Try to use a different embed method
+        // Method 2: Try direct video element access through iframe (non-destructive)
         setTimeout(() => {
           try {
-            // Try using a different embed URL format
-            const alternativeUrl = `https://www.loom.com/embed/${videoId}?autoplay=1&hide_share=1&hide_title=1&muted=0&enablejsapi=1&allowfullscreen=1&showinfo=0&controls=1&rel=0&loop=0&modestbranding=1&iv_load_policy=3&cc_load_policy=0&disablekb=0&fs=1&hl=en&playsinline=1&vq=hd720`;
-            console.log(`🎬 Trying alternative embed URL: ${alternativeUrl}`);
-            
-            const newIframe = document.createElement('iframe');
-            newIframe.src = alternativeUrl;
-            newIframe.style.width = '100%';
-            newIframe.style.height = '100%';
-            newIframe.frameBorder = '0';
-            newIframe.allowFullScreen = true;
-            newIframe.allow = 'autoplay; encrypted-media; fullscreen; picture-in-picture';
-            
-            // Replace the current iframe
-            iframe.parentNode.replaceChild(newIframe, iframe);
-            loomIframeRef.current = newIframe;
-            
-            // Try to seek after the new iframe loads
-            newIframe.onload = () => {
-              setTimeout(() => {
-                try {
-                  const newIframeWindow = newIframe.contentWindow;
-                  if (newIframeWindow) {
-                    // Try to access the video element directly
-                    const newIframeDoc = newIframeWindow.document;
-                    const videoElement = newIframeDoc.querySelector('video');
-                    if (videoElement) {
-                      videoElement.currentTime = timestamp;
-                      videoElement.play().then(() => {
-                        console.log('🎬 Alternative iframe video started at timestamp');
-                      }).catch(e => {
-                        console.log('🎬 Alternative iframe play failed:', e.message);
-                      });
-                    }
-                  }
-                } catch (e) {
-                  console.log('🎬 Alternative iframe seek failed:', e.message);
-                }
-              }, 3000);
-            };
-            
-            console.log(`🎬 Created alternative iframe`);
-          } catch (error) {
-            console.log('🎬 Alternative embed approach failed:', error.message);
+            console.log('🎬 Method 2: Trying direct video element access');
+            const iframeWindow = iframe.contentWindow;
+            if (iframeWindow) {
+              // Try to find and control the video element directly
+              const videoElement = iframeWindow.document.querySelector('video');
+              if (videoElement) {
+                console.log('🎬 Found video element, seeking directly');
+                videoElement.currentTime = timestamp;
+                videoElement.play().then(() => {
+                  console.log('🎬 Video started playing at timestamp');
+                }).catch(e => {
+                  console.log('🎬 Direct play failed:', e.message);
+                });
+              } else {
+                console.log('🎬 Video element not found in iframe');
+              }
+            }
+          } catch (e) {
+            console.log('🎬 Direct video access failed:', e.message);
           }
         }, 2000);
 
-        // Method 3: Show user-friendly message about manual seeking
+        // Method 3: Try script injection into existing iframe (non-destructive)
+        setTimeout(() => {
+          try {
+            console.log('🎬 Method 3: Trying script injection into existing iframe');
+            const iframeWindow = iframe.contentWindow;
+            if (iframeWindow) {
+              // Try to inject a script that will seek the video
+              const script = iframeWindow.document.createElement('script');
+              script.textContent = `
+                (function() {
+                  function seekVideo() {
+                    const video = document.querySelector('video');
+                    if (video && video.readyState >= 2) {
+                      console.log('🎬 Found video, seeking to ${timestamp}s');
+                      video.currentTime = ${timestamp};
+                      video.play().then(() => {
+                        console.log('🎬 Video started playing at timestamp');
+                      }).catch(e => {
+                        console.log('🎬 Play failed:', e.message);
+                      });
+                    } else if (video) {
+                      console.log('🎬 Video not ready, retrying...');
+                      setTimeout(seekVideo, 500);
+                    } else {
+                      console.log('🎬 Video not found, retrying...');
+                      setTimeout(seekVideo, 500);
+                    }
+                  }
+                  seekVideo();
+                })();
+              `;
+              iframeWindow.document.head.appendChild(script);
+              console.log('🎬 Injected seek script into existing iframe');
+            }
+          } catch (e) {
+            console.log('🎬 Script injection failed:', e.message);
+          }
+        }, 3000);
+
+        // Method 4: Show user-friendly message about manual seeking
         setTimeout(() => {
           console.log('🎬 All automatic seeking methods failed for Loom video');
           const minutes = Math.floor(timestamp / 60);
@@ -671,7 +667,7 @@ const VideoDemoChatPopup = ({ leadId }) => {
           // Show user-friendly message
           setLoomTimestampMessage(`Please manually seek to ${timeString} in the video`);
           setShowLoomTimestamp(true);
-        }, 4000);
+        }, 5000);
 
       } catch (error) {
         console.warn('🎬 All Loom seek methods failed:', error);
@@ -799,13 +795,14 @@ const VideoDemoChatPopup = ({ leadId }) => {
             {ytVideoUrl ? (
               <div className="relative w-full h-full">
               <HybridVideoPlayer
+                key={ytVideoUrl} // Force re-render when URL changes
                 url={ytVideoUrl}
                 width="100%"
                 height="100%"
                 controls={true}
                 playing={playingYt}
                 startTime={currentTimestamp}
-                  style={{ width: '100%', height: '100%', background: 'black' }}
+                style={{ width: '100%', height: '100%', background: 'black' }}
                 onReady={() => {
                   handleVideoReady();
                   console.log('Video ready for chat');
@@ -813,8 +810,8 @@ const VideoDemoChatPopup = ({ leadId }) => {
                 onPlay={() => {
                   console.log('Video playing in chat');
                 }}
-                  iframeRef={loomIframeRef}
-                />
+                iframeRef={loomIframeRef}
+              />
                 
                 {/* Loom Timestamp Indicator */}
                 {showLoomTimestamp && ytVideoUrl.includes('loom.com') && currentTimestamp > 0 && (
