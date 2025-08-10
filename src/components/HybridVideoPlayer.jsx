@@ -9,18 +9,23 @@ const HybridVideoPlayer = ({
   height = '100%', 
   controls = true, 
   playing = true,
+  startTime = 0,
   onReady,
   onPlay,
   onPause,
   onEnded,
   style = {},
-  className = ''
+  className = '',
+  iframeRef
 }) => {
   const [audioEnabled, setAudioEnabled] = useState(true); // Start with audio enabled
   const [hasUserInteracted, setHasUserInteracted] = useState(true); // Assume user has interacted
-  const iframeRef = useRef(null);
+  const internalIframeRef = useRef(null);
   const videoType = getVideoType(url);
   const canUseCustomPlayer = canPlayWithCustomPlayer(url);
+  
+  // Use external iframeRef if provided, otherwise use internal one
+  const currentIframeRef = iframeRef || internalIframeRef;
 
   // Function to enable audio after user interaction
   const enableAudio = () => {
@@ -28,14 +33,14 @@ const HybridVideoPlayer = ({
     setHasUserInteracted(true);
     
     // For iframe videos, try to send postMessage to enable audio
-    if (iframeRef.current && iframeRef.current.contentWindow) {
+    if (currentIframeRef && currentIframeRef.contentWindow) {
       try {
         // Send unmute command to iframe
-        iframeRef.current.contentWindow.postMessage({ type: 'unmute' }, '*');
+        currentIframeRef.contentWindow.postMessage({ type: 'unmute' }, '*');
         
         // For Loom videos, try specific commands
         if (videoType === 'loom') {
-          iframeRef.current.contentWindow.postMessage({ 
+          currentIframeRef.contentWindow.postMessage({ 
             type: 'setVolume', 
             volume: 1.0 
           }, '*');
@@ -43,7 +48,7 @@ const HybridVideoPlayer = ({
         
         // For YouTube videos, try to unmute
         if (videoType === 'youtube') {
-          iframeRef.current.contentWindow.postMessage({ 
+          currentIframeRef.contentWindow.postMessage({ 
             type: 'unmute' 
           }, '*');
         }
@@ -61,6 +66,12 @@ const HybridVideoPlayer = ({
     setTimeout(() => {
       enableAudio();
     }, 500);
+
+    // For Loom, let the parent component handle seeking to avoid conflicts
+    if (videoType === 'loom' && currentIframeRef && startTime > 0) {
+      console.log(`🎬 Loom iframe loaded, letting parent component handle seeking to ${startTime}s`);
+      // Don't try to seek here - let VideoDemoChatPopup handle it
+    }
   };
 
   // Convert URL to embed format with audio parameters
@@ -77,13 +88,28 @@ const HybridVideoPlayer = ({
         } else if (url.includes('youtu.be/')) {
           videoId = url.split('youtu.be/')[1].split('?')[0];
         }
-        return videoId ? `https://www.youtube.com/embed/${videoId}?autoplay=1&muted=0&enablejsapi=1&controls=1` : url;
+        if (!videoId) return url;
+        const ytStart = startTime && startTime > 0 ? `&start=${Math.floor(startTime)}` : '';
+        return `https://www.youtube.com/embed/${videoId}?autoplay=1&muted=0&enablejsapi=1&controls=1${ytStart}`;
 
       case 'loom':
-        // Convert Loom share URL to embed URL
+        // Convert Loom share URL to embed URL with enhanced API support
         if (url.includes('loom.com/share/')) {
           const videoId = url.split('loom.com/share/')[1].split('?')[0];
-          return videoId ? `https://www.loom.com/embed/${videoId}?autoplay=1&muted=0&hide_share=1&hide_title=1` : url;
+          
+          // Extract existing query parameters (like timestamp)
+          const urlParams = new URLSearchParams(url.split('?')[1] || '');
+          const timestamp = urlParams.get('t');
+          
+          // Build base embed URL with parameters
+          let embedUrl = `https://www.loom.com/embed/${videoId}?autoplay=1&hide_share=1&hide_title=1&muted=0&enablejsapi=1&allowfullscreen=1&showinfo=0&controls=1&rel=0`;
+          
+          // Add timestamp back if it exists
+          if (timestamp) {
+            embedUrl += `&t=${timestamp}`;
+          }
+          
+          return embedUrl;
         }
         return url;
 
@@ -91,7 +117,8 @@ const HybridVideoPlayer = ({
         // Convert Vimeo URL to embed URL
         if (url.includes('vimeo.com/')) {
           const videoId = url.split('vimeo.com/')[1].split('?')[0];
-          return videoId ? `https://player.vimeo.com/video/${videoId}?autoplay=1&muted=0&controls=1` : url;
+          const vimeoTime = startTime && startTime > 0 ? `#t=${Math.floor(startTime)}s` : '';
+          return videoId ? `https://player.vimeo.com/video/${videoId}?autoplay=1&muted=0&controls=1${vimeoTime}` : url;
         }
         return url;
 
@@ -142,7 +169,7 @@ const HybridVideoPlayer = ({
     <div 
       className={`relative ${className}`}
       style={{ width, height, ...style }}
-      onClick={handleUserInteraction}
+      onClick={videoType === 'loom' ? undefined : handleUserInteraction}
     >
       {/* Audio Toggle Button */}
       <button
@@ -162,7 +189,7 @@ const HybridVideoPlayer = ({
 
       {/* Iframe Video */}
       <iframe
-        ref={iframeRef}
+        ref={currentIframeRef}
         src={getEmbedUrl()}
         frameBorder="0"
         webkitallowfullscreen
