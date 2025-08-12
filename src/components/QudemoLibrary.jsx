@@ -136,13 +136,17 @@ const QudemoLibrary = () => {
       
       const data = await res.json();
       
+      console.log('📊 QudemoLibrary fetch response:', { status: res.status, data });
+      
       if (res.ok && data.success) {
         const newQudemos = data.data || [];
         const currentCount = newQudemos.length;
         
+        console.log('📊 Qudemos loaded:', newQudemos.length, 'items');
         setQudemos(newQudemos);
         setLastCount(currentCount);
       } else {
+        console.error('❌ QudemoLibrary fetch failed:', data);
         setError(data.error || "Failed to fetch demos.");
       }
     } catch (err) {

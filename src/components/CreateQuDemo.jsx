@@ -152,6 +152,8 @@ const CreateQuDemo = () => {
         const videoUrl = validVideoUrls[i];
         const source = sources[i] || sources[0] || "loom"; // Use corresponding source or fallback
         
+        console.log(`🎬 Processing video ${i + 1}/${validVideoUrls.length}: ${videoUrl}`);
+        
         // Create request body for this video
         const requestBody = {
           videoUrl: videoUrl,
@@ -174,30 +176,44 @@ const CreateQuDemo = () => {
           
           const data = await res.json();
           
+          console.log(`📊 Video ${i + 1} response:`, { status: res.status, data });
+          
           if (res.ok && data.success) {
             successCount++;
             results.push({ videoUrl, status: 'success', data });
+            console.log(`✅ Video ${i + 1} processed successfully`);
           } else {
             errorCount++;
-            results.push({ videoUrl, status: 'error', error: data.error || 'Unknown error' });
+            const errorMessage = data.error || data.details || 'Unknown error';
+            results.push({ videoUrl, status: 'error', error: errorMessage });
+            console.error(`❌ Video ${i + 1} failed:`, { error: data.error, details: data.details, status: res.status });
           }
         } catch (err) {
           errorCount++;
           results.push({ videoUrl, status: 'error', error: 'Network error' });
           console.error(`❌ Network error for video ${i + 1}:`, err);
         }
+        
+        // Add a small delay between video processing requests to prevent overwhelming the backend
+        if (i < validVideoUrls.length - 1) {
+          console.log(`⏳ Waiting 2 seconds before processing next video...`);
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        }
       }
       
 
       
       // Show results to user
+      console.log('📊 Final results:', { successCount, errorCount, results });
+      
       if (successCount > 0 && errorCount === 0) {
         setSuccess(`Successfully submitted ${successCount} video(s) for processing!`);
       } else if (successCount > 0 && errorCount > 0) {
         setSuccess(`Submitted ${successCount} video(s) successfully. ${errorCount} video(s) failed.`);
         setError(`Failed videos: ${results.filter(r => r.status === 'error').map(r => r.videoUrl).join(', ')}`);
       } else {
-        setError(`Failed to submit any videos. Please try again.`);
+        console.error('❌ All videos failed. Results:', results);
+        setError(`Failed to submit any videos. Please try again. Check console for details.`);
       }
       
       // Reset form if all videos were successful
