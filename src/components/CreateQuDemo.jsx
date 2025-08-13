@@ -8,6 +8,7 @@ import { useCompany } from "../context/CompanyContext";
 import { getNodeApiUrl } from "../config/api";
 import { CompanyContext } from "../context/CompanyContext";
 
+
 const CreateQuDemo = () => {
   const { company, isLoading } = useCompany();
   const [videoUrls, setVideoUrls] = useState([""]);
@@ -19,6 +20,9 @@ const CreateQuDemo = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [lastSubmissionTime, setLastSubmissionTime] = useState(0); // Track last submission time
   const fileInputRefs = useRef([]);
+  
+  // Video processing notification state
+
   
   // New state for Product Knowledge Sources
   const [websiteUrl, setWebsiteUrl] = useState("");
@@ -270,8 +274,6 @@ const CreateQuDemo = () => {
     try {
       const token = localStorage.getItem('accessToken');
       
-
-      
       // Process all videos
       const results = [];
       let successCount = 0;
@@ -291,8 +293,6 @@ const CreateQuDemo = () => {
           meetingLink: meetingLink || null
         };
         
-
-        
         try {
           const res = await fetch(getNodeApiUrl('/api/video/videos'), {
             method: 'POST',
@@ -307,16 +307,16 @@ const CreateQuDemo = () => {
           
           console.log(`📊 Video ${i + 1} response:`, { status: res.status, data });
           
-          if (res.ok && data.success) {
+                    if (res.ok && data.success) {
             successCount++;
             results.push({ videoUrl, status: 'success', data });
-            console.log(`✅ Video ${i + 1} processed successfully`);
           } else {
-            errorCount++;
-            const errorMessage = data.error || data.details || 'Unknown error';
-            results.push({ videoUrl, status: 'error', error: errorMessage });
-            console.error(`❌ Video ${i + 1} failed:`, { error: data.error, details: data.details, status: res.status });
-          }
+          errorCount++;
+          const errorMessage = data.error || data.details || 'Unknown error';
+          results.push({ videoUrl, status: 'error', error: errorMessage });
+          console.error(`❌ Video ${i + 1} failed:`, { error: data.error, details: data.details, status: res.status });
+        }
+          
         } catch (err) {
           errorCount++;
           results.push({ videoUrl, status: 'error', error: 'Network error' });
@@ -332,9 +332,7 @@ const CreateQuDemo = () => {
       
 
       
-      // Show results to user
-      console.log('📊 Final results:', { successCount, errorCount, results });
-      
+      // Update final status
       if (successCount > 0 && errorCount === 0) {
         setSuccess(`Successfully submitted ${successCount} video(s) for processing!`);
       } else if (successCount > 0 && errorCount > 0) {
@@ -344,6 +342,9 @@ const CreateQuDemo = () => {
         console.error('❌ All videos failed. Results:', results);
         setError(`Failed to submit any videos. Please try again. Check console for details.`);
       }
+      
+      // Show results to user
+      console.log('📊 Final results:', { successCount, errorCount, results });
       
       // Reset form if all videos were successful
       if (errorCount === 0) {
@@ -592,6 +593,9 @@ const CreateQuDemo = () => {
         {error && <div className="text-red-600 text-sm mt-2">{error}</div>}
         {success && <div className="text-green-600 text-sm mt-2">{success}</div>}
       </form>
+      
+      {/* Video Processing Notification */}
+      
     </div>
   );
 };

@@ -150,7 +150,7 @@ const QudemoLibrary = () => {
     setError("");
     try {
       const token = localStorage.getItem('accessToken');
-      const apiUrl = getNodeApiUrl(`/api/qudemos?companyId=${company.id}`);
+      const apiUrl = getNodeApiUrl(`/api/qudemos?companyId=${company.id}&limit=100`);
       
       const res = await fetch(apiUrl, {
         headers: {
