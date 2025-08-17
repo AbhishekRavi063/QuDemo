@@ -18,6 +18,8 @@ const CompanyManagement = () => {
   const [formErrors, setFormErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     fetchCompanies();
@@ -142,25 +144,45 @@ const CompanyManagement = () => {
 
   const handleDeleteCompany = async (companyId) => {
     setError("");
+    setDeleteTarget(null); // Close modal immediately
+    setIsDeleting(true);
+    
     try {
       const token = localStorage.getItem('accessToken');
       const response = await fetch(getNodeApiUrl(`/api/companies/${companyId}`), {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
       });
+      
       const data = await response.json();
+      
       if (data.success) {
-        fetchCompanies();
+        // Show success message
+        setError(""); // Clear any existing errors
+        setSuccessMessage(data.message || 'Company deleted successfully');
+        
+        // Refresh the companies list
+        await fetchCompanies();
+        
+        // Clear success message after 5 seconds
+        setTimeout(() => {
+          setSuccessMessage('');
+        }, 5000);
+        
+        // Show success notification (you can implement a toast notification here)
+        console.log('✅ Company deleted successfully:', data.message);
       } else {
         setError(data.error || 'Failed to delete company');
+        console.error('❌ Delete company failed:', data.error);
       }
     } catch (error) {
-      console.error('Delete company error:', error);
+      console.error('❌ Delete company error:', error);
       setError('Network error. Please try again.');
     } finally {
-      setDeleteTarget(null);
+      setIsDeleting(false);
     }
   };
 
@@ -187,6 +209,12 @@ const CompanyManagement = () => {
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
           {error}
+        </div>
+      )}
+
+      {successMessage && (
+        <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-md">
+          {successMessage}
         </div>
       )}
 
@@ -391,19 +419,38 @@ const CompanyManagement = () => {
               <img src={deleteTarget.logo} alt={deleteTarget.display_name + ' logo'} className="w-16 h-16 rounded-full object-cover border-2 border-indigo-100 shadow mb-4" />
             )}
             <h3 className="text-lg font-bold text-gray-900 mb-2 text-center">Delete Company</h3>
-            <p className="text-gray-700 text-center mb-4">Are you sure you want to delete <span className="font-semibold">{deleteTarget.display_name}</span>? This action cannot be undone.</p>
+            <p className="text-gray-700 text-center mb-4">
+              Are you sure you want to delete <span className="font-semibold">{deleteTarget.display_name}</span>?
+            </p>
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+              <p className="text-sm text-red-800">
+                <strong>⚠️ This action will permanently delete:</strong>
+              </p>
+              <ul className="text-sm text-red-700 mt-2 space-y-1">
+                <li>• All video demos and transcripts</li>
+                <li>• All knowledge sources and scraped data</li>
+                <li>• All user interactions and questions</li>
+                <li>• All company data from Pinecone</li>
+                <li>• The company record itself</li>
+              </ul>
+              <p className="text-sm text-red-800 mt-2 font-semibold">
+                This action cannot be undone!
+              </p>
+            </div>
             <div className="flex w-full space-x-3 mt-2">
               <button
                 onClick={() => setDeleteTarget(null)}
-                className="flex-1 bg-gray-100 text-gray-700 hover:bg-gray-200 font-medium py-2 rounded-lg transition-colors duration-150"
+                disabled={isDeleting}
+                className="flex-1 bg-gray-100 text-gray-700 hover:bg-gray-200 font-medium py-2 rounded-lg transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Cancel
               </button>
               <button
                 onClick={() => handleDeleteCompany(deleteTarget.id)}
-                className="flex-1 bg-red-600 text-white hover:bg-red-700 font-medium py-2 rounded-lg transition-colors duration-150"
+                disabled={isDeleting}
+                className="flex-1 bg-red-600 text-white hover:bg-red-700 font-medium py-2 rounded-lg transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Delete
+                {isDeleting ? 'Deleting...' : 'Delete'}
               </button>
             </div>
           </div>

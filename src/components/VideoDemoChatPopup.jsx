@@ -57,12 +57,16 @@ const TypingIndicator = () => (
 );
 
 const cleanMessageText = (text) => {
+  console.log('🔍 cleanMessageText input:', text);
+  
   // Remove unwanted patterns
   let cleaned = text
     .replace(/\*\*/g, "")
     .replace(/\(.*?page.*?\)/gi, "")
     .replace(/\s{2,}/g, " ")
     .trim();
+
+  console.log('🔍 After removing patterns:', cleaned);
 
   // Ensure bullet points and numbers are on new lines
   cleaned = cleaned
@@ -71,6 +75,8 @@ const cleanMessageText = (text) => {
     // New line before numbered lists (1., 2., etc.) if not already at line start
     .replace(/\s*(\d+\.)\s+/g, "<br/>$1 ");
 
+  console.log('🔍 After bullet/number formatting:', cleaned);
+
   // Convert URLs to clickable links
   cleaned = cleaned.replace(
     /(https?:\/\/[^\s]+)/g,
@@ -78,9 +84,16 @@ const cleanMessageText = (text) => {
       `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-blue-600 underline">${url}</a>`
   );
 
+  console.log('🔍 After URL conversion:', cleaned);
+
   // Split at each '– ' and wrap each in <p> tags, preserving the intro as its own paragraph
   const parts = cleaned.split(/(?=– )/g);
-  return parts.map(part => `<p>${part.trim()}</p>`).join("");
+  console.log('🔍 Parts after splitting:', parts);
+  
+  const result = parts.map(part => `<p>${part.trim()}</p>`).join("");
+  console.log('🔍 Final result:', result);
+  
+  return result;
 };
 
 // Helper function to convert Loom share URL to embed URL
@@ -333,6 +346,9 @@ const VideoDemoChatPopup = ({ leadId }) => {
         console.log('🔍 Question:', userQuestion);
         
         const askUrl = getVideoApiUrl(`/ask/${encodeURIComponent(company.name)}`);
+        console.log('🔍 Calling API URL:', askUrl);
+        console.log('🔍 Request payload:', { question: userQuestion });
+        
         const response = await axios.post(askUrl, {
           question: userQuestion
         }, {
@@ -341,37 +357,132 @@ const VideoDemoChatPopup = ({ leadId }) => {
         });
         
         console.log('✅ Q&A response:', response.data);
+        console.log('🎬 Video fields in response:', {
+          video_url: response.data?.video_url,
+          start: response.data?.start,
+          end: response.data?.end,
+          video_title: response.data?.video_title
+        });
         
-        let aiAnswer = 'Sorry, I could not find an answer.';
-        if (response.data && response.data.answer) {
-          aiAnswer = response.data.answer;
+        // Process the response and handle video switching
+        try {
+          const aiAnswer = response.data?.answer || 'Sorry, I could not find an answer.';
+          console.log('🔍 Extracted answer:', aiAnswer);
+          
+          // Check for video navigation data in the response
+          let targetVideoUrl = null;
+          let timestamp = 0;
+          
+          // First check direct video fields (this is how the Python backend sends video data)
+          if (response.data && response.data.video_url) {
+            targetVideoUrl = response.data.video_url;
+            timestamp = response.data.start || 0;
+            console.log('🎬 Using direct video fields:', { url: targetVideoUrl, timestamp });
+          }
+          // Fallback: check sources array for video sources
+          else if (response.data && response.data.sources && response.data.sources.length > 0) {
+            // Find the first video source with a timestamp
+            const videoSource = response.data.sources.find(source => 
+              source.source_type === 'video' && source.start_timestamp
+            );
+            
+            if (videoSource) {
+              targetVideoUrl = videoSource.url;
+              timestamp = videoSource.start_timestamp;
+              console.log('🎬 Found video source in sources:', { url: targetVideoUrl, timestamp });
+            }
+          }
+          
+          // Add message with video switching
+          setMessages(msgs => [...msgs, {
+            sender: "AI",
+            text: aiAnswer,
+            time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+          }]);
+          
+          // Switch video if we have a valid video URL
+          if (targetVideoUrl) {
+            console.log('🎬 Switching to video:', targetVideoUrl, 'at timestamp:', timestamp);
+            setYtVideoUrl(targetVideoUrl);
+            setCurrentTimestamp(timestamp);
+            setPlayingYt(true);
+          }
+          
+          setIsTyping(false);
+          console.log('🔍 Message added successfully');
+          
+        } catch (processingError) {
+          console.error('❌ Processing failed:', processingError);
+          
+          // Fallback - just add the answer
+          setMessages(msgs => [...msgs, {
+            sender: "AI",
+            text: response.data?.answer || "I found an answer but there was an error displaying it. Please try again.",
+            time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+          }]);
+          setIsTyping(false);
         }
-        // Fallback answer detection
-        const fallbackPhrases = [
-          "I do not have that information",
-          "I don't have that information",
-          "I do not know",
-          "I don't know",
-          "no information available",
-          "I couldn't find any information",
-          "Sorry, I couldn't find",
-          "Sorry, I do not have",
-          "I don't have specific details",
-          "not have specific information",
-          "not found in the video transcripts",
-          "please refer to a different source"
-        ];
-        const answerLower = aiAnswer.toLowerCase();
-        const isGenericFallback = (
-          !aiAnswer.trim() ||
-          fallbackPhrases.some(phrase => answerLower.includes(phrase.toLowerCase())) ||
-          ((answerLower.includes('sorry') || answerLower.includes('apologize')) &&
-            (answerLower.includes('not have') || answerLower.includes('do not have') || answerLower.includes('no information'))) ||
-          answerLower.includes('i do not know') ||
-          answerLower.includes("i don't know")
-        );
-        const isFallback = isGenericFallback;
-              // A helper function to build the correct URL
+        
+        // COMMENTED OUT COMPLEX PROCESSING FOR NOW
+        /*
+        // Log sources information
+        if (response.data && response.data.sources) {
+          console.log('🔍 Sources count:', response.data.sources.length);
+          response.data.sources.forEach((source, index) => {
+            console.log(`🔍 Source ${index + 1}:`, {
+              type: source.type || 'unknown',
+              title: source.title || 'unknown',
+              url: source.url || 'unknown',
+              timestamp: source.timestamp || 'none',
+              metadata: source.metadata || 'none'
+            });
+          });
+        }
+        
+        try {
+          console.log('🔍 Starting answer extraction...');
+          let aiAnswer = 'Sorry, I could not find an answer.';
+          if (response.data && response.data.answer) {
+            aiAnswer = response.data.answer;
+            console.log('🔍 Answer extracted successfully');
+          } else {
+            console.log('🔍 No answer found in response');
+          }
+        */
+          
+                      /*
+            console.log('🔍 AI Answer extracted:', aiAnswer);
+            // Fallback answer detection
+            const fallbackPhrases = [
+              "I do not have that information",
+              "I don't have that information",
+              "I do not know",
+              "I don't know",
+              "no information available",
+              "I couldn't find any information",
+              "Sorry, I couldn't find",
+              "Sorry, I do not have",
+              "I don't have specific details",
+              "not have specific information",
+              "not found in the video transcripts",
+              "please refer to a different source"
+            ];
+            const answerLower = aiAnswer.toLowerCase();
+            const isGenericFallback = (
+              !aiAnswer.trim() ||
+              fallbackPhrases.some(phrase => answerLower.includes(phrase.toLowerCase())) ||
+              ((answerLower.includes('sorry') || answerLower.includes('apologize')) &&
+                (answerLower.includes('not have') || answerLower.includes('do not have') || answerLower.includes('no information'))) ||
+              answerLower.includes('i do not know') ||
+              answerLower.includes("i don't know")
+            );
+            const isFallback = isGenericFallback;
+            console.log('🔍 Is fallback answer:', isFallback);
+            */
+        
+        // COMMENTED OUT ALL VIDEO PROCESSING
+        /*
+        // A helper function to build the correct URL
       const buildVideoUrlWithTimestamp = (url, timestamp) => {
         if (!url) {
           return null;
@@ -381,12 +492,28 @@ const VideoDemoChatPopup = ({ leadId }) => {
         return `${url}${separator}t=${Math.floor(timestamp)}`;
       };
 
-        // Video switching logic
-        let targetVideoUrl = response.data && response.data.video_url;
-        let timestamp = typeof response.data.start === 'number' ? response.data.start : 0;
+        console.log('🔍 Starting video switching logic...');
+        
+        try {
+          // Video switching logic
+          let targetVideoUrl = response.data && response.data.video_url;
+          let timestamp = typeof response.data.start === 'number' ? response.data.start : 0;
+        */
+        
+        /*
+        console.log('🔍 About to parse timestamp...');
         if ((!timestamp || isNaN(timestamp)) && response.data && response.data.sources && response.data.sources.length > 0) {
-          timestamp = parseTimestamp(response.data.sources[0]);
+          try {
+            timestamp = parseTimestamp(response.data.sources[0]);
+            console.log('🔍 Timestamp parsed successfully:', timestamp);
+          } catch (timestampError) {
+            console.error('❌ Timestamp parsing error:', timestampError);
+            timestamp = 0;
+          }
         }
+        
+        console.log('🔍 Video URL:', targetVideoUrl);
+        console.log('🔍 Timestamp:', timestamp);
         
         console.log('🎬 Video URL from response:', targetVideoUrl);
         console.log('🎬 Timestamp from response:', timestamp);
@@ -463,12 +590,37 @@ const VideoDemoChatPopup = ({ leadId }) => {
         } else if (!targetVideoUrl) {
           console.log('🎬 No video URL in response, keeping current video');
         }
-        setMessages(msgs => [...msgs, {
-          sender: "AI",
-          text: cleanMessageText(aiAnswer),
-          time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-        }]);
-        setIsTyping(false);
+        } catch (videoError) {
+          console.error('❌ Video switching error:', videoError);
+          console.error('❌ Video error details:', videoError.message);
+          console.error('❌ Video error stack:', videoError.stack);
+        }
+        try {
+          const cleanedAnswer = cleanMessageText(aiAnswer);
+          console.log('🔍 Original answer:', aiAnswer);
+          console.log('🔍 Cleaned answer:', cleanedAnswer);
+          
+          setMessages(msgs => [...msgs, {
+            sender: "AI",
+            text: cleanedAnswer,
+            time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+          }]);
+          setIsTyping(false);
+          console.log('🔍 Message added to UI successfully');
+        } catch (messageError) {
+          console.error('❌ Message setting error:', messageError);
+          console.error('❌ Message error details:', messageError.message);
+          console.error('❌ Message error stack:', messageError.stack);
+          
+          // Fallback: add a simple text message
+          setMessages(msgs => [...msgs, {
+            sender: "AI",
+            text: aiAnswer,
+            time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+          }]);
+          setIsTyping(false);
+        }
+        */
         // Store interaction in backend
         if (leadId && company?.id) {
           try {
@@ -479,22 +631,41 @@ const VideoDemoChatPopup = ({ leadId }) => {
                 lead_id: leadId,
                 company_id: company.id,
                 question: userQuestion,
-                answer: aiAnswer
+                answer: response.data?.answer || 'No answer available'
               })
             });
           } catch (err) {
             // Optionally handle error
           }
         }
-      } catch (err) {
-        let errorMessage = "Sorry, I couldn't process your question right now. Please try again.";
-        setMessages(msgs => [...msgs, {
-          sender: "AI",
-          text: cleanMessageText(errorMessage),
-          time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-        }]);
-        setIsTyping(false);
-      }
+              } catch (err) {
+          console.error('❌ Q&A API Error:', err);
+          console.error('❌ Error details:', err.response?.data || err.message);
+          console.error('❌ Error status:', err.response?.status);
+          
+          let errorMessage = "Sorry, I couldn't process your question right now. Please try again.";
+          setMessages(msgs => [...msgs, {
+            sender: "AI",
+            text: cleanMessageText(errorMessage),
+            time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+          }]);
+          setIsTyping(false);
+        }
+              /*
+        } catch (processingError) {
+          console.error('❌ Response processing error:', processingError);
+          console.error('❌ Processing error details:', processingError.message);
+          console.error('❌ Processing error stack:', processingError.stack);
+          
+          let errorMessage = "Sorry, I couldn't process your question right now. Please try again.";
+          setMessages(msgs => [...msgs, {
+            sender: "AI",
+            text: cleanMessageText(errorMessage),
+            time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+          }]);
+          setIsTyping(false);
+        }
+        */
     };
 
     const handleClose = () => navigate("/");

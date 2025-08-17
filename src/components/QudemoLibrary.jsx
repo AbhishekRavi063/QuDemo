@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import ReactPlayer from "react-player";
 import HybridVideoPlayer from "./HybridVideoPlayer";
+import KnowledgeDataPreview from "./KnowledgeDataPreview";
 import {
   EyeIcon,
   ChatBubbleLeftIcon,
@@ -26,6 +27,7 @@ const getLoomVideoId = (url) => {
 };
 
 function getThumbnailUrl(q) {
+  // If there's a custom thumbnail URL, use it
   if (q.thumbnail_url) return q.thumbnail_url;
   
   // If YouTube link, extract video ID and return the default thumbnail
@@ -36,21 +38,22 @@ function getThumbnailUrl(q) {
     return `https://img.youtube.com/vi/${ytMatch[1]}/hqdefault.jpg`;
   }
   
-  // Loom logic
+  // Loom logic - only try if we have a valid Loom ID
   const loomId = getLoomVideoId(q.video_url);
-  if (loomId) {
+  if (loomId && loomId.length > 10) { // Basic validation for Loom ID
     return `https://cdn.loom.com/sessions/thumbnails/${loomId}-with-play.gif`;
   }
   
-  // Vimeo logic
+  // Vimeo logic - only try if we have a valid Vimeo URL
   if (q.video_url && q.video_url.includes('vimeo.com/')) {
     const videoId = q.video_url.split('vimeo.com/')[1].split('?')[0].split('/')[0];
-    if (videoId) {
+    if (videoId && videoId.length > 5) { // Basic validation for Vimeo ID
       return `https://vumbnail.com/${videoId}.jpg`;
     }
   }
   
-  return "https://via.placeholder.com/400x200?text=No+Thumbnail";
+  // Default fallback - use data URL to avoid network issues
+  return "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzY2NzM4NyIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIFRodW1ibmFpbDwvdGV4dD4KPC9zdmc+";
 }
 
 // Helper function to convert Loom share URL to embed URL
@@ -109,25 +112,34 @@ const QudemoLibrary = () => {
   const fetchKnowledgeSourceContent = async (sourceId) => {
     setLoadingContent(true);
     try {
+      console.log(`🔍 DEBUG: Fetching content for source: ${sourceId}`);
+      console.log(`🔍 DEBUG: Company name: ${company.name}`);
+      
+      // Call Node.js backend (which will then call Python backend)
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(getNodeApiUrl(`/api/knowledge/source/${sourceId}/content`), {
+      const response = await fetch(getNodeApiUrl(`/api/knowledge/source/${sourceId}/content?company_name=${encodeURIComponent(company.name)}`), {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
       
+      console.log('🔍 DEBUG: Response status:', response.status);
+      console.log('🔍 DEBUG: Response headers:', response.headers);
+      
       if (response.ok) {
         const data = await response.json();
-        console.log('📄 Knowledge source content response:', data);
+        console.log('🔍 DEBUG: Response data:', data);
         
         if (data.success && data.data) {
+          console.log('🔍 DEBUG: Setting knowledge source content:', data.data);
           setKnowledgeSourceContent(data.data);
         } else {
-          console.error('Failed to fetch knowledge source content:', data);
+          console.error('❌ Failed to fetch knowledge source content:', data);
           setKnowledgeSourceContent({ error: data.error || 'Failed to load content' });
         }
       } else {
-        console.error('Failed to fetch knowledge source content:', response.status);
+        console.error('❌ Failed to fetch knowledge source content:', response.status);
+        console.error('❌ Response text:', await response.text());
         setKnowledgeSourceContent({ error: 'Failed to load content' });
       }
     } catch (err) {
@@ -140,6 +152,11 @@ const QudemoLibrary = () => {
 
   // Function to preview knowledge source
   const handlePreviewKnowledgeSource = async (source) => {
+    console.log('🔍 DEBUG: Preview clicked for source:', source);
+    console.log('🔍 DEBUG: Source ID:', source.id);
+    console.log('🔍 DEBUG: Source URL:', source.source_url);
+    console.log('🔍 DEBUG: Source title:', source.title);
+    
     setPreviewingKnowledgeSource(source);
     setKnowledgeSourceContent(null);
     await fetchKnowledgeSourceContent(source.id);
@@ -184,6 +201,10 @@ const QudemoLibrary = () => {
   const fetchKnowledgeSources = async () => {
     try {
       const token = localStorage.getItem('accessToken');
+      console.log(`🔍 DEBUG: Fetching knowledge sources for company: "${company.name}"`);
+      console.log(`🔍 DEBUG: Company object:`, company);
+      
+      // Call Node.js backend (which will then call Python backend)
       const response = await fetch(getNodeApiUrl(`/api/knowledge/sources/${company.name}`), {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -192,13 +213,18 @@ const QudemoLibrary = () => {
 
       if (response.ok) {
         const data = await response.json();
-        // Filter out video content from knowledge sources tab
+        console.log(`🔍 DEBUG: Node.js API response:`, data);
+        
+        // Filter out video content from knowledge sources tab and only show completed sources
         // Videos are displayed in the Videos tab, so we only show documents, websites, and other non-video content here
         const nonVideoSources = (data.data || []).filter(source => 
           source.source_type !== 'video' && 
           source.source_type !== 'youtube' && 
-          source.source_type !== 'loom'
+          source.source_type !== 'loom' &&
+          (source.status === 'processed' || !source.status) // Only show processed sources
         );
+        
+        console.log(`🔍 DEBUG: After frontend filtering: ${nonVideoSources.length} non-video sources`);
         setKnowledgeSources(nonVideoSources);
       }
     } catch (err) {
@@ -224,7 +250,16 @@ const QudemoLibrary = () => {
     q.title?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-
+  // Filter knowledge sources to only show completed ones
+  console.log('🔍 DEBUG: Current knowledgeSources state:', knowledgeSources);
+  console.log('🔍 DEBUG: Current searchTerm:', searchTerm);
+  console.log('🔍 DEBUG: Current knowledgeSourceContent state:', knowledgeSourceContent);
+  
+  const filteredKnowledgeSources = knowledgeSources.filter((source) =>
+    source.title?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+  
+  console.log('🔍 DEBUG: Filtered knowledge sources:', filteredKnowledgeSources);
 
   if (isLoading) {
     return (
@@ -361,7 +396,10 @@ const QudemoLibrary = () => {
                       className="w-full h-40 object-cover"
                       onError={(e) => {
                         console.warn(`Failed to load thumbnail for ${q.title}:`, e.target.src);
-                        e.target.src = "https://via.placeholder.com/400x200?text=Thumbnail+Error";
+                        // Prevent infinite loops by checking if we're already using the fallback
+                        if (!e.target.src.includes('data:image/svg+xml')) {
+                          e.target.src = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzY2NzM4NyIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPlRodW1ibmFpbCBFcnJvcjwvdGV4dD4KPC9zdmc+";
+                        }
                       }}
                     />
                   )}
@@ -373,8 +411,10 @@ const QudemoLibrary = () => {
                 </div>
 
                 <div className="p-4 flex flex-col flex-grow">
-                  <div className="text-blue-900 font-semibold text-lg mb-1">
-                    {q.video_name || q.title}
+                  <div className="flex justify-between items-start mb-2">
+                    <div className="text-blue-900 font-semibold text-lg">
+                      {q.video_name || q.title}
+                    </div>
                   </div>
                   <p className="text-gray-600 mt-1 flex-grow">{q.description}</p>
 
@@ -420,111 +460,13 @@ const QudemoLibrary = () => {
         )
       ) : (
         // Knowledge Sources Tab Content
-        knowledgeSources.length === 0 ? (
-          <div className="text-center text-gray-500 py-12">
-            <div className="mb-4">
-              <div className="text-6xl mb-4">📚</div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No Knowledge Sources Yet</h3>
-              <p className="text-gray-600 mb-4">
-                Add website content, PDFs, and documents to enhance your AI assistant's knowledge base. 
-                <br />
-                <span className="text-sm text-gray-500">(Videos are shown in the Videos tab)</span>
-              </p>
-              <Link to="/create">
-                <button className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
-                  Add Knowledge Sources
-                </button>
-              </Link>
-            </div>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {knowledgeSources.map((source) => (
-              <div
-                key={source.id}
-                className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200"
-              >
-                <div className="p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className={`w-3 h-3 rounded-full ${
-                      source.status === 'processed' ? 'bg-green-500' : 
-                      source.status === 'processing' ? 'bg-yellow-500' : 'bg-red-500'
-                    }`}></div>
-                    <span className={`text-xs px-2 py-1 rounded-full capitalize ${
-                      source.status === 'processed' ? 'bg-green-100 text-green-800' : 
-                      source.status === 'processing' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'
-                    }`}>
-                      {source.status}
-                    </span>
-                  </div>
-                  
-                  <div className="mb-3">
-                    <h3 className="font-semibold text-gray-900 mb-1">{source.title}</h3>
-                    <p className="text-sm text-gray-600 line-clamp-2">{source.description}</p>
-                  </div>
-                  
-                  <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
-                    <span className="capitalize">{source.source_type}</span>
-                    <span>Created: {new Date(source.created_at).toLocaleDateString()}</span>
-                  </div>
-                  
-                  {source.source_url && (
-                    <div className="mb-3">
-                      <a
-                        href={source.source_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:text-blue-800 text-sm break-all"
-                      >
-                        {source.source_url}
-                      </a>
-                    </div>
-                  )}
-                  
-                  <div className="flex justify-between items-center">
-                    <div className="text-xs text-gray-500 space-y-1">
-                      <div>Created: {new Date(source.created_at).toLocaleString()}</div>
-                      <div>Processed: {source.processed_at ? new Date(source.processed_at).toLocaleString() : 'Pending'}</div>
-                      <div>Updated: {new Date(source.updated_at).toLocaleString()}</div>
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        className="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1"
-                        onClick={() => handlePreviewKnowledgeSource(source)}
-                      >
-                        <EyeIcon className="h-4 w-4" />
-                        Preview
-                      </button>
-                      <button
-                        className="text-red-600 hover:text-red-800 text-sm"
-                        onClick={async () => {
-                          if (window.confirm('Are you sure you want to delete this knowledge source?')) {
-                            try {
-                              const token = localStorage.getItem('accessToken');
-                              const response = await fetch(getNodeApiUrl(`/api/knowledge/source/${source.id}`), {
-                                method: 'DELETE',
-                                headers: {
-                                  'Authorization': `Bearer ${token}`
-                                }
-                              });
-                              if (response.ok) {
-                                fetchKnowledgeSources();
-                              }
-                            } catch (err) {
-                              console.error('Failed to delete knowledge source:', err);
-                            }
-                          }
-                        }}
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )
+        <KnowledgeDataPreview 
+          companyName={company?.name || "Demo Company"} 
+          onDataUpdate={(updatedItems) => {
+            console.log('Knowledge data updated:', updatedItems.length, 'items remaining');
+            // You can add additional logic here if needed
+          }}
+        />
       )}
 
       {/* Modal for video preview */}
