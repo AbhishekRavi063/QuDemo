@@ -29,6 +29,9 @@ const CreateQuDemo = () => {
   const [documentFile, setDocumentFile] = useState(null);
   const [isProcessingKnowledge, setIsProcessingKnowledge] = useState(false);
   const [knowledgeSources, setKnowledgeSources] = useState([]);
+  const [currentTaskId, setCurrentTaskId] = useState(null);
+  const [scrapingProgress, setScrapingProgress] = useState(null);
+  const [progressInterval, setProgressInterval] = useState(null);
   const documentInputRef = useRef(null);
 
   const handleSourceChange = (index, value) => {
@@ -73,8 +76,51 @@ const CreateQuDemo = () => {
     }
   };
 
+  // Progress tracking functions
+  const startProgressTracking = (taskId) => {
+    setCurrentTaskId(taskId);
+    setScrapingProgress({
+      status: "starting",
+      progress: { current: 0, total: 0, percentage: 0 },
+      stats: { urls_scraped: 0, urls_skipped: 0 }
+    });
+    
+    // Poll for progress updates every 5 seconds
+    const interval = setInterval(async () => {
+      try {
+        const response = await fetch(getNodeApiUrl(`/scraping-progress/${taskId}`));
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success) {
+            setScrapingProgress(data.data);
+            
+            // Stop tracking if complete
+            if (data.data.status === "completed" || data.data.status === "failed") {
+              clearInterval(interval);
+              setProgressInterval(null);
+              setCurrentTaskId(null);
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Progress tracking error:", err);
+      }
+    }, 5000);
+    
+    setProgressInterval(interval);
+  };
+
+  const stopProgressTracking = () => {
+    if (progressInterval) {
+      clearInterval(progressInterval);
+      setProgressInterval(null);
+    }
+    setCurrentTaskId(null);
+    setScrapingProgress(null);
+  };
+
   const processWebsiteKnowledge = async () => {
-    if (!websiteUrl.trim()) {
+    if (!websiteUrl) {
       setError("Please enter a website URL");
       return;
     }
@@ -83,8 +129,16 @@ const CreateQuDemo = () => {
     setError("");
     setSuccess("");
 
+    // Show initial progress message
+    setSuccess("🧠 Starting smart website processing... This will only scrape demo-relevant content.");
+
     try {
       const token = localStorage.getItem('accessToken');
+      
+      // Create AbortController for timeout handling
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 7200000); // 120 minutes timeout
+      
       const response = await fetch(getNodeApiUrl('/api/knowledge/process-website'), {
         method: 'POST',
         headers: {
@@ -94,13 +148,21 @@ const CreateQuDemo = () => {
         body: JSON.stringify({
           companyName: company.name,
           websiteUrl: websiteUrl
-        })
+        }),
+        signal: controller.signal
       });
+
+      clearTimeout(timeoutId);
 
       const data = await response.json();
 
       if (response.ok && data.success) {
-        setSuccess("Website knowledge processed successfully!");
+        // Start progress tracking if task ID is provided
+        if (data.data && data.data.task_id) {
+          startProgressTracking(data.data.task_id);
+        }
+        
+        setSuccess("✅ Website processing started! Monitoring progress...");
         setWebsiteUrl("");
         // Refresh knowledge sources list
         fetchKnowledgeSources();
@@ -108,7 +170,11 @@ const CreateQuDemo = () => {
         setError(data.error || "Failed to process website");
       }
     } catch (err) {
-      setError("Network error. Please try again.");
+      if (err.name === 'AbortError') {
+        setError("⏱️ Website processing is taking longer than expected. Please check the status in a few minutes.");
+      } else {
+        setError("Network error. Please try again.");
+      }
     } finally {
       setIsProcessingKnowledge(false);
     }
@@ -170,6 +236,12 @@ const CreateQuDemo = () => {
       if (response.ok) {
         const data = await response.json();
         setKnowledgeSources(data.data || []);
+        
+        // Check if any sources are still processing
+        const processingSources = data.data?.filter(source => source.status === 'processing') || [];
+        if (processingSources.length > 0) {
+          setSuccess(`⏳ ${processingSources.length} knowledge source(s) still processing... Please wait.`);
+        }
       }
     } catch (err) {
       console.error("Failed to fetch knowledge sources:", err);
@@ -360,6 +432,88 @@ const CreateQuDemo = () => {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  // Progress display component
+  const ProgressDisplay = () => {
+    if (!scrapingProgress) return null;
+
+    const { status, progress, stats, current_url } = scrapingProgress;
+    
+    const getStatusColor = (status) => {
+      switch (status) {
+        case 'completed': return 'text-green-600';
+        case 'failed': return 'text-red-600';
+        case 'processing': return 'text-blue-600';
+        default: return 'text-gray-600';
+      }
+    };
+
+    const getStatusIcon = (status) => {
+      switch (status) {
+        case 'completed': return '✅';
+        case 'failed': return '❌';
+        case 'processing': return '🔄';
+        default: return '⏳';
+      }
+    };
+
+    return (
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-lg font-semibold text-blue-900">
+            {getStatusIcon(status)} Smart Scraping Progress
+          </h3>
+          <span className={`font-medium ${getStatusColor(status)}`}>
+            {status.charAt(0).toUpperCase() + status.slice(1)}
+          </span>
+        </div>
+        
+        {progress && (
+          <div className="mb-3">
+            <div className="flex justify-between text-sm text-gray-600 mb-1">
+              <span>Progress: {progress.current}/{progress.total}</span>
+              <span>{progress.percentage.toFixed(1)}%</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div 
+                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                style={{ width: `${progress.percentage}%` }}
+              ></div>
+            </div>
+          </div>
+        )}
+        
+        {stats && (
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div className="bg-white rounded p-2">
+              <div className="font-medium text-green-700">✅ Scraped</div>
+              <div className="text-lg font-bold">{stats.urls_scraped}</div>
+            </div>
+            <div className="bg-white rounded p-2">
+              <div className="font-medium text-orange-700">⏭️ Skipped</div>
+              <div className="text-lg font-bold">{stats.urls_skipped}</div>
+            </div>
+          </div>
+        )}
+        
+        {current_url && (
+          <div className="mt-3 text-sm text-gray-600">
+            <div className="font-medium">Current URL:</div>
+            <div className="truncate">{current_url}</div>
+          </div>
+        )}
+        
+        {status === 'completed' && (
+          <button
+            onClick={stopProgressTracking}
+            className="mt-3 text-sm text-blue-600 hover:text-blue-800"
+          >
+            Close Progress
+          </button>
+        )}
+      </div>
+    );
   };
 
   if (isLoading) {
@@ -595,7 +749,7 @@ const CreateQuDemo = () => {
       </form>
       
       {/* Video Processing Notification */}
-      
+      {scrapingProgress && <ProgressDisplay />}
     </div>
   );
 };
