@@ -548,16 +548,7 @@ ${metadata.description || 'Website content has been processed and is available f
             <p className="text-gray-600">Extracted and processed knowledge data for {companyName || 'your company'}</p>
           </div>
           <div className="flex items-center gap-4">
-            <button
-              onClick={() => window.location.reload()}
-              className="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1"
-              title="Refresh data"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              Refresh
-            </button>
+            {/* Removed manual refresh button to prevent auto-refresh issues */}
             <div className="text-right">
               <div className="text-3xl font-bold text-blue-600">{knowledgeSources.length}</div>
               <div className="text-sm text-gray-500">Total Sources</div>

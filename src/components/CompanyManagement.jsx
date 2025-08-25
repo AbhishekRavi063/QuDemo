@@ -10,7 +10,6 @@ const CompanyManagement = () => {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
-    displayName: '',
     description: '',
     website: '',
     logo: ''
@@ -59,11 +58,7 @@ const CompanyManagement = () => {
       newErrors.name = 'Company name can only contain letters, numbers, hyphens, and underscores';
     }
 
-    if (!formData.displayName.trim()) {
-      newErrors.displayName = 'Display name is required';
-    } else if (formData.displayName.length < 2) {
-      newErrors.displayName = 'Display name must be at least 2 characters';
-    }
+
 
     if (formData.website && !/^https?:\/\/.+/.test(formData.website)) {
       newErrors.website = 'Website must be a valid URL';
@@ -120,7 +115,6 @@ const CompanyManagement = () => {
         // Reset form and close modal
         setFormData({
           name: '',
-          displayName: '',
           description: '',
           website: '',
           logo: ''
@@ -225,14 +219,14 @@ const CompanyManagement = () => {
             {company.logo && (
               <img
                 src={company.logo}
-                alt={company.display_name + ' logo'}
+                alt={company.name + ' logo'}
                 className="w-20 h-20 rounded-full object-cover border-2 border-indigo-100 shadow mb-4"
-                onError={e => { e.target.onerror = null; e.target.src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(company.display_name); }}
+                onError={e => { e.target.onerror = null; e.target.src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(company.name); }}
               />
             )}
-            {/* Display Name and Status */}
+            {/* Company Name and Status */}
             <div className="flex items-center justify-between w-full mb-2">
-              <h3 className="text-xl font-bold text-gray-900 truncate">{company.display_name}</h3>
+              <h3 className="text-xl font-bold text-gray-900 truncate">{company.name}</h3>
               <span className={`ml-2 px-3 py-1 text-xs font-semibold rounded-full ${
                 company.is_active 
                   ? 'bg-green-100 text-green-800' 
@@ -281,7 +275,7 @@ const CompanyManagement = () => {
                 Video API
               </button>
               <button
-                onClick={() => setDeleteTarget({id: company.id, display_name: company.display_name, logo: company.logo})}
+                onClick={() => setDeleteTarget({id: company.id, name: company.name, logo: company.logo})}
                 className="flex-1 bg-red-50 text-red-600 hover:bg-red-100 font-medium py-2 rounded-lg transition-colors duration-150"
               >
                 Delete
@@ -319,28 +313,14 @@ const CompanyManagement = () => {
                     className={`mt-1 block w-full px-3 py-2 border ${
                       formErrors.name ? 'border-red-300' : 'border-gray-300'
                     } rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500`}
-                    placeholder="my-company"
+                    placeholder="My Company (e.g., acme-corp)"
                   />
                   {formErrors.name && (
                     <p className="mt-1 text-sm text-red-600">{formErrors.name}</p>
                   )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Display Name</label>
-                  <input
-                    type="text"
-                    name="displayName"
-                    value={formData.displayName}
-                    onChange={handleInputChange}
-                    className={`mt-1 block w-full px-3 py-2 border ${
-                      formErrors.displayName ? 'border-red-300' : 'border-gray-300'
-                    } rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500`}
-                    placeholder="My Company"
-                  />
-                  {formErrors.displayName && (
-                    <p className="mt-1 text-sm text-red-600">{formErrors.displayName}</p>
-                  )}
+                  <p className="mt-1 text-sm text-gray-500">
+                    Use letters, numbers, hyphens, and underscores only. This will be used for all internal mappings.
+                  </p>
                 </div>
 
                 <div>

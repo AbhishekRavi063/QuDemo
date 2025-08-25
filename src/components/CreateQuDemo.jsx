@@ -7,10 +7,14 @@ import {
 import { useCompany } from "../context/CompanyContext";
 import { getNodeApiUrl } from "../config/api";
 import { CompanyContext } from "../context/CompanyContext";
+import { useNavigate } from "react-router-dom";
 
 
 const CreateQuDemo = () => {
   const { company, isLoading } = useCompany();
+  const navigate = useNavigate();
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
   const [videoUrls, setVideoUrls] = useState([""]);
   const [thumbnailUrl, setThumbnailUrl] = useState("");
   const [sources, setSources] = useState([""]);
@@ -94,16 +98,14 @@ const CreateQuDemo = () => {
           if (data.success) {
             setScrapingProgress(data.data);
             
-            // Stop tracking if complete
-            if (data.data.status === "completed" || data.data.status === "failed") {
-              clearInterval(interval);
-              setProgressInterval(null);
-              setCurrentTaskId(null);
+            // Stop tracking if completed or failed
+            if (data.data.status === 'completed' || data.data.status === 'failed') {
+              stopProgressTracking();
             }
           }
         }
       } catch (err) {
-        console.error("Progress tracking error:", err);
+        console.error("Failed to fetch progress:", err);
       }
     }, 5000);
     
@@ -117,67 +119,6 @@ const CreateQuDemo = () => {
     }
     setCurrentTaskId(null);
     setScrapingProgress(null);
-  };
-
-  const processWebsiteKnowledge = async () => {
-    if (!websiteUrl) {
-      setError("Please enter a website URL");
-      return;
-    }
-
-    setIsProcessingKnowledge(true);
-    setError("");
-    setSuccess("");
-
-    // Show initial progress message
-    setSuccess("🧠 Starting smart website processing... This will only scrape demo-relevant content.");
-
-    try {
-      const token = localStorage.getItem('accessToken');
-      
-      // Create AbortController for timeout handling
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 7200000); // 120 minutes timeout
-      
-      const response = await fetch(getNodeApiUrl('/api/knowledge/process-website'), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          companyName: company.name,
-          websiteUrl: websiteUrl
-        }),
-        signal: controller.signal
-      });
-
-      clearTimeout(timeoutId);
-
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        // Start progress tracking if task ID is provided
-        if (data.data && data.data.task_id) {
-          startProgressTracking(data.data.task_id);
-        }
-        
-        setSuccess("✅ Website processing started! Monitoring progress...");
-        setWebsiteUrl("");
-        // Refresh knowledge sources list
-        fetchKnowledgeSources();
-      } else {
-        setError(data.error || "Failed to process website");
-      }
-    } catch (err) {
-      if (err.name === 'AbortError') {
-        setError("⏱️ Website processing is taking longer than expected. Please check the status in a few minutes.");
-      } else {
-        setError("Network error. Please try again.");
-      }
-    } finally {
-      setIsProcessingKnowledge(false);
-    }
   };
 
   const processDocumentKnowledge = async () => {
@@ -312,208 +253,132 @@ const CreateQuDemo = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Prevent multiple rapid submissions (debounce)
+    if (isSubmitting) return;
+    
+    // Prevent rapid submissions
     const now = Date.now();
-    const timeSinceLastSubmission = now - lastSubmissionTime;
-    if (timeSinceLastSubmission < 3000) { // 3 seconds debounce
-      console.log(`⚠️ Submission blocked - too soon after last submission (${timeSinceLastSubmission}ms ago)`);
-      setError("Please wait a few seconds before submitting again.");
+    if (now - lastSubmissionTime < 2000) {
+      setError("Please wait a moment before submitting again.");
       return;
     }
-    
-    setError("");
-    setSuccess("");
-    if (!videoUrls.some(url => url.trim() !== "")) {
-      setError("At least one Video URL is required.");
-      return;
-    }
-    
-    // Get all non-empty video URLs
-    const validVideoUrls = videoUrls.filter(url => url.trim() !== "");
-    
-    // Validate all video URLs
-    for (const videoUrl of validVideoUrls) {
-      const validation = validateVideoUrl(videoUrl);
-      if (!validation.isValid) {
-        setError(`Invalid URL: ${videoUrl} - ${validation.error}`);
-        return;
-      }
-    }
+    setLastSubmissionTime(now);
     
     setIsSubmitting(true);
-    setLastSubmissionTime(now); // Update last submission time
-    
+    setError("");
+    setSuccess("");
+
     try {
+      // Validate required fields
+      if (!company || !company.id) {
+        setError("Company information is required. Please refresh the page and try again.");
+        return;
+      }
+
+      // Create qudemo first
+      const qudemoData = {
+        title: title || "Untitled Qudemo",
+        description: description || "No description provided",
+        companyId: company.id,
+        videos: videoUrls.filter(url => url.trim()).map((url, index) => ({
+          url: url.trim(),
+          type: url.includes('loom.com') ? 'loom' : 'youtube',
+          title: `Video ${index + 1}`,
+          order: index + 1
+        })),
+        knowledgeSources: sources.filter(source => source.trim()).map(source => ({
+          url: source.trim(),
+          type: 'website'
+        }))
+      };
+
+      console.log('🎯 Creating qudemo with data:', qudemoData);
+
       const token = localStorage.getItem('accessToken');
+      const createResponse = await fetch(getNodeApiUrl('/api/qudemos'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(qudemoData)
+      });
+
+      const createResult = await createResponse.json();
       
-      // Process all videos
-      const results = [];
-      let successCount = 0;
-      let errorCount = 0;
+      if (!createResult.success) {
+        throw new Error(createResult.error || 'Failed to create qudemo');
+      }
+
+      const qudemoId = createResult.data.id;
+      console.log('✅ Qudemo created successfully:', qudemoId);
+
+      setSuccess("🎉 Qudemo created successfully! Now processing all content automatically...");
+
+      // Process all content automatically using the new endpoint
+      const validVideoUrls = videoUrls.filter(url => url.trim());
+      const validWebsiteUrl = websiteUrl.trim();
       
-      for (let i = 0; i < validVideoUrls.length; i++) {
-        const videoUrl = validVideoUrls[i];
-        const source = sources[i] || sources[0] || "loom"; // Use corresponding source or fallback
-        
-        console.log(`🎬 Processing video ${i + 1}/${validVideoUrls.length}: ${videoUrl}`);
-        
-        // Create request body for this video
-        const requestBody = {
-          videoUrl: videoUrl,
-          companyId: company.id,
-          source: source,
-          meetingLink: meetingLink || null
-        };
-        
+      if (validVideoUrls.length > 0 || validWebsiteUrl) {
         try {
-          const res = await fetch(getNodeApiUrl('/api/video/videos'), {
+          const contentResponse = await fetch(getNodeApiUrl(`/api/qudemos/process-content/${company.name}/${qudemoId}`), {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
               'Authorization': `Bearer ${token}`
             },
-            body: JSON.stringify(requestBody)
+            body: JSON.stringify({
+              video_urls: validVideoUrls,
+              website_url: validWebsiteUrl || null
+            })
           });
-          
-          const data = await res.json();
-          
-          console.log(`📊 Video ${i + 1} response:`, { status: res.status, data });
-          
-                    if (res.ok && data.success) {
-            successCount++;
-            results.push({ videoUrl, status: 'success', data });
-          } else {
-          errorCount++;
-          const errorMessage = data.error || data.details || 'Unknown error';
-          results.push({ videoUrl, status: 'error', error: errorMessage });
-          console.error(`❌ Video ${i + 1} failed:`, { error: data.error, details: data.details, status: res.status });
-        }
-          
-        } catch (err) {
-          errorCount++;
-          results.push({ videoUrl, status: 'error', error: 'Network error' });
-          console.error(`❌ Network error for video ${i + 1}:`, err);
-        }
-        
-        // Add a small delay between video processing requests to prevent overwhelming the backend
-        if (i < validVideoUrls.length - 1) {
-          console.log(`⏳ Waiting 2 seconds before processing next video...`);
-          await new Promise(resolve => setTimeout(resolve, 2000));
-        }
-      }
-      
 
-      
-      // Update final status
-      if (successCount > 0 && errorCount === 0) {
-        setSuccess(`Successfully submitted ${successCount} video(s) for processing!`);
-      } else if (successCount > 0 && errorCount > 0) {
-        setSuccess(`Submitted ${successCount} video(s) successfully. ${errorCount} video(s) failed.`);
-        setError(`Failed videos: ${results.filter(r => r.status === 'error').map(r => r.videoUrl).join(', ')}`);
-      } else {
-        console.error('❌ All videos failed. Results:', results);
-        setError(`Failed to submit any videos. Please try again. Check console for details.`);
+          const contentResult = await contentResponse.json();
+          
+          if (contentResult.success) {
+            const { videos_processed, website_processed, total_chunks, processing_order } = contentResult;
+            
+            let successMessage = "🎉 All content processed successfully!";
+            if (videos_processed > 0) {
+              successMessage += `\n📹 ${videos_processed} video(s) processed`;
+            }
+            if (website_processed) {
+              successMessage += `\n🌐 Website processed (${total_chunks} chunks created)`;
+            }
+            if (processing_order.length > 0) {
+              successMessage += `\n⏱️ Processing order: ${processing_order.join(' → ')}`;
+            }
+            
+            setSuccess(successMessage);
+          } else {
+            throw new Error(contentResult.error || 'Content processing failed');
+          }
+        } catch (contentError) {
+          console.error('❌ Content processing error:', contentError);
+          setError(`Content processing failed: ${contentError.message}. The qudemo was created but content processing needs to be retried.`);
+        }
       }
+
+      setSuccess("🎉 Qudemo created and all content processed successfully! Redirecting to Qudemo Library...");
       
-      // Show results to user
-      console.log('📊 Final results:', { successCount, errorCount, results });
+      // Reset form
+      setTitle("");
+      setDescription("");
+      setVideoUrls([""]);
+      setSources([""]);
+      setWebsiteUrl("");
+      setMeetingLink("");
       
-      // Reset form if all videos were successful
-      if (errorCount === 0) {
-        setVideoUrls([""]);
-        setThumbnailUrl("");
-        setSources([""]);
-        setMeetingLink("");
-      }
+      // Navigate to qudemo library after a short delay to show success message
+      setTimeout(() => {
+        navigate('/qudemos');
+      }, 2000);
       
-    } catch (err) {
-      console.error('❌ General error:', err);
-      setError("An unexpected error occurred. Please try again.");
+    } catch (error) {
+      console.error('❌ Create qudemo error:', error);
+      setError(error.message || "Failed to create qudemo. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  // Progress display component
-  const ProgressDisplay = () => {
-    if (!scrapingProgress) return null;
-
-    const { status, progress, stats, current_url } = scrapingProgress;
-    
-    const getStatusColor = (status) => {
-      switch (status) {
-        case 'completed': return 'text-green-600';
-        case 'failed': return 'text-red-600';
-        case 'processing': return 'text-blue-600';
-        default: return 'text-gray-600';
-      }
-    };
-
-    const getStatusIcon = (status) => {
-      switch (status) {
-        case 'completed': return '✅';
-        case 'failed': return '❌';
-        case 'processing': return '🔄';
-        default: return '⏳';
-      }
-    };
-
-    return (
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-semibold text-blue-900">
-            {getStatusIcon(status)} Smart Scraping Progress
-          </h3>
-          <span className={`font-medium ${getStatusColor(status)}`}>
-            {status.charAt(0).toUpperCase() + status.slice(1)}
-          </span>
-        </div>
-        
-        {progress && (
-          <div className="mb-3">
-            <div className="flex justify-between text-sm text-gray-600 mb-1">
-              <span>Progress: {progress.current}/{progress.total}</span>
-              <span>{progress.percentage.toFixed(1)}%</span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div 
-                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                style={{ width: `${progress.percentage}%` }}
-              ></div>
-            </div>
-          </div>
-        )}
-        
-        {stats && (
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div className="bg-white rounded p-2">
-              <div className="font-medium text-green-700">✅ Scraped</div>
-              <div className="text-lg font-bold">{stats.urls_scraped}</div>
-            </div>
-            <div className="bg-white rounded p-2">
-              <div className="font-medium text-orange-700">⏭️ Skipped</div>
-              <div className="text-lg font-bold">{stats.urls_skipped}</div>
-            </div>
-          </div>
-        )}
-        
-        {current_url && (
-          <div className="mt-3 text-sm text-gray-600">
-            <div className="font-medium">Current URL:</div>
-            <div className="truncate">{current_url}</div>
-          </div>
-        )}
-        
-        {status === 'completed' && (
-          <button
-            onClick={stopProgressTracking}
-            className="mt-3 text-sm text-blue-600 hover:text-blue-800"
-          >
-            Close Progress
-          </button>
-        )}
-      </div>
-    );
   };
 
   if (isLoading) {
@@ -545,6 +410,35 @@ const CreateQuDemo = () => {
         product at their own pace.
       </p>
       <form onSubmit={handleSubmit}>
+        {/* Title & Description */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div>
+            <label className="block font-medium text-gray-700 mb-1">
+              Qudemo Title *
+            </label>
+            <input
+              type="text"
+              value={title}
+              onChange={e => setTitle(e.target.value)}
+              placeholder="Enter qudemo title"
+              required
+              className="w-full border border-gray-300 px-4 py-2 rounded-lg"
+            />
+          </div>
+          <div>
+            <label className="block font-medium text-gray-700 mb-1">
+              Description
+            </label>
+            <textarea
+              value={description}
+              onChange={e => setDescription(e.target.value)}
+              placeholder="Describe your qudemo"
+              rows={3}
+              className="w-full border border-gray-300 px-4 py-2 rounded-lg"
+            />
+          </div>
+        </div>
+
         {/* Video URL & Thumbnail */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
@@ -639,27 +533,18 @@ const CreateQuDemo = () => {
 
           {/* Website Knowledge */}
           <div className="mb-6 p-4 border border-gray-200 rounded-lg">
-            <h4 className="font-medium text-gray-800 mb-2">🌐 Website Content</h4>
+            <h4 className="font-medium text-gray-800 mb-2">🌐 Website Knowledge</h4>
             <p className="text-sm text-gray-600 mb-3">
-              Scrape website content (e.g., FAQ pages, documentation) to improve AI responses.
+              Enter a website URL to automatically scrape and add to your knowledge base. 
+              <span className="text-blue-600 font-medium"> This will be processed automatically when you save the QuDemo.</span>
             </p>
-            <div className="flex flex-col sm:flex-row gap-2">
-              <input
-                type="text"
-                value={websiteUrl}
-                onChange={handleWebsiteUrlChange}
-                placeholder="https://example.com/faq or https://docs.example.com"
-                className="flex-1 border border-gray-300 px-4 py-2 rounded-lg"
-              />
-              <button
-                type="button"
-                onClick={processWebsiteKnowledge}
-                disabled={isProcessingKnowledge || !websiteUrl.trim()}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-              >
-                {isProcessingKnowledge ? 'Processing...' : 'Process Website'}
-              </button>
-            </div>
+            <input
+              type="text"
+              value={websiteUrl}
+              onChange={handleWebsiteUrlChange}
+              placeholder="https://example.com/faq or https://docs.example.com"
+              className="w-full border border-gray-300 px-4 py-2 rounded-lg"
+            />
           </div>
 
           {/* Document Knowledge */}
@@ -732,8 +617,8 @@ const CreateQuDemo = () => {
         <div className="pt-4 relative flex flex-col items-center">
           {isSubmitting && (
             <div className="absolute -top-16 left-1/2 -translate-x-1/2 bg-blue-100 border border-blue-300 text-blue-800 px-6 py-3 rounded shadow z-20 text-center w-[320px] animate-fade-in">
-              <div className="font-semibold mb-1">Video is being processed...</div>
-              <div className="text-xs">This may take some time. After processing, you will see your video in the library.</div>
+              <div className="font-semibold mb-1">Content is being processed...</div>
+              <div className="text-xs">Videos and website content are being processed. This may take some time.</div>
             </div>
           )}
           <button
@@ -741,7 +626,7 @@ const CreateQuDemo = () => {
             disabled={isSubmitting}
             className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 transition text-white px-6 py-2 rounded font-medium"
           >
-            {isSubmitting ? 'Saving...' : 'Save QuDemo'}
+            {isSubmitting ? 'Processing Content...' : 'Save QuDemo & Process Content'}
           </button>
         </div>
         {error && <div className="text-red-600 text-sm mt-2">{error}</div>}
@@ -749,7 +634,64 @@ const CreateQuDemo = () => {
       </form>
       
       {/* Video Processing Notification */}
-      {scrapingProgress && <ProgressDisplay />}
+      {scrapingProgress && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-lg font-semibold text-blue-900">
+              {scrapingProgress.status === 'completed' ? '✅' : scrapingProgress.status === 'failed' ? '❌' : '🔄'} Smart Scraping Progress
+            </h3>
+            <span className={`font-medium ${
+              scrapingProgress.status === 'completed' ? 'text-green-600' : scrapingProgress.status === 'failed' ? 'text-red-600' : 'text-blue-600'
+            }`}>
+              {scrapingProgress.status.charAt(0).toUpperCase() + scrapingProgress.status.slice(1)}
+            </span>
+          </div>
+          
+          {scrapingProgress.progress && (
+            <div className="mb-3">
+              <div className="flex justify-between text-sm text-gray-600 mb-1">
+                <span>Progress: {scrapingProgress.progress.current}/{scrapingProgress.progress.total}</span>
+                <span>{scrapingProgress.progress.percentage.toFixed(1)}%</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div 
+                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${scrapingProgress.progress.percentage}%` }}
+                ></div>
+              </div>
+            </div>
+          )}
+          
+          {scrapingProgress.stats && (
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div className="bg-white rounded p-2">
+                <div className="font-medium text-green-700">✅ Scraped</div>
+                <div className="text-lg font-bold">{scrapingProgress.stats.urls_scraped}</div>
+              </div>
+              <div className="bg-white rounded p-2">
+                <div className="font-medium text-orange-700">⏭️ Skipped</div>
+                <div className="text-lg font-bold">{scrapingProgress.stats.urls_skipped}</div>
+              </div>
+            </div>
+          )}
+          
+          {scrapingProgress.current_url && (
+            <div className="mt-3 text-sm text-gray-600">
+              <div className="font-medium">Current URL:</div>
+              <div className="truncate">{scrapingProgress.current_url}</div>
+            </div>
+          )}
+          
+          {scrapingProgress.status === 'completed' && (
+            <button
+              onClick={stopProgressTracking}
+              className="mt-3 text-sm text-blue-600 hover:text-blue-800"
+            >
+              Close Progress
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 };

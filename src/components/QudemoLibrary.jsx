@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
-import ReactPlayer from "react-player";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import HybridVideoPlayer from "./HybridVideoPlayer";
 import KnowledgeDataPreview from "./KnowledgeDataPreview";
 import {
@@ -12,6 +11,7 @@ import {
   SpeakerWaveIcon,
   SpeakerXMarkIcon,
   ArrowPathIcon,
+  TrashIcon,
 } from "@heroicons/react/24/outline";
 import { Link } from 'react-router-dom';
 import { useCompany } from "../context/CompanyContext";
@@ -94,6 +94,7 @@ const QudemoLibrary = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [lastCount, setLastCount] = useState(0);
   const [activeTab, setActiveTab] = useState('videos'); // 'videos' or 'knowledge'
+  const [deletingQudemo, setDeletingQudemo] = useState(null);
 
   // Function to enable audio after user interaction
   const enableAudio = () => {
@@ -162,12 +163,12 @@ const QudemoLibrary = () => {
     await fetchKnowledgeSourceContent(source.id);
   };
 
-  const fetchQudemos = async () => {
+  const fetchQudemos = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
       const token = localStorage.getItem('accessToken');
-      const apiUrl = getNodeApiUrl(`/api/qudemos?companyId=${company.id}&limit=100`);
+      const apiUrl = getNodeApiUrl(`/api/qudemos?companyId=${company?.id}&limit=100`);
       
       const res = await fetch(apiUrl, {
         headers: {
@@ -196,16 +197,16 @@ const QudemoLibrary = () => {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, [company?.id]);
 
-  const fetchKnowledgeSources = async () => {
+  const fetchKnowledgeSources = useCallback(async () => {
     try {
       const token = localStorage.getItem('accessToken');
-      console.log(`🔍 DEBUG: Fetching knowledge sources for company: "${company.name}"`);
+      console.log(`🔍 DEBUG: Fetching knowledge sources for company: "${company?.name}"`);
       console.log(`🔍 DEBUG: Company object:`, company);
       
       // Call Node.js backend (which will then call Python backend)
-      const response = await fetch(getNodeApiUrl(`/api/knowledge/sources/${company.name}`), {
+      const response = await fetch(getNodeApiUrl(`/api/knowledge/sources/${company?.name}`), {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -230,13 +231,61 @@ const QudemoLibrary = () => {
     } catch (err) {
       console.error("Failed to fetch knowledge sources:", err);
     }
+  }, [company?.name]);
+
+  const handleDeleteQudemo = async (qudemoId) => {
+    const qudemo = qudemos.find(q => q.id === qudemoId);
+    const qudemoName = qudemo?.title || qudemo?.video_name || 'this qudemo';
+    
+    if (!window.confirm(`Are you sure you want to delete "${qudemoName}"?\n\nThis action will permanently delete:\n• The qudemo itself\n• All associated videos\n• All knowledge sources\n• All analytics data\n\nThis action cannot be undone.`)) {
+      return;
+    }
+
+    setDeletingQudemo(qudemoId);
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await fetch(getNodeApiUrl(`/api/qudemos/${qudemoId}`), {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        // Remove the qudemo from the local state
+        setQudemos(prevQudemos => prevQudemos.filter(q => q.id !== qudemoId));
+        console.log('✅ Qudemo deleted successfully');
+        
+        // Show success message
+        const successMessage = document.createElement('div');
+        successMessage.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+        successMessage.textContent = 'Qudemo deleted successfully!';
+        document.body.appendChild(successMessage);
+        
+        // Remove success message after 3 seconds
+        setTimeout(() => {
+          if (successMessage.parentNode) {
+            successMessage.parentNode.removeChild(successMessage);
+          }
+        }, 3000);
+      } else {
+        const data = await response.json();
+        console.error('❌ Failed to delete qudemo:', data.error);
+        alert('Failed to delete qudemo. Please try again.');
+      }
+    } catch (err) {
+      console.error('❌ Error deleting qudemo:', err);
+      alert('Network error. Please try again.');
+    } finally {
+      setDeletingQudemo(null);
+    }
   };
 
   useEffect(() => {
     if (!company || isLoading) return;
     fetchQudemos();
     fetchKnowledgeSources();
-  }, [company, isLoading]);
+  }, [company, isLoading, fetchQudemos, fetchKnowledgeSources]);
 
   // Auto-refresh removed
 
@@ -261,7 +310,10 @@ const QudemoLibrary = () => {
   
   console.log('🔍 DEBUG: Filtered knowledge sources:', filteredKnowledgeSources);
 
+  console.log('🔍 QudemoLibrary: Render state - isLoading:', isLoading, 'company:', !!company, 'error:', error);
+  
   if (isLoading) {
+    console.log('🔍 QudemoLibrary: Showing loading state');
     return (
       <div className="text-center py-12 px-4 sm:px-6 lg:px-8 bg-white rounded-lg shadow-lg">
         <h3 className="mt-2 text-lg font-medium text-gray-900">
@@ -275,6 +327,7 @@ const QudemoLibrary = () => {
   }
 
   if (!company) {
+    console.log('🔍 QudemoLibrary: Showing no company state');
     return (
       <div className="text-center py-12 px-4 sm:px-6 lg:px-8 bg-white rounded-lg shadow-lg">
         <h3 className="mt-2 text-lg font-medium text-gray-900">
@@ -283,6 +336,14 @@ const QudemoLibrary = () => {
         <p className="mt-1 text-sm text-gray-600">
           You need to create a company before you can view or create QuDemos.
         </p>
+        <div className="mt-4">
+          <button 
+            onClick={() => window.location.href = '/companies'}
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          >
+            Create Company
+          </button>
+        </div>
       </div>
     );
   }
@@ -364,45 +425,25 @@ const QudemoLibrary = () => {
                 key={q.id}
                 className="bg-white rounded shadow-md overflow-hidden flex flex-col relative"
               >
-                <div
-                  className="relative w-full h-40"
-                  style={{ background: `url('${getThumbnailUrl(q)}') center center / cover no-repeat` }}
-                >
-                  {q.video_url && ReactPlayer.canPlay(q.video_url) ? (
-                    <div className="relative w-full h-40">
-                      <ReactPlayer
-                        url={q.video_url}
-                        width="100%"
-                        height="100%"
-                        controls={false}
-                        playing={true}
-                        muted={true}
-                        light={getThumbnailUrl(q)}
-                        style={{ position: 'absolute', top: 0, left: 0 }}
-                        onReady={() => {
-                          // For thumbnail videos, keep them muted but ready for preview
-                          console.log('Thumbnail video ready for:', q.video_name);
-                        }}
-                      />
-                      {/* Audio indicator for thumbnail */}
-                      <div className="absolute bottom-2 right-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
-                        🔊 Click to preview with audio
-                      </div>
+                <div className="relative w-full h-40">
+                  <img
+                    src={getThumbnailUrl(q)}
+                    alt={q.title}
+                    className="w-full h-40 object-cover"
+                    onError={(e) => {
+                      console.warn(`Failed to load thumbnail for ${q.title}:`, e.target.src);
+                      // Prevent infinite loops by checking if we're already using the fallback
+                      if (!e.target.src.includes('data:image/svg+xml')) {
+                        e.target.src = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzY2NzM4NyIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPlRodW1ibmFpbCBFcnJvcjwvdGV4dD4KPC9zdmc+";
+                      }
+                    }}
+                  />
+                  {/* Play button overlay */}
+                  <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-20 hover:bg-opacity-30 transition-all duration-200">
+                    <div className="bg-white bg-opacity-90 rounded-full p-3 shadow-lg">
+                      <PlayIcon className="w-8 h-8 text-blue-600" />
                     </div>
-                  ) : (
-                    <img
-                      src={getThumbnailUrl(q)}
-                      alt={q.title}
-                      className="w-full h-40 object-cover"
-                      onError={(e) => {
-                        console.warn(`Failed to load thumbnail for ${q.title}:`, e.target.src);
-                        // Prevent infinite loops by checking if we're already using the fallback
-                        if (!e.target.src.includes('data:image/svg+xml')) {
-                          e.target.src = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzY2NzM4NyIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPlRodW1ibmFpbCBFcnJvcjwvdGV4dD4KPC9zdmc+";
-                        }
-                      }}
-                    />
-                  )}
+                  </div>
                   {q.is_active && (
                     <span className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-0.5 rounded-full font-semibold">
                       Active
@@ -415,6 +456,21 @@ const QudemoLibrary = () => {
                     <div className="text-blue-900 font-semibold text-lg">
                       {q.video_name || q.title}
                     </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteQudemo(q.id);
+                      }}
+                      disabled={deletingQudemo === q.id}
+                      className="text-gray-400 hover:text-red-600 p-1 rounded transition-all duration-200 hover:bg-red-50 disabled:opacity-50"
+                      title="Delete qudemo"
+                    >
+                      {deletingQudemo === q.id ? (
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-500"></div>
+                      ) : (
+                        <TrashIcon className="w-4 h-4" />
+                      )}
+                    </button>
                   </div>
                   <p className="text-gray-600 mt-1 flex-grow">{q.description}</p>
 

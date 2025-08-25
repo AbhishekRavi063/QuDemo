@@ -1,0 +1,513 @@
+import React, { useState, useEffect, useRef } from 'react';
+import ReactPlayer from 'react-player';
+import HybridVideoPlayer from './HybridVideoPlayer';
+import { 
+  XMarkIcon, 
+  PaperAirplaneIcon, 
+  PlayIcon, 
+  PauseIcon,
+  SpeakerWaveIcon,
+  SpeakerXMarkIcon,
+  ChatBubbleLeftIcon,
+  UserIcon
+} from '@heroicons/react/24/outline';
+import { getVideoApiUrl, getNodeApiUrl } from '../config/api';
+import axios from 'axios';
+
+const TypingIndicator = () => (
+  <div className="typing-indicator flex space-x-1">
+    <span className="dot animate-bounce delay-150"></span>
+    <span className="dot animate-bounce delay-300"></span>
+    <span className="dot animate-bounce delay-450"></span>
+
+    <style>{`
+      .typing-indicator {
+        align-items: center;
+      }
+      .dot {
+        width: 8px;
+        height: 8px;
+        background-color: #2563eb;
+        border-radius: 50%;
+        display: inline-block;
+        animation-duration: 1s;
+        animation-iteration-count: infinite;
+        animation-timing-function: ease-in-out;
+      }
+      .animate-bounce {
+        animation-name: bounce-dot;
+      }
+      .delay-150 {
+        animation-delay: 0.15s;
+      }
+      .delay-300 {
+        animation-delay: 0.3s;
+      }
+      .delay-450 {
+        animation-delay: 0.45s;
+      }
+
+      @keyframes bounce-dot {
+        0%,
+        80%,
+        100% {
+          transform: translateY(0);
+          opacity: 0.3;
+        }
+        40% {
+          transform: translateY(-8px);
+          opacity: 1;
+        }
+      }
+    `}</style>
+  </div>
+);
+
+const cleanMessageText = (text) => {
+  console.log('🔍 cleanMessageText input:', text);
+  
+  // Remove unwanted patterns
+  let cleaned = text
+    .replace(/\*\*/g, "")
+    .replace(/\(.*?page.*?\)/gi, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+
+  console.log('🔍 After removing patterns:', cleaned);
+
+  // Ensure bullet points and numbers are on new lines
+  cleaned = cleaned
+    // New line before bullets (•, -, *) if not already at line start
+    .replace(/\s*([•\-*])\s+/g, "<br/>$1 ")
+    // New line before numbered lists (1., 2., etc.) if not already at line start
+    .replace(/\s*(\d+\.)\s+/g, "<br/>$1 ");
+
+  console.log('🔍 After bullet/number formatting:', cleaned);
+
+  // Convert URLs to clickable links
+  cleaned = cleaned.replace(
+    /(https?:\/\/[^\s]+)/g,
+    (url) =>
+      `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-blue-600 underline">${url}</a>`
+  );
+
+  console.log('🔍 After URL conversion:', cleaned);
+
+  // Split at each '– ' and wrap each in <p> tags, preserving the intro as its own paragraph
+  const parts = cleaned.split(/(?=– )/g);
+  console.log('🔍 Parts after splitting:', parts);
+  
+  const result = parts.map(part => `<p>${part.trim()}</p>`).join("");
+  console.log('🔍 Final result:', result);
+  
+  return result;
+};
+
+const QudemoPreview = ({ qudemo, onClose }) => {
+  // Generate a unique key for this qudemo's chat
+  const chatKey = `qudemo-chat-${qudemo?.id}`;
+  
+  // Load messages from localStorage or initialize with empty array
+  const [messages, setMessages] = useState(() => {
+    const saved = localStorage.getItem(chatKey);
+    return saved ? JSON.parse(saved) : [];
+  });
+  
+  const [inputMessage, setInputMessage] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  const [currentTimestamp, setCurrentTimestamp] = useState(0);
+  const [audioEnabled, setAudioEnabled] = useState(false);
+  const [showLoomTimestamp, setShowLoomTimestamp] = useState(false);
+  const [loomTimestampMessage, setLoomTimestampMessage] = useState('');
+  const messagesEndRef = useRef(null);
+  const loomIframeRef = useRef();
+
+  // Initialize with welcome message only if this is a new conversation
+  useEffect(() => {
+    if (qudemo) {
+      // Check if we have saved messages for this qudemo
+      const saved = localStorage.getItem(chatKey);
+      if (saved && saved !== '[]') {
+        // Load existing messages
+        try {
+          const parsedMessages = JSON.parse(saved);
+          setMessages(parsedMessages);
+        } catch (e) {
+          console.error('Error parsing saved messages:', e);
+          // If parsing fails, start fresh
+          setMessages([]);
+        }
+      } else {
+        // Only show welcome message if no saved messages exist
+        const welcomeMessage = {
+          sender: "AI",
+          text: `Welcome to the ${qudemo.title}! I'm your AI assistant for this qudemo. I can help you understand the content from the videos and knowledge sources. What would you like to know?`,
+          time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+        };
+        setMessages([welcomeMessage]);
+      }
+    }
+  }, [qudemo, chatKey]);
+
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  // Save messages to localStorage whenever they change
+  useEffect(() => {
+    if (messages.length > 0) {
+      localStorage.setItem(chatKey, JSON.stringify(messages));
+    }
+  }, [messages, chatKey]);
+
+  // Cleanup function to ensure messages are saved when component unmounts
+  useEffect(() => {
+    return () => {
+      if (messages.length > 0) {
+        localStorage.setItem(chatKey, JSON.stringify(messages));
+      }
+    };
+  }, [messages, chatKey]);
+
+  // Function to enable audio after user interaction
+  const enableAudio = () => {
+    setAudioEnabled(true);
+    // Enable audio on all video elements
+    setTimeout(() => {
+      const videoElements = document.querySelectorAll('video');
+      videoElements.forEach(video => {
+        video.muted = false;
+        video.volume = 1.0;
+        video.play().catch(e => console.log('Autoplay prevented:', e));
+      });
+      
+      // Also handle ReactPlayer instances
+      const iframes = document.querySelectorAll('iframe');
+      iframes.forEach(iframe => {
+        if (iframe.src.includes('loom.com')) {
+          // For Loom videos, try to unmute via postMessage
+          try {
+            iframe.contentWindow.postMessage({ type: 'unmute' }, '*');
+          } catch (e) {
+            console.log('Could not unmute Loom video:', e);
+          }
+        }
+      });
+    }, 100);
+  };
+
+  const handleSendMessage = async () => {
+    if (!inputMessage.trim() || isTyping) return;
+
+    const userQuestion = inputMessage;
+    setMessages(prev => [...prev, {
+      sender: "You",
+      text: userQuestion,
+      time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    }]);
+    setInputMessage('');
+    setIsTyping(true);
+
+    try {
+      console.log('🔍 Sending Q&A request for qudemo:', qudemo.id);
+      console.log('🔍 Question:', userQuestion);
+      
+      // Call the Node.js backend Q&A endpoint which will forward to Python backend
+      const askUrl = getNodeApiUrl(`/api/qa/qudemo/${qudemo.id}`);
+      console.log('🔍 Calling API URL:', askUrl);
+      console.log('🔍 Request payload:', { question: userQuestion });
+      
+      const response = await axios.post(askUrl, {
+        question: userQuestion
+      }, {
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+        },
+        timeout: 30000
+      });
+      
+      console.log('✅ Q&A response:', response.data);
+      console.log('🎬 Video fields in response:', {
+        video_url: response.data?.video_url,
+        start: response.data?.start,
+        end: response.data?.end,
+        video_title: response.data?.video_title
+      });
+      
+      // Process the response and handle video switching
+      try {
+        const aiAnswer = response.data?.answer || 'Sorry, I could not find an answer.';
+        console.log('🔍 Extracted answer:', aiAnswer);
+        
+        // Check for video navigation data in the response
+        let targetVideoUrl = null;
+        let timestamp = 0;
+        
+        // First check direct video fields (this is how the Python backend sends video data)
+        if (response.data && response.data.video_url) {
+          targetVideoUrl = response.data.video_url;
+          timestamp = response.data.start || 0;
+          console.log('🎬 Using direct video fields:', { url: targetVideoUrl, timestamp });
+        }
+        // Fallback: check sources array for video sources
+        else if (response.data && response.data.sources && response.data.sources.length > 0) {
+          // Find the first video source with a timestamp
+          const videoSource = response.data.sources.find(source => 
+            source.source_type === 'video' && source.start_timestamp
+          );
+          
+          if (videoSource) {
+            targetVideoUrl = videoSource.url;
+            timestamp = videoSource.start_timestamp;
+            console.log('🎬 Found video source in sources:', { url: targetVideoUrl, timestamp });
+          }
+        }
+        
+        // Add message with video switching
+        setMessages(msgs => [...msgs, {
+          sender: "AI",
+          text: cleanMessageText(aiAnswer),
+          time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+        }]);
+        
+        // Switch video if we have a valid video URL
+        if (targetVideoUrl) {
+          console.log('🎬 Switching to video:', targetVideoUrl, 'at timestamp:', timestamp);
+          // Find if this video is in our qudemo's videos
+          const videoIndex = qudemo.videos?.findIndex(v => v.video_url === targetVideoUrl);
+          if (videoIndex !== -1) {
+            setCurrentVideoIndex(videoIndex);
+            setCurrentTimestamp(timestamp);
+            setIsPlaying(true);
+          }
+        }
+        
+        setIsTyping(false);
+        console.log('🔍 Message added successfully');
+        
+      } catch (processingError) {
+        console.error('❌ Processing failed:', processingError);
+        
+        // Fallback - just add the answer
+        setMessages(msgs => [...msgs, {
+          sender: "AI",
+          text: cleanMessageText(response.data?.answer || "I found an answer but there was an error displaying it. Please try again."),
+          time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+        }]);
+        setIsTyping(false);
+      }
+
+    } catch (error) {
+      console.error('Chat error:', error);
+      const errorMessage = {
+        sender: "AI",
+        text: 'Sorry, I encountered an error while processing your request. Please try again.',
+        time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+      };
+      setMessages(prev => [...prev, errorMessage]);
+      setIsTyping(false);
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
+
+  const currentVideo = qudemo?.videos?.[currentVideoIndex];
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center p-4">
+      <div className="w-full max-w-7xl h-full max-h-[85vh] bg-white rounded-lg shadow-2xl flex flex-col md:flex-row overflow-hidden relative">
+        {/* Video Section */}
+        <div 
+          className="w-full md:w-2/3 relative flex flex-col items-center justify-center bg-black"
+          onClick={enableAudio}
+        >
+          {currentVideo ? (
+            <div className="relative w-full h-full">
+              <HybridVideoPlayer
+                key={`${currentVideo.video_url}-${currentTimestamp}`} // Force re-render when URL or timestamp changes
+                url={currentVideo.video_url}
+                width="100%"
+                height="100%"
+                controls={true}
+                playing={isPlaying}
+                startTime={currentTimestamp}
+                style={{ width: '100%', height: '100%', background: 'black' }}
+                onReady={() => {
+                  console.log('Video ready for chat');
+                }}
+                onPlay={() => {
+                  console.log('Video playing in chat');
+                }}
+                iframeRef={loomIframeRef}
+              />
+              
+              {/* Loom Timestamp Indicator */}
+              {showLoomTimestamp && currentVideo.video_url.includes('loom.com') && currentTimestamp > 0 && (
+                <div className="absolute top-4 right-4 bg-yellow-500 text-black px-4 py-3 rounded-lg text-sm font-medium z-20 shadow-lg max-w-xs">
+                  <div className="flex items-center space-x-2">
+                    <span>⏰</span>
+                    <div>
+                      <div className="font-bold">Seek to:</div>
+                      <div>{loomTimestampMessage}</div>
+                    </div>
+                    <button 
+                      onClick={() => setShowLoomTimestamp(false)}
+                      className="text-black hover:text-gray-700 ml-2"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="flex items-center justify-center h-full w-full text-white text-lg">
+              <div className="text-center">
+                <PlayIcon className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                <p>No videos available for this qudemo</p>
+              </div>
+            </div>
+          )}
+
+          {/* Video Controls */}
+          {qudemo?.videos && qudemo.videos.length > 1 && (
+            <div className="p-4 bg-gray-900">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <span className="text-white text-sm">
+                    Video {currentVideoIndex + 1} of {qudemo.videos.length}
+                  </span>
+                </div>
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => setCurrentVideoIndex(Math.max(0, currentVideoIndex - 1))}
+                    disabled={currentVideoIndex === 0}
+                    className="px-3 py-1 bg-gray-700 text-white rounded text-sm disabled:opacity-50"
+                  >
+                    Previous
+                  </button>
+                  <button
+                    onClick={() => setCurrentVideoIndex(Math.min(qudemo.videos.length - 1, currentVideoIndex + 1))}
+                    disabled={currentVideoIndex === qudemo.videos.length - 1}
+                    className="px-3 py-1 bg-gray-700 text-white rounded text-sm disabled:opacity-50"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Chat Section */}
+        <div className="w-full md:w-1/3 flex flex-col bg-white border-l">
+          {/* Header */}
+          <div className="bg-blue-600 text-white px-4 py-3 flex justify-between items-center">
+            <div className="flex items-center gap-4">
+              <div className="font-semibold text-sm sm:text-base">
+                Ask questions about this qudemo
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  if (window.confirm('Are you sure you want to clear the chat history?')) {
+                    setMessages([]);
+                    localStorage.removeItem(chatKey);
+                  }
+                }}
+                className="text-white hover:text-gray-200 text-xs px-2 py-1 rounded border border-white/30 hover:bg-white/10"
+                title="Clear chat history"
+              >
+                Clear Chat
+              </button>
+              <XMarkIcon
+                className="h-5 w-5 cursor-pointer"
+                onClick={onClose}
+              />
+            </div>
+          </div>
+
+          {/* Chat Messages */}
+          <div className="flex-1 p-3 overflow-y-auto space-y-3 bg-gray-50 text-sm">
+            {messages.map((msg, idx) => (
+              <div
+                key={idx}
+                className={`flex ${msg.sender === "AI" ? "justify-start" : "justify-end"}`}
+              >
+                <div
+                  className={`rounded-xl px-4 py-2 max-w-[80%] ${
+                    msg.sender === "AI"
+                      ? "bg-white border text-gray-800 text-left"
+                      : "bg-blue-600 text-white text-right"
+                  }`}
+                >
+                  <span
+                    dangerouslySetInnerHTML={{
+                      __html: msg.text, // already cleaned before storing
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
+            
+            {/* Typing indicator */}
+            {isTyping && (
+              <div className="flex justify-start">
+                <div className="rounded-xl px-4 py-2 max-w-[80%] bg-white border text-gray-800 select-none">
+                  <TypingIndicator />
+                </div>
+              </div>
+            )}
+            
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Input */}
+          <div className="p-3 border-t flex items-center gap-2">
+            <input
+              value={inputMessage}
+              onChange={(e) => setInputMessage(e.target.value)}
+              onKeyDown={handleKeyPress}
+              type="text"
+              placeholder="Ask a question about this qudemo..."
+              className="flex-1 px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <button
+              onClick={handleSendMessage}
+              disabled={!inputMessage.trim() || isTyping}
+              className="text-blue-600 hover:text-blue-800 disabled:opacity-50"
+            >
+              <PaperAirplaneIcon className="h-7 w-8" />
+            </button>
+          </div>
+
+          {/* Footer */}
+          <div className="p-4 flex flex-col sm:flex-row sm:justify-between items-center text-xs gap-2 bg-white border-t">
+            <span className="text-gray-500">Powered by Qudemo AI</span>
+            <div className="flex gap-2">
+              <button className="text-blue-600 font-semibold hover:underline border border-gray-300 rounded px-3 py-1.5">
+                FAQs
+              </button>
+              <button className="text-blue-600 font-semibold hover:underline border border-gray-300 rounded px-3 py-1.5">
+                Schedule Meeting
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default QudemoPreview;

@@ -5,8 +5,7 @@ import { PaperAirplaneIcon, XMarkIcon, SpeakerWaveIcon, SpeakerXMarkIcon } from 
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useCompany } from "../context/CompanyContext";
-import { getVideoApiUrl, getNodeApiUrl } from "../config/api";
-
+import { getVideoApiUrl, getNodeApiUrl } from "../config/api"; 
 const TypingIndicator = () => (
   <div className="typing-indicator flex space-x-1">
     <span className="dot animate-bounce delay-150"></span>

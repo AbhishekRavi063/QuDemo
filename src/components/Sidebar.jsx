@@ -11,6 +11,7 @@ import {
   UserIcon,
   UsersIcon,
   PlusIcon,
+  PlayIcon,
 } from '@heroicons/react/24/outline';
 
 const menuItems = [
@@ -18,6 +19,7 @@ const menuItems = [
   { name: 'Create QuDemo', icon: PlusIcon, path: '/create' },
   { name: 'Customers', icon: UsersIcon, path: '/customers' },
   { name: 'Qudemo Library', icon: Squares2X2Icon, path: '/library' },
+  { name: 'Qudemos', icon: PlayIcon, path: '/qudemos' },
   { name: 'Buyer Interactions', icon: ChatBubbleLeftEllipsisIcon, path: '/interactions' },
   { name: 'Insights & Analytics', icon: ChartBarIcon, path: '/analytics' },
   { name: 'Companies', path: '/companies' },

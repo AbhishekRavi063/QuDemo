@@ -90,7 +90,8 @@ const HybridVideoPlayer = ({
         }
         if (!videoId) return url;
         const ytStart = startTime && startTime > 0 ? `&start=${Math.floor(startTime)}` : '';
-        return `https://www.youtube.com/embed/${videoId}?autoplay=1&muted=0&enablejsapi=1&controls=1${ytStart}`;
+        const autoplay = playing ? '1' : '0';
+        return `https://www.youtube.com/embed/${videoId}?autoplay=${autoplay}&muted=0&enablejsapi=1&controls=1${ytStart}`;
 
       case 'loom':
         // Convert Loom share URL to embed URL with enhanced API support
@@ -102,7 +103,8 @@ const HybridVideoPlayer = ({
           const timestamp = urlParams.get('t');
           
           // Build base embed URL with parameters
-          let embedUrl = `https://www.loom.com/embed/${videoId}?autoplay=1&hide_share=1&hide_title=1&muted=0&enablejsapi=1&allowfullscreen=1&showinfo=0&controls=1&rel=0`;
+          const autoplay = playing ? '1' : '0';
+          let embedUrl = `https://www.loom.com/embed/${videoId}?autoplay=${autoplay}&hide_share=1&hide_title=1&muted=0&enablejsapi=1&allowfullscreen=1&showinfo=0&controls=1&rel=0`;
           
           // Add timestamp back if it exists
           if (timestamp) {
@@ -118,7 +120,8 @@ const HybridVideoPlayer = ({
         if (url.includes('vimeo.com/')) {
           const videoId = url.split('vimeo.com/')[1].split('?')[0];
           const vimeoTime = startTime && startTime > 0 ? `#t=${Math.floor(startTime)}s` : '';
-          return videoId ? `https://player.vimeo.com/video/${videoId}?autoplay=1&muted=0&controls=1${vimeoTime}` : url;
+          const autoplay = playing ? '1' : '0';
+          return videoId ? `https://player.vimeo.com/video/${videoId}?autoplay=${autoplay}&muted=0&controls=1${vimeoTime}` : url;
         }
         return url;
 

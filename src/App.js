@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
+import { getNodeApiUrl } from './config/api';
 
 // Import components
 import Header from './components/Header';
@@ -8,6 +9,8 @@ import Sidebar from './components/Sidebar';
 import DemoHomePage from './components/DemoHomePage';
 import CreateQuDemo from './components/CreateQuDemo';
 import QudemoLibrary from './components/QudemoLibrary';
+import Qudemos from './components/Qudemos';
+import EditQudemo from './components/EditQudemo';
 import BuyerInteractions from './components/BuyerInteractions';
 import InsightsAnalytics from './components/InsightsAnalytics';
 import ProfilePage from './components/ProfilePage';
@@ -35,7 +38,7 @@ const ProtectedRoute = ({ children }) => {
       }
 
       try {
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/auth/profile`, {
+        const response = await fetch(getNodeApiUrl('/api/auth/profile'), {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -98,6 +101,8 @@ const DashboardLayout = ({ children }) => {
 };
 
 function App() {
+  // Removed aggressive refresh prevention to fix UI refresh issues
+
   return (
     <Router>
       <CompanyProvider>
@@ -145,6 +150,26 @@ function App() {
                 <ProtectedRoute>
                   <DashboardLayout>
                     <QudemoLibrary />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/qudemos" 
+              element={
+                <ProtectedRoute>
+                  <DashboardLayout>
+                    <Qudemos />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/edit-qudemo/:id" 
+              element={
+                <ProtectedRoute>
+                  <DashboardLayout>
+                    <EditQudemo />
                   </DashboardLayout>
                 </ProtectedRoute>
               } 

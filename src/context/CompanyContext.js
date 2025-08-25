@@ -12,10 +12,16 @@ export const CompanyProvider = ({ children }) => {
 
   const fetchCompany = useCallback(async () => {
     const token = localStorage.getItem('accessToken');
+    console.log('🔍 CompanyContext: Starting fetchCompany');
+    console.log('🔍 CompanyContext: Token exists:', !!token);
+    
     if (!token) {
+      console.log('🔍 CompanyContext: No token found, setting loading to false');
       setIsLoading(false);
       return;
     }
+    
+    console.log('🔍 CompanyContext: Setting loading to true');
     setIsLoading(true);
     try {
       const apiUrl = getNodeApiUrl('/api/companies');
@@ -62,6 +68,9 @@ export const CompanyProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
+    // Fetch company data on initial load
+    console.log('🔍 CompanyContext: useEffect triggered');
+    console.log('🔍 CompanyContext: Current state - company:', !!company, 'isLoading:', isLoading);
     fetchCompany();
   }, [fetchCompany]);
 
