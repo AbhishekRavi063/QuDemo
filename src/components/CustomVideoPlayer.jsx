@@ -7,6 +7,7 @@ const CustomVideoPlayer = ({
   height = '100%', 
   controls = true, 
   playing = true,
+  startTime = 0,
   onReady,
   onPlay,
   onPause,
@@ -23,10 +24,25 @@ const CustomVideoPlayer = ({
   const [showControls, setShowControls] = useState(true);
   const [hasUserInteracted, setHasUserInteracted] = useState(false);
 
+  // Handle startTime changes
+  useEffect(() => {
+    if (videoRef.current && startTime > 0 && videoRef.current.readyState >= 2) {
+      console.log(`🎬 Updating video position to ${startTime}s`);
+      videoRef.current.currentTime = startTime;
+    }
+  }, [startTime]);
+
   // Handle video metadata loaded
   const handleLoadedMetadata = () => {
     if (videoRef.current) {
       setDuration(videoRef.current.duration);
+      
+      // Set start time if provided
+      if (startTime > 0) {
+        console.log(`🎬 Setting video start time to ${startTime}s`);
+        videoRef.current.currentTime = startTime;
+      }
+      
       // Try to enable audio immediately
       enableAudioImmediately();
       if (onReady) onReady();

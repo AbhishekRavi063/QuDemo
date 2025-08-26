@@ -965,7 +965,7 @@ const VideoDemoChatPopup = ({ leadId }) => {
             {ytVideoUrl ? (
               <div className="relative w-full h-full">
               <HybridVideoPlayer
-                key={ytVideoUrl} // Force re-render when URL changes
+                key={`${ytVideoUrl}-${currentTimestamp}`} // Force re-render when URL OR timestamp changes
                 url={ytVideoUrl}
                 width="100%"
                 height="100%"

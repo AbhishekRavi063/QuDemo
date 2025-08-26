@@ -74,6 +74,38 @@ const HybridVideoPlayer = ({
     }
   };
 
+  // Handle timestamp changes
+  useEffect(() => {
+    if (startTime > 0 && currentIframeRef && currentIframeRef.contentWindow) {
+      console.log(`🎬 Timestamp changed to ${startTime}s, updating video position`);
+      
+      // For YouTube videos, we need to reload the iframe with the new timestamp
+      if (videoType === 'youtube') {
+        const currentSrc = currentIframeRef.src;
+        const newSrc = getEmbedUrl(); // This will include the new startTime
+        if (currentSrc !== newSrc) {
+          console.log(`🎬 Reloading YouTube iframe with new timestamp: ${startTime}s`);
+          currentIframeRef.src = newSrc;
+        }
+      }
+      
+      // For Loom videos, the parent component handles seeking
+      if (videoType === 'loom') {
+        console.log(`🎬 Loom timestamp changed to ${startTime}s, parent will handle seeking`);
+      }
+      
+      // For Vimeo videos, we need to reload the iframe with the new timestamp
+      if (videoType === 'vimeo') {
+        const currentSrc = currentIframeRef.src;
+        const newSrc = getEmbedUrl(); // This will include the new startTime
+        if (currentSrc !== newSrc) {
+          console.log(`🎬 Reloading Vimeo iframe with new timestamp: ${startTime}s`);
+          currentIframeRef.src = newSrc;
+        }
+      }
+    }
+  }, [startTime, videoType, url]);
+
   // Convert URL to embed format with audio parameters
   const getEmbedUrl = () => {
     if (!url) return '';
@@ -151,6 +183,7 @@ const HybridVideoPlayer = ({
           height="100%"
           controls={controls}
           playing={playing}
+          startTime={startTime}
           onReady={onReady}
           onPlay={onPlay}
           onPause={onPause}
