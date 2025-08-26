@@ -26,8 +26,33 @@ const Qudemos = () => {
   const [error, setError] = useState(null);
   const [previewingQudemo, setPreviewingQudemo] = useState(null);
   const [dropdownOpen, setDropdownOpen] = useState(null);
+  const [deletingQudemoId, setDeletingQudemoId] = useState(null);
   const { company } = useCompany();
   const navigate = useNavigate();
+
+  // Notification function
+  const showNotification = (message, type = 'info') => {
+    const notification = document.createElement('div');
+    const bgColor = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500';
+    notification.className = `fixed top-4 right-4 ${bgColor} text-white px-6 py-3 rounded-lg shadow-lg z-50 transform transition-all duration-300 translate-x-full`;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    // Animate in
+    setTimeout(() => {
+      notification.classList.remove('translate-x-full');
+    }, 100);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+      notification.classList.add('translate-x-full');
+      setTimeout(() => {
+        if (notification.parentNode) {
+          notification.parentNode.removeChild(notification);
+        }
+      }, 300);
+    }, 3000);
+  };
 
   // Helper function to get relative time
   const getRelativeTime = (dateString) => {
@@ -86,14 +111,15 @@ const Qudemos = () => {
   }, [company]);
 
   // Refresh data when component comes into focus (e.g., when navigating back)
-  useEffect(() => {
-    const handleFocus = () => {
-      fetchQudemos();
-    };
+  // Removed aggressive refresh to prevent UI refresh issues
+  // useEffect(() => {
+  //   const handleFocus = () => {
+  //     fetchQudemos();
+  //   };
 
-    window.addEventListener('focus', handleFocus);
-    return () => window.removeEventListener('focus', handleFocus);
-  }, [company]);
+  //   window.addEventListener('focus', handleFocus);
+  //   return () => window.removeEventListener('focus', handleFocus);
+  // }, [company]);
 
   const handleDropdownAction = async (action, qudemo) => {
     setDropdownOpen(null);
@@ -113,7 +139,9 @@ const Qudemos = () => {
           `Are you sure you want to delete "${qudemo.title}"?\n\nThis action will permanently delete:\n• The qudemo and all its videos\n• All knowledge sources\n• All analytics data\n\nThis action cannot be undone.`
         );
         if (confirmDelete) {
+          setDeletingQudemoId(qudemo.id);
           await deleteQudemo(qudemo.id);
+          setDeletingQudemoId(null);
         }
         break;
       case 'share':
@@ -152,8 +180,7 @@ const Qudemos = () => {
 
   const deleteQudemo = async (qudemoId) => {
     try {
-      // Show loading state
-      setLoading(true);
+      // Don't set global loading, just track the specific qudemo being deleted
       
       const token = localStorage.getItem('accessToken');
       const response = await fetch(getNodeApiUrl(`/api/qudemos/${qudemoId}`), {
@@ -177,29 +204,16 @@ const Qudemos = () => {
         // Show success message
         console.log('✅ Qudemo deleted successfully');
         
-        // Optional: Show a toast notification instead of alert
-        // For now, we'll use a more user-friendly approach
-        const successMessage = document.createElement('div');
-        successMessage.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
-        successMessage.textContent = 'Qudemo deleted successfully!';
-        document.body.appendChild(successMessage);
-        
-        // Remove the message after 3 seconds
-        setTimeout(() => {
-          if (successMessage.parentNode) {
-            successMessage.parentNode.removeChild(successMessage);
-          }
-        }, 3000);
+        // Show success notification
+        showNotification('Qudemo deleted successfully!', 'success');
         
       } else {
         console.error('❌ Failed to delete qudemo:', data.error);
-        alert('Failed to delete qudemo: ' + (data.error || 'Unknown error'));
+        showNotification('Failed to delete qudemo: ' + (data.error || 'Unknown error'), 'error');
       }
     } catch (error) {
       console.error('❌ Error deleting qudemo:', error);
-      alert('Failed to delete qudemo. Please try again.');
-    } finally {
-      setLoading(false);
+      showNotification('Failed to delete qudemo. Please try again.', 'error');
     }
   };
 
@@ -258,13 +272,25 @@ const Qudemos = () => {
           <h1 className="text-2xl font-bold text-gray-900">Qudemos</h1>
           <p className="text-gray-600">Manage and preview your interactive demos</p>
         </div>
-        <button
-          onClick={() => navigate('/create')}
-          className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-        >
-          <PlusIcon className="w-5 h-5" />
-          <span>Create Qudemo</span>
-        </button>
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={fetchQudemos}
+            className="flex items-center space-x-2 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+            title="Refresh qudemos"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            <span>Refresh</span>
+          </button>
+          <button
+            onClick={() => navigate('/create')}
+            className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+          >
+            <PlusIcon className="w-5 h-5" />
+            <span>Create Qudemo</span>
+          </button>
+        </div>
       </div>
 
       {/* Qudemos Grid */}
@@ -287,11 +313,21 @@ const Qudemos = () => {
           {qudemos.map((qudemo) => (
             <div
               key={qudemo.id}
-              className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow border border-gray-200 cursor-pointer"
-              onClick={() => handleDropdownAction('preview', qudemo)}
+              className={`bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow border border-gray-200 ${
+                deletingQudemoId === qudemo.id ? 'opacity-50 pointer-events-none' : ''
+              }`}
             >
               {/* Video Thumbnail */}
               <div className="relative h-48 bg-gray-100 rounded-t-lg overflow-hidden">
+                {/* Delete Loading Overlay */}
+                {deletingQudemoId === qudemo.id && (
+                  <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-10 rounded-t-lg">
+                    <div className="text-white text-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-2"></div>
+                      <p className="text-sm">Deleting...</p>
+                    </div>
+                  </div>
+                )}
                 {qudemo.videos && qudemo.videos.length > 0 ? (
                   <div className="w-full h-full bg-black flex items-center justify-center">
                     <div className="relative w-full h-full">
@@ -313,9 +349,15 @@ const Qudemos = () => {
                       </div>
                       {/* Play Button Overlay */}
                       <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-16 h-16 bg-black bg-opacity-50 rounded-full flex items-center justify-center">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDropdownAction('preview', qudemo);
+                          }}
+                          className="w-16 h-16 bg-black bg-opacity-50 rounded-full flex items-center justify-center hover:bg-opacity-70 transition-all"
+                        >
                           <PlayIcon className="w-8 h-8 text-white" />
-                        </div>
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -394,17 +436,17 @@ const Qudemos = () => {
                             e.stopPropagation();
                             handleDropdownAction('delete', qudemo);
                           }}
-                          disabled={loading}
+                          disabled={deletingQudemoId === qudemo.id}
                           className={`w-full px-4 py-2 text-left hover:bg-red-50 text-red-600 flex items-center space-x-2 ${
-                            loading ? 'opacity-50 cursor-not-allowed' : ''
+                            deletingQudemoId === qudemo.id ? 'opacity-50 cursor-not-allowed' : ''
                           }`}
                         >
-                          {loading ? (
+                          {deletingQudemoId === qudemo.id ? (
                             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
                           ) : (
                             <TrashIcon className="w-4 h-4" />
                           )}
-                          <span>{loading ? 'Deleting...' : 'Delete'}</span>
+                          <span>{deletingQudemoId === qudemo.id ? 'Deleting...' : 'Delete'}</span>
                         </button>
                       </div>
                     )}
