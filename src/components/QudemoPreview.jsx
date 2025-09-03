@@ -163,6 +163,11 @@ const QudemoPreview = ({ qudemo, onClose }) => {
       localStorage.setItem(chatKey, JSON.stringify(messages));
     }
   }, [messages, chatKey]);
+  
+  // Debug: Monitor currentTimestamp state changes
+  useEffect(() => {
+    console.log('🎬 QudemoPreview: currentTimestamp state changed to:', currentTimestamp, 'Type:', typeof currentTimestamp);
+  }, [currentTimestamp]);
 
   // Cleanup function to ensure messages are saved when component unmounts
   useEffect(() => {
@@ -253,6 +258,25 @@ const QudemoPreview = ({ qudemo, onClose }) => {
           targetVideoUrl = response.data.video_url;
           timestamp = response.data.start || 0;
           console.log('🎬 Using direct video fields:', { url: targetVideoUrl, timestamp });
+          console.log('🎬 Raw response data:', response.data);
+          console.log('🎬 Start time value:', response.data.start, 'Type:', typeof response.data.start);
+          
+          // Ensure timestamp is a number and convert to seconds if needed
+          if (typeof timestamp === 'string') {
+            timestamp = parseFloat(timestamp);
+          }
+          if (isNaN(timestamp)) {
+            timestamp = 0;
+          }
+          
+          // Additional validation - ensure timestamp is reasonable
+          if (timestamp < 0 || timestamp > 36000) { // Max 10 hours
+            console.log('⚠️ Timestamp out of reasonable range, resetting to 0');
+            timestamp = 0;
+          }
+          
+          console.log('🎬 Processed timestamp:', timestamp, 'Type:', typeof timestamp);
+          console.log('🎬 Final timestamp value for video player:', timestamp);
         }
         // Fallback: check sources array for video sources
         else if (response.data && response.data.sources && response.data.sources.length > 0) {
@@ -278,12 +302,18 @@ const QudemoPreview = ({ qudemo, onClose }) => {
         // Switch video if we have a valid video URL
         if (targetVideoUrl) {
           console.log('🎬 Switching to video:', targetVideoUrl, 'at timestamp:', timestamp);
+          console.log('🎬 About to set currentTimestamp to:', timestamp);
+          
           // Find if this video is in our qudemo's videos
           const videoIndex = qudemo.videos?.findIndex(v => v.video_url === targetVideoUrl);
           if (videoIndex !== -1) {
+            console.log('🎬 Found video at index:', videoIndex);
             setCurrentVideoIndex(videoIndex);
             setCurrentTimestamp(timestamp);
             setIsPlaying(true);
+            console.log('🎬 currentTimestamp set to:', timestamp);
+          } else {
+            console.log('⚠️ Video not found in qudemo videos array');
           }
         }
         
@@ -344,6 +374,8 @@ const QudemoPreview = ({ qudemo, onClose }) => {
                 style={{ width: '100%', height: '100%', background: 'black' }}
                 onReady={() => {
                   console.log('Video ready for chat');
+                  console.log('🎬 Video ready - currentTimestamp:', currentTimestamp, 'Type:', typeof currentTimestamp);
+                  console.log('🎬 Video ready - startTime prop passed:', currentTimestamp);
                 }}
                 onPlay={() => {
                   console.log('Video playing in chat');
@@ -363,6 +395,25 @@ const QudemoPreview = ({ qudemo, onClose }) => {
                     <button 
                       onClick={() => setShowLoomTimestamp(false)}
                       className="text-black hover:text-gray-700 ml-2"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+              )}
+              
+              {/* YouTube Timestamp Indicator */}
+              {currentTimestamp > 0 && currentVideo.video_url.includes('youtube.com') && (
+                <div className="absolute top-4 right-4 bg-blue-500 text-white px-4 py-3 rounded-lg text-sm font-medium z-20 shadow-lg max-w-xs">
+                  <div className="flex items-center space-x-2">
+                    <span>⏰</span>
+                    <div>
+                      <div className="font-bold">Jump to:</div>
+                      <div>{Math.floor(currentTimestamp / 60)}:{(currentTimestamp % 60).toString().padStart(2, '0')}</div>
+                    </div>
+                    <button 
+                      onClick={() => setCurrentTimestamp(0)}
+                      className="text-white hover:text-gray-200 ml-2"
                     >
                       ✕
                     </button>

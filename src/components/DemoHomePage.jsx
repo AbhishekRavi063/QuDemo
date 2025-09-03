@@ -1,3 +1,5 @@
+// CUSTOMER PAGE COMPONENT - COMMENTED OUT (NOT IN USE)
+/*
 import React, { useState } from "react";
 import { ChevronDownIcon } from "@heroicons/react/20/solid";
 import InteractiveDemoPopup from "../components/InteractiveDemoPopup"; // Adjust path if needed
@@ -12,6 +14,10 @@ import {
 import { NavLink } from "react-router-dom";
 
 const DemoHomePage = () => {
+  // COMPONENT DISABLED - RETURN NULL
+  return null;
+  
+  /*
   const [showHeroDropdown, setShowHeroDropdown] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [showInteractiveDemoPopup, setShowInteractiveDemoPopup] =
@@ -24,6 +30,7 @@ const DemoHomePage = () => {
     time: "",
     notes: "",
   });
+*/
 
   const toggleHeroDropdown = () => setShowHeroDropdown((prev) => !prev);
 
@@ -270,3 +277,4 @@ const BenefitItem = ({ icon: Icon, title, description }) => (
 );
 
 export default DemoHomePage;
+*/

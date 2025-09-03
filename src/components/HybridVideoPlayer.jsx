@@ -18,6 +18,7 @@ const HybridVideoPlayer = ({
   className = '',
   iframeRef
 }) => {
+  console.log('🎬 HybridVideoPlayer props:', { url, startTime, playing, controls });
   const [audioEnabled, setAudioEnabled] = useState(true); // Start with audio enabled
   const [hasUserInteracted, setHasUserInteracted] = useState(true); // Assume user has interacted
   const internalIframeRef = useRef(null);
@@ -74,9 +75,10 @@ const HybridVideoPlayer = ({
     }
   };
 
-  // Handle timestamp changes
+          // Handle timestamp changes
   useEffect(() => {
-    if (startTime > 0 && currentIframeRef && currentIframeRef.contentWindow) {
+    console.log(`🎬 HybridVideoPlayer: startTime prop changed to ${startTime}s (type: ${typeof startTime})`);
+    if (startTime > 0 && currentIframeRef) {
       console.log(`🎬 Timestamp changed to ${startTime}s, updating video position`);
       
       // For YouTube videos, we need to reload the iframe with the new timestamp
@@ -86,7 +88,86 @@ const HybridVideoPlayer = ({
         if (currentSrc !== newSrc) {
           console.log(`🎬 Reloading YouTube iframe with new timestamp: ${startTime}s`);
           currentIframeRef.src = newSrc;
+          
+          // Also try to seek after a short delay to ensure the iframe is loaded
+          setTimeout(() => {
+            if (currentIframeRef.contentWindow) {
+              try {
+                currentIframeRef.contentWindow.postMessage({
+                  type: 'seekTo',
+                  seconds: Math.floor(startTime)
+                }, '*');
+                console.log(`🎬 Sent seekTo message for YouTube: ${startTime}s`);
+              } catch (e) {
+                console.log('🎬 Could not send seekTo message to YouTube iframe:', e);
+              }
+            }
+          }, 1000);
         }
+        
+        // Additional YouTube-specific seeking - try multiple methods
+        setTimeout(() => {
+          if (currentIframeRef.contentWindow) {
+            try {
+              // Method 1: postMessage with seekTo
+              currentIframeRef.contentWindow.postMessage({
+                type: 'seekTo',
+                seconds: Math.floor(startTime)
+              }, '*');
+              
+              // Method 2: postMessage with seek
+              currentIframeRef.contentWindow.postMessage({
+                type: 'seek',
+                seconds: Math.floor(startTime)
+              }, '*');
+              
+              // Method 3: postMessage with time
+              currentIframeRef.contentWindow.postMessage({
+                type: 'time',
+                seconds: Math.floor(startTime)
+              }, '*');
+              
+              // Method 4: YouTube Player API commands
+              currentIframeRef.contentWindow.postMessage({
+                event: 'command',
+                func: 'seekTo',
+                args: [Math.floor(startTime), true]
+              }, '*');
+              
+              // Method 5: Direct function call
+              currentIframeRef.contentWindow.postMessage({
+                event: 'command',
+                func: 'playVideo'
+              }, '*');
+              
+              console.log(`🎬 Sent multiple seek messages for YouTube: ${startTime}s`);
+            } catch (e) {
+              console.log('🎬 Could not send seek messages to YouTube iframe:', e);
+            }
+          }
+        }, 2000);
+        
+        // Method 6: Try to inject YouTube Player API script for direct control
+        setTimeout(() => {
+          try {
+            const iframeWindow = currentIframeRef.contentWindow;
+            if (iframeWindow && iframeWindow.document) {
+              // Inject YouTube Player API script
+              const script = iframeWindow.document.createElement('script');
+              script.src = 'https://www.youtube.com/iframe_api';
+              script.onload = () => {
+                console.log('🎬 YouTube Player API script loaded');
+                // Try to seek using the API
+                if (iframeWindow.YT && iframeWindow.YT.Player) {
+                  console.log('🎬 YouTube Player API available, attempting to seek');
+                }
+              };
+              iframeWindow.document.head.appendChild(script);
+            }
+          } catch (e) {
+            console.log('🎬 Could not inject YouTube Player API script:', e);
+          }
+        }, 3000);
       }
       
       // For Loom videos, the parent component handles seeking
@@ -121,9 +202,16 @@ const HybridVideoPlayer = ({
           videoId = url.split('youtu.be/')[1].split('?')[0];
         }
         if (!videoId) return url;
+        
+        // Ensure startTime is properly formatted for YouTube
         const ytStart = startTime && startTime > 0 ? `&start=${Math.floor(startTime)}` : '';
         const autoplay = playing ? '1' : '0';
-        return `https://www.youtube.com/embed/${videoId}?autoplay=${autoplay}&muted=0&enablejsapi=1&controls=1${ytStart}`;
+        // Use YouTube Player API v2 for better timestamp control
+        const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=${autoplay}&muted=0&enablejsapi=1&controls=1&rel=0&modestbranding=1&version=3&playerapiid=ytplayer${ytStart}`;
+        
+        console.log(`🎬 Generated YouTube embed URL with startTime ${startTime}s:`, embedUrl);
+        console.log(`🎬 startTime value: ${startTime}, Type: ${typeof startTime}, Truthy: ${!!startTime}, > 0: ${startTime > 0}`);
+        return embedUrl;
 
       case 'loom':
         // Convert Loom share URL to embed URL with enhanced API support

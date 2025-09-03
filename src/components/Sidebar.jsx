@@ -17,7 +17,8 @@ import {
 const menuItems = [
   { name: 'Overview', icon: ClockIcon, path: '/' },
   { name: 'Create QuDemo', icon: PlusIcon, path: '/create' },
-  { name: 'Customers', icon: UsersIcon, path: '/customers' },
+  // CUSTOMER PAGE - COMMENTED OUT (NOT IN USE)
+  // { name: 'Customers', icon: UsersIcon, path: '/customers' },
   { name: 'Qudemo Library', icon: Squares2X2Icon, path: '/library' },
   { name: 'Qudemos', icon: PlayIcon, path: '/qudemos' },
   { name: 'Buyer Interactions', icon: ChatBubbleLeftEllipsisIcon, path: '/interactions' },

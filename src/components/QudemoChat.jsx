@@ -30,6 +30,15 @@ const QudemoChat = ({ qudemoId, qudemoTitle }) => {
     scrollToBottom();
   }, [messages]);
 
+  // Monitor timestamp changes and reset video state when needed
+  useEffect(() => {
+    if (currentTimestamp > 0) {
+      // When timestamp changes, ensure video is ready to play
+      setIsPlaying(true);
+      console.log(`Timestamp changed to ${currentTimestamp}s, video state reset to play`);
+    }
+  }, [currentTimestamp]);
+
   const sendMessage = async () => {
     if (!input.trim() || isTyping) return;
 
@@ -72,15 +81,18 @@ const QudemoChat = ({ qudemoId, qudemoTitle }) => {
           sources: data.sources || [],
           videoUrl: data.video_url,
           timestamp: data.start,
-          answerSource: data.answer_source
+          answerSource: data.answer_source // can be 'video' | 'knowledge' | 'combined'
         };
 
         setMessages(prev => [...prev, aiMessage]);
 
-        // If there's a video URL with timestamp, set it for playback
-        if (data.video_url && data.start !== undefined) {
+        // If there's a video URL with timestamp and video is the primary source, set it for playback
+        if (data.answer_source === 'video' && data.video_url && data.start !== undefined) {
           setCurrentVideoUrl(data.video_url);
           setCurrentTimestamp(data.start);
+          // Force play state when new video timestamp is received
+          setIsPlaying(true);
+          console.log(`New video timestamp received: ${data.start}s, forcing play state`);
         }
       } else {
         const errorMessage = {
@@ -127,9 +139,23 @@ const QudemoChat = ({ qudemoId, qudemoTitle }) => {
     setCurrentTimestamp(timestamp);
     setIsPlaying(true);
     
-    // You can implement video player logic here
-    // For now, we'll just show the timestamp
+    // Force video to play when jumping to timestamp
+    // This ensures the video jumps even if it was manually paused
     console.log(`Playing video at ${formatTimestamp(timestamp)}`);
+    
+    // If this is a different timestamp than current, force play state
+    if (timestamp !== currentTimestamp) {
+      setIsPlaying(true);
+      // Reset any paused state to ensure video can jump
+      console.log(`New timestamp detected, forcing play state`);
+    }
+  };
+
+  const resetVideoState = () => {
+    // Reset video state when needed
+    setIsPlaying(false);
+    setCurrentTimestamp(0);
+    console.log('Video state reset');
   };
 
   const renderMessage = (message, index) => {
@@ -153,21 +179,21 @@ const QudemoChat = ({ qudemoId, qudemoTitle }) => {
           {isAI && message.sources && message.sources.length > 0 && (
             <div className="mt-2 pt-2 border-t border-gray-200">
               <div className="text-xs text-gray-600 mb-1">
-                Source: {message.answerSource === 'video_transcript' ? 'Video Transcript' : 'Knowledge Base'}
+                Source: {message.answerSource === 'video' ? 'Video Transcript' : message.answerSource === 'knowledge' ? 'Knowledge Base' : 'Combined'}
               </div>
               
               {message.sources.map((source, idx) => (
                 <div key={idx} className="text-xs text-gray-500">
-                  {source.type === 'video' && source.timestamp !== undefined && (
+                  {((source.type === 'video') || (source.content_type === 'video')) && (source.start_timestamp !== undefined || source.timestamp !== undefined) && (
                     <button
-                      onClick={() => playVideoAtTimestamp(source.url, source.timestamp)}
+                      onClick={() => playVideoAtTimestamp((source.video_url || source.url), (source.start_timestamp !== undefined ? source.start_timestamp : source.timestamp))}
                       className="text-blue-600 hover:text-blue-800 underline flex items-center gap-1"
                     >
                       <PlayIcon className="w-3 h-3" />
-                      {source.title} at {formatTimestamp(source.timestamp)}
+                      {(source.title || 'Video')} at {formatTimestamp((source.start_timestamp !== undefined ? source.start_timestamp : source.timestamp))}
                     </button>
                   )}
-                  {source.type === 'knowledge' && (
+                  {(source.type === 'knowledge' || source.content_type === 'knowledge') && (
                     <div className="text-gray-600">
                       📚 {source.title}
                     </div>
@@ -220,20 +246,33 @@ const QudemoChat = ({ qudemoId, qudemoTitle }) => {
         <div className="border-t border-gray-200 p-4 bg-gray-50">
           <div className="flex items-center justify-between mb-2">
             <h4 className="font-medium text-gray-700">Video Player</h4>
-            <button
-              onClick={() => setCurrentVideoUrl(null)}
-              className="text-gray-500 hover:text-gray-700"
-            >
-              ✕
-            </button>
+            <div className="flex space-x-2">
+              <button
+                onClick={resetVideoState}
+                className="text-gray-500 hover:text-gray-700 text-sm px-2 py-1 border border-gray-300 rounded"
+                title="Reset video state"
+              >
+                Reset
+              </button>
+              <button
+                onClick={() => setCurrentVideoUrl(null)}
+                className="text-gray-500 hover:text-gray-700"
+                title="Close video player"
+              >
+                ✕
+              </button>
+            </div>
           </div>
           <div className="bg-black rounded-lg p-2 text-white text-center">
             <div className="flex items-center justify-center space-x-2">
-              <PlayIcon className="w-5 h-5" />
+              {isPlaying ? <PlayIcon className="w-5 h-5" /> : <PauseIcon className="w-5 h-5" />}
               <span>Video ready at {formatTimestamp(currentTimestamp)}</span>
             </div>
             <p className="text-sm text-gray-300 mt-1">
-              Click the timestamp links above to jump to specific parts
+              {isPlaying ? 'Playing' : 'Paused'} - Click timestamp links above to jump to specific parts
+            </p>
+            <p className="text-xs text-gray-400 mt-1">
+              Status: {isPlaying ? 'Active' : 'Inactive'} | Timestamp: {formatTimestamp(currentTimestamp)}
             </p>
           </div>
         </div>

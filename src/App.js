@@ -6,7 +6,8 @@ import { getNodeApiUrl } from './config/api';
 // Import components
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
-import DemoHomePage from './components/DemoHomePage';
+// CUSTOMER PAGE COMPONENT - COMMENTED OUT (NOT IN USE)
+// import DemoHomePage from './components/DemoHomePage';
 import CreateQuDemo from './components/CreateQuDemo';
 import QudemoLibrary from './components/QudemoLibrary';
 import Qudemos from './components/Qudemos';
@@ -124,6 +125,7 @@ function App() {
                 </ProtectedRoute>
               } 
             />
+            {/* CUSTOMER PAGE ROUTE - COMMENTED OUT (NOT IN USE)
             <Route 
               path="/customers" 
               element={
@@ -134,6 +136,7 @@ function App() {
                 </ProtectedRoute>
               } 
             />
+            */}
             <Route 
               path="/create" 
               element={

@@ -1,3 +1,7 @@
+// CUSTOMER PAGE COMPONENT - COMMENTED OUT (NOT IN USE)
+// This entire component is disabled - all imports and functionality commented out
+
+/*
 import React, { useState, useRef, useEffect } from "react";
 import {
   XMarkIcon,
@@ -9,6 +13,10 @@ import { useCompany } from '../context/CompanyContext';
 import { getNodeApiUrl } from '../config/api';
 
 const InteractiveDemoPopup = ({ onClose, onSendRocket }) => {
+  // COMPONENT DISABLED - RETURN NULL
+  return null;
+  
+  /*
   const { company } = useCompany();
   const [message, setMessage] = useState("");
   const [chatLog, setChatLog] = useState([
@@ -24,6 +32,7 @@ const InteractiveDemoPopup = ({ onClose, onSendRocket }) => {
   const [error, setError] = useState("");
   const [retry, setRetry] = useState(false);
   const chatAreaRef = useRef(null);
+*/
 
   const questions = [
     { key: 'name', prompt: "Could you please tell me your name? 😊", validate: v => v.trim().length > 1 },
@@ -158,3 +167,4 @@ const InteractiveDemoPopup = ({ onClose, onSendRocket }) => {
 };
 
 export default InteractiveDemoPopup;
+*/
