@@ -69,6 +69,10 @@ const QudemoChat = ({ qudemoId, qudemoTitle }) => {
       });
 
       const data = await response.json();
+      console.log('🔍 QudemoChat: Full response data:', data);
+      console.log('🔍 QudemoChat: video_url:', data.video_url);
+      console.log('🔍 QudemoChat: start:', data.start);
+      console.log('🔍 QudemoChat: answer_source:', data.answer_source);
 
       if (data.success) {
         const aiMessage = {
@@ -86,13 +90,14 @@ const QudemoChat = ({ qudemoId, qudemoTitle }) => {
 
         setMessages(prev => [...prev, aiMessage]);
 
-        // If there's a video URL with timestamp and video is the primary source, set it for playback
-        if (data.answer_source === 'video' && data.video_url && data.start !== undefined) {
+        // If there's a video URL with timestamp, set it for playback (regardless of answer source)
+        if (data.video_url && data.start !== undefined && data.start > 0) {
           setCurrentVideoUrl(data.video_url);
           setCurrentTimestamp(data.start);
           // Force play state when new video timestamp is received
           setIsPlaying(true);
           console.log(`New video timestamp received: ${data.start}s, forcing play state`);
+          console.log(`Answer source: ${data.answer_source}, Video URL: ${data.video_url}`);
         }
       } else {
         const errorMessage = {

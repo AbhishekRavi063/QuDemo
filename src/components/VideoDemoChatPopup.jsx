@@ -168,6 +168,7 @@ const VideoDemoChatPopup = ({ leadId }) => {
   }, [currentTimestamp, ytVideoUrl]);
 
   useEffect(() => {
+    console.log('🔍 DEBUG: useEffect triggered - currentTimestamp:', currentTimestamp, 'ytVideoUrl:', ytVideoUrl);
     if (currentTimestamp > 0 && ytVideoUrl) {
       console.log('🎬 VideoDemoChatPopup: About to seek to timestamp:', currentTimestamp);
       setTimeout(() => {
@@ -199,6 +200,13 @@ const VideoDemoChatPopup = ({ leadId }) => {
                 method: 'seekTo',
                 value: currentTimestamp
               }, '*');
+              
+              // Force play after seeking for Loom videos
+              setTimeout(() => {
+                iframe.contentWindow.postMessage({
+                  method: 'play'
+                }, '*');
+              }, 100);
             }
           } catch (error) {
             console.error('Error seeking in iframe:', error);
@@ -233,11 +241,17 @@ const VideoDemoChatPopup = ({ leadId }) => {
         let targetVideoUrl = "";
           
         // Extract timestamp and video URL if available
+        console.log('🔍 DEBUG: Full response data:', response.data);
+        console.log('🔍 DEBUG: response.data.start:', response.data.start);
+        console.log('🔍 DEBUG: response.data.video_url:', response.data.video_url);
+        
         if (response.data.start !== undefined) {
             timestamp = response.data.start || 0;
+            console.log('🔍 DEBUG: Set timestamp to:', timestamp);
         }
         if (response.data.video_url) {
           targetVideoUrl = response.data.video_url;
+          console.log('🔍 DEBUG: Set targetVideoUrl to:', targetVideoUrl);
         }
 
         // Add AI message to chat
@@ -247,6 +261,7 @@ const VideoDemoChatPopup = ({ leadId }) => {
         }]);
 
         // Handle video seeking if timestamp is available
+        console.log('🔍 DEBUG: Checking conditions - targetVideoUrl:', targetVideoUrl, 'timestamp:', timestamp);
         if (targetVideoUrl && timestamp > 0) {
           console.log('🎬 Switching to video:', targetVideoUrl, 'at timestamp:', timestamp);
           console.log('🎬 About to set currentTimestamp to:', timestamp);

@@ -303,9 +303,13 @@ const QudemoPreview = ({ qudemo, onClose }) => {
         if (targetVideoUrl) {
           console.log('🎬 Switching to video:', targetVideoUrl, 'at timestamp:', timestamp);
           console.log('🎬 About to set currentTimestamp to:', timestamp);
+          console.log('🔍 DEBUG: Qudemo videos array:', qudemo.videos);
+          console.log('🔍 DEBUG: Looking for video URL:', targetVideoUrl);
           
           // Find if this video is in our qudemo's videos
           const videoIndex = qudemo.videos?.findIndex(v => v.video_url === targetVideoUrl);
+          console.log('🔍 DEBUG: Video index found:', videoIndex);
+          
           if (videoIndex !== -1) {
             console.log('🎬 Found video at index:', videoIndex);
             setCurrentVideoIndex(videoIndex);
@@ -314,6 +318,13 @@ const QudemoPreview = ({ qudemo, onClose }) => {
             console.log('🎬 currentTimestamp set to:', timestamp);
           } else {
             console.log('⚠️ Video not found in qudemo videos array');
+            console.log('🔍 DEBUG: Available video URLs:', qudemo.videos?.map(v => v.video_url));
+            // Try to set timestamp anyway if we have a valid timestamp
+            if (timestamp > 0) {
+              console.log('🎬 Setting timestamp anyway since we have a valid timestamp');
+              setCurrentTimestamp(timestamp);
+              setIsPlaying(true);
+            }
           }
         }
         
