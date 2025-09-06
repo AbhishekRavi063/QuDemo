@@ -198,14 +198,17 @@ const VideoDemoChatPopup = ({ leadId }) => {
               // Loom iframe seeking
               iframe.contentWindow.postMessage({
                 method: 'seekTo',
-                value: currentTimestamp
+                value: Math.floor(currentTimestamp)
               }, '*');
+              
+              console.log(`🎬 Sent seekTo message for Loom: ${currentTimestamp}s`);
               
               // Force play after seeking for Loom videos
               setTimeout(() => {
                 iframe.contentWindow.postMessage({
                   method: 'play'
                 }, '*');
+                console.log(`🎬 Sent play message for Loom`);
               }, 100);
             }
           } catch (error) {

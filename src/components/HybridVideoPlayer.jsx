@@ -170,9 +170,29 @@ const HybridVideoPlayer = ({
         }, 3000);
       }
       
-      // For Loom videos, the parent component handles seeking
+      // For Loom videos, reload the iframe with the new timestamp
       if (videoType === 'loom') {
-        console.log(`🎬 Loom timestamp changed to ${startTime}s, parent will handle seeking`);
+        const currentSrc = currentIframeRef.src;
+        const newSrc = getEmbedUrl(); // This will include the new startTime
+        if (currentSrc !== newSrc) {
+          console.log(`🎬 Reloading Loom iframe with new timestamp: ${startTime}s`);
+          currentIframeRef.src = newSrc;
+          
+          // Also try to seek after a short delay to ensure the iframe is loaded
+          setTimeout(() => {
+            if (currentIframeRef.contentWindow) {
+              try {
+                currentIframeRef.contentWindow.postMessage({
+                  method: 'seekTo',
+                  value: Math.floor(startTime)
+                }, '*');
+                console.log(`🎬 Sent seekTo message for Loom: ${startTime}s`);
+              } catch (e) {
+                console.log('🎬 Could not send seekTo message to Loom iframe:', e);
+              }
+            }
+          }, 1000);
+        }
       }
       
       // For Vimeo videos, we need to reload the iframe with the new timestamp
@@ -220,15 +240,17 @@ const HybridVideoPlayer = ({
           
           // Extract existing query parameters (like timestamp)
           const urlParams = new URLSearchParams(url.split('?')[1] || '');
-          const timestamp = urlParams.get('t');
+          const existingTimestamp = urlParams.get('t');
           
           // Build base embed URL with parameters
           const autoplay = playing ? '1' : '0';
           let embedUrl = `https://www.loom.com/embed/${videoId}?autoplay=${autoplay}&hide_share=1&hide_title=1&muted=0&enablejsapi=1&allowfullscreen=1&showinfo=0&controls=1&rel=0`;
           
-          // Add timestamp back if it exists
-          if (timestamp) {
-            embedUrl += `&t=${timestamp}`;
+          // Add timestamp - prioritize startTime prop over existing URL timestamp
+          const timestampToUse = startTime && startTime > 0 ? Math.floor(startTime) : existingTimestamp;
+          if (timestampToUse) {
+            embedUrl += `&t=${timestampToUse}`;
+            console.log(`🎬 Loom embed URL with timestamp: ${timestampToUse}s`);
           }
           
           return embedUrl;
