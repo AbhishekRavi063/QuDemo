@@ -124,6 +124,7 @@ const QudemoPreview = ({ qudemo, onClose }) => {
   const [loomTimestampMessage, setLoomTimestampMessage] = useState('');
   const messagesEndRef = useRef(null);
   const loomIframeRef = useRef();
+  const videoPlayerRef = useRef(null);
 
   // Initialize with welcome message only if this is a new conversation
   useEffect(() => {
@@ -137,7 +138,8 @@ const QudemoPreview = ({ qudemo, onClose }) => {
           setMessages(parsedMessages);
         } catch (e) {
           console.error('Error parsing saved messages:', e);
-          // If parsing fails, start fresh
+          // If parsing fails, start fresh and clean up corrupted data
+          localStorage.removeItem(chatKey);
           setMessages([]);
         }
       } else {
@@ -314,6 +316,7 @@ const QudemoPreview = ({ qudemo, onClose }) => {
             console.log('🎬 Found video at index:', videoIndex);
             setCurrentVideoIndex(videoIndex);
             setCurrentTimestamp(timestamp);
+            // Force video to resume and jump to timestamp
             setIsPlaying(true);
             console.log('🎬 currentTimestamp set to:', timestamp);
           } else {
@@ -323,9 +326,32 @@ const QudemoPreview = ({ qudemo, onClose }) => {
             if (timestamp > 0) {
               console.log('🎬 Setting timestamp anyway since we have a valid timestamp');
               setCurrentTimestamp(timestamp);
+              // Force video to resume and jump to timestamp
               setIsPlaying(true);
             }
           }
+          
+          // Force video to seek to new timestamp after a brief delay
+          // This ensures the video player responds to the new timestamp
+          setTimeout(() => {
+            if (timestamp > 0 && videoPlayerRef.current) {
+              console.log('🎬 Force seeking to timestamp:', timestamp);
+              try {
+                // Try to seek directly using the player ref
+                if (videoPlayerRef.current.seekTo) {
+                  videoPlayerRef.current.seekTo(timestamp);
+                  console.log('🎬 Direct seek successful');
+                }
+                // Also update state as backup
+                setCurrentTimestamp(timestamp);
+                setIsPlaying(true);
+              } catch (error) {
+                console.log('🎬 Direct seek failed, using state update:', error);
+                setCurrentTimestamp(timestamp);
+                setIsPlaying(true);
+              }
+            }
+          }, 100);
         }
         
         setIsTyping(false);
@@ -375,6 +401,7 @@ const QudemoPreview = ({ qudemo, onClose }) => {
           {currentVideo ? (
             <div className="relative w-full h-full">
               <HybridVideoPlayer
+                ref={videoPlayerRef}
                 key={`${currentVideo.video_url}-${currentTimestamp}`} // Force re-render when URL or timestamp changes
                 url={currentVideo.video_url}
                 width="100%"

@@ -274,6 +274,15 @@ const CreateQuDemo = () => {
         return;
       }
 
+      // Check if any content is provided
+      const validVideoUrls = videoUrls.filter(url => url.trim());
+      const validWebsiteUrl = websiteUrl.trim();
+      
+      if (validVideoUrls.length === 0 && !validWebsiteUrl) {
+        setError("Please provide at least one video URL or website URL to create a QuDemo.");
+        return;
+      }
+
       // Create qudemo first
       const qudemoData = {
         title: title || "Untitled Qudemo",
@@ -315,8 +324,6 @@ const CreateQuDemo = () => {
       setSuccess("🎉 Qudemo created successfully! Now processing all content automatically...");
 
       // Process all content automatically using the new endpoint
-      const validVideoUrls = videoUrls.filter(url => url.trim());
-      const validWebsiteUrl = websiteUrl.trim();
       
       if (validVideoUrls.length > 0 || validWebsiteUrl) {
         try {
@@ -350,7 +357,81 @@ const CreateQuDemo = () => {
             
             setSuccess(successMessage);
           } else {
-            throw new Error(contentResult.error || 'Content processing failed');
+            // Handle processing failure with detailed error message
+            const { processing_errors, has_anti_bot_protection, message } = contentResult;
+            
+            let errorMessage = "❌ Content processing failed!\n\n";
+            
+            // Show specific failed content with detailed reasons
+            if (processing_errors && processing_errors.length > 0) {
+              errorMessage += "📋 Failed Content Details:\n\n";
+              
+              processing_errors.forEach((error, index) => {
+                if (error.type === 'website') {
+                  errorMessage += `🌐 WEBSITE FAILED:\n`;
+                  errorMessage += `   URL: ${error.url}\n`;
+                  errorMessage += `   Reason: ${error.error}\n`;
+                  
+                  if (error.error_type) {
+                    errorMessage += `   Error Type: ${error.error_type.toUpperCase()}\n`;
+                  }
+                  
+                  if (error.protection_detected) {
+                    errorMessage += `   🛡️ Anti-Bot Protection: YES\n`;
+                  }
+                  
+                  errorMessage += `\n`;
+                  
+                } else if (error.type === 'video') {
+                  errorMessage += `📹 VIDEO FAILED:\n`;
+                  errorMessage += `   URL: ${error.url}\n`;
+                  errorMessage += `   Reason: ${error.error}\n`;
+                  
+                  if (error.error_type) {
+                    errorMessage += `   Error Type: ${error.error_type.toUpperCase()}\n`;
+                  }
+                  
+                  errorMessage += `\n`;
+                }
+              });
+            }
+            
+            // Add general anti-bot protection notice if detected
+            if (has_anti_bot_protection) {
+              errorMessage += "🛡️ Anti-Bot Protection Summary:\n";
+              errorMessage += "One or more websites have security measures that prevent automated scraping.\n";
+              errorMessage += "This is common with sites using Cloudflare, reCAPTCHA, or similar protection.\n\n";
+            }
+            
+            // Add helpful suggestions based on what failed
+            errorMessage += "💡 What you can do:\n";
+            
+            const hasWebsiteErrors = processing_errors?.some(e => e.type === 'website');
+            const hasVideoErrors = processing_errors?.some(e => e.type === 'video');
+            
+            if (hasWebsiteErrors && !hasVideoErrors) {
+              errorMessage += "• Try a different website URL (avoid sites with anti-bot protection)\n";
+              errorMessage += "• Use only video content for this QuDemo\n";
+              errorMessage += "• Contact the website owner for API access\n";
+            } else if (hasVideoErrors && !hasWebsiteErrors) {
+              errorMessage += "• Check that your video URLs are valid and accessible\n";
+              errorMessage += "• Try different video URLs (YouTube, Loom, Vimeo)\n";
+              errorMessage += "• Use only website content for this QuDemo\n";
+            } else if (hasWebsiteErrors && hasVideoErrors) {
+              errorMessage += "• Try different content sources (both videos and websites failed)\n";
+              errorMessage += "• Check that all URLs are valid and accessible\n";
+              errorMessage += "• Contact support for assistance\n";
+            } else {
+              errorMessage += "• Try different content sources\n";
+              errorMessage += "• Check that all URLs are valid and accessible\n";
+              errorMessage += "• Contact support if you need assistance\n";
+            }
+            
+            errorMessage += "\n⚠️ QuDemo will not be created without successful content.";
+            
+            // Show error notification and don't redirect
+            setError(errorMessage);
+            return; // Don't proceed with navigation
           }
         } catch (contentError) {
           console.error('❌ Content processing error:', contentError);
@@ -629,8 +710,45 @@ const CreateQuDemo = () => {
             {isSubmitting ? 'Processing Content...' : 'Save QuDemo & Process Content'}
           </button>
         </div>
-        {error && <div className="text-red-600 text-sm mt-2">{error}</div>}
-        {success && <div className="text-green-600 text-sm mt-2">{success}</div>}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mt-4">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-red-800">Processing Failed</h3>
+                <div className="mt-2 text-sm text-red-700 whitespace-pre-line">{error}</div>
+                <div className="mt-4">
+                  <button
+                    type="button"
+                    onClick={() => setError("")}
+                    className="bg-red-100 px-3 py-2 rounded-md text-sm font-medium text-red-800 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                  >
+                    OK
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        {success && (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4 mt-4">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-green-800">Success</h3>
+                <div className="mt-2 text-sm text-green-700 whitespace-pre-line">{success}</div>
+              </div>
+            </div>
+          </div>
+        )}
       </form>
       
       {/* Video Processing Notification */}

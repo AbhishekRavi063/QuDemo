@@ -201,6 +201,11 @@ const Qudemos = () => {
           setPreviewingQudemo(null);
         }
         
+        // Clean up localStorage data for the deleted qudemo
+        const chatKey = `qudemo_chat_${qudemoId}`;
+        localStorage.removeItem(chatKey);
+        console.log(`🧹 Cleaned up localStorage for deleted qudemo: ${qudemoId}`);
+        
         // Show success message
         console.log('✅ Qudemo deleted successfully');
         
