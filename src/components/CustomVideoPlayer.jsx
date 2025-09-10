@@ -29,8 +29,16 @@ const CustomVideoPlayer = ({
     if (videoRef.current && startTime > 0 && videoRef.current.readyState >= 2) {
       console.log(`🎬 Updating video position to ${startTime}s`);
       videoRef.current.currentTime = startTime;
+      
+      // Force play when timestamp changes (even if user manually paused)
+      if (playing) {
+        console.log(`🎬 Forcing play due to new timestamp`);
+        videoRef.current.play().catch(e => console.log('Force play failed:', e));
+        setIsPlaying(true);
+        if (onPlay) onPlay();
+      }
     }
-  }, [startTime]);
+  }, [startTime, playing]);
 
   // Handle video metadata loaded
   const handleLoadedMetadata = () => {

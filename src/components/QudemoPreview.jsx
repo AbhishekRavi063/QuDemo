@@ -103,6 +103,42 @@ const cleanMessageText = (text) => {
   return result;
 };
 
+// Extract video ID from various URL formats
+const extractVideoId = (url) => {
+  if (!url) return null;
+  
+  try {
+    // YouTube URLs
+    if (url.includes('youtube.com/watch')) {
+      const urlParams = new URLSearchParams(url.split('?')[1]);
+      return urlParams.get('v');
+    } else if (url.includes('youtu.be/')) {
+      return url.split('youtu.be/')[1].split('?')[0];
+    } else if (url.includes('youtube.com/embed/')) {
+      return url.split('youtube.com/embed/')[1].split('?')[0];
+    }
+    
+    // Loom URLs
+    if (url.includes('loom.com/share/')) {
+      return url.split('loom.com/share/')[1].split('?')[0];
+    } else if (url.includes('loom.com/embed/')) {
+      return url.split('loom.com/embed/')[1].split('?')[0];
+    }
+    
+    // Vimeo URLs
+    if (url.includes('vimeo.com/')) {
+      return url.split('vimeo.com/')[1].split('?')[0];
+    } else if (url.includes('player.vimeo.com/video/')) {
+      return url.split('player.vimeo.com/video/')[1].split('?')[0];
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error extracting video ID:', error);
+    return null;
+  }
+};
+
 const QudemoPreview = ({ qudemo, onClose }) => {
   // Generate a unique key for this qudemo's chat
   const chatKey = `qudemo-chat-${qudemo?.id}`;
@@ -308,8 +344,14 @@ const QudemoPreview = ({ qudemo, onClose }) => {
           console.log('🔍 DEBUG: Qudemo videos array:', qudemo.videos);
           console.log('🔍 DEBUG: Looking for video URL:', targetVideoUrl);
           
-          // Find if this video is in our qudemo's videos
-          const videoIndex = qudemo.videos?.findIndex(v => v.video_url === targetVideoUrl);
+          // Find if this video is in our qudemo's videos (flexible URL matching)
+          const videoIndex = qudemo.videos?.findIndex(v => {
+            if (!v.video_url || !targetVideoUrl) return false;
+            // Extract video IDs for comparison
+            const vId = extractVideoId(v.video_url);
+            const targetId = extractVideoId(targetVideoUrl);
+            return vId && targetId && vId === targetId;
+          });
           console.log('🔍 DEBUG: Video index found:', videoIndex);
           
           if (videoIndex !== -1) {

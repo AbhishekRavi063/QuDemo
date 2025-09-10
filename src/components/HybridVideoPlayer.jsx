@@ -207,6 +207,60 @@ const HybridVideoPlayer = ({
     }
   }, [startTime, videoType, url]);
 
+  // Handle playing prop changes - force play when playing becomes true
+  useEffect(() => {
+    console.log(`🎬 HybridVideoPlayer: playing prop changed to ${playing}`);
+    if (playing && currentIframeRef && currentIframeRef.contentWindow) {
+      console.log(`🎬 Forcing video to play due to playing prop change`);
+      
+      // For YouTube videos, send play command
+      if (videoType === 'youtube') {
+        try {
+          // Method 1: YouTube Player API commands
+          currentIframeRef.contentWindow.postMessage({
+            event: 'command',
+            func: 'playVideo'
+          }, '*');
+          
+          // Method 2: Generic play message
+          currentIframeRef.contentWindow.postMessage({
+            type: 'play'
+          }, '*');
+          
+          console.log(`🎬 Sent play commands for YouTube`);
+        } catch (e) {
+          console.log('🎬 Could not send play message to YouTube iframe:', e);
+        }
+      }
+      
+      // For Loom videos, send play command
+      if (videoType === 'loom') {
+        try {
+          currentIframeRef.contentWindow.postMessage({
+            method: 'play'
+          }, '*');
+          
+          console.log(`🎬 Sent play command for Loom`);
+        } catch (e) {
+          console.log('🎬 Could not send play message to Loom iframe:', e);
+        }
+      }
+      
+      // For Vimeo videos, send play command
+      if (videoType === 'vimeo') {
+        try {
+          currentIframeRef.contentWindow.postMessage({
+            method: 'play'
+          }, '*');
+          
+          console.log(`🎬 Sent play command for Vimeo`);
+        } catch (e) {
+          console.log('🎬 Could not send play message to Vimeo iframe:', e);
+        }
+      }
+    }
+  }, [playing, videoType]);
+
   // Convert URL to embed format with audio parameters
   const getEmbedUrl = () => {
     if (!url) return '';
@@ -229,6 +283,8 @@ const HybridVideoPlayer = ({
         // Use YouTube Player API v2 for better timestamp control
         const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=${autoplay}&muted=0&enablejsapi=1&controls=1&rel=0&modestbranding=1&version=3&playerapiid=ytplayer${ytStart}`;
         
+        console.log(`🎬 YouTube embed URL: autoplay=${autoplay}, startTime=${startTime}, playing=${playing}`);
+        
         console.log(`🎬 Generated YouTube embed URL with startTime ${startTime}s:`, embedUrl);
         console.log(`🎬 startTime value: ${startTime}, Type: ${typeof startTime}, Truthy: ${!!startTime}, > 0: ${startTime > 0}`);
         return embedUrl;
@@ -245,6 +301,8 @@ const HybridVideoPlayer = ({
           // Build base embed URL with parameters
           const autoplay = playing ? '1' : '0';
           let embedUrl = `https://www.loom.com/embed/${videoId}?autoplay=${autoplay}&hide_share=1&hide_title=1&muted=0&enablejsapi=1&allowfullscreen=1&showinfo=0&controls=1&rel=0`;
+          
+          console.log(`🎬 Loom embed URL: autoplay=${autoplay}, startTime=${startTime}, playing=${playing}`);
           
           // Add timestamp - prioritize startTime prop over existing URL timestamp
           const timestampToUse = startTime && startTime > 0 ? Math.floor(startTime) : existingTimestamp;
@@ -263,7 +321,10 @@ const HybridVideoPlayer = ({
           const videoId = url.split('vimeo.com/')[1].split('?')[0];
           const vimeoTime = startTime && startTime > 0 ? `#t=${Math.floor(startTime)}s` : '';
           const autoplay = playing ? '1' : '0';
-          return videoId ? `https://player.vimeo.com/video/${videoId}?autoplay=${autoplay}&muted=0&controls=1${vimeoTime}` : url;
+          const embedUrl = videoId ? `https://player.vimeo.com/video/${videoId}?autoplay=${autoplay}&muted=0&controls=1${vimeoTime}` : url;
+          
+          console.log(`🎬 Vimeo embed URL: autoplay=${autoplay}, startTime=${startTime}, playing=${playing}`);
+          return embedUrl;
         }
         return url;
 
@@ -335,6 +396,7 @@ const HybridVideoPlayer = ({
 
       {/* Iframe Video */}
       <iframe
+        key={`${url}-${startTime}-${playing}`} // Force re-render when URL, timestamp, or playing state changes
         ref={currentIframeRef}
         src={getEmbedUrl()}
         frameBorder="0"
