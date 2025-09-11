@@ -158,6 +158,7 @@ const QudemoPreview = ({ qudemo, onClose }) => {
   const [audioEnabled, setAudioEnabled] = useState(false);
   const [showLoomTimestamp, setShowLoomTimestamp] = useState(false);
   const [loomTimestampMessage, setLoomTimestampMessage] = useState('');
+  const [videoRefreshKey, setVideoRefreshKey] = useState(0); // Force video player refresh
   const messagesEndRef = useRef(null);
   const loomIframeRef = useRef();
   const videoPlayerRef = useRef(null);
@@ -344,6 +345,9 @@ const QudemoPreview = ({ qudemo, onClose }) => {
           console.log('🔍 DEBUG: Qudemo videos array:', qudemo.videos);
           console.log('🔍 DEBUG: Looking for video URL:', targetVideoUrl);
           
+          // First, pause the current video to ensure clean transition
+          setIsPlaying(false);
+          
           // Find if this video is in our qudemo's videos (flexible URL matching)
           const videoIndex = qudemo.videos?.findIndex(v => {
             if (!v.video_url || !targetVideoUrl) return false;
@@ -358,42 +362,42 @@ const QudemoPreview = ({ qudemo, onClose }) => {
             console.log('🎬 Found video at index:', videoIndex);
             setCurrentVideoIndex(videoIndex);
             setCurrentTimestamp(timestamp);
-            // Force video to resume and jump to timestamp
-            setIsPlaying(true);
             console.log('🎬 currentTimestamp set to:', timestamp);
           } else {
             console.log('⚠️ Video not found in qudemo videos array');
             console.log('🔍 DEBUG: Available video URLs:', qudemo.videos?.map(v => v.video_url));
             // Try to set timestamp anyway if we have a valid timestamp
-            if (timestamp > 0) {
+            if (timestamp !== undefined) {
               console.log('🎬 Setting timestamp anyway since we have a valid timestamp');
               setCurrentTimestamp(timestamp);
-              // Force video to resume and jump to timestamp
-              setIsPlaying(true);
             }
           }
           
           // Force video to seek to new timestamp after a brief delay
           // This ensures the video player responds to the new timestamp
           setTimeout(() => {
-            if (timestamp > 0 && videoPlayerRef.current) {
+            if (timestamp !== undefined) {
               console.log('🎬 Force seeking to timestamp:', timestamp);
-              try {
-                // Try to seek directly using the player ref
-                if (videoPlayerRef.current.seekTo) {
-                  videoPlayerRef.current.seekTo(timestamp);
-                  console.log('🎬 Direct seek successful');
+              // Update timestamp and start playing
+              setCurrentTimestamp(timestamp);
+              setIsPlaying(true);
+              
+              // Increment refresh key to force video player re-render
+              setVideoRefreshKey(prev => prev + 1);
+              
+              // Try to seek directly using the player ref if available
+              if (videoPlayerRef.current) {
+                try {
+                  if (videoPlayerRef.current.seekTo) {
+                    videoPlayerRef.current.seekTo(timestamp);
+                    console.log('🎬 Direct seek successful');
+                  }
+                } catch (error) {
+                  console.log('🎬 Direct seek failed, using state update:', error);
                 }
-                // Also update state as backup
-                setCurrentTimestamp(timestamp);
-                setIsPlaying(true);
-              } catch (error) {
-                console.log('🎬 Direct seek failed, using state update:', error);
-                setCurrentTimestamp(timestamp);
-                setIsPlaying(true);
               }
             }
-          }, 100);
+          }, 200); // Increased delay to ensure video player is ready
         }
         
         setIsTyping(false);
@@ -444,7 +448,7 @@ const QudemoPreview = ({ qudemo, onClose }) => {
             <div className="relative w-full h-full">
               <HybridVideoPlayer
                 ref={videoPlayerRef}
-                key={`${currentVideo.video_url}-${currentTimestamp}`} // Force re-render when URL or timestamp changes
+                key={`${currentVideo.video_url}-${currentTimestamp}-${videoRefreshKey}`} // Force re-render when URL, timestamp, or refresh key changes
                 url={currentVideo.video_url}
                 width="100%"
                 height="100%"

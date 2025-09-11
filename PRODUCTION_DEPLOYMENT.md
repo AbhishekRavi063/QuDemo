@@ -48,7 +48,7 @@ SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 # API Keys
 OPENAI_API_KEY=your_openai_api_key
 GEMINI_API_KEY=your_gemini_api_key
-PINECONE_API_KEY=your_pinecone_api_key
+# Note: PINECONE_API_KEY removed - now using GCS-based storage
 
 # Python Backend URL
 PYTHON_API_BASE_URL=https://qudemo-python-backend.onrender.com
@@ -68,8 +68,8 @@ SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 # API Keys
 OPENAI_API_KEY=your_openai_api_key
 GEMINI_API_KEY=your_gemini_api_key
-PINECONE_API_KEY=your_pinecone_api_key
-PINECONE_INDEX=your_pinecone_index_name
+# Note: PINECONE_API_KEY removed - now using GCS-based storage
+# Note: PINECONE_INDEX removed - now using GCS-based storage
 
 # Node.js Backend URL
 NODE_BACKEND_URL=https://qudemo-node-backend.onrender.com
@@ -202,7 +202,7 @@ The backends are configured to accept requests from:
 2. **Video Processing Fails:**
    - Check Python backend status
    - Verify API keys are set
-   - Check Pinecone connection
+   - Check GCS connection
 
 3. **Database Connection Issues:**
    - Verify Supabase credentials

@@ -85,19 +85,35 @@ const QudemoChat = ({ qudemoId, qudemoTitle }) => {
           sources: data.sources || [],
           videoUrl: data.video_url,
           timestamp: data.start,
-          answerSource: data.answer_source // can be 'video' | 'knowledge' | 'combined'
+          answerSource: data.answer_source, // can be 'video' | 'knowledge' | 'hybrid' | 'combined'
+          searchMethod: data.search_method, // 'hybrid' | 'standard' | 'topic_wise'
+          confidence: data.confidence,
+          searchScore: data.search_score,
+          hybridScores: data.hybrid_scores,
+          formattedTimestamp: data.formatted_timestamp,
+          difficultyLevel: data.difficulty_level,
+          estimatedTime: data.estimated_time
         };
 
         setMessages(prev => [...prev, aiMessage]);
 
-        // If there's a video URL with timestamp, set it for playback (regardless of answer source)
-        if (data.video_url && data.start !== undefined && data.start > 0) {
+        // Enhanced video timestamp handling for hybrid Q&A
+        if (data.video_url && data.start !== undefined) {
           setCurrentVideoUrl(data.video_url);
           setCurrentTimestamp(data.start);
           // Force play state when new video timestamp is received
           setIsPlaying(true);
-          console.log(`New video timestamp received: ${data.start}s, forcing play state`);
-          console.log(`Answer source: ${data.answer_source}, Video URL: ${data.video_url}`);
+          
+          // Enhanced logging for hybrid Q&A
+          if (data.searchMethod === 'hybrid') {
+            console.log(`🎯 Hybrid Q&A timestamp: ${data.start}s (${data.formattedTimestamp})`);
+            console.log(`🎯 Hybrid scores:`, data.hybridScores);
+            console.log(`🎯 Confidence: ${data.confidence}, Search score: ${data.searchScore}`);
+          } else {
+            console.log(`📹 Standard Q&A timestamp: ${data.start}s`);
+          }
+          
+          console.log(`🎬 Video URL: ${data.video_url}, Answer source: ${data.answer_source}`);
         }
       } else {
         const errorMessage = {

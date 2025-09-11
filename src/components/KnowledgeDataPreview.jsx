@@ -277,7 +277,7 @@ ${metadata.description || 'Website content has been processed and is available f
           throw new Error('Source not found');
         }
 
-        // Call backend API to delete from database and Pinecone
+        // Call backend API to delete from database and GCS
         const token = localStorage.getItem('accessToken');
         const response = await fetch(getNodeApiUrl(`/api/knowledge/source/${sourceId}`), {
           method: 'DELETE',

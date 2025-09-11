@@ -410,7 +410,7 @@ const CompanyManagement = () => {
                 <li>• All video demos and transcripts</li>
                 <li>• All knowledge sources and scraped data</li>
                 <li>• All user interactions and questions</li>
-                <li>• All company data from Pinecone</li>
+                <li>• All company data from GCS</li>
                 <li>• The company record itself</li>
               </ul>
               <p className="text-sm text-red-800 mt-2 font-semibold">
