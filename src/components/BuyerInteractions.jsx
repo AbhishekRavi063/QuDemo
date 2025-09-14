@@ -79,6 +79,7 @@ const data = [
 ];
 
 const BuyerDetailsModal = ({ buyer, onClose }) => {
+  const { pythonApiUrl } = useBackend();
   const [activeTab, setActiveTab] = useState("overview");
   const [questions, setQuestions] = useState([]);
   const [loadingQuestions, setLoadingQuestions] = useState(false);
@@ -137,7 +138,7 @@ const BuyerDetailsModal = ({ buyer, onClose }) => {
       }
     };
     if (questions.length > 0) fetchSummary();
-  }, [questions, buyer]);
+  }, [questions, buyer, pythonApiUrl]);
 
   // Generate a summary from questions and answers (max 100 words)
   const generateSummary = (questions) => {
