@@ -12,6 +12,7 @@ import {
   UsersIcon,
   PlusIcon,
   PlayIcon,
+  ServerIcon,
 } from '@heroicons/react/24/outline';
 
 const menuItems = [

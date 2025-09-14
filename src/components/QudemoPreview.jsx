@@ -12,6 +12,7 @@ import {
   UserIcon
 } from '@heroicons/react/24/outline';
 import { getVideoApiUrl, getNodeApiUrl } from '../config/api';
+import { useBackend } from '../context/BackendContext';
 import axios from 'axios';
 
 const TypingIndicator = () => (

@@ -4,10 +4,12 @@ const config = {
   // API Base URLs
   NODE_API_URL: process.env.REACT_APP_NODE_API_URL || 'http://localhost:5000',
   PYTHON_API_URL: process.env.REACT_APP_PYTHON_API_URL || 'http://localhost:5001',
+  PYTHON_API_URL_2: process.env.REACT_APP_PYTHON_API_URL_2 || 'http://localhost:5002',
   
   // Production URLs (fallback)
   PROD_NODE_API_URL: 'https://qudemo-node-backend.onrender.com',
   PROD_PYTHON_API_URL: 'https://qudemo-python-backend.onrender.com',
+  PROD_PYTHON_API_URL_2: 'https://qudemo-python-backend-2.onrender.com',
   
   // API Endpoints
   endpoints: {
@@ -89,8 +91,8 @@ export const buildApiUrl = (baseUrl, endpoint) => {
 };
 
 // Helper function to get video API URL
-export const getVideoApiUrl = (endpoint) => {
-  const baseUrl = getApiUrl('python');
+export const getVideoApiUrl = (endpoint, pythonUrl = null) => {
+  const baseUrl = pythonUrl || getApiUrl('python');
   return buildApiUrl(baseUrl, endpoint);
 };
 

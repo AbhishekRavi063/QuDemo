@@ -11,6 +11,7 @@ import {
   BuildingOffice2Icon,
 } from "@heroicons/react/24/outline";
 import { getVideoApiUrl, getNodeApiUrl } from "../config/api";
+import { useBackend } from "../context/BackendContext";
 
 
 
@@ -115,7 +116,7 @@ const BuyerDetailsModal = ({ buyer, onClose }) => {
       setLoadingSummary(true);
       setSummaryError("");
       try {
-        const summaryUrl = getVideoApiUrl('/generate-summary');
+        const summaryUrl = getVideoApiUrl('/generate-summary', pythonApiUrl);
         const response = await fetch(summaryUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -637,6 +638,7 @@ const BuyerDetailsModal = ({ buyer, onClose }) => {
 };
 
 const BuyerInteractions = () => {
+  const { pythonApiUrl } = useBackend();
   const [selectedBuyer, setSelectedBuyer] = useState(null);
   const [activeTab, setActiveTab] = useState("all");
   const [buyers, setBuyers] = useState([]);

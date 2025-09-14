@@ -22,6 +22,7 @@ import CompanyManagement from './components/CompanyManagement';
 import AuthCallback from './components/AuthCallback';
 import Overview from './components/Overview';
 import { CompanyProvider } from './context/CompanyContext';
+import { BackendProvider } from './context/BackendContext';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -106,8 +107,9 @@ function App() {
 
   return (
     <Router>
-      <CompanyProvider>
-        <div className="App">
+      <BackendProvider>
+        <CompanyProvider>
+          <div className="App">
           <Routes>
             {/* Public Routes */}
             <Route path="/login" element={<LoginPage />} />
@@ -231,8 +233,9 @@ function App() {
             {/* Catch all route */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
-        </div>
-      </CompanyProvider>
+          </div>
+        </CompanyProvider>
+      </BackendProvider>
     </Router>
   );
 }
