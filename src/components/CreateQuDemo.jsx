@@ -14,11 +14,8 @@ const CreateQuDemo = () => {
   const { company, isLoading } = useCompany();
   const navigate = useNavigate();
   const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
   const [videoUrls, setVideoUrls] = useState([""]);
-  const [thumbnailUrl, setThumbnailUrl] = useState("");
   const [sources, setSources] = useState([""]);
-  const [meetingLink, setMeetingLink] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -286,7 +283,7 @@ const CreateQuDemo = () => {
       // Create qudemo first
       const qudemoData = {
         title: title || "Untitled Qudemo",
-        description: description || "No description provided",
+        description: "No description provided",
         companyId: company.id,
         videos: videoUrls.filter(url => url.trim()).map((url, index) => ({
           url: url.trim(),
@@ -439,17 +436,15 @@ const CreateQuDemo = () => {
         }
       }
 
-      setSuccess("🎉 Qudemo created and all content processed successfully! Redirecting to Qudemo Library...");
+      setSuccess("🎉 Qudemo created and all content processed successfully! Redirecting to Qudemos...");
       
       // Reset form
       setTitle("");
-      setDescription("");
       setVideoUrls([""]);
       setSources([""]);
       setWebsiteUrl("");
-      setMeetingLink("");
       
-      // Navigate to qudemo library after a short delay to show success message
+      // Navigate to qudemos page after a short delay to show success message
       setTimeout(() => {
         navigate('/qudemos');
       }, 2000);
@@ -503,18 +498,6 @@ const CreateQuDemo = () => {
               onChange={e => setTitle(e.target.value)}
               placeholder="Enter qudemo title"
               required
-              className="w-full border border-gray-300 px-4 py-2 rounded-lg"
-            />
-          </div>
-          <div>
-            <label className="block font-medium text-gray-700 mb-1">
-              Description
-            </label>
-            <textarea
-              value={description}
-              onChange={e => setDescription(e.target.value)}
-              placeholder="Describe your qudemo"
-              rows={3}
               className="w-full border border-gray-300 px-4 py-2 rounded-lg"
             />
           </div>
@@ -580,27 +563,6 @@ const CreateQuDemo = () => {
             </p>
           </div>
 
-          <div>
-            <label className="block font-medium text-gray-700 mb-1">
-              Thumbnail Image URL
-            </label>
-            <div className="flex flex-col sm:flex-row">
-              <input
-                type="text"
-                value={thumbnailUrl}
-                onChange={e => setThumbnailUrl(e.target.value)}
-                placeholder="https://example.com/thumbnail.jpg"
-                className="flex-1 border border-gray-300 px-4 py-2 rounded-t-lg sm:rounded-l-lg sm:rounded-tr-none"
-              />
-              <button type="button" className="flex items-center justify-center px-3 py-2 border border-t-0 sm:border-t border-l-0 sm:border-l border-gray-300 rounded-b-lg sm:rounded-r-lg sm:rounded-bl-none bg-gray-100 hover:bg-gray-200">
-                <ArrowUpTrayIcon className="h-5 w-5 text-gray-600" />
-                <span className="ml-1 text-sm">Upload</span>
-              </button>
-            </div>
-            <p className="text-sm text-gray-500 mt-1">
-              An image that represents your demo (optional).
-            </p>
-          </div>
         </div>
 
         {/* Product Knowledge Sources */}
@@ -653,46 +615,8 @@ const CreateQuDemo = () => {
             </div>
           </div>
 
-          {/* Knowledge Sources List */}
-          {knowledgeSources.length > 0 && (
-            <div className="mb-6 p-4 border border-gray-200 rounded-lg">
-              <h4 className="font-medium text-gray-800 mb-3">📚 Current Knowledge Sources</h4>
-              <div className="space-y-2">
-                {knowledgeSources.map((source) => (
-                  <div key={source.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      <div className={`w-3 h-3 rounded-full ${
-                        source.status === 'processed' ? 'bg-green-500' : 
-                        source.status === 'processing' ? 'bg-yellow-500' : 'bg-red-500'
-                      }`}></div>
-                      <div>
-                        <div className="font-medium text-sm">{source.title}</div>
-                        <div className="text-xs text-gray-500">
-                          {source.source_type} • {new Date(source.created_at).toLocaleDateString()}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-xs text-gray-500 capitalize">{source.status}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
 
-        {/* Meeting Link */}
-        <div className="mt-6">
-          <label className="block font-medium text-gray-700 mb-1">
-            Meeting Link
-          </label>
-          <input
-            type="text"
-            value={meetingLink}
-            onChange={e => setMeetingLink(e.target.value)}
-            placeholder="https://meet.example.com/session"
-            className="w-full border border-gray-300 px-4 py-2 rounded-lg"
-          />
-        </div>
 
         {/* Save Button */}
         <div className="pt-4 relative flex flex-col items-center">

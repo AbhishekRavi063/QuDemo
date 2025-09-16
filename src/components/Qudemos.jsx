@@ -27,6 +27,9 @@ const Qudemos = () => {
   const [previewingQudemo, setPreviewingQudemo] = useState(null);
   const [dropdownOpen, setDropdownOpen] = useState(null);
   const [deletingQudemoId, setDeletingQudemoId] = useState(null);
+  const [sharingQudemo, setSharingQudemo] = useState(null);
+  const [shareLink, setShareLink] = useState('');
+  const [showShareModal, setShowShareModal] = useState(false);
   const { company } = useCompany();
   const navigate = useNavigate();
 
@@ -52,6 +55,52 @@ const Qudemos = () => {
         }
       }, 300);
     }, 3000);
+  };
+
+  // Share functionality
+  const handleShareQudemo = async (qudemo) => {
+    console.log('🔗 Frontend (Qudemos): handleShareQudemo called with qudemo:', qudemo);
+    setSharingQudemo(qudemo);
+    try {
+      const token = localStorage.getItem('accessToken');
+      console.log('🔗 Frontend (Qudemos): Making POST request to:', getNodeApiUrl(`/api/qudemos/${qudemo.id}/share`));
+      console.log('🔗 Frontend (Qudemos): Token exists:', !!token);
+      
+      const response = await fetch(getNodeApiUrl(`/api/qudemos/${qudemo.id}/share`), {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      console.log('🔗 Frontend (Qudemos): Response status:', response.status);
+
+      if (response.ok) {
+        const data = await response.json();
+        setShareLink(data.shareUrl);
+        setShowShareModal(true);
+      } else {
+        const data = await response.json();
+        console.error('❌ Failed to generate share link:', data.error);
+        showNotification('Failed to generate share link. Please try again.', 'error');
+      }
+    } catch (err) {
+      console.error('❌ Error generating share link:', err);
+      showNotification('Network error. Please try again.', 'error');
+    } finally {
+      setSharingQudemo(null);
+    }
+  };
+
+  const copyShareLink = async () => {
+    try {
+      await navigator.clipboard.writeText(shareLink);
+      showNotification('Share link copied to clipboard!', 'success');
+    } catch (err) {
+      console.error('❌ Failed to copy to clipboard:', err);
+      showNotification('Failed to copy link. Please copy manually.', 'error');
+    }
   };
 
   // Helper function to get relative time
@@ -122,6 +171,7 @@ const Qudemos = () => {
   // }, [company]);
 
   const handleDropdownAction = async (action, qudemo) => {
+    console.log('🔗 Frontend (Qudemos): handleDropdownAction called with action:', action, 'qudemo:', qudemo);
     setDropdownOpen(null);
 
     switch (action) {
@@ -145,8 +195,8 @@ const Qudemos = () => {
         }
         break;
       case 'share':
-        // TODO: Implement share functionality
-        alert('Share functionality coming soon!');
+        console.log('🔗 Frontend (Qudemos): Share action selected for qudemo:', qudemo);
+        handleShareQudemo(qudemo);
         break;
       default:
         break;
@@ -427,6 +477,7 @@ const Qudemos = () => {
                         </button>
                         <button
                           onClick={(e) => {
+                            console.log('🔗 Frontend (Qudemos): Share button clicked in dropdown');
                             e.stopPropagation();
                             handleDropdownAction('share', qudemo);
                           }}
@@ -491,6 +542,66 @@ const Qudemos = () => {
           qudemo={previewingQudemo} 
           onClose={() => setPreviewingQudemo(null)} 
         />
+      )}
+
+      {/* Share Modal */}
+      {showShareModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">Share QuDemo</h3>
+                <button
+                  onClick={() => setShowShareModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              
+              <div className="mb-4">
+                <p className="text-sm text-gray-600 mb-2">
+                  Share this QuDemo with anyone using the link below:
+                </p>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="text"
+                    value={shareLink}
+                    readOnly
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm bg-gray-50"
+                  />
+                  <button
+                    onClick={copyShareLink}
+                    className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                    Copy
+                  </button>
+                </div>
+              </div>
+              
+              <div className="bg-blue-50 p-3 rounded-lg">
+                <p className="text-sm text-blue-800">
+                  <strong>Note:</strong> This link is public and can be accessed by anyone without authentication. 
+                  The shared page will show your company name and the QuDemo content.
+                </p>
+              </div>
+              
+              <div className="mt-4 flex justify-end">
+                <button
+                  onClick={() => setShowShareModal(false)}
+                  className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -9,7 +9,6 @@ import Sidebar from './components/Sidebar';
 // CUSTOMER PAGE COMPONENT - COMMENTED OUT (NOT IN USE)
 // import DemoHomePage from './components/DemoHomePage';
 import CreateQuDemo from './components/CreateQuDemo';
-import QudemoLibrary from './components/QudemoLibrary';
 import Qudemos from './components/Qudemos';
 import EditQudemo from './components/EditQudemo';
 import BuyerInteractions from './components/BuyerInteractions';
@@ -19,9 +18,12 @@ import SettingsPage from './components/SettingsPage';
 import LoginPage from './components/LoginPage';
 import RegisterPage from './components/RegisterPage';
 import CompanyManagement from './components/CompanyManagement';
+import CompanySetup from './components/CompanySetup';
 import AuthCallback from './components/AuthCallback';
 import Overview from './components/Overview';
-import { CompanyProvider } from './context/CompanyContext';
+import TestRunner from './components/TestRunner';
+import PublicQudemoShare from './components/PublicQudemoShare';
+import { CompanyProvider, useCompany } from './context/CompanyContext';
 import { BackendProvider } from './context/BackendContext';
 
 // Protected Route Component
@@ -83,6 +85,27 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
+// Company Check Component
+const CompanyCheck = ({ children }) => {
+  const { company, isLoading } = useCompany();
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
+
+  // If no company exists, show company setup
+  if (!company) {
+    return <CompanySetup />;
+  }
+
+  // If company exists, show the dashboard
+  return children;
+};
+
 // Dashboard Layout Component
 const DashboardLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -115,15 +138,18 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
+            <Route path="/share/:shareToken" element={<PublicQudemoShare />} />
             
             {/* Protected Routes */}
             <Route 
               path="/" 
               element={
                 <ProtectedRoute>
-                  <DashboardLayout>
-                    <Overview />
-                  </DashboardLayout>
+                  <CompanyCheck>
+                    <DashboardLayout>
+                      <Overview />
+                    </DashboardLayout>
+                  </CompanyCheck>
                 </ProtectedRoute>
               } 
             />
@@ -143,19 +169,11 @@ function App() {
               path="/create" 
               element={
                 <ProtectedRoute>
-                  <DashboardLayout>
-                    <CreateQuDemo />
-                  </DashboardLayout>
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/library" 
-              element={
-                <ProtectedRoute>
-                  <DashboardLayout>
-                    <QudemoLibrary />
-                  </DashboardLayout>
+                  <CompanyCheck>
+                    <DashboardLayout>
+                      <CreateQuDemo />
+                    </DashboardLayout>
+                  </CompanyCheck>
                 </ProtectedRoute>
               } 
             />
@@ -163,9 +181,11 @@ function App() {
               path="/qudemos" 
               element={
                 <ProtectedRoute>
-                  <DashboardLayout>
-                    <Qudemos />
-                  </DashboardLayout>
+                  <CompanyCheck>
+                    <DashboardLayout>
+                      <Qudemos />
+                    </DashboardLayout>
+                  </CompanyCheck>
                 </ProtectedRoute>
               } 
             />
@@ -173,9 +193,11 @@ function App() {
               path="/edit-qudemo/:id" 
               element={
                 <ProtectedRoute>
-                  <DashboardLayout>
-                    <EditQudemo />
-                  </DashboardLayout>
+                  <CompanyCheck>
+                    <DashboardLayout>
+                      <EditQudemo />
+                    </DashboardLayout>
+                  </CompanyCheck>
                 </ProtectedRoute>
               } 
             />
@@ -183,9 +205,11 @@ function App() {
               path="/interactions" 
               element={
                 <ProtectedRoute>
-                  <DashboardLayout>
-                    <BuyerInteractions />
-                  </DashboardLayout>
+                  <CompanyCheck>
+                    <DashboardLayout>
+                      <BuyerInteractions />
+                    </DashboardLayout>
+                  </CompanyCheck>
                 </ProtectedRoute>
               } 
             />
@@ -193,9 +217,11 @@ function App() {
               path="/analytics" 
               element={
                 <ProtectedRoute>
-                  <DashboardLayout>
-                    <InsightsAnalytics />
-                  </DashboardLayout>
+                  <CompanyCheck>
+                    <DashboardLayout>
+                      <InsightsAnalytics />
+                    </DashboardLayout>
+                  </CompanyCheck>
                 </ProtectedRoute>
               } 
             />
@@ -203,9 +229,11 @@ function App() {
               path="/profile" 
               element={
                 <ProtectedRoute>
-                  <DashboardLayout>
-                    <ProfilePage />
-                  </DashboardLayout>
+                  <CompanyCheck>
+                    <DashboardLayout>
+                      <ProfilePage />
+                    </DashboardLayout>
+                  </CompanyCheck>
                 </ProtectedRoute>
               } 
             />
@@ -213,9 +241,11 @@ function App() {
               path="/settings" 
               element={
                 <ProtectedRoute>
-                  <DashboardLayout>
-                    <SettingsPage />
-                  </DashboardLayout>
+                  <CompanyCheck>
+                    <DashboardLayout>
+                      <SettingsPage />
+                    </DashboardLayout>
+                  </CompanyCheck>
                 </ProtectedRoute>
               } 
             />
@@ -223,9 +253,23 @@ function App() {
               path="/companies" 
               element={
                 <ProtectedRoute>
-                  <DashboardLayout>
-                    <CompanyManagement />
-                  </DashboardLayout>
+                  <CompanyCheck>
+                    <DashboardLayout>
+                      <CompanyManagement />
+                    </DashboardLayout>
+                  </CompanyCheck>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/test-runner" 
+              element={
+                <ProtectedRoute>
+                  <CompanyCheck>
+                    <DashboardLayout>
+                      <TestRunner />
+                    </DashboardLayout>
+                  </CompanyCheck>
                 </ProtectedRoute>
               } 
             />

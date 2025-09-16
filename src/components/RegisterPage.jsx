@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { getNodeApiUrl } from '../config/api';
+import { supabase } from '../config/supabase';
 
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
@@ -12,6 +13,7 @@ const RegisterPage = () => {
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [registerError, setRegisterError] = useState('');
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const navigate = useNavigate();
 
   const validateForm = () => {
@@ -67,8 +69,49 @@ const RegisterPage = () => {
     }
   };
 
-  const handleGoogleSignIn = () => {
-    window.location.href = `${process.env.REACT_APP_SUPABASE_URL}/auth/v1/authorize?provider=google&redirect_to=${window.location.origin}/auth/callback`;
+  const handleGoogleSignUp = async () => {
+    console.log('🔍 Google sign-up clicked');
+    console.log('🔍 Supabase URL:', process.env.REACT_APP_SUPABASE_URL);
+    console.log('🔍 Supabase Anon Key:', process.env.REACT_APP_SUPABASE_ANON_KEY ? 'Set' : 'Not set');
+    
+    // Check if Supabase is properly configured
+    const isUsingPlaceholders = !process.env.REACT_APP_SUPABASE_URL || 
+                              process.env.REACT_APP_SUPABASE_URL === 'your-supabase-url' ||
+                              !process.env.REACT_APP_SUPABASE_ANON_KEY ||
+                              process.env.REACT_APP_SUPABASE_ANON_KEY === 'your-supabase-anon-key-here';
+    
+    if (isUsingPlaceholders) {
+      console.log('🔍 Supabase not configured - showing error');
+      setRegisterError('Google OAuth is not configured. Please set up Supabase credentials in .env file.');
+      return;
+    }
+    
+    setIsGoogleLoading(true);
+    setRegisterError('');
+
+    try {
+      console.log('🔍 Calling Supabase OAuth...');
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`
+        }
+      });
+
+      console.log('🔍 OAuth response:', { data, error });
+
+      if (error) {
+        console.error('Google sign-up error:', error);
+        setRegisterError(`Google sign-up failed: ${error.message}`);
+      } else {
+        console.log('🔍 OAuth initiated successfully');
+      }
+    } catch (error) {
+      console.error('Google sign-up error:', error);
+      setRegisterError(`Google sign-up failed: ${error.message}`);
+    } finally {
+      setIsGoogleLoading(false);
+    }
   };
 
   return (
@@ -150,11 +193,16 @@ const RegisterPage = () => {
         </form>
         <button
           type="button"
-          onClick={handleGoogleSignIn}
-          className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md bg-white text-gray-700 hover:bg-gray-50 font-medium mt-4"
+          onClick={handleGoogleSignUp}
+          disabled={isGoogleLoading}
+          className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md bg-white text-gray-700 hover:bg-gray-50 font-medium mt-4 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <img src="https://www.svgrepo.com/show/355037/google.svg" alt="Google" className="h-5 w-5 mr-2" />
-          Sign in with Google
+          {isGoogleLoading ? (
+            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-600 mr-2"></div>
+          ) : (
+            <img src="https://www.svgrepo.com/show/355037/google.svg" alt="Google" className="h-5 w-5 mr-2" />
+          )}
+          {isGoogleLoading ? 'Signing up...' : 'Sign up with Google'}
         </button>
       </div>
     </div>

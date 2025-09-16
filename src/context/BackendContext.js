@@ -43,9 +43,32 @@ export const BackendProvider = ({ children }) => {
   // Switch backend
   const switchBackend = (backendId) => {
     if (backends[backendId]) {
+      const previousBackend = selectedBackend;
+      const newBackend = backends[backendId];
+      
       setSelectedBackend(backendId);
       localStorage.setItem('selectedBackend', backendId);
-      console.log(`🔄 Switched to ${backends[backendId].name}`);
+      
+      // Log backend switch
+      console.log(`🔄 Backend Switch: ${backends[previousBackend]?.name || 'Unknown'} → ${newBackend.name}`);
+      console.log(`📍 New Backend URL: ${newBackend.pythonUrl || newBackend.prodPythonUrl}`);
+      console.log(`📝 Description: ${newBackend.description}`);
+      
+      // Send analytics event for production
+      if (process.env.NODE_ENV === 'production') {
+        // Log to console for debugging
+        console.log(`📊 Analytics: Backend switched to ${newBackend.name} at ${new Date().toISOString()}`);
+        
+        // You can add more analytics here (e.g., Google Analytics, Mixpanel, etc.)
+        if (window.gtag) {
+          window.gtag('event', 'backend_switch', {
+            'backend_name': newBackend.name,
+            'backend_id': backendId,
+            'previous_backend': backends[previousBackend]?.name || 'Unknown',
+            'timestamp': new Date().toISOString()
+          });
+        }
+      }
     }
   };
 

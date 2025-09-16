@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { getNodeApiUrl } from "../config/api";
+import { useCompany } from "../context/CompanyContext";
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState("personal");
+  const { company } = useCompany();
   
   // User profile state
   const [user, setUser] = useState(null);
@@ -14,7 +16,6 @@ export default function ProfilePage() {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [company, setCompany] = useState("");
   const [jobTitle, setJobTitle] = useState("");
 
   const [timezone, setTimezone] = useState("UTC-5");
@@ -48,6 +49,7 @@ export default function ProfilePage() {
 
   const tabs = [
     { name: "Personal Info", key: "personal" },
+    { name: "Company", key: "company" },
     { name: "Preferences", key: "preferences" },
     { name: "Security", key: "security" },
   ];
@@ -231,26 +233,15 @@ export default function ProfilePage() {
                 />
               </div>
 
-              {/* Company Info */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <div>
-                  <label className="block font-medium mb-2">Company</label>
-                  <input
-                    type="text"
-                    value={company}
-                    onChange={(e) => setCompany(e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block font-medium mb-2">Job Title</label>
-                  <input
-                    type="text"
-                    value={jobTitle}
-                    onChange={(e) => setJobTitle(e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
+              {/* Job Title */}
+              <div className="mb-6">
+                <label className="block font-medium mb-2">Job Title</label>
+                <input
+                  type="text"
+                  value={jobTitle}
+                  onChange={(e) => setJobTitle(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                />
               </div>
 
               <button
@@ -260,6 +251,131 @@ export default function ProfilePage() {
                 Save Changes
               </button>
             </form>
+          )}
+
+          {activeTab === "company" && (
+            <div>
+              <h2 className="text-xl font-semibold mb-2">Company Information</h2>
+              <p className="text-gray-500 mb-6">View your company details and settings</p>
+              
+              {company ? (
+                <div className="space-y-6">
+                  {/* Company Logo */}
+                  <div className="flex items-center space-x-4">
+                    {company.logo_url ? (
+                      <img
+                        src={company.logo_url}
+                        alt="Company Logo"
+                        className="w-20 h-20 bg-gray-300 rounded-lg object-cover border"
+                      />
+                    ) : (
+                      <div className="w-20 h-20 bg-gray-300 rounded-lg flex items-center justify-center text-gray-500 font-semibold text-lg">
+                        {company.name?.charAt(0) || 'C'}
+                      </div>
+                    )}
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900">{company.name}</h3>
+                      <p className="text-gray-500">Company Logo</p>
+                    </div>
+                  </div>
+
+                  {/* Company Details */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block font-medium mb-2 text-gray-700">Company Name</label>
+                      <div className="w-full border border-gray-200 rounded-lg px-3 py-2 bg-gray-50 text-gray-900">
+                        {company.name || 'Not provided'}
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <label className="block font-medium mb-2 text-gray-700">Display Name</label>
+                      <div className="w-full border border-gray-200 rounded-lg px-3 py-2 bg-gray-50 text-gray-900">
+                        {company.display_name || company.name || 'Not provided'}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block font-medium mb-2 text-gray-700">Description</label>
+                    <div className="w-full border border-gray-200 rounded-lg px-3 py-2 bg-gray-50 text-gray-900 min-h-[80px]">
+                      {company.description || 'No description provided'}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block font-medium mb-2 text-gray-700">Website</label>
+                    <div className="w-full border border-gray-200 rounded-lg px-3 py-2 bg-gray-50 text-gray-900">
+                      {company.website ? (
+                        <a 
+                          href={company.website} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800 underline"
+                        >
+                          {company.website}
+                        </a>
+                      ) : (
+                        'Not provided'
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block font-medium mb-2 text-gray-700">Logo URL</label>
+                    <div className="w-full border border-gray-200 rounded-lg px-3 py-2 bg-gray-50 text-gray-900">
+                      {company.logo_url ? (
+                        <a 
+                          href={company.logo_url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800 underline"
+                        >
+                          {company.logo_url}
+                        </a>
+                      ) : (
+                        'Not provided'
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Company Status */}
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div>
+                      <h4 className="font-medium text-gray-900">Company Status</h4>
+                      <p className="text-sm text-gray-500">Current status of your company account</p>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className={`w-3 h-3 rounded-full ${company.is_active ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                      <span className={`text-sm font-medium ${company.is_active ? 'text-green-700' : 'text-red-700'}`}>
+                        {company.is_active ? 'Active' : 'Inactive'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Company Created Date */}
+                  <div className="text-sm text-gray-500">
+                    <strong>Created:</strong> {company.created_at ? new Date(company.created_at).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    }) : 'Unknown'}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <div className="text-gray-500 mb-4">
+                    <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Company Found</h3>
+                  <p className="text-gray-500">You don't have a company associated with your account.</p>
+                </div>
+              )}
+            </div>
           )}
 
           {activeTab === "preferences" && (

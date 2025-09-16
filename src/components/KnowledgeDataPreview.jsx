@@ -19,7 +19,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { getNodeApiUrl } from '../config/api';
 
-const KnowledgeDataPreview = ({ companyName, onDataUpdate }) => {
+const KnowledgeDataPreview = ({ companyName, qudemoId, onDataUpdate }) => {
   const [knowledgeSources, setKnowledgeSources] = useState([]);
   const [selectedSource, setSelectedSource] = useState(null);
   const [showPreview, setShowPreview] = useState(false);
@@ -39,7 +39,15 @@ const KnowledgeDataPreview = ({ companyName, onDataUpdate }) => {
       setLoading(true);
       try {
         const token = localStorage.getItem('accessToken');
-        const response = await fetch(getNodeApiUrl(`/api/knowledge/sources/${encodeURIComponent(companyName)}`), {
+        
+        // Use QuDemo-specific endpoint if qudemoId is provided, otherwise use company-level endpoint
+        const endpoint = qudemoId 
+          ? `/api/knowledge/sources/${encodeURIComponent(companyName)}/${qudemoId}`
+          : `/api/knowledge/sources/${encodeURIComponent(companyName)}`;
+        
+        console.log(`🔍 DEBUG: Fetching knowledge sources from: ${endpoint}`);
+        
+        const response = await fetch(getNodeApiUrl(endpoint), {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -76,7 +84,7 @@ const KnowledgeDataPreview = ({ companyName, onDataUpdate }) => {
     };
 
     fetchKnowledgeSources();
-  }, [companyName]);
+  }, [companyName, qudemoId]);
 
   const handlePreviewKnowledgeSource = async (source) => {
     setSelectedSource(source);
