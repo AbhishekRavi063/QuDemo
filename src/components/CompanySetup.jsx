@@ -20,16 +20,26 @@ const CompanySetup = () => {
   const validateForm = () => {
     const errors = {};
     
+    // Name is required
     if (!formData.name.trim()) {
       errors.name = 'Company name is required';
     } else if (formData.name.trim().length < 2) {
       errors.name = 'Company name must be at least 2 characters';
     }
     
+    // Description is required
+    if (!formData.description.trim()) {
+      errors.description = 'Company description is required';
+    } else if (formData.description.trim().length < 10) {
+      errors.description = 'Description must be at least 10 characters';
+    }
+    
+    // Website is optional, but if provided, must be valid URL
     if (formData.website && !isValidUrl(formData.website)) {
       errors.website = 'Please enter a valid website URL';
     }
     
+    // Logo is optional, but if provided, must be valid URL
     if (formData.logo && !isValidUrl(formData.logo)) {
       errors.logo = 'Please enter a valid logo URL';
     }
@@ -70,6 +80,12 @@ const CompanySetup = () => {
       return;
     }
     
+    // Prevent duplicate submissions
+    if (isSubmitting) {
+      console.log('🚫 Already submitting, ignoring duplicate request');
+      return;
+    }
+    
     setIsSubmitting(true);
     setError('');
     setSuccess('');
@@ -86,7 +102,7 @@ const CompanySetup = () => {
           name: formData.name.trim(),
           description: formData.description.trim() || 'No description provided',
           website: formData.website.trim() || null,
-          logo_url: formData.logo.trim() || null
+          logo: formData.logo.trim() || null
         })
       });
       
@@ -96,14 +112,25 @@ const CompanySetup = () => {
         setSuccess('🎉 Company created successfully! Setting up your workspace...');
         
         // Refresh company context
+        console.log('🔄 Refreshing company context...');
         await refreshCompany();
+        console.log('✅ Company context refreshed');
         
         // Redirect to main dashboard after a short delay
+        console.log('🚀 Redirecting to dashboard in 2 seconds...');
         setTimeout(() => {
+          console.log('🚀 Navigating to dashboard now');
           navigate('/');
         }, 2000);
       } else {
-        setError(data.error || 'Failed to create company. Please try again.');
+        if (response.status === 409) {
+          setError('You already have a company! Redirecting to dashboard...');
+          setTimeout(() => {
+            navigate('/');
+          }, 2000);
+        } else {
+          setError(data.error || 'Failed to create company. Please try again.');
+        }
       }
     } catch (error) {
       console.error('Create company error:', error);
@@ -156,25 +183,31 @@ const CompanySetup = () => {
             {/* Description */}
             <div>
               <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-                Description
+                Description *
               </label>
               <div className="mt-1">
                 <textarea
                   id="description"
                   name="description"
                   rows={3}
+                  required
                   value={formData.description}
                   onChange={handleInputChange}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                  placeholder="Brief description of your company (optional)"
+                  className={`appearance-none block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm ${
+                    formErrors.description ? 'border-red-300' : 'border-gray-300'
+                  }`}
+                  placeholder="Brief description of your company (required)"
                 />
+                {formErrors.description && (
+                  <p className="mt-1 text-sm text-red-600">{formErrors.description}</p>
+                )}
               </div>
             </div>
 
             {/* Website */}
             <div>
               <label htmlFor="website" className="block text-sm font-medium text-gray-700">
-                Website
+                Website (Optional)
               </label>
               <div className="mt-1">
                 <input
@@ -197,7 +230,7 @@ const CompanySetup = () => {
             {/* Logo URL */}
             <div>
               <label htmlFor="logo" className="block text-sm font-medium text-gray-700">
-                Logo URL
+                Logo URL (Optional)
               </label>
               <div className="mt-1">
                 <input

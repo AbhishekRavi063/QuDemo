@@ -13,6 +13,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { getVideoApiUrl, getNodeApiUrl } from '../config/api';
 import { useBackend } from '../context/BackendContext';
+import { refreshAccessToken, clearAuthTokens } from '../utils/tokenRefresh';
 import axios from 'axios';
 
 const TypingIndicator = () => (
@@ -261,20 +262,63 @@ const QudemoPreview = ({ qudemo, onClose }) => {
       console.log('🔍 Sending Q&A request for qudemo:', qudemo.id);
       console.log('🔍 Question:', userQuestion);
       
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        console.log('❌ QudemoPreview: No access token found');
+        setMessages(prev => [...prev, {
+          sender: "AI",
+          text: "Please log in to ask questions.",
+          time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+        }]);
+        setIsTyping(false);
+        return;
+      }
+      
       // Call the Node.js backend Q&A endpoint which will forward to Python backend
       const askUrl = getNodeApiUrl(`/api/qa/qudemo/${qudemo.id}`);
       console.log('🔍 Calling API URL:', askUrl);
       console.log('🔍 Request payload:', { question: userQuestion });
       
-      const response = await axios.post(askUrl, {
-        question: userQuestion
-      }, {
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        },
-        timeout: 30000
-      });
+      let response;
+      try {
+        response = await axios.post(askUrl, {
+          question: userQuestion
+        }, {
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          timeout: 30000
+        });
+      } catch (error) {
+        // Handle token expiration
+        if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+          console.log('🔄 QudemoPreview: Token expired, attempting refresh');
+          
+          const refreshResult = await refreshAccessToken();
+          
+          if (refreshResult.success) {
+            console.log('✅ QudemoPreview: Token refreshed, retrying request');
+            
+            // Retry the request with the new token
+            response = await axios.post(askUrl, {
+              question: userQuestion
+            }, {
+              headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${refreshResult.accessToken}`
+              },
+              timeout: 30000
+            });
+          } else {
+            console.log('❌ QudemoPreview: Token refresh failed');
+            clearAuthTokens();
+            throw error; // Re-throw to be handled by the catch block
+          }
+        } else {
+          throw error; // Re-throw non-auth errors
+        }
+      }
       
       console.log('✅ Q&A response:', response.data);
       console.log('🎬 Video fields in response:', {
@@ -418,12 +462,27 @@ const QudemoPreview = ({ qudemo, onClose }) => {
 
     } catch (error) {
       console.error('Chat error:', error);
-      const errorMessage = {
-        sender: "AI",
-        text: 'Sorry, I encountered an error while processing your request. Please try again.',
-        time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-      };
-      setMessages(prev => [...prev, errorMessage]);
+      
+      // Handle authentication errors specifically
+      if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+        console.log('❌ QudemoPreview: Authentication failed even after refresh attempt');
+        clearAuthTokens();
+        
+        const errorMessage = {
+          sender: "AI",
+          text: 'Your session has expired. Please refresh the page and log in again.',
+          time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+        };
+        setMessages(prev => [...prev, errorMessage]);
+      } else {
+        const errorMessage = {
+          sender: "AI",
+          text: 'Sorry, I encountered an error while processing your request. Please try again.',
+          time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+        };
+        setMessages(prev => [...prev, errorMessage]);
+      }
+      
       setIsTyping(false);
     }
   };

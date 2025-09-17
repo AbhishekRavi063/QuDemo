@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { PaperAirplaneIcon, PlayIcon, PauseIcon } from '@heroicons/react/24/outline';
 import { useCompany } from '../context/CompanyContext';
 import { getNodeApiUrl } from '../config/api';
+import { authenticatedFetch, clearAuthTokens } from '../utils/tokenRefresh';
 
 const QudemoChat = ({ qudemoId, qudemoTitle }) => {
   const { company } = useCompany();
@@ -57,16 +58,44 @@ const QudemoChat = ({ qudemoId, qudemoTitle }) => {
 
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(getNodeApiUrl(`/api/qa/qudemo/${qudemoId}`), {
+      
+      if (!token) {
+        console.log('❌ QudemoChat: No access token found');
+        setMessages(prev => [...prev, {
+          sender: "AI",
+          text: "Please log in to ask questions.",
+          time: new Date().toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          })
+        }]);
+        setIsTyping(false);
+        return;
+      }
+
+      const response = await authenticatedFetch(getNodeApiUrl(`/api/qa/qudemo/${qudemoId}`), {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
         body: JSON.stringify({
           question: input
         })
       });
+
+      // Handle authentication errors after refresh attempt
+      if (response.status === 401 || response.status === 403) {
+        console.log('❌ QudemoChat: Authentication failed even after refresh attempt');
+        clearAuthTokens();
+        
+        setMessages(prev => [...prev, {
+          sender: "AI",
+          text: "Your session has expired. Please refresh the page and log in again.",
+          time: new Date().toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          })
+        }]);
+        setIsTyping(false);
+        return;
+      }
 
       const data = await response.json();
       console.log('🔍 QudemoChat: Full response data:', data);

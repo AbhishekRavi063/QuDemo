@@ -17,6 +17,13 @@ const AuthCallback = () => {
         return;
       }
       
+      // Additional check for URL hash
+      if (!window.location.hash.includes('access_token')) {
+        console.log('🔍 AuthCallback: No access token in URL, redirecting to login');
+        navigate('/login');
+        return;
+      }
+      
       try {
         setHasProcessed(true);
         console.log('🔍 AuthCallback: Starting authentication callback');
@@ -69,11 +76,7 @@ const AuthCallback = () => {
           
           console.log('🔍 AuthCallback: Session found, processing user:', user);
           
-          // Store tokens in localStorage
-          localStorage.setItem('accessToken', access_token);
-          localStorage.setItem('refreshToken', refresh_token);
-          
-          // Store user data
+          // Store user data (but not tokens yet - wait for backend tokens)
           localStorage.setItem('user', JSON.stringify({
             id: user.id,
             email: user.email,
@@ -82,29 +85,40 @@ const AuthCallback = () => {
             profile_picture: user.user_metadata?.avatar_url || user.user_metadata?.picture || ''
           }));
 
-          console.log('🔍 AuthCallback: User data stored, proceeding with backend sync');
+          console.log('🔍 AuthCallback: User data stored, proceeding with backend sync to get proper tokens');
 
           // Check if user exists in our backend, if not create them
           try {
             console.log('🔍 AuthCallback: Checking if user exists in backend...');
-            const response = await fetch(getNodeApiUrl('/api/auth/profile'), {
-              headers: {
-                'Authorization': `Bearer ${access_token}`
-              }
-            });
+            let response;
+            try {
+              response = await fetch(getNodeApiUrl('/api/auth/profile'), {
+                headers: {
+                  'Authorization': `Bearer ${access_token}` // Use Supabase token temporarily for profile check
+                }
+              });
+            } catch (profileError) {
+              console.error('Profile check failed:', profileError);
+              // If profile check fails completely, use Supabase tokens as fallback
+              console.log('⚠️ AuthCallback: Profile check failed, using Supabase tokens as fallback');
+              localStorage.setItem('accessToken', access_token);
+              localStorage.setItem('refreshToken', refresh_token);
+              setTimeout(() => navigate('/'), 500);
+              return;
+            }
 
             console.log('🔍 AuthCallback: Backend profile check response:', response.status);
 
             if (!response.ok) {
               console.log('🔍 AuthCallback: User not found in backend, creating user...');
               // User doesn't exist in our backend, create them
-              console.log('🔍 AuthCallback: Sending register request with token:', accessToken ? 'Present' : 'Missing');
-              console.log('🔍 AuthCallback: Token length:', accessToken ? accessToken.length : 0);
+              console.log('🔍 AuthCallback: Sending register request with token:', access_token ? 'Present' : 'Missing');
+              console.log('🔍 AuthCallback: Token length:', access_token ? access_token.length : 0);
               const createUserResponse = await fetch(getNodeApiUrl('/api/auth/register'), {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${accessToken}` // ✅ Add the token for auth middleware
+                  'Authorization': `Bearer ${access_token}` // ✅ Add the token for auth middleware
                 },
                 body: JSON.stringify({
                   email: user.email,
@@ -125,20 +139,71 @@ const AuthCallback = () => {
                 return;
               } else {
                 console.log('🔍 AuthCallback: User created/updated successfully in backend');
+                
+                // Get the backend tokens if available
+                const backendData = await createUserResponse.json();
+                if (backendData.success && backendData.data.tokens) {
+                  console.log('🔍 AuthCallback: Using backend tokens for consistency');
+                  localStorage.setItem('accessToken', backendData.data.tokens.accessToken);
+                  localStorage.setItem('refreshToken', backendData.data.tokens.refreshToken);
+                  console.log('✅ AuthCallback: Backend tokens stored for new user');
+                } else {
+                  console.log('⚠️ AuthCallback: No backend tokens received, using Supabase tokens as fallback');
+                  localStorage.setItem('accessToken', access_token);
+                  localStorage.setItem('refreshToken', refresh_token);
+                }
               }
             } else {
-              console.log('🔍 AuthCallback: User already exists in backend - LOGIN SUCCESS');
+              console.log('🔍 AuthCallback: User already exists in backend - getting fresh tokens');
+              
+              // User exists, get fresh tokens by calling login endpoint
+              try {
+                const loginResponse = await fetch(getNodeApiUrl('/api/auth/login'), {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    email: user.email,
+                    password: null, // No password for OAuth users
+                    isGoogleUser: true
+                  })
+                });
+                
+                if (loginResponse.ok) {
+                  const loginData = await loginResponse.json();
+                  if (loginData.success && loginData.data.tokens) {
+                    console.log('🔍 AuthCallback: Got fresh tokens for existing user');
+                    localStorage.setItem('accessToken', loginData.data.tokens.accessToken);
+                    localStorage.setItem('refreshToken', loginData.data.tokens.refreshToken);
+                    console.log('✅ AuthCallback: Fresh tokens stored for existing user');
+                  }
+                }
+              } catch (loginError) {
+                console.error('Failed to get fresh tokens for existing user:', loginError);
+                // Use Supabase tokens as fallback
+                console.log('⚠️ AuthCallback: Using Supabase tokens as fallback for existing user');
+                localStorage.setItem('accessToken', access_token);
+                localStorage.setItem('refreshToken', refresh_token);
+              }
             }
           } catch (backendError) {
             console.error('Backend user creation error:', backendError);
+            // Store Supabase tokens as fallback if backend completely fails
+            console.log('⚠️ AuthCallback: Backend failed completely, using Supabase tokens as fallback');
+            localStorage.setItem('accessToken', access_token);
+            localStorage.setItem('refreshToken', refresh_token);
             setError('Failed to sync user account. Please try again.');
             setIsProcessing(false);
             return;
           }
 
           // Small delay to ensure user is fully created before navigation
-          console.log('🔍 AuthCallback: User sync complete, navigating to home page...');
+          console.log('🔍 AuthCallback: User sync complete, triggering company refresh...');
+          
+          // Dispatch custom event to trigger company refresh
+          window.dispatchEvent(new CustomEvent('authCompleted'));
+          
           setTimeout(() => {
+            console.log('🔍 AuthCallback: Navigating to home page');
             navigate('/');
           }, 500);
           } else {

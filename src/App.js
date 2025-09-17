@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
 import { getNodeApiUrl } from './config/api';
+import { authenticatedFetch, clearAuthTokens } from './utils/tokenRefresh';
 
 // Import components
 import Header from './components/Header';
@@ -25,6 +26,7 @@ import TestRunner from './components/TestRunner';
 import PublicQudemoShare from './components/PublicQudemoShare';
 import { CompanyProvider, useCompany } from './context/CompanyContext';
 import { BackendProvider } from './context/BackendContext';
+import { NotificationProvider } from './context/NotificationContext';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -42,25 +44,61 @@ const ProtectedRoute = ({ children }) => {
       }
 
       try {
+        console.log('🔐 Checking authentication with token:', token ? 'exists' : 'missing');
+        
+        // First try a simple profile check without automatic refresh
         const response = await fetch(getNodeApiUrl('/api/auth/profile'), {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
 
+        console.log('🔐 Auth check response status:', response.status);
+        console.log('🔐 Auth check response ok:', response.ok);
+
         if (response.ok) {
+          console.log('✅ Authentication successful');
           setIsAuthenticated(true);
+        } else if (response.status === 401 || response.status === 403) {
+          console.log('🔄 Token expired, attempting refresh...');
+          
+          // Try to refresh the token
+          const refreshToken = localStorage.getItem('refreshToken');
+          if (refreshToken) {
+            try {
+              const refreshResponse = await fetch(getNodeApiUrl('/api/auth/refresh'), {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ refreshToken })
+              });
+
+              if (refreshResponse.ok) {
+                const refreshData = await refreshResponse.json();
+                if (refreshData.success && refreshData.data.accessToken) {
+                  console.log('✅ Token refreshed successfully');
+                  localStorage.setItem('accessToken', refreshData.data.accessToken);
+                  setIsAuthenticated(true);
+                  return;
+                }
+              }
+            } catch (refreshError) {
+              console.error('Token refresh failed:', refreshError);
+            }
+          }
+          
+          console.log('❌ Authentication failed, clearing tokens');
+          clearAuthTokens();
+          setIsAuthenticated(false);
         } else {
-          localStorage.removeItem('accessToken');
-          localStorage.removeItem('refreshToken');
-          localStorage.removeItem('user');
+          console.log('❌ Authentication failed with status:', response.status);
+          clearAuthTokens();
           setIsAuthenticated(false);
         }
       } catch (error) {
         console.error('Auth check error:', error);
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('user');
+        clearAuthTokens();
         setIsAuthenticated(false);
       } finally {
         setIsLoading(false);
@@ -71,6 +109,7 @@ const ProtectedRoute = ({ children }) => {
   }, []);
 
   if (isLoading) {
+    console.log('🔐 Authentication check in progress...');
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
@@ -79,8 +118,11 @@ const ProtectedRoute = ({ children }) => {
   }
 
   if (!isAuthenticated) {
+    console.log('🔐 User not authenticated, redirecting to login');
     return <Navigate to="/login" replace />;
   }
+
+  console.log('🔐 User authenticated, showing protected content');
 
   return children;
 };
@@ -88,6 +130,8 @@ const ProtectedRoute = ({ children }) => {
 // Company Check Component
 const CompanyCheck = ({ children }) => {
   const { company, isLoading } = useCompany();
+
+  console.log('🏢 CompanyCheck: isLoading:', isLoading, 'company:', !!company);
 
   if (isLoading) {
     return (
@@ -99,10 +143,12 @@ const CompanyCheck = ({ children }) => {
 
   // If no company exists, show company setup
   if (!company) {
+    console.log('🏢 CompanyCheck: No company found, showing CompanySetup');
     return <CompanySetup />;
   }
 
   // If company exists, show the dashboard
+  console.log('🏢 CompanyCheck: Company found, showing dashboard');
   return children;
 };
 
@@ -132,7 +178,8 @@ function App() {
     <Router>
       <BackendProvider>
         <CompanyProvider>
-          <div className="App">
+          <NotificationProvider>
+            <div className="App">
           <Routes>
             {/* Public Routes */}
             <Route path="/login" element={<LoginPage />} />
@@ -277,7 +324,8 @@ function App() {
             {/* Catch all route */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
-          </div>
+            </div>
+          </NotificationProvider>
         </CompanyProvider>
       </BackendProvider>
     </Router>

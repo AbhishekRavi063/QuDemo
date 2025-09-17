@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { getNodeApiUrl } from "../config/api";
 import { useCompany } from "../context/CompanyContext";
+import { useNotification } from "../context/NotificationContext";
 
 export default function ProfilePage() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("personal");
-  const { company } = useCompany();
+  const { company, refreshCompany, setCompany } = useCompany();
+  const { showSuccess, showError } = useNotification();
   
   // User profile state
   const [user, setUser] = useState(null);
@@ -17,6 +21,11 @@ export default function ProfilePage() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [jobTitle, setJobTitle] = useState("");
+
+  // Delete company modal state
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
 
   const [timezone, setTimezone] = useState("UTC-5");
   const [language, setLanguage] = useState("English");
@@ -115,6 +124,59 @@ export default function ProfilePage() {
     reader.onload = () => resolve(reader.result);
     reader.onerror = (error) => reject(error);
   });
+
+  // Delete company function
+  const handleDeleteCompany = async () => {
+    if (deleteConfirmText !== "DELETE") {
+      showError("Please type 'DELETE' to confirm company deletion.");
+      return;
+    }
+
+    console.log('🗑️ Starting company deletion...');
+    setIsDeleting(true);
+    try {
+      const token = localStorage.getItem('accessToken');
+      console.log('🗑️ Making DELETE request to:', getNodeApiUrl('/api/companies'));
+      console.log('🗑️ Token exists:', !!token);
+      
+      const response = await fetch(getNodeApiUrl('/api/companies'), {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      console.log('🗑️ Delete response status:', response.status);
+      console.log('🗑️ Delete response ok:', response.ok);
+      
+      const data = await response.json();
+      console.log('🗑️ Delete response data:', data);
+
+      if (data.success) {
+        console.log('✅ Company deletion successful, refreshing context...');
+        showSuccess('Company deleted successfully! You will be redirected to create a new company.');
+        // Force clear company context immediately
+        setCompany(null);
+        // Refresh company context to ensure it's cleared
+        await refreshCompany();
+        console.log('✅ Company context refreshed, navigating to home...');
+        // Navigate to home page (which will show CompanySetup due to no company)
+        setTimeout(() => {
+          navigate('/');
+        }, 2000);
+      } else {
+        showError(data.error || 'Failed to delete company. Please try again.');
+      }
+    } catch (error) {
+      console.error('Delete company error:', error);
+      showError('Network error. Please try again.');
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteModal(false);
+      setDeleteConfirmText("");
+    }
+  };
 
   if (isLoading) {
     return (
@@ -363,6 +425,47 @@ export default function ProfilePage() {
                       minute: '2-digit'
                     }) : 'Unknown'}
                   </div>
+
+                  {/* Delete Company Button */}
+                  <div className="pt-6 border-t border-gray-200">
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                      <div className="flex items-start">
+                        <div className="flex-shrink-0">
+                          <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                        <div className="ml-3 flex-1">
+                          <h3 className="text-sm font-medium text-red-800">
+                            Danger Zone
+                          </h3>
+                          <div className="mt-2 text-sm text-red-700">
+                            <p>
+                              Deleting your company will permanently remove all data including:
+                            </p>
+                            <ul className="list-disc list-inside mt-2 space-y-1">
+                              <li>All QuDemos and their videos</li>
+                              <li>All transcript files and knowledge sources</li>
+                              <li>All analytics and interaction data</li>
+                              <li>Company settings and configuration</li>
+                            </ul>
+                            <p className="mt-2 font-medium">
+                              This action cannot be undone.
+                            </p>
+                          </div>
+                          <div className="mt-4">
+                            <button
+                              type="button"
+                              onClick={() => setShowDeleteModal(true)}
+                              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                            >
+                              Delete Company
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               ) : (
                 <div className="text-center py-8">
@@ -549,6 +652,73 @@ export default function ProfilePage() {
           )}
         </div>
       </div>
+
+      {/* Delete Company Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="flex items-center mb-4">
+              <div className="flex-shrink-0">
+                <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-lg font-medium text-gray-900">
+                  Delete Company
+                </h3>
+              </div>
+            </div>
+            
+            <div className="mb-4">
+              <p className="text-sm text-gray-500 mb-4">
+                This action will permanently delete your company and all associated data:
+              </p>
+              <ul className="text-sm text-gray-600 list-disc list-inside space-y-1 mb-4">
+                <li>All QuDemos and their videos</li>
+                <li>All transcript files and knowledge sources</li>
+                <li>All analytics and interaction data</li>
+                <li>Company settings and configuration</li>
+              </ul>
+              <p className="text-sm text-gray-500 mb-4">
+                <strong>This action cannot be undone.</strong>
+              </p>
+              <p className="text-sm text-gray-700 mb-2">
+                To confirm deletion, type <strong>DELETE</strong> in the box below:
+              </p>
+              <input
+                type="text"
+                value={deleteConfirmText}
+                onChange={(e) => setDeleteConfirmText(e.target.value)}
+                placeholder="Type DELETE to confirm"
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-red-500 focus:border-red-500"
+              />
+            </div>
+            
+            <div className="flex justify-end space-x-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setDeleteConfirmText("");
+                }}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+                disabled={isDeleting}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteCompany}
+                disabled={isDeleting || deleteConfirmText !== "DELETE"}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed rounded-md transition-colors"
+              >
+                {isDeleting ? 'Deleting...' : 'Delete Company'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 } 
