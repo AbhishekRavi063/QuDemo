@@ -99,11 +99,10 @@ const AuthCallback = () => {
               });
             } catch (profileError) {
               console.error('Profile check failed:', profileError);
-              // If profile check fails completely, use Supabase tokens as fallback
-              console.log('⚠️ AuthCallback: Profile check failed, using Supabase tokens as fallback');
-              localStorage.setItem('accessToken', access_token);
-              localStorage.setItem('refreshToken', refresh_token);
-              setTimeout(() => navigate('/'), 500);
+              // If profile check fails, redirect to login instead of using fallback tokens
+              console.log('⚠️ AuthCallback: Profile check failed, redirecting to login');
+              setError('Authentication failed. Please try again.');
+              setTimeout(() => navigate('/login'), 3000);
               return;
             }
 
@@ -179,20 +178,19 @@ const AuthCallback = () => {
                 }
               } catch (loginError) {
                 console.error('Failed to get fresh tokens for existing user:', loginError);
-                // Use Supabase tokens as fallback
-                console.log('⚠️ AuthCallback: Using Supabase tokens as fallback for existing user');
-                localStorage.setItem('accessToken', access_token);
-                localStorage.setItem('refreshToken', refresh_token);
+                // If login fails, redirect to login instead of using fallback tokens
+                console.log('⚠️ AuthCallback: Login failed for existing user, redirecting to login');
+                setError('Failed to authenticate existing user. Please try again.');
+                setTimeout(() => navigate('/login'), 3000);
+                return;
               }
             }
           } catch (backendError) {
             console.error('Backend user creation error:', backendError);
-            // Store Supabase tokens as fallback if backend completely fails
-            console.log('⚠️ AuthCallback: Backend failed completely, using Supabase tokens as fallback');
-            localStorage.setItem('accessToken', access_token);
-            localStorage.setItem('refreshToken', refresh_token);
+            // If backend fails completely, redirect to login instead of using fallback tokens
+            console.log('⚠️ AuthCallback: Backend failed completely, redirecting to login');
             setError('Failed to sync user account. Please try again.');
-            setIsProcessing(false);
+            setTimeout(() => navigate('/login'), 3000);
             return;
           }
 

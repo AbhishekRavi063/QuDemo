@@ -92,6 +92,15 @@ const CompanySetup = () => {
     
     try {
       const token = localStorage.getItem('accessToken');
+      console.log('🔍 CompanySetup: Creating company with token:', token ? 'exists' : 'missing');
+      console.log('🔍 CompanySetup: Token length:', token?.length || 0);
+      
+      // Validate authentication before proceeding
+      if (!token) {
+        setError('Authentication required. Please log in again.');
+        return;
+      }
+      
       const response = await fetch(getNodeApiUrl('/api/companies'), {
         method: 'POST',
         headers: {
@@ -106,7 +115,11 @@ const CompanySetup = () => {
         })
       });
       
+      console.log('🔍 CompanySetup: Response status:', response.status);
+      console.log('🔍 CompanySetup: Response ok:', response.ok);
+      
       const data = await response.json();
+      console.log('🔍 CompanySetup: Response data:', data);
       
       if (data.success) {
         setSuccess('🎉 Company created successfully! Setting up your workspace...');

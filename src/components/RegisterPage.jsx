@@ -54,7 +54,19 @@ const RegisterPage = () => {
       });
       const data = await response.json();
       if (data.success) {
-        navigate('/login');
+        // Validate that we have the required data
+        if (!data.data || !data.data.tokens || !data.data.user) {
+          setRegisterError('Registration successful but incomplete data received. Please try logging in.');
+          return;
+        }
+        
+        // Store tokens (same as login flow)
+        localStorage.setItem('accessToken', data.data.tokens.accessToken);
+        localStorage.setItem('refreshToken', data.data.tokens.refreshToken);
+        localStorage.setItem('user', JSON.stringify(data.data.user));
+        
+        // Redirect to dashboard (not login) - will trigger company check
+        navigate('/');
       } else {
         if (data.details && Array.isArray(data.details)) {
           setRegisterError(data.details.join(' '));

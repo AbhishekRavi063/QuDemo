@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
+import React, { createContext, useState, useEffect, useContext, useCallback, useRef } from 'react';
 import { getNodeApiUrl } from '../config/api';
 import { authenticatedFetch, clearAuthTokens } from '../utils/tokenRefresh';
 
@@ -10,6 +10,7 @@ export const CompanyProvider = ({ children }) => {
   const [company, setCompany] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const isFetchingRef = useRef(false);
 
   const fetchCompany = useCallback(async () => {
     const token = localStorage.getItem('accessToken');
@@ -22,6 +23,13 @@ export const CompanyProvider = ({ children }) => {
       return;
     }
     
+    // Prevent multiple simultaneous fetches
+    if (isFetchingRef.current) {
+      console.log('🔍 CompanyContext: Already fetching, skipping duplicate request');
+      return;
+    }
+    
+    isFetchingRef.current = true;
     console.log('🔍 CompanyContext: Setting loading to true');
     setIsLoading(true);
     setError(null);
@@ -101,8 +109,9 @@ export const CompanyProvider = ({ children }) => {
       setCompany(null);
     } finally {
       setIsLoading(false);
+      isFetchingRef.current = false;
     }
-  }, []);
+  }, [isFetchingRef]);
 
   useEffect(() => {
     // Fetch company data on initial load
