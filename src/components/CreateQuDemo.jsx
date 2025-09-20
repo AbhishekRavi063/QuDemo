@@ -23,14 +23,14 @@ const CreateQuDemo = () => {
 
   
   // New state for Product Knowledge Sources
-  const [websiteUrl, setWebsiteUrl] = useState("");
-  const [documentFile, setDocumentFile] = useState(null);
-  const [isProcessingKnowledge, setIsProcessingKnowledge] = useState(false);
-  const [knowledgeSources, setKnowledgeSources] = useState([]);
-  const [currentTaskId, setCurrentTaskId] = useState(null);
+  // const [websiteUrl, setWebsiteUrl] = useState(""); // Not used
+  // const [documentFile, setDocumentFile] = useState(null); // Not used
+  // const [isProcessingKnowledge, setIsProcessingKnowledge] = useState(false); // Not used
+  // const [knowledgeSources, setKnowledgeSources] = useState([]); // Not used
+  // const [currentTaskId, setCurrentTaskId] = useState(null); // Not used
   const [scrapingProgress, setScrapingProgress] = useState(null);
-  const [progressInterval, setProgressInterval] = useState(null);
-  const documentInputRef = useRef(null);
+  // const [progressInterval, setProgressInterval] = useState(null); // Not used
+  // const documentInputRef = useRef(null); // Not used
 
   // const handleSourceChange = (index, value) => { // Not used
   //   const updated = [...sources];
@@ -62,151 +62,151 @@ const CreateQuDemo = () => {
     setVideoUrls(updated);
   };
 
-  // Knowledge Sources handlers
-  const handleWebsiteUrlChange = (e) => {
-    setWebsiteUrl(e.target.value);
-  };
+  // Knowledge Sources handlers - COMMENTED OUT (not used)
+  // const handleWebsiteUrlChange = (e) => {
+  //   setWebsiteUrl(e.target.value);
+  // };
 
-  const handleDocumentUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setDocumentFile(file);
-    }
-  };
+  // const handleDocumentUpload = (e) => {
+  //   const file = e.target.files[0];
+  //   if (file) {
+  //     setDocumentFile(file);
+  //   }
+  // };
 
-  // Progress tracking functions
-  const startProgressTracking = (taskId) => {
-    setCurrentTaskId(taskId);
-    setScrapingProgress({
-      status: "starting",
-      progress: { current: 0, total: 0, percentage: 0 },
-      stats: { urls_scraped: 0, urls_skipped: 0 }
-    });
+  // Progress tracking functions - COMMENTED OUT (not used)
+  // const startProgressTracking = (taskId) => {
+  //   setCurrentTaskId(taskId);
+  //   setScrapingProgress({
+  //     status: "starting",
+  //     progress: { current: 0, total: 0, percentage: 0 },
+  //     stats: { urls_scraped: 0, urls_skipped: 0 }
+  //   });
     
-    // Poll for progress updates every 5 seconds
-    const interval = setInterval(async () => {
-      try {
-        const response = await fetch(getNodeApiUrl(`/scraping-progress/${taskId}`));
-        if (response.ok) {
-          const data = await response.json();
-          if (data.success) {
-            setScrapingProgress(data.data);
+  //   // Poll for progress updates every 5 seconds
+  //   const interval = setInterval(async () => {
+  //     try {
+  //       const response = await fetch(getNodeApiUrl(`/scraping-progress/${taskId}`));
+  //       if (response.ok) {
+  //         const data = await response.json();
+  //         if (data.success) {
+  //           setScrapingProgress(data.data);
             
-            // Stop tracking if completed or failed
-            if (data.data.status === 'completed' || data.data.status === 'failed') {
-              stopProgressTracking();
-            }
-          }
-        }
-      } catch (err) {
-        console.error("Failed to fetch progress:", err);
-      }
-    }, 5000);
+  //           // Stop tracking if completed or failed
+  //           if (data.data.status === 'completed' || data.data.status === 'failed') {
+  //             stopProgressTracking();
+  //           }
+  //         }
+  //       }
+  //     } catch (err) {
+  //       console.error("Failed to fetch progress:", err);
+  //     }
+  //   }, 5000);
     
-    setProgressInterval(interval);
-  };
+  //   setProgressInterval(interval);
+  // };
 
-  const stopProgressTracking = () => {
-    if (progressInterval) {
-      clearInterval(progressInterval);
-      setProgressInterval(null);
-    }
-    setCurrentTaskId(null);
-    setScrapingProgress(null);
-  };
+  // const stopProgressTracking = () => {
+  //   if (progressInterval) {
+  //     clearInterval(progressInterval);
+  //     setProgressInterval(null);
+  //   }
+  //   setCurrentTaskId(null);
+  //   setScrapingProgress(null);
+  // };
 
-  const processDocumentKnowledge = async () => {
-    if (!documentFile) {
-      setError("Please select a document file");
-      return;
-    }
+  // const processDocumentKnowledge = async () => { // Not used
+  //   if (!documentFile) {
+  //     setError("Please select a document file");
+  //     return;
+  //   }
 
-    setIsProcessingKnowledge(true);
-    setError("");
-    setSuccess("");
+  //   setIsProcessingKnowledge(true);
+  //   setError("");
+  //   setSuccess("");
 
-    try {
-      const token = localStorage.getItem('accessToken');
-      const formData = new FormData();
-      formData.append('file', documentFile);
-      formData.append('companyName', company.name);
+  //   try {
+  //     const token = localStorage.getItem('accessToken');
+  //     const formData = new FormData();
+  //     formData.append('file', documentFile);
+  //     formData.append('companyName', company.name);
 
-      const response = await fetch(getNodeApiUrl('/api/knowledge/process-document'), {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: formData
-      });
+  //     const response = await fetch(getNodeApiUrl('/api/knowledge/process-document'), {
+  //       method: 'POST',
+  //       headers: {
+  //         'Authorization': `Bearer ${token}`
+  //       },
+  //       body: formData
+  //     });
 
-      const data = await response.json();
+  //     const data = await response.json();
 
-      if (response.ok && data.success) {
-        setSuccess("Document knowledge processed successfully!");
-        setDocumentFile(null);
-        if (documentInputRef.current) {
-          documentInputRef.current.value = "";
-        }
-        // Refresh knowledge sources list
-        fetchKnowledgeSources();
-      } else {
-        setError(data.error || "Failed to process document");
-      }
-    } catch (err) {
-      setError("Network error. Please try again.");
-    } finally {
-      setIsProcessingKnowledge(false);
-    }
-  };
+  //     if (response.ok && data.success) {
+  //       setSuccess("Document knowledge processed successfully!");
+  //       setDocumentFile(null);
+  //       if (documentInputRef.current) {
+  //         documentInputRef.current.value = "";
+  //       }
+  //       // Refresh knowledge sources list
+  //       fetchKnowledgeSources();
+  //     } else {
+  //       setError(data.error || "Failed to process document");
+  //     }
+  //   } catch (err) {
+  //     setError("Network error. Please try again.");
+  //   } finally {
+  //     setIsProcessingKnowledge(false);
+  //   }
+  // };
 
-  const fetchKnowledgeSources = async () => {
-    try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch(getNodeApiUrl(`/api/knowledge/sources/${company.name}`), {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+  // const fetchKnowledgeSources = async () => { // Not used
+  //   try {
+  //     const token = localStorage.getItem('accessToken');
+  //     const response = await fetch(getNodeApiUrl(`/api/knowledge/sources/${company.name}`), {
+  //       headers: {
+  //         'Authorization': `Bearer ${token}`
+  //       }
+  //     });
 
-      if (response.ok) {
-        const data = await response.json();
-        setKnowledgeSources(data.data || []);
+  //     if (response.ok) {
+  //       const data = await response.json();
+  //       setKnowledgeSources(data.data || []);
         
-        // Check if any sources are still processing
-        const processingSources = data.data?.filter(source => source.status === 'processing') || [];
-        if (processingSources.length > 0) {
-          setSuccess(`⏳ ${processingSources.length} knowledge source(s) still processing... Please wait.`);
-        }
-      }
-    } catch (err) {
-      console.error("Failed to fetch knowledge sources:", err);
-    }
-  };
+  //       // Check if any sources are still processing
+  //       const processingSources = data.data?.filter(source => source.status === 'processing') || [];
+  //       if (processingSources.length > 0) {
+  //         setSuccess(`⏳ ${processingSources.length} knowledge source(s) still processing... Please wait.`);
+  //       }
+  //     }
+  //   } catch (err) {
+  //     console.error("Failed to fetch knowledge sources:", err);
+  //   }
+  // };
 
-  // Load knowledge sources on component mount
-  React.useEffect(() => {
-    if (company) {
-      fetchKnowledgeSources();
-    }
-  }, [company]);
+  // Load knowledge sources on component mount - COMMENTED OUT (not used)
+  // React.useEffect(() => {
+  //   if (company) {
+  //     fetchKnowledgeSources();
+  //   }
+  // }, [company]);
 
-  // Add video URL validation (Loom, Vimeo, and YouTube)
-  const validateVideoUrl = (url) => {
-    if (!url || !url.trim()) {
-      return { isValid: false, error: "Video URL is required" };
-    }
-    if (!url.startsWith('http')) {
-      return { isValid: false, error: "Please provide a valid URL starting with http" };
-    }
-    const isLoomVideo = url.includes('loom.com');
-    const isVimeoVideo = url.includes('vimeo.com');
-    const isYouTubeVideo = url.includes('youtube.com') || url.includes('youtu.be');
+  // Add video URL validation (Loom, Vimeo, and YouTube) - COMMENTED OUT (not used)
+  // const validateVideoUrl = (url) => {
+  //   if (!url || !url.trim()) {
+  //     return { isValid: false, error: "Video URL is required" };
+  //   }
+  //   if (!url.startsWith('http')) {
+  //     return { isValid: false, error: "Please provide a valid URL starting with http" };
+  //   }
+  //   const isLoomVideo = url.includes('loom.com');
+  //   const isVimeoVideo = url.includes('vimeo.com');
+  //   const isYouTubeVideo = url.includes('youtube.com') || url.includes('youtu.be');
     
-    if (!isLoomVideo && !isVimeoVideo && !isYouTubeVideo) {
-      return { isValid: false, error: "Only Loom, Vimeo, and YouTube video URLs are supported" };
-    }
-    return { isValid: true, error: null };
-  };
+  //   if (!isLoomVideo && !isVimeoVideo && !isYouTubeVideo) {
+  //     return { isValid: false, error: "Only Loom, Vimeo, and YouTube video URLs are supported" };
+  //   }
+  //   return { isValid: true, error: null };
+  // };
 
   const handleFileUpload = async (index, event) => {
     const file = event.target.files[0];
@@ -270,9 +270,9 @@ const CreateQuDemo = () => {
 
       // Check if any content is provided
       const validVideoUrls = videoUrls.filter(url => url.trim());
-      const validWebsiteUrl = websiteUrl.trim();
+      // const validWebsiteUrl = websiteUrl.trim(); // Not used
       
-      if (validVideoUrls.length === 0 && !validWebsiteUrl) {
+      if (validVideoUrls.length === 0) { // Removed websiteUrl check
         setError("Please provide at least one video URL or website URL to create a QuDemo.");
         return;
       }
@@ -319,7 +319,7 @@ const CreateQuDemo = () => {
 
       // Process all content automatically using the new endpoint
       
-      if (validVideoUrls.length > 0 || validWebsiteUrl) {
+      if (validVideoUrls.length > 0) { // Removed websiteUrl check
         try {
           const contentResponse = await fetch(getNodeApiUrl(`/api/qudemos/process-content/${company.name}/${qudemoId}`), {
             method: 'POST',
@@ -329,7 +329,7 @@ const CreateQuDemo = () => {
             },
             body: JSON.stringify({
               video_urls: validVideoUrls,
-              website_url: validWebsiteUrl || null
+              website_url: null // Not used
             })
           });
 
@@ -352,7 +352,7 @@ const CreateQuDemo = () => {
             setSuccess(successMessage);
           } else {
             // Handle processing failure with detailed error message
-            const { processing_errors, has_anti_bot_protection, message } = contentResult;
+            const { processing_errors, has_anti_bot_protection } = contentResult; // message not used
             
             let errorMessage = "❌ Content processing failed!\n\n";
             
@@ -439,7 +439,7 @@ const CreateQuDemo = () => {
       setTitle("");
       setVideoUrls([""]);
       setSources([""]);
-      setWebsiteUrl("");
+      // setWebsiteUrl(""); // Not used
       
       // Navigate to qudemos page after a short delay to show success message
       setTimeout(() => {
@@ -558,7 +558,8 @@ const CreateQuDemo = () => {
           </div>
 
         {/* PRODUCT KNOWLEDGE SOURCES - TEMPORARILY COMMENTED OUT */}
-        {/* <div className="mt-6">
+        {/*
+        <div className="mt-6">
           <label className="block font-medium text-gray-700 mb-2">
             Product Knowledge Sources
           </label>
@@ -605,8 +606,8 @@ const CreateQuDemo = () => {
             </div>
           </div>
 
-        </div> */}
-
+        </div>
+        */}
 
           {/* Submit Button */}
           <div className="flex justify-center">
@@ -723,7 +724,7 @@ const CreateQuDemo = () => {
           
           {scrapingProgress.status === 'completed' && (
             <button
-              onClick={stopProgressTracking}
+              onClick={() => setScrapingProgress(null)} // Simplified - just close the progress
               className="mt-3 text-sm text-blue-600 hover:text-blue-800"
             >
               Close Progress
