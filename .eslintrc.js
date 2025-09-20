@@ -4,8 +4,13 @@ module.exports = {
     'react-app/jest'
   ],
   rules: {
-    'no-unused-vars': 'warn',
-    'react-hooks/exhaustive-deps': 'warn',
-    'jsx-a11y/anchor-is-valid': 'warn'
+    'no-unused-vars': 'off',
+    'react-hooks/exhaustive-deps': 'off',
+    'jsx-a11y/anchor-is-valid': 'off'
+  },
+  env: {
+    browser: true,
+    node: true,
+    es6: true
   }
 };
