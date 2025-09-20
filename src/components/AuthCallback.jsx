@@ -12,6 +12,23 @@ const AuthCallback = () => {
 
   useEffect(() => {
     const handleAuthCallback = async () => {
+      // IMMEDIATE DOMAIN CHECK - Force redirect if on Vercel domain
+      const currentHost = window.location.host;
+      if (currentHost.includes('vercel.app') || currentHost.includes('vercel.com')) {
+        console.log('🚨 AuthCallback: IMMEDIATE VERCEL DOMAIN DETECTED - FORCING REDIRECT');
+        console.log('🚨 AuthCallback: Current host:', currentHost);
+        console.log('🚨 AuthCallback: This indicates Vercel domain configuration issue');
+        
+        const currentPath = window.location.pathname;
+        const currentSearch = window.location.search;
+        const currentHash = window.location.hash;
+        const redirectUrl = `https://qudemo.com${currentPath}${currentSearch}${currentHash}`;
+        
+        console.log('🚨 AuthCallback: Redirecting to:', redirectUrl);
+        window.location.replace(redirectUrl);
+        return;
+      }
+      
       // Prevent duplicate processing
       if (hasProcessed) {
         console.log('🔍 AuthCallback: Already processed, skipping');
