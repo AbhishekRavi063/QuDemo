@@ -2,6 +2,9 @@
 export const navigateToOverview = (navigate) => {
   const currentDomain = window.location.origin;
   console.log('🔍 Navigation: Current domain:', currentDomain);
+  console.log('🔍 Navigation: Current URL:', window.location.href);
+  console.log('🔍 Navigation: Current pathname:', window.location.pathname);
+  console.log('🔍 Navigation: Current hash:', window.location.hash);
   
   // If we're on the custom domain, use React Router navigation
   if (currentDomain.includes('qudemo.com')) {
@@ -10,6 +13,7 @@ export const navigateToOverview = (navigate) => {
   } else {
     // If we're on Vercel domain, force redirect to custom domain
     console.log('🔍 Navigation: On Vercel domain, redirecting to custom domain');
+    console.log('🔍 Navigation: Forcing redirect to https://qudemo.com/overview');
     window.location.href = 'https://qudemo.com/overview';
   }
 };
