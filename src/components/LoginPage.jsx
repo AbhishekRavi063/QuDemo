@@ -88,10 +88,6 @@ const LoginPage = () => {
   };
 
   const handleGoogleSignIn = async () => {
-    console.log('🔍 Google sign-in clicked');
-    console.log('🔍 Supabase URL:', process.env.REACT_APP_SUPABASE_URL);
-    console.log('🔍 Supabase Anon Key:', process.env.REACT_APP_SUPABASE_ANON_KEY ? 'Set' : 'Not set');
-    
     // Check if Supabase is properly configured
     const isUsingPlaceholders = !process.env.REACT_APP_SUPABASE_URL || 
                               process.env.REACT_APP_SUPABASE_URL === 'your-supabase-url' ||
@@ -99,7 +95,6 @@ const LoginPage = () => {
                               process.env.REACT_APP_SUPABASE_ANON_KEY === 'your-supabase-anon-key-here';
     
     if (isUsingPlaceholders) {
-      console.log('🔍 Supabase not configured - showing error');
       setLoginError('Google OAuth is not configured. Please set up Supabase credentials in .env file.');
       return;
     }
@@ -108,9 +103,6 @@ const LoginPage = () => {
     setLoginError('');
 
     try {
-      console.log('🔍 Calling Supabase OAuth...');
-      console.log('🔍 Redirect URL:', `${window.location.origin}/auth/callback`);
-      
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -118,14 +110,9 @@ const LoginPage = () => {
         }
       });
 
-      console.log('🔍 OAuth response:', { data, error });
-      console.log('🔍 OAuth data URL:', data?.url);
-
       if (error) {
         console.error('Google sign-in error:', error);
         setLoginError(`Google sign-in failed: ${error.message}`);
-      } else {
-        console.log('🔍 OAuth initiated successfully');
       }
     } catch (error) {
       console.error('Google sign-in error:', error);
@@ -208,24 +195,16 @@ const LoginPage = () => {
             </div>
           </div>
 
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <input
-                id="remember-me"
-                name="remember-me"
-                type="checkbox"
-                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-              />
-              <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
-                Remember me
-              </label>
-            </div>
-
-            <div className="text-sm">
-              <Link to="/forgot-password" className="font-medium text-indigo-600 hover:text-indigo-500">
-                Forgot your password?
-              </Link>
-            </div>
+          <div className="flex items-center">
+            <input
+              id="remember-me"
+              name="remember-me"
+              type="checkbox"
+              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+            />
+            <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
+              Remember me
+            </label>
           </div>
 
           <div>
@@ -260,35 +239,6 @@ const LoginPage = () => {
             <img src="https://www.svgrepo.com/show/355037/google.svg" alt="Google" className="h-5 w-5 mr-2" />
           )}
           {isGoogleLoading ? 'Signing in...' : 'Sign in with Google'}
-        </button>
-        
-        {/* Debug button - remove in production */}
-        <button
-          type="button"
-          onClick={() => {
-            console.log('🔍 Manual Supabase test:');
-            console.log('🔍 URL:', process.env.REACT_APP_SUPABASE_URL);
-            console.log('🔍 Anon Key length:', process.env.REACT_APP_SUPABASE_ANON_KEY?.length);
-            console.log('🔍 Current origin:', window.location.origin);
-            
-            // Test OAuth URL generation
-            supabase.auth.signInWithOAuth({
-              provider: 'google',
-              options: {
-                redirectTo: `${window.location.origin}/auth/callback`
-              }
-            }).then(({ data, error }) => {
-              console.log('🔍 Manual OAuth test result:', { data, error });
-              if (data?.url) {
-                console.log('🔍 Generated OAuth URL:', data.url);
-                // Optionally open the URL
-                // window.open(data.url, '_blank');
-              }
-            });
-          }}
-          className="w-full flex justify-center py-2 px-4 border border-red-300 rounded-md bg-red-50 text-red-700 hover:bg-red-100 font-medium mt-2 text-sm"
-        >
-          🔍 Debug Supabase OAuth
         </button>
       </div>
     </div>

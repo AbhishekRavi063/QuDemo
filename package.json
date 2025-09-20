@@ -8,14 +8,18 @@
     "ajv": "^8.12.0",
     "ajv-keywords": "^5.1.0",
     "axios": "^1.9.0",
+    "clsx": "^2.1.1",
+    "framer-motion": "^12.23.16",
     "lucide-react": "^0.511.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-icons": "^5.5.0",
+    "react-intersection-observer": "^9.16.0",
     "react-player": "^2.16.0",
     "react-router-dom": "^6.30.0",
     "react-scripts": "5.0.1",
-    "recharts": "^2.15.3"
+    "recharts": "^2.15.3",
+    "tailwind-merge": "^3.3.1"
   },
   "scripts": {
     "start": "react-scripts start",

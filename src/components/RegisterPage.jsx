@@ -82,10 +82,6 @@ const RegisterPage = () => {
   };
 
   const handleGoogleSignUp = async () => {
-    console.log('🔍 Google sign-up clicked');
-    console.log('🔍 Supabase URL:', process.env.REACT_APP_SUPABASE_URL);
-    console.log('🔍 Supabase Anon Key:', process.env.REACT_APP_SUPABASE_ANON_KEY ? 'Set' : 'Not set');
-    
     // Check if Supabase is properly configured
     const isUsingPlaceholders = !process.env.REACT_APP_SUPABASE_URL || 
                               process.env.REACT_APP_SUPABASE_URL === 'your-supabase-url' ||
@@ -93,7 +89,6 @@ const RegisterPage = () => {
                               process.env.REACT_APP_SUPABASE_ANON_KEY === 'your-supabase-anon-key-here';
     
     if (isUsingPlaceholders) {
-      console.log('🔍 Supabase not configured - showing error');
       setRegisterError('Google OAuth is not configured. Please set up Supabase credentials in .env file.');
       return;
     }
@@ -102,7 +97,6 @@ const RegisterPage = () => {
     setRegisterError('');
 
     try {
-      console.log('🔍 Calling Supabase OAuth...');
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -110,13 +104,9 @@ const RegisterPage = () => {
         }
       });
 
-      console.log('🔍 OAuth response:', { data, error });
-
       if (error) {
         console.error('Google sign-up error:', error);
         setRegisterError(`Google sign-up failed: ${error.message}`);
-      } else {
-        console.log('🔍 OAuth initiated successfully');
       }
     } catch (error) {
       console.error('Google sign-up error:', error);

@@ -59,8 +59,9 @@ export default function ProfilePage() {
   const tabs = [
     { name: "Personal Info", key: "personal" },
     { name: "Company", key: "company" },
-    { name: "Preferences", key: "preferences" },
-    { name: "Security", key: "security" },
+    // PREFERENCES AND SECURITY TABS - TEMPORARILY COMMENTED OUT
+    // { name: "Preferences", key: "preferences" },
+    // { name: "Security", key: "security" },
   ];
 
   // Custom Switch component for better UX
@@ -481,12 +482,12 @@ export default function ProfilePage() {
             </div>
           )}
 
-          {activeTab === "preferences" && (
+          {/* PREFERENCES TAB - TEMPORARILY COMMENTED OUT */}
+          {/* {activeTab === "preferences" && (
             <form>
               <h2 className="text-xl font-semibold mb-2">Preferences</h2>
               <p className="text-gray-500 mb-6">Customize your experience and notification settings</p>
               
-              {/* Timezone and Language */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                 <div>
                   <label className="block font-medium mb-2">Timezone</label>
@@ -518,7 +519,6 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-              {/* Notification Settings */}
               <div className="mb-8">
                 <h3 className="text-lg font-medium mb-4">Notification Preferences</h3>
                 <div className="space-y-4">
@@ -562,14 +562,14 @@ export default function ProfilePage() {
                 Save Preferences
               </button>
             </form>
-          )}
+          )} */}
 
-          {activeTab === "security" && (
+          {/* SECURITY TAB - TEMPORARILY COMMENTED OUT */}
+          {/* {activeTab === "security" && (
             <form>
               <h2 className="text-xl font-semibold mb-2">Security & Privacy</h2>
               <p className="text-gray-500 mb-6">Manage your account security and privacy settings</p>
               
-              {/* Password Change */}
               <div className="mb-8">
                 <h3 className="text-lg font-medium mb-4">Change Password</h3>
                 <div className="space-y-4">
@@ -603,7 +603,6 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-              {/* Privacy Settings */}
               <div className="mb-8">
                 <h3 className="text-lg font-medium mb-4">Privacy Settings</h3>
                 <div className="space-y-4">
@@ -649,7 +648,7 @@ export default function ProfilePage() {
                 Save Security Settings
               </button>
             </form>
-          )}
+          )} */}
         </div>
       </div>
 

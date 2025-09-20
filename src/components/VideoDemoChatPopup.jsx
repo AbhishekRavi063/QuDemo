@@ -1,16 +1,8 @@
-// CUSTOMER PAGE COMPONENT - COMMENTED OUT (NOT IN USE)
-// This entire component is disabled - all imports and functionality commented out
-
-// DISABLED: This component is not in use
-/*
 import React, { useState, useRef, useEffect } from "react";
 import ReactPlayer from "react-player/youtube";
-import HybridVideoPlayer from "./HybridVideoPlayer";
-import { PaperAirplaneIcon, XMarkIcon, SpeakerWaveIcon, SpeakerXMarkIcon } from "@heroicons/react/24/outline";
+import { PaperAirplaneIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { useCompany } from "../context/CompanyContext";
-import { getVideoApiUrl, getNodeApiUrl } from "../config/api"; 
 
 const TypingIndicator = () => (
   <div className="typing-indicator flex space-x-1">
@@ -18,7 +10,7 @@ const TypingIndicator = () => (
     <span className="dot animate-bounce delay-300"></span>
     <span className="dot animate-bounce delay-450"></span>
 
-    <style>{`
+    <style jsx>{`
       .typing-indicator {
         align-items: center;
       }
@@ -62,25 +54,13 @@ const TypingIndicator = () => (
 );
 
 const cleanMessageText = (text) => {
-  console.log('🔍 cleanMessageText input:', text);
-  
   // Remove unwanted patterns
   let cleaned = text
     .replace(/\*\*/g, "")
     .replace(/\(.*?page.*?\)/gi, "")
+    .replace(/help\.puzzle\.io.*?\.pdf/gi, "")
     .replace(/\s{2,}/g, " ")
     .trim();
-
-  console.log('🔍 After removing patterns:', cleaned);
-
-  // Ensure bullet points and numbers are on new lines
-  cleaned = cleaned
-    // New line before bullets (•, -, *) if not already at line start
-    .replace(/\s*([•\-*])\s+/g, "<br/>$1 ")
-    // New line before numbered lists (1., 2., etc.) if not already at line start
-    .replace(/\s*(\d+\.)\s+/g, "<br/>$1 ");
-
-  console.log('🔍 After bullet/number formatting:', cleaned);
 
   // Convert URLs to clickable links
   cleaned = cleaned.replace(
@@ -89,422 +69,293 @@ const cleanMessageText = (text) => {
       `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-blue-600 underline">${url}</a>`
   );
 
-  console.log('🔍 After URL conversion:', cleaned);
-
   // Split at each '– ' and wrap each in <p> tags, preserving the intro as its own paragraph
   const parts = cleaned.split(/(?=– )/g);
-  console.log('🔍 Parts after splitting:', parts);
-  
-  const result = parts.map(part => `<p>${part.trim()}</p>`).join("");
-  console.log('🔍 Final result:', result);
-  
-  return result;
+  return parts.map(part => `<p>${part.trim()}</p>`).join("");
 };
 
-// Helper function to convert Loom share URL to embed URL
-const convertLoomToEmbedUrl = (url) => {
-  if (url && url.includes('loom.com/share/')) {
-    return url.replace('/share/', '/embed/');
-  }
-  return url;
-};
-
-// Helper function to convert Vimeo share URL to embed URL
-const convertVimeoToEmbedUrl = (url) => {
-  if (url && url.includes('vimeo.com/')) {
-    const videoId = url.split('vimeo.com/')[1];
-    if (videoId) {
-      return `https://player.vimeo.com/video/${videoId}`;
-    }
-  }
-  return url;
-};
-
-const VideoDemoChatPopup = ({ leadId }) => {
-  // COMPONENT DISABLED - RETURN NULL
-  return null;
-  
-  /*
-  const { company } = useCompany();
-  const navigate = useNavigate();
+const VideoDemoChatPopup = ({ onClose }) => {
+    const [source, setSource] = useState("puzzle");
+    const [messages, setMessages] = useState([
+      {
+        sender: "AI",
+        text: cleanMessageText(`Hello! I'm your AI Assistant for this puzzle demo.`),
+        time: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      },
+    ]);
+    
   const [input, setInput] = useState("");
-  const [messages, setMessages] = useState([]);
+  const [videoUrl, setVideoUrl] = useState(
+    "https://youtu.be/_zRaJOF-trE?si=-49QCSw2FbrTxpvi&t=0"
+  );
+  const [playing, setPlaying] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
-  const [currentVideoUrl, setCurrentVideoUrl] = useState("");
-  const [currentTimestamp, setCurrentTimestamp] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
-  const [ytVideoUrl, setYtVideoUrl] = useState("");
-  const [isMuted, setIsMuted] = useState(false);
-  const [audioEnabled, setAudioEnabled] = useState(true);
-  const [loomTimestampMessage, setLoomTimestampMessage] = useState("");
-  const [timestampRef] = useState(0);
-  const videoRef = useRef(null);
-  const chatRef = useRef(null);
-  const inputRef = useRef(null);
-  const iframeRef = useRef(null);
-  const playerRef = useRef(null);
-*/
 
-  // Get company video URL
-  const companyVideoUrl = company?.video_url || "";
+  const playerRef = useRef();
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    if (chatRef.current) {
-      chatRef.current.scrollTop = chatRef.current.scrollHeight;
+  const getTimestampFromUrl = (url) => {
+    try {
+      const urlObj = new URL(url);
+      const tParam = urlObj.searchParams.get("t");
+      return tParam ? parseInt(tParam, 10) : 0;
+    } catch {
+      return 0;
     }
-  }, [messages]);
-
-  useEffect(() => {
-    if (inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, []);
-
-  useEffect(() => {
-    if (currentTimestamp > 0 && ytVideoUrl) {
-      console.log('🎬 VideoDemoChatPopup: currentTimestamp state changed to:', currentTimestamp, 'Type:', typeof currentTimestamp);
-    }
-  }, [currentTimestamp, ytVideoUrl]);
-
-  useEffect(() => {
-    console.log('🔍 DEBUG: useEffect triggered - currentTimestamp:', currentTimestamp, 'ytVideoUrl:', ytVideoUrl);
-    if (currentTimestamp > 0 && ytVideoUrl) {
-      console.log('🎬 VideoDemoChatPopup: About to seek to timestamp:', currentTimestamp);
-      setTimeout(() => {
-        if (iframeRef.current) {
-          try {
-            const iframe = iframeRef.current;
-            if (ytVideoUrl.includes('youtube.com')) {
-              // YouTube iframe seeking
-              iframe.contentWindow.postMessage(JSON.stringify({
-                event: 'command',
-                func: 'seekTo',
-                args: [currentTimestamp, true]
-              }), '*');
-              
-              // Also try the YouTube Player API commands
-              iframe.contentWindow.postMessage(JSON.stringify({
-                event: 'command',
-                func: 'seekTo',
-                args: [currentTimestamp]
-              }), '*');
-              
-              iframe.contentWindow.postMessage(JSON.stringify({
-                event: 'command',
-                func: 'playVideo'
-              }), '*');
-            } else if (ytVideoUrl.includes('loom.com')) {
-              // Loom iframe seeking
-              iframe.contentWindow.postMessage({
-                method: 'seekTo',
-                value: Math.floor(currentTimestamp)
-              }, '*');
-              
-              console.log(`🎬 Sent seekTo message for Loom: ${currentTimestamp}s`);
-              
-              // Force play after seeking for Loom videos
-              setTimeout(() => {
-                iframe.contentWindow.postMessage({
-                  method: 'play'
-                }, '*');
-                console.log(`🎬 Sent play message for Loom`);
-              }, 100);
-            }
-          } catch (error) {
-            console.error('Error seeking in iframe:', error);
-          }
-        }
-          }, 1000);
-      }
-    }, [currentTimestamp, ytVideoUrl]);
-
-  const handleClose = () => {
-    navigate('/customers');
   };
 
-    const sendMessage = async () => {
-    if (!input.trim() || isTyping) return;
+  useEffect(() => {
+    if (videoUrl && playerRef.current) {
+      const seconds = getTimestampFromUrl(videoUrl);
+      const timer = setTimeout(() => {
+        playerRef.current.seekTo(seconds, "seconds");
+        setPlaying(true);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [videoUrl]);
 
-    const userMessage = input.trim();
-      setInput("");
-    setMessages(prev => [...prev, { sender: "You", text: userMessage }]);
-      setIsTyping(true);
+  const sendMessage = async () => {
+    if (!input.trim()) return;
+
+    const now = new Date().toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    const userMsg = { sender: "You", text: input, time: now };
+    setMessages((prev) => [...prev, userMsg]);
+    setInput("");
+    setPlaying(false);
+    setIsTyping(true);
 
     try {
-      const response = await axios.post(getVideoApiUrl('/ask'), {
-        question: userMessage,
-        company_name: company?.name || "default",
-        qudemo_id: "demo"
-      });
-
-      if (response.data && response.data.answer) {
-        const aiMessage = response.data.answer;
-          let timestamp = 0;
-        let targetVideoUrl = "";
-          
-        // Extract timestamp and video URL if available
-        console.log('🔍 DEBUG: Full response data:', response.data);
-        console.log('🔍 DEBUG: response.data.start:', response.data.start);
-        console.log('🔍 DEBUG: response.data.video_url:', response.data.video_url);
-        
-        if (response.data.start !== undefined) {
-            timestamp = response.data.start || 0;
-            console.log('🔍 DEBUG: Set timestamp to:', timestamp);
-        }
-        if (response.data.video_url) {
-          targetVideoUrl = response.data.video_url;
-          console.log('🔍 DEBUG: Set targetVideoUrl to:', targetVideoUrl);
-        }
-
-        // Add AI message to chat
-        setMessages(prev => [...prev, { 
-            sender: "AI",
-          text: cleanMessageText(aiMessage) 
-        }]);
-
-        // Handle video seeking if timestamp is available
-        console.log('🔍 DEBUG: Checking conditions - targetVideoUrl:', targetVideoUrl, 'timestamp:', timestamp);
-        if (targetVideoUrl && timestamp > 0) {
-          console.log('🎬 Switching to video:', targetVideoUrl, 'at timestamp:', timestamp);
-          console.log('🎬 About to set currentTimestamp to:', timestamp);
-          
-          setCurrentVideoUrl(targetVideoUrl);
-          setYtVideoUrl(targetVideoUrl);
-          
-          // Set timestamp with delay to ensure state updates properly
-          setTimeout(() => {
-            setCurrentTimestamp(timestamp);
-            console.log('🎬 currentTimestamp set to:', timestamp);
-          }, 100);
-          
-          setTimeout(() => {
-            setIsPlaying(true);
-          }, 200);
-        }
+      // Choose endpoint based on source
+      let endpoint = "https://qudemo-backend.onrender.com/ask/puzzle";
+      if (source === "mixpanel") {
+        endpoint = "https://qudemo-backend.onrender.com/ask/mixpanel";
       }
-    } catch (error) {
-      console.error('Error sending message:', error);
-      setMessages(prev => [...prev, { 
-        sender: "AI", 
-        text: "Sorry, I encountered an error while processing your request. Please try again." 
-      }]);
+      const res = await axios.post(endpoint, {
+        question: input,
+      });
+      if (res.data.video_url) {
+        setVideoUrl(res.data.video_url);
+      }
+      const aiMsg = {
+        sender: "AI",
+        text: cleanMessageText(res.data.answer),
+        time: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      };
+      setMessages((prev) => [...prev, aiMsg]);
+    } catch (err) {
+      console.error("API error", err);
     } finally {
       setIsTyping(false);
     }
   };
 
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
+  const handleClose = () => {
+    if (onClose) {
+      onClose();
+    } else {
+      navigate("/");
     }
   };
 
-  const toggleMute = () => {
-    setIsMuted(!isMuted);
+  const handleSourceChange = async (e) => {
+    const selectedSource = e.target.value;
+    setSource(selectedSource);
+    // Update the initial message based on the dropdown
+    setMessages([
+      {
+        sender: "AI",
+        text: getInitialMessage(selectedSource),
+        time: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      },
+    ]);
+    // Update the video based on the dropdown
+    setVideoUrl(
+      selectedSource === "mixpanel"
+        ? "https://youtu.be/c7SfDNFhD0E?si=1oD7SVquYz2R7i4R"
+        : "https://youtu.be/_zRaJOF-trE?si=-49QCSw2FbrTxpvi&t=0"
+    );
+    try {
+      await axios.post("https://qudemo-backend.onrender.com/bucket", { source: selectedSource });
+    } catch (err) {
+      console.error("Error posting to /bucket:", err);
+    }
   };
 
-  const toggleAudio = () => {
-    setAudioEnabled(!audioEnabled);
+  const getInitialMessage = (source) => {
+    if (source === "mixpanel") {
+      return cleanMessageText(`
+    Hello! I'm your AI Assistant for mixpanel demo.
+      `);
+    } else {
+      return cleanMessageText(`
+    Hello! I'm your AI Assistant for this product demo.
+      `);
+    }
   };
 
-  const handleVideoReady = () => {
-    console.log('Video ready for chat');
-    console.log('🎬 Video ready - currentTimestamp:', currentTimestamp, 'Type:', typeof currentTimestamp);
-    console.log('🎬 Video ready - startTime prop passed:', currentTimestamp);
+  // List of suggested questions for puzzle
+  const puzzleQuestions = [
+    "How to integrate with Stripe?",
+    "Explain the Spotlight feature.",
+    "How do I upload my invoices?",
+    "How does the real-time dashboard calculate metrics like net burn and runway?",
+    "How to do reconciliations?",
+    "What is the general ledger in Puzzle?",
+    "How can I view or add fixed assets?",
+    "How can I manage my prepaid accounts?",
+    "How can I add manual journals?",
+    "How does Puzzle handle charts of accounts?"
+  ];
+
+  // Handle clicking a question bubble
+  const handleQuestionClick = async (question) => {
+    setInput(question);
+    // Wait for input to update, then send
+    setTimeout(() => {
+      sendMessage(question);
+    }, 0);
   };
 
-        return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-      <div className="bg-white w-full max-w-6xl h-full max-h-[90vh] rounded-xl shadow-2xl flex overflow-hidden">
+  return (
+    <div
+      className=" inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center p-4"
+      onClick={handleClose}
+    >
+      <div
+        className="w-full max-w-[1200px]  h-[600px] max-h-[85vh] bg-white rounded-lg flex flex-col md:flex-row overflow-hidden relative"
+        style={{ boxShadow: '0 0 40px 8px purple' }}
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Video Section */}
-        <div className="w-full md:w-2/4 flex flex-col bg-black">
-          {companyVideoUrl ? (
-            <div className="relative flex-1">
-              {/* Video Player */}
-              <div className="w-full h-full">
-                {companyVideoUrl.includes('youtube.com') ? (
-                  <div className="w-full h-full">
-                    <iframe
-                      ref={iframeRef}
-                      src={`https://www.youtube.com/embed/${companyVideoUrl.split('v=')[1]}?autoplay=0&muted=0&enablejsapi=1&controls=1&rel=0&modestbranding=1&version=3&playerapiid=ytplayer`}
-                      className="w-full h-full"
-                      frameBorder="0"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                      onLoad={handleVideoReady}
-                    />
-          </div>
-                ) : companyVideoUrl.includes('loom.com') ? (
-                  <div className="w-full h-full">
-                    <iframe
-                      ref={iframeRef}
-                      src={convertLoomToEmbedUrl(companyVideoUrl)}
-                      className="w-full h-full"
-                      frameBorder="0"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      onLoad={handleVideoReady}
-                    />
-          </div>
-                ) : (
-                  <video
-                    ref={videoRef}
-                    src={companyVideoUrl}
-                    className="w-full h-full object-cover"
-                    controls
-                    onLoadedMetadata={handleVideoReady}
-                  />
-                )}
+        <div className="w-full md:w-2/3 relative">
+          <ReactPlayer
+            key={videoUrl} // <-- add this line
+            ref={playerRef}
+            url={videoUrl}
+            controls
+            playing={playing}
+            width="100%"
+            height="100%"
+          />
         </div>
 
-              {/* Video Controls Overlay */}
-              <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between bg-black bg-opacity-50 rounded-lg p-3">
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={toggleMute}
-                    className="text-white hover:text-gray-300 transition"
-                  >
-                    {isMuted ? <SpeakerXMarkIcon className="h-5 w-5" /> : <SpeakerWaveIcon className="h-5 w-5" />}
-                  </button>
-                  <button
-                    onClick={toggleAudio}
-                    className="text-white hover:text-gray-300 transition"
-                  >
-                    {audioEnabled ? <SpeakerWaveIcon className="h-5 w-5" /> : <SpeakerXMarkIcon className="h-5 w-5" />}
-                  </button>
-                </div>
+        {/* Chat Section */}
+        <div className="w-full md:w-2/4 flex flex-col bg-white border-l">
+          {/* Header */}
+          <div className="bg-blue-600 text-white px-4 py-3 flex justify-between items-center">
+            <div className="flex items-center gap-4">
+              <div className="font-semibold text-sm sm:text-base">
+                Ask questions about this demo
               </div>
-                
-                {/* Loom Timestamp Indicator */}
-              {currentTimestamp > 0 && companyVideoUrl.includes('loom.com') && (
-                <div className="absolute top-4 right-4 bg-blue-500 text-white px-4 py-3 rounded-lg text-sm font-medium z-20 shadow-lg max-w-xs">
-                    <div className="flex items-center space-x-2">
-                      <span>⏰</span>
-                      <div>
-                      <div className="font-bold">Jump to:</div>
-                      <div>{Math.floor(currentTimestamp / 60)}:{(currentTimestamp % 60).toString().padStart(2, '0')}</div>
-                      </div>
-                      <button 
-                      onClick={() => setCurrentTimestamp(0)}
-                      className="text-white hover:text-gray-200 ml-2"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                </div>
-              )}
+              
+              {/* Dropdown 
+              <select
+                className="ml-2 px-2 py-1 rounded text-blue-700 text-xs sm:text-sm focus:outline-none cursor-pointer"
+                value={source}
+                onChange={handleSourceChange}
+              >
+                <option value="puzzle">Puzzle</option>
+                <option value="mixpanel">Mixpanel</option>
+              </select>*/}
+            </div>
+            <XMarkIcon
+              className="h-5 w-5 cursor-pointer"
+              onClick={handleClose}
+            />
+          </div>
 
-              {/* YouTube Timestamp Indicator */}
-              {currentTimestamp > 0 && companyVideoUrl.includes('youtube.com') && (
-                <div className="absolute top-4 right-4 bg-blue-500 text-white px-4 py-3 rounded-lg text-sm font-medium z-20 shadow-lg max-w-xs">
-                  <div className="flex items-center space-x-2">
-                    <span>⏰</span>
-                    <div>
-                      <div className="font-bold">Jump to:</div>
-                      <div>{Math.floor(currentTimestamp / 60)}:{(currentTimestamp % 60).toString().padStart(2, '0')}</div>
-                    </div>
-                    <button 
-                      onClick={() => setCurrentTimestamp(0)}
-                      className="text-white hover:text-gray-200 ml-2"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  </div>
-                )}
+          {/* Chat Messages */}
+          <div className="flex-1 p-3 overflow-y-auto space-y-3 bg-gray-50 text-sm">
+            {messages.map((msg, idx) => (
+              <div
+                key={idx}
+                className={`flex ${msg.sender === "AI" ? "justify-start" : "justify-end"}`}
+              >
+                <div
+                  className={`rounded-xl px-4 py-2 max-w-[80%] ${
+                    msg.sender === "AI" ? "bg-white border text-gray-800" : "bg-blue-600 text-white"
+                  }`}
+                >
+                  <span
+                    dangerouslySetInnerHTML={{
+                      __html: msg.text, // already cleaned before storing
+                    }}
+                  />
+                </div>
               </div>
-            ) : (
-              <div className="flex items-center justify-center h-full w-full text-white text-lg">
-                No company video found.
+            ))}
+            {/* Show question bubbles for puzzle source */}
+            {source === "puzzle" && (
+              <div className="flex flex-wrap gap-2 mb-3">
+                {puzzleQuestions.map((q, i) => (
+                  <button
+                    key={i}
+                    className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs hover:bg-blue-200 transition border border-blue-200"
+                    onClick={() => handleQuestionClick(q)}
+                  >
+                    {q}
+                  </button>
+                ))}
               </div>
             )}
           </div>
 
-          {/* Chat Section */}
-          <div className="w-full md:w-2/4 flex flex-col bg-white border-l">
-            {/* Header */}
-            <div className="bg-blue-600 text-white px-4 py-3 flex justify-between items-center">
-              <div className="flex items-center gap-4">
-                <div className="font-semibold text-sm sm:text-base">
-                  Ask questions about this demo
-                </div>
+          {/* Typing indicator */}
+          {isTyping && (
+            <div className="flex justify-start">
+              <div className="rounded-xl px-4 py-2 max-w-[80%] bg-white border text-gray-800 select-none">
+                <TypingIndicator />
               </div>
-              <XMarkIcon
-                className="h-5 w-5 cursor-pointer"
-                onClick={handleClose}
-              />
             </div>
+          )}
 
-            {/* Chat Messages */}
-          <div className="flex-1 p-3 overflow-y-auto space-y-3 bg-gray-50 text-sm" ref={chatRef}>
-              {messages.map((msg, idx) => (
-                <div
-                  key={idx}
-                      className={`flex ${msg.sender === "AI" ? "justify-start" : "justify-end"}`}
-                    >
-                      <div
-                        className={`rounded-xl px-4 py-2 max-w-[80%] ${
-                          msg.sender === "AI"
-                            ? "bg-white border text-gray-800 text-left"
-                            : "bg-blue-600 text-white text-right"
-                        }`}
-                      >
-                        <span
-                          dangerouslySetInnerHTML={{
-                            __html: msg.text, // already cleaned before storing
-                          }}
-                        />
-                      </div>
-                    </div>
-              ))}
-            </div>
+          {/* Input */}
+          <div className="p-3 border-t flex items-center gap-2">
+            <input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              type="text"
+              placeholder="Ask a question about this product..."
+              className="flex-1 px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+            />
+            <button
+              onClick={sendMessage}
+              className="text-blue-600 hover:text-blue-800"
+            >
+              <PaperAirplaneIcon className="h-7 w-8" />
+            </button>
+          </div>
 
-            {/* Typing indicator */}
-            {isTyping && (
-              <div className="flex justify-start">
-                <div className="rounded-xl px-4 py-2 max-w-[80%] bg-white border text-gray-800 select-none">
-                  <TypingIndicator />
-                </div>
-              </div>
-            )}
-
-            {/* Input */}
-            <div className="p-3 border-t flex items-center gap-2">
-              <input
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                type="text"
-                placeholder="Ask a question about this product..."
-                className="flex-1 px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-              ref={inputRef}
-              />
-              <button
-                onClick={sendMessage}
-                className="text-blue-600 hover:text-blue-800"
-              >
-                <PaperAirplaneIcon className="h-7 w-8" />
+          {/* Footer */}
+          <div className="p-4 flex flex-col sm:flex-row sm:justify-between items-center text-xs gap-2 bg-white border-t">
+            <span className="text-gray-500">Powered by Qudemo AI</span>
+            <div className="flex gap-2">
+              <button className="text-blue-600 font-semibold hover:underline border border-gray-300 rounded px-3 py-1.5">
+                FAQs
               </button>
-            </div>
-
-            {/* Footer */}
-            <div className="p-4 flex flex-col sm:flex-row sm:justify-between items-center text-xs gap-2 bg-white border-t">
-              <span className="text-gray-500">Powered by Qudemo AI</span>
-              <div className="flex gap-2">
-                <button className="text-blue-600 font-semibold hover:underline border border-gray-300 rounded px-3 py-1.5">
-                  FAQs
-                </button>
-                <button className="text-blue-600 font-semibold hover:underline border border-gray-300 rounded px-3 py-1.5">
-                  Schedule Meeting
-                </button>
-              </div>
+              <button className="text-blue-600 font-semibold hover:underline border border-gray-300 rounded px-3 py-1.5">
+                Schedule Meeting
+              </button>
             </div>
           </div>
         </div>
       </div>
-    );
+    </div>
+  );
 };
 
 export default VideoDemoChatPopup;
-*/

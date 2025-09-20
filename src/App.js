@@ -22,6 +22,7 @@ import CompanyManagement from './components/CompanyManagement';
 import CompanySetup from './components/CompanySetup';
 import AuthCallback from './components/AuthCallback';
 import Overview from './components/Overview';
+import HomePage from './components/HomePage';
 import TestRunner from './components/TestRunner';
 import PublicQudemoShare from './components/PublicQudemoShare';
 import { CompanyProvider, useCompany } from './context/CompanyContext';
@@ -182,6 +183,7 @@ function App() {
             <div className="App">
           <Routes>
             {/* Public Routes */}
+            <Route path="/" element={<HomePage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
@@ -189,7 +191,7 @@ function App() {
             
             {/* Protected Routes */}
             <Route 
-              path="/" 
+              path="/overview" 
               element={
                 <ProtectedRoute>
                   <CompanyCheck>

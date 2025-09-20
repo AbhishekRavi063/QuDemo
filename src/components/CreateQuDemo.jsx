@@ -479,45 +479,48 @@ const CreateQuDemo = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-6 sm:px-6 lg:px-8 space-y-6 bg-white rounded-lg shadow-lg">
-      <h2 className="text-2xl font-semibold">Qudemo Details</h2>
-      <p className="text-gray-600">
-        Create an interactive demo that allows buyers to learn about your
-        product at their own pace.
-      </p>
-      <form onSubmit={handleSubmit}>
-        {/* Title & Description */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          <div>
-            <label className="block font-medium text-gray-700 mb-1">
-              Qudemo Title *
-            </label>
-            <input
-              type="text"
-              value={title}
-              onChange={e => setTitle(e.target.value)}
-              placeholder="Enter qudemo title"
-              required
-              className="w-full border border-gray-300 px-4 py-2 rounded-lg"
-            />
-          </div>
+    <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="bg-white rounded-lg border border-gray-200 p-8">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">Create New Qudemo</h2>
+          <p className="text-gray-600">
+            Create an interactive demo that allows buyers to learn about your product at their own pace.
+          </p>
         </div>
 
-        {/* Video URL & Thumbnail */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block font-medium text-gray-700 mb-1">
-              Video URL
-            </label>
-            {videoUrls.map((url, index) => (
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 mb-2" key={index}>
-                <div className="flex flex-col sm:flex-row flex-1 w-full">
+        <form onSubmit={handleSubmit} className="space-y-8">
+          {/* Qudemo Title */}
+          <div className="flex justify-center">
+            <div className="w-full max-w-md">
+              <label className="block font-bold text-gray-700 mb-2 text-center">
+                Qudemo Title <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={title}
+                onChange={e => setTitle(e.target.value)}
+                placeholder="Enter qudemo title"
+                required
+                className="w-full border border-gray-300 px-4 py-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+          </div>
+
+          {/* Video URL */}
+          <div className="flex justify-center">
+            <div className="w-full max-w-2xl">
+              <label className="block font-bold text-gray-700 mb-2 text-center">
+                Video URL
+              </label>
+              {videoUrls.map((url, index) => (
+                <div className="flex items-center gap-2 mb-2" key={index}>
                   <input
                     type="text"
                     value={url}
                     onChange={e => handleVideoUrlChange(index, e.target.value)}
                     placeholder="https://www.loom.com/share/your-video-id or https://vimeo.com/your-video-id"
-                    className="flex-1 border border-gray-300 px-4 py-2 rounded-t-lg sm:rounded-l-lg sm:rounded-tr-none"
+                    className="flex-1 border border-gray-300 px-4 py-3 rounded-l-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                   <input
                     type="file"
@@ -528,45 +531,37 @@ const CreateQuDemo = () => {
                   />
                   <button
                     type="button"
-                    className="flex items-center justify-center px-3 py-2 border border-t-0 sm:border-t border-l-0 sm:border-l border-gray-300 rounded-b-lg sm:rounded-r-lg sm:rounded-bl-none bg-gray-100 hover:bg-gray-200"
+                    className="px-4 py-3 border border-l-0 border-gray-300 rounded-r-lg bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium"
                     onClick={() => fileInputRefs.current[index]?.click()}
                     disabled={isSubmitting}
                   >
-                    <ArrowUpTrayIcon className="h-5 w-5 text-gray-600" />
-                    <span className="ml-1 text-sm">Upload</span>
+                    Upload
                   </button>
+                  {videoUrls.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeVideoUrlField(index)}
+                      className="text-red-500 hover:text-red-700 p-2"
+                    >
+                      <XMarkIcon className="h-5 w-5" />
+                    </button>
+                  )}
                 </div>
-                {videoUrls.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => removeVideoUrlField(index)}
-                    className="text-red-500 hover:text-red-700"
-                  >
-                    <XMarkIcon className="h-5 w-5" />
-                  </button>
-                )}
+              ))}
+              <div className="text-center mt-2">
+                <button
+                  type="button"
+                  onClick={addVideoUrlField}
+                  className="text-blue-600 hover:underline text-sm font-medium"
+                >
+                  + Add another video
+                </button>
               </div>
-            ))}
-            <button
-              type="button"
-              onClick={addVideoUrlField}
-              className="flex items-center text-sm text-blue-600 hover:underline mt-1"
-            >
-              <PlusIcon className="h-4 w-4 mr-1" />
-              Add another video
-            </button>
-            <p className="text-sm text-gray-500 mt-1">
-              Link to your Loom product demo video or upload a new one.
-            </p>
-            <p className="text-xs text-gray-400 mt-1">
-              Only Loom video URLs are supported for optimal performance and reliability.
-            </p>
+            </div>
           </div>
 
-        </div>
-
-        {/* Product Knowledge Sources */}
-        <div className="mt-6">
+        {/* PRODUCT KNOWLEDGE SOURCES - TEMPORARILY COMMENTED OUT */}
+        {/* <div className="mt-6">
           <label className="block font-medium text-gray-700 mb-2">
             Product Knowledge Sources
           </label>
@@ -574,7 +569,6 @@ const CreateQuDemo = () => {
             Add website content and documents to enhance your AI assistant's knowledge base.
           </p>
 
-          {/* Website Knowledge */}
           <div className="mb-6 p-4 border border-gray-200 rounded-lg">
             <h4 className="font-medium text-gray-800 mb-2">🌐 Website Knowledge</h4>
             <p className="text-sm text-gray-600 mb-3">
@@ -590,7 +584,6 @@ const CreateQuDemo = () => {
             />
           </div>
 
-          {/* Document Knowledge */}
           <div className="mb-6 p-4 border border-gray-200 rounded-lg">
             <h4 className="font-medium text-gray-800 mb-2">📄 Document Upload</h4>
             <p className="text-sm text-gray-600 mb-3">
@@ -615,27 +608,32 @@ const CreateQuDemo = () => {
             </div>
           </div>
 
-        </div>
+        </div> */}
 
 
-        {/* Save Button */}
-        <div className="pt-4 relative flex flex-col items-center">
+          {/* Submit Button */}
+          <div className="flex justify-center">
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full max-w-md bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-bold py-3 px-6 rounded-lg transition-colors duration-200"
+            >
+              {isSubmitting ? 'Processing Content...' : 'Create Qudemo'}
+            </button>
+          </div>
+
+          {/* Processing Indicator */}
           {isSubmitting && (
-            <div className="absolute -top-16 left-1/2 -translate-x-1/2 bg-blue-100 border border-blue-300 text-blue-800 px-6 py-3 rounded shadow z-20 text-center w-[320px] animate-fade-in">
+            <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-blue-100 border border-blue-300 text-blue-800 px-6 py-3 rounded shadow z-20 text-center w-[320px] animate-fade-in">
               <div className="font-semibold mb-1">Content is being processed...</div>
               <div className="text-xs">Videos and website content are being processed. This may take some time.</div>
             </div>
           )}
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 transition text-white px-6 py-2 rounded font-medium"
-          >
-            {isSubmitting ? 'Processing Content...' : 'Save QuDemo & Process Content'}
-          </button>
-        </div>
+        </form>
+
+        {/* Error Message */}
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mt-4">
+          <div className="mt-6 bg-red-50 border border-red-200 rounded-lg p-4">
             <div className="flex items-start">
               <div className="flex-shrink-0">
                 <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
@@ -658,8 +656,10 @@ const CreateQuDemo = () => {
             </div>
           </div>
         )}
+
+        {/* Success Message */}
         {success && (
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4 mt-4">
+          <div className="mt-6 bg-green-50 border border-green-200 rounded-lg p-4">
             <div className="flex items-start">
               <div className="flex-shrink-0">
                 <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
@@ -673,7 +673,7 @@ const CreateQuDemo = () => {
             </div>
           </div>
         )}
-      </form>
+      </div>
       
       {/* Video Processing Notification */}
       {scrapingProgress && (

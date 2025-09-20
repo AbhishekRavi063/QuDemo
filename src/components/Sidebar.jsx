@@ -17,14 +17,15 @@ import {
 } from '@heroicons/react/24/outline';
 
 const menuItems = [
-  { name: 'Overview', icon: ClockIcon, path: '/' },
+  { name: 'Overview', icon: ClockIcon, path: '/overview' },
   { name: 'Create QuDemo', icon: PlusIcon, path: '/create' },
   // CUSTOMER PAGE - COMMENTED OUT (NOT IN USE)
   // { name: 'Customers', icon: UsersIcon, path: '/customers' },
   { name: 'Qudemos', icon: PlayIcon, path: '/qudemos' },
   { name: 'Buyer Interactions', icon: ChatBubbleLeftEllipsisIcon, path: '/interactions' },
   { name: 'Insights & Analytics', icon: ChartBarIcon, path: '/analytics' },
-  { name: 'Test Runner', icon: BeakerIcon, path: '/test-runner' },
+  // TEST RUNNER - TEMPORARILY COMMENTED OUT
+  // { name: 'Test Runner', icon: BeakerIcon, path: '/test-runner' },
 ];
 
 const Sidebar = () => {
@@ -118,7 +119,8 @@ const Sidebar = () => {
               Profile
             </Link>
             
-            <Link
+            {/* SETTINGS MENU - TEMPORARILY COMMENTED OUT */}
+            {/* <Link
               to="/settings"
               className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 ${
                 location.pathname === '/settings'
@@ -139,7 +141,7 @@ const Sidebar = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
               Settings
-            </Link>
+            </Link> */}
             
             <button
               onClick={handleLogout}
