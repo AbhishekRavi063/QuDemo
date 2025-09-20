@@ -9,6 +9,7 @@ export const navigateToOverview = (navigate) => {
   // If we're on the custom domain, use React Router navigation
   if (currentDomain.includes('qudemo.com')) {
     console.log('🔍 Navigation: Using custom domain, navigating with React Router');
+    console.log('🔍 Navigation: Calling navigate("/overview")');
     navigate('/overview');
   } else {
     // If we're on Vercel domain, force redirect to custom domain

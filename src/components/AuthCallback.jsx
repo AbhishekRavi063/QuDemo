@@ -19,10 +19,8 @@ const AuthCallback = () => {
         console.log('🚨 AuthCallback: Current host:', currentHost);
         console.log('🚨 AuthCallback: This indicates Vercel domain configuration issue');
         
-        const currentPath = window.location.pathname;
-        const currentSearch = window.location.search;
-        const currentHash = window.location.hash;
-        const redirectUrl = `https://qudemo.com${currentPath}${currentSearch}${currentHash}`;
+        // Always redirect to /overview instead of preserving the hash
+        const redirectUrl = `https://qudemo.com/overview`;
         
         console.log('🚨 AuthCallback: Redirecting to:', redirectUrl);
         window.location.replace(redirectUrl);

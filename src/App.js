@@ -185,6 +185,14 @@ function App() {
     }
   }, []);
 
+  // Clean up hash from URL if present
+  useEffect(() => {
+    if (window.location.hash === '#') {
+      console.log('🔍 App: Cleaning up empty hash from URL');
+      window.history.replaceState(null, null, window.location.pathname + window.location.search);
+    }
+  }, []);
+
   return (
     <Router>
       <BackendProvider>
