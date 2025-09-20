@@ -44,10 +44,6 @@ const AuthCallback = () => {
         setHasProcessed(true);
         console.log('🔍 AuthCallback: Starting authentication callback');
         
-        // Clear any existing tokens to ensure fresh authentication
-        console.log('🧹 AuthCallback: Clearing existing tokens for fresh authentication');
-        const { clearAuthTokens } = await import('../utils/tokenRefresh');
-        await clearAuthTokens();
         console.log('🔍 AuthCallback: Current URL:', window.location.href);
         console.log('🔍 AuthCallback: URL hash:', window.location.hash);
         console.log('🔍 AuthCallback: URL search params:', window.location.search);
@@ -59,7 +55,7 @@ const AuthCallback = () => {
           hash: window.location.hash
         });
         
-        // Parse tokens from URL hash
+        // Parse tokens from URL hash FIRST, before clearing tokens
         const hash = window.location.hash.substring(1);
         const params = new URLSearchParams(hash);
         const accessToken = params.get('access_token');
@@ -75,6 +71,13 @@ const AuthCallback = () => {
         });
 
         if (accessToken && refreshToken) {
+          console.log('🔍 AuthCallback: Tokens found in URL, clearing old tokens and setting session');
+          
+          // Clear any existing tokens to ensure fresh authentication
+          console.log('🧹 AuthCallback: Clearing existing tokens for fresh authentication');
+          const { clearAuthTokens } = await import('../utils/tokenRefresh');
+          await clearAuthTokens();
+          
           console.log('🔍 AuthCallback: Tokens found in URL, setting session manually');
           
           // Set the session manually using Supabase's setSession method
@@ -234,22 +237,8 @@ const AuthCallback = () => {
             setTimeout(() => navigate('/login'), 3000);
           }
         } else {
-          console.log('🔍 AuthCallback: No tokens found in URL hash');
-          
-          // Check if we're using placeholder Supabase values
-          const isUsingPlaceholders = !process.env.REACT_APP_SUPABASE_URL || 
-                                    process.env.REACT_APP_SUPABASE_URL === 'your-supabase-url' ||
-                                    !process.env.REACT_APP_SUPABASE_ANON_KEY ||
-                                    process.env.REACT_APP_SUPABASE_ANON_KEY === 'your-supabase-anon-key-here';
-          
-          if (isUsingPlaceholders) {
-            console.log('🔍 AuthCallback: Using placeholder Supabase values - OAuth not configured');
-            setError('Google OAuth is not configured. Please set up Supabase credentials.');
-            setTimeout(() => navigate('/login'), 5000);
-          } else {
-            console.log('🔍 AuthCallback: Redirecting to login');
-            navigate('/login');
-          }
+          console.log('🔍 AuthCallback: No tokens found in URL hash, redirecting to login');
+          navigate('/login');
         }
       } catch (error) {
         console.error('Auth callback error:', error);
