@@ -100,11 +100,20 @@ export const authenticatedFetch = async (url, options = {}) => {
 };
 
 /**
- * Clears all authentication tokens
+ * Clears all authentication tokens and Supabase session
  */
-export const clearAuthTokens = () => {
+export const clearAuthTokens = async () => {
+  try {
+    // Clear Supabase session first
+    const { supabase } = await import('../config/supabase');
+    await supabase.auth.signOut();
+  } catch (error) {
+    console.log('Supabase signout error (non-critical):', error);
+  }
+  
+  // Clear localStorage tokens
   localStorage.removeItem('accessToken');
   localStorage.removeItem('refreshToken');
   localStorage.removeItem('user');
-  console.log('🧹 Auth tokens cleared');
+  console.log('🧹 Auth tokens and session cleared');
 };

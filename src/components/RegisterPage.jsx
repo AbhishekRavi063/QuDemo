@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { getNodeApiUrl } from '../config/api';
 import { supabase } from '../config/supabase';
+import { navigateToOverview } from '../utils/navigation';
 
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
@@ -66,7 +67,8 @@ const RegisterPage = () => {
         localStorage.setItem('user', JSON.stringify(data.data.user));
         
         // Redirect to dashboard (not login) - will trigger company check
-        navigate('/overview');
+        console.log('🔍 RegisterPage: Redirecting to overview, current domain:', window.location.origin);
+        navigateToOverview(navigate);
       } else {
         if (data.details && Array.isArray(data.details)) {
           setRegisterError(data.details.join(' '));
@@ -97,6 +99,11 @@ const RegisterPage = () => {
     setRegisterError('');
 
     try {
+      // Clear any existing session and tokens before starting new OAuth
+      console.log('🧹 RegisterPage: Clearing existing session for fresh Google sign-up');
+      const { clearAuthTokens } = await import('../utils/tokenRefresh');
+      await clearAuthTokens();
+      
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { StarBorder } from "./ui/star-border";
 import FadeInSection from "./FadeInSection";
+import { navigateToOverview } from '../utils/navigation';
 
 const HomePage = () => {
   const [openFAQ, setOpenFAQ] = useState(null);
@@ -85,7 +86,7 @@ const HomePage = () => {
                 Engage your prospects with an AI Powered demo that answers their questions in real time.
               </p>
               <StarBorder
-                onClick={() => navigate('/overview')}
+                onClick={() => navigateToOverview(navigate)}
                 color="#3b82f6"
                 className="text-white font-bold text-lg"
               >

@@ -32,10 +32,9 @@ const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
 
-  const handleLogout = () => {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('user');
+  const handleLogout = async () => {
+    const { clearAuthTokens } = await import('../utils/tokenRefresh');
+    await clearAuthTokens();
     window.location.href = '/login';
   };
 

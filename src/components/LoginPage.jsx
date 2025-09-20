@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { getNodeApiUrl } from '../config/api';
 import { supabase } from '../config/supabase';
+import { navigateToOverview } from '../utils/navigation';
 
 const LoginPage = () => {
   const [formData, setFormData] = useState({
@@ -75,7 +76,8 @@ const LoginPage = () => {
         localStorage.setItem('user', JSON.stringify(data.data.user));
         
         // Redirect to dashboard
-        navigate('/overview');
+        console.log('🔍 LoginPage: Redirecting to overview, current domain:', window.location.origin);
+        navigateToOverview(navigate);
       } else {
         setLoginError(data.error || 'Login failed');
       }
@@ -103,6 +105,11 @@ const LoginPage = () => {
     setLoginError('');
 
     try {
+      // Clear any existing session and tokens before starting new OAuth
+      console.log('🧹 LoginPage: Clearing existing session for fresh Google sign-in');
+      const { clearAuthTokens } = await import('../utils/tokenRefresh');
+      await clearAuthTokens();
+      
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {

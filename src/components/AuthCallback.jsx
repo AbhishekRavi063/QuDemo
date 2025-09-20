@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../config/supabase';
 import { getNodeApiUrl } from '../config/api';
+import { navigateToOverview } from '../utils/navigation';
 
 const AuthCallback = () => {
   const navigate = useNavigate();
@@ -27,6 +28,11 @@ const AuthCallback = () => {
       try {
         setHasProcessed(true);
         console.log('🔍 AuthCallback: Starting authentication callback');
+        
+        // Clear any existing tokens to ensure fresh authentication
+        console.log('🧹 AuthCallback: Clearing existing tokens for fresh authentication');
+        const { clearAuthTokens } = await import('../utils/tokenRefresh');
+        await clearAuthTokens();
         console.log('🔍 AuthCallback: Current URL:', window.location.href);
         console.log('🔍 AuthCallback: URL hash:', window.location.hash);
         console.log('🔍 AuthCallback: URL search params:', window.location.search);
@@ -202,7 +208,7 @@ const AuthCallback = () => {
           
           setTimeout(() => {
             console.log('🔍 AuthCallback: Navigating to overview page');
-            navigate('/overview');
+            navigateToOverview(navigate);
           }, 500);
           } else {
             console.log('🔍 AuthCallback: Session not created from tokens');
