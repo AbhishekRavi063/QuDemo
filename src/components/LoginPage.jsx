@@ -75,7 +75,7 @@ const LoginPage = () => {
         localStorage.setItem('user', JSON.stringify(data.data.user));
         
         // Redirect to dashboard
-        navigate('/');
+        navigate('/overview');
       } else {
         setLoginError(data.error || 'Login failed');
       }

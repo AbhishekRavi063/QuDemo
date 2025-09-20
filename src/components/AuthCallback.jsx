@@ -201,8 +201,8 @@ const AuthCallback = () => {
           window.dispatchEvent(new CustomEvent('authCompleted'));
           
           setTimeout(() => {
-            console.log('🔍 AuthCallback: Navigating to home page');
-            navigate('/');
+            console.log('🔍 AuthCallback: Navigating to overview page');
+            navigate('/overview');
           }, 500);
           } else {
             console.log('🔍 AuthCallback: Session not created from tokens');

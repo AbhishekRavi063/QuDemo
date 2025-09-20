@@ -66,7 +66,7 @@ const RegisterPage = () => {
         localStorage.setItem('user', JSON.stringify(data.data.user));
         
         // Redirect to dashboard (not login) - will trigger company check
-        navigate('/');
+        navigate('/overview');
       } else {
         if (data.details && Array.isArray(data.details)) {
           setRegisterError(data.details.join(' '));
