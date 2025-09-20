@@ -9,12 +9,28 @@ html, body {
 }
 
 /* Hide vertical scrollbar but keep scrolling functionality */
-html {
+* {
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* Internet Explorer 10+ */
 }
 
-html::-webkit-scrollbar {
+*::-webkit-scrollbar {
   display: none; /* WebKit browsers (Chrome, Safari, Edge) */
+  width: 0; /* Chrome, Safari, Edge */
+  height: 0; /* Chrome, Safari, Edge */
+}
+
+html, body {
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none; /* WebKit browsers (Chrome, Safari, Edge) */
+  width: 0;
+  height: 0;
 }
 

@@ -12,7 +12,13 @@ const HomePage = () => {
   };
 
   return (
-    <div style={{ background: 'black', width: '100%', overflow: 'hidden' }}>
+    <div style={{ 
+      background: 'black', 
+      width: '100%', 
+      overflow: 'hidden',
+      scrollbarWidth: 'none',
+      msOverflowStyle: 'none'
+    }}>
       {/* Video Background */}
       <video
         autoPlay

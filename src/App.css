@@ -1,5 +1,18 @@
 .App {
   text-align: center;
+  overflow-x: hidden;
+}
+
+/* Hide scrollbar for all elements */
+.App * {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.App *::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+  width: 0;
+  height: 0;
 }
 
 .App-logo {
