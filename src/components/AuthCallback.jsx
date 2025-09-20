@@ -158,7 +158,7 @@ const AuthCallback = () => {
                 const errorData = await createUserResponse.json();
                 console.error('Failed to create user in backend:', errorData);
                 setError('Failed to create user account. Please try again.');
-                setIsProcessing(false);
+                // setIsProcessing(false); // Not used
                 return;
               } else {
                 console.log('🔍 AuthCallback: User created/updated successfully in backend');

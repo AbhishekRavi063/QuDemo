@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { getNodeApiUrl } from '../config/api';
 import { supabase } from '../config/supabase';
 // import { navigateToOverview } from '../utils/navigation'; // Not used anymore
