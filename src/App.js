@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import './App.css';
 import { getNodeApiUrl } from './config/api';
 import { authenticatedFetch, clearAuthTokens } from './utils/tokenRefresh';
+import { checkDomainOnLoad } from './utils/domainEnforcer';
 
 // Import components
 import Header from './components/Header';
@@ -174,6 +175,15 @@ const DashboardLayout = ({ children }) => {
 
 function App() {
   // Removed aggressive refresh prevention to fix UI refresh issues
+  
+  // Check domain on app load to prevent Vercel redirects
+  useEffect(() => {
+    const wasRedirected = checkDomainOnLoad();
+    if (wasRedirected) {
+      console.log('🔍 App: Domain redirect triggered, stopping execution');
+      return;
+    }
+  }, []);
 
   return (
     <Router>
