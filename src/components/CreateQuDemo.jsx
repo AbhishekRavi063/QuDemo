@@ -1,12 +1,9 @@
-import React, { useState, useRef, useContext } from "react";
+import React, { useState, useRef } from "react";
 import {
-  ArrowUpTrayIcon,
-  PlusIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { useCompany } from "../context/CompanyContext";
 import { getNodeApiUrl } from "../config/api";
-import { CompanyContext } from "../context/CompanyContext";
 import { useNavigate } from "react-router-dom";
 
 
@@ -35,20 +32,20 @@ const CreateQuDemo = () => {
   const [progressInterval, setProgressInterval] = useState(null);
   const documentInputRef = useRef(null);
 
-  const handleSourceChange = (index, value) => {
-    const updated = [...sources];
-    updated[index] = value;
-    setSources(updated);
-  };
+  // const handleSourceChange = (index, value) => { // Not used
+  //   const updated = [...sources];
+  //   updated[index] = value;
+  //   setSources(updated);
+  // };
 
-  const addSourceField = () => {
-    setSources([...sources, ""]);
-  };
+  // const addSourceField = () => { // Not used
+  //   setSources([...sources, ""]);
+  // };
 
-  const removeSourceField = (index) => {
-    const updated = sources.filter((_, i) => i !== index);
-    setSources(updated);
-  };
+  // const removeSourceField = (index) => { // Not used
+  //   const updated = sources.filter((_, i) => i !== index);
+  //   setSources(updated);
+  // };
 
   const handleVideoUrlChange = (index, value) => {
     const updated = [...videoUrls];
