@@ -77,7 +77,8 @@ const LoginPage = () => {
         
         // Redirect to dashboard
         console.log('🔍 LoginPage: Redirecting to overview, current domain:', window.location.origin);
-        navigateToOverview(navigate);
+        console.log('🔍 LoginPage: Using direct redirect to /overview');
+        window.location.href = 'https://qudemo.com/overview';
       } else {
         setLoginError(data.error || 'Login failed');
       }

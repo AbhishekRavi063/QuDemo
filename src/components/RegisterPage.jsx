@@ -68,7 +68,8 @@ const RegisterPage = () => {
         
         // Redirect to dashboard (not login) - will trigger company check
         console.log('🔍 RegisterPage: Redirecting to overview, current domain:', window.location.origin);
-        navigateToOverview(navigate);
+        console.log('🔍 RegisterPage: Using direct redirect to /overview');
+        window.location.href = 'https://qudemo.com/overview';
       } else {
         if (data.details && Array.isArray(data.details)) {
           setRegisterError(data.details.join(' '));

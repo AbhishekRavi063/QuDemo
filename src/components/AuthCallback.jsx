@@ -224,14 +224,9 @@ const AuthCallback = () => {
           setTimeout(() => {
             console.log('🔍 AuthCallback: Navigating to overview page');
             
-            // Force check: if we're not on qudemo.com, redirect immediately
-            if (!window.location.origin.includes('qudemo.com')) {
-              console.log('🔍 AuthCallback: Not on custom domain, forcing redirect to qudemo.com');
-              window.location.href = 'https://qudemo.com/overview';
-              return;
-            }
-            
-            navigateToOverview(navigate);
+            // Always use direct redirect to avoid hash issues
+            console.log('🔍 AuthCallback: Using direct redirect to /overview');
+            window.location.href = 'https://qudemo.com/overview';
           }, 500);
           } else {
             console.log('🔍 AuthCallback: Session not created from tokens');
