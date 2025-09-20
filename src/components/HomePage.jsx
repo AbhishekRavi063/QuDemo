@@ -437,6 +437,19 @@ const HomePage = () => {
                 Join Qudemo to create more engaging, interactive video experiences that save time for everyone.
               </p>
               
+              {/* Contact Section */}
+              <div className="mb-8">
+                <p className="text-lg text-gray-300 mb-4">
+                  Any queries or support?
+                </p>
+                <a 
+                  href="mailto:mail@qudemo.com"
+                  className="text-blue-400 hover:text-blue-300 text-lg font-medium transition-colors duration-200"
+                >
+                  mail@qudemo.com
+                </a>
+              </div>
+              
               {/* Copyright */}
               <p className="text-sm text-gray-400">
                 © 2025 Qudemo Softwares Inc. All Rights Reserved.
