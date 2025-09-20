@@ -2,11 +2,11 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../config/supabase';
 import { getNodeApiUrl } from '../config/api';
-import { navigateToOverview } from '../utils/navigation';
+// import { navigateToOverview } from '../utils/navigation'; // Not used anymore
 
 const AuthCallback = () => {
   const navigate = useNavigate();
-  const [isProcessing, setIsProcessing] = useState(true);
+  // const [isProcessing, setIsProcessing] = useState(true); // Not used
   const [error, setError] = useState('');
   const [hasProcessed, setHasProcessed] = useState(false);
 
@@ -245,12 +245,12 @@ const AuthCallback = () => {
         setError('Authentication failed. Please try again.');
         setTimeout(() => navigate('/login'), 3000);
       } finally {
-        setIsProcessing(false);
+        // setIsProcessing(false); // Not used
       }
     };
 
     handleAuthCallback();
-  }, [navigate]);
+  }, [navigate, hasProcessed]);
 
   if (error) {
     return (

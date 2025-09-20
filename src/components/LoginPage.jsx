@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { getNodeApiUrl } from '../config/api';
 import { supabase } from '../config/supabase';
-import { navigateToOverview } from '../utils/navigation';
+// import { navigateToOverview } from '../utils/navigation'; // Not used anymore
 
 const LoginPage = () => {
   const [formData, setFormData] = useState({
@@ -13,7 +13,7 @@ const LoginPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const navigate = useNavigate();
+  // const navigate = useNavigate(); // Not used anymore
 
   const validateForm = () => {
     const newErrors = {};
@@ -111,7 +111,7 @@ const LoginPage = () => {
       const { clearAuthTokens } = await import('../utils/tokenRefresh');
       await clearAuthTokens();
       
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/auth/callback`

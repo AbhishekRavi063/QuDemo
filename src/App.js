@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
 import { getNodeApiUrl } from './config/api';
-import { authenticatedFetch, clearAuthTokens } from './utils/tokenRefresh';
+import { clearAuthTokens } from './utils/tokenRefresh';
 import { checkDomainOnLoad } from './utils/domainEnforcer';
 
 // Import components
