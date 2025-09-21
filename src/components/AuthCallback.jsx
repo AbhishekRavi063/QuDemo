@@ -8,7 +8,6 @@ const AuthCallback = () => {
   const navigate = useNavigate();
   // const [isProcessing, setIsProcessing] = useState(true); // Not used
   const [error, setError] = useState('');
-  const [hasProcessed, setHasProcessed] = useState(false);
 
   useEffect(() => {
     const handleAuthCallback = async () => {
@@ -20,16 +19,10 @@ const AuthCallback = () => {
         console.log('🚨 AuthCallback: This indicates Vercel domain configuration issue');
         
         // Always redirect to /overview instead of preserving the hash
-        const redirectUrl = `https://qudemo.com/overview`;
+        const redirectUrl = `${window.location.origin}/overview`;
         
         console.log('🚨 AuthCallback: Redirecting to:', redirectUrl);
         window.location.replace(redirectUrl);
-        return;
-      }
-      
-      // Prevent duplicate processing
-      if (hasProcessed) {
-        console.log('🔍 AuthCallback: Already processed, skipping');
         return;
       }
       
@@ -41,7 +34,6 @@ const AuthCallback = () => {
       }
       
       try {
-        setHasProcessed(true);
         console.log('🔍 AuthCallback: Starting authentication callback');
         
         console.log('🔍 AuthCallback: Current URL:', window.location.href);
@@ -78,27 +70,31 @@ const AuthCallback = () => {
           const { clearAuthTokens } = await import('../utils/tokenRefresh');
           await clearAuthTokens();
           
-          console.log('🔍 AuthCallback: Tokens found in URL, setting session manually');
+          console.log('🔍 AuthCallback: Tokens found in URL, parsing user data from JWT');
           
-          // Set the session manually using Supabase's setSession method
-          const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken
-          });
-          
-          console.log('🔍 AuthCallback: Manual session set result:', { sessionData, sessionError });
-          
-          if (sessionError) {
-            console.error('Auth callback session error:', sessionError);
-            setError(`Session setup failed: ${sessionError.message}`);
+          // Parse the JWT token to extract user data directly
+          // Decode the JWT payload (without verification since we trust Supabase)
+          const tokenParts = accessToken.split('.');
+          if (tokenParts.length !== 3) {
+            console.error('Invalid JWT token format');
+            setError('Invalid authentication token');
             setTimeout(() => navigate('/login'), 3000);
             return;
           }
-
-          if (sessionData.session) {
-          const { access_token, refresh_token, user } = sessionData.session;
           
-          console.log('🔍 AuthCallback: Session found, processing user:', user);
+          const payload = JSON.parse(atob(tokenParts[1]));
+          console.log('🔍 AuthCallback: Parsed JWT payload:', payload);
+          
+          // Extract user data from the JWT payload
+          const user = {
+            id: payload.sub,
+            email: payload.email,
+            user_metadata: payload.user_metadata || {}
+          };
+          
+          console.log('🔍 AuthCallback: Extracted user data:', user);
+          
+          console.log('🔍 AuthCallback: Processing user:', user);
           
           // Store user data (but not tokens yet - wait for backend tokens)
           localStorage.setItem('user', JSON.stringify({
@@ -118,7 +114,7 @@ const AuthCallback = () => {
             try {
               response = await fetch(getNodeApiUrl('/api/auth/profile'), {
                 headers: {
-                  'Authorization': `Bearer ${access_token}` // Use Supabase token temporarily for profile check
+                  'Authorization': `Bearer ${accessToken}` // Use Supabase token temporarily for profile check
                 }
               });
             } catch (profileError) {
@@ -135,13 +131,13 @@ const AuthCallback = () => {
             if (!response.ok) {
               console.log('🔍 AuthCallback: User not found in backend, creating user...');
               // User doesn't exist in our backend, create them
-              console.log('🔍 AuthCallback: Sending register request with token:', access_token ? 'Present' : 'Missing');
-              console.log('🔍 AuthCallback: Token length:', access_token ? access_token.length : 0);
+              console.log('🔍 AuthCallback: Sending register request with token:', accessToken ? 'Present' : 'Missing');
+              console.log('🔍 AuthCallback: Token length:', accessToken ? accessToken.length : 0);
               const createUserResponse = await fetch(getNodeApiUrl('/api/auth/register'), {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${access_token}` // ✅ Add the token for auth middleware
+                  'Authorization': `Bearer ${accessToken}` // ✅ Add the token for auth middleware
                 },
                 body: JSON.stringify({
                   email: user.email,
@@ -154,17 +150,22 @@ const AuthCallback = () => {
               });
 
               console.log('🔍 AuthCallback: User creation response:', createUserResponse.status);
+              console.log('🔍 AuthCallback: User creation response headers:', Object.fromEntries(createUserResponse.headers.entries()));
+              
               if (!createUserResponse.ok) {
                 const errorData = await createUserResponse.json();
                 console.error('Failed to create user in backend:', errorData);
                 setError('Failed to create user account. Please try again.');
-                // setIsProcessing(false); // Not used
                 return;
               } else {
                 console.log('🔍 AuthCallback: User created/updated successfully in backend');
                 
                 // Get the backend tokens if available
                 const backendData = await createUserResponse.json();
+                console.log('🔍 AuthCallback: Backend response data:', backendData);
+                console.log('🔍 AuthCallback: Backend response success:', backendData.success);
+                console.log('🔍 AuthCallback: Backend response data.tokens:', backendData.data?.tokens);
+                
                 if (backendData.success && backendData.data.tokens) {
                   console.log('🔍 AuthCallback: Using backend tokens for consistency');
                   localStorage.setItem('accessToken', backendData.data.tokens.accessToken);
@@ -172,8 +173,8 @@ const AuthCallback = () => {
                   console.log('✅ AuthCallback: Backend tokens stored for new user');
                 } else {
                   console.log('⚠️ AuthCallback: No backend tokens received, using Supabase tokens as fallback');
-                  localStorage.setItem('accessToken', access_token);
-                  localStorage.setItem('refreshToken', refresh_token);
+                  localStorage.setItem('accessToken', accessToken);
+                  localStorage.setItem('refreshToken', refreshToken);
                 }
               }
             } else {
@@ -227,15 +228,12 @@ const AuthCallback = () => {
           setTimeout(() => {
             console.log('🔍 AuthCallback: Navigating to overview page');
             
-            // Always use direct redirect to avoid hash issues
+            // Use current domain to avoid production redirects in development
+            const currentOrigin = window.location.origin;
+            console.log('🔍 AuthCallback: Current origin:', currentOrigin);
             console.log('🔍 AuthCallback: Using direct redirect to /overview');
-            window.location.href = 'https://qudemo.com/overview';
+            window.location.href = `${currentOrigin}/overview`;
           }, 500);
-          } else {
-            console.log('🔍 AuthCallback: Session not created from tokens');
-            setError('Failed to create session from tokens');
-            setTimeout(() => navigate('/login'), 3000);
-          }
         } else {
           console.log('🔍 AuthCallback: No tokens found in URL hash, redirecting to login');
           navigate('/login');
@@ -250,7 +248,7 @@ const AuthCallback = () => {
     };
 
     handleAuthCallback();
-  }, [navigate, hasProcessed]);
+  }, [navigate]);
 
   if (error) {
     return (

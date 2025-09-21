@@ -76,9 +76,10 @@ const LoginPage = () => {
         localStorage.setItem('user', JSON.stringify(data.data.user));
         
         // Redirect to dashboard
-        console.log('🔍 LoginPage: Redirecting to overview, current domain:', window.location.origin);
+        const currentOrigin = window.location.origin;
+        console.log('🔍 LoginPage: Redirecting to overview, current domain:', currentOrigin);
         console.log('🔍 LoginPage: Using direct redirect to /overview');
-        window.location.href = 'https://qudemo.com/overview';
+        window.location.href = `${currentOrigin}/overview`;
       } else {
         setLoginError(data.error || 'Login failed');
       }

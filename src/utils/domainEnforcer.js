@@ -19,7 +19,11 @@ export const enforceCustomDomain = () => {
     const currentSearch = window.location.search;
     const currentHash = window.location.hash;
     
-    const redirectUrl = `https://qudemo.com${currentPath}${currentSearch}${currentHash}`;
+    // Use environment-based redirect
+    const isProduction = window.location.hostname === 'qudemo.com';
+    const redirectUrl = isProduction 
+      ? `https://qudemo.com${currentPath}${currentSearch}${currentHash}`
+      : `${window.location.origin}${currentPath}${currentSearch}${currentHash}`;
     
     console.log('🔍 DomainEnforcer: Redirecting to:', redirectUrl);
     

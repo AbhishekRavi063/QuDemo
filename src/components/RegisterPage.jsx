@@ -67,9 +67,10 @@ const RegisterPage = () => {
         localStorage.setItem('user', JSON.stringify(data.data.user));
         
         // Redirect to dashboard (not login) - will trigger company check
-        console.log('🔍 RegisterPage: Redirecting to overview, current domain:', window.location.origin);
+        const currentOrigin = window.location.origin;
+        console.log('🔍 RegisterPage: Redirecting to overview, current domain:', currentOrigin);
         console.log('🔍 RegisterPage: Using direct redirect to /overview');
-        window.location.href = 'https://qudemo.com/overview';
+        window.location.href = `${currentOrigin}/overview`;
       } else {
         if (data.details && Array.isArray(data.details)) {
           setRegisterError(data.details.join(' '));
