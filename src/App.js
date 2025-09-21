@@ -26,6 +26,7 @@ import Overview from './components/Overview';
 import HomePage from './components/HomePage';
 import TestRunner from './components/TestRunner';
 import PublicQudemoShare from './components/PublicQudemoShare';
+import PrivacyPolicy from './components/PrivacyPolicy';
 import { CompanyProvider, useCompany } from './context/CompanyContext';
 import { BackendProvider } from './context/BackendContext';
 import { NotificationProvider } from './context/NotificationContext';
@@ -231,6 +232,7 @@ function App() {
             <Routes>
               {/* Public Routes */}
               <Route path="/" element={<HomePage />} />
+              <Route path="/privacypolicy" element={<PrivacyPolicy />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/auth/callback" element={<AuthCallback />} />

@@ -33,22 +33,14 @@ export default function Header() {
   // }, []);
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 md:px-6 py-3 bg-white border-b shadow-sm">
+    <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 md:px-6 py-0 bg-white border-b shadow-sm">
       {/* Left - Logo */}
-      <div className="flex items-center space-x-0">
+      <div className="flex items-center">
         <img 
-          src="/logo.png" 
-          alt="QuDemo Logo" 
-          className="w-8 h-8 object-contain"
+          src="/Qudemologo.png" 
+          alt="Qudemo Logo" 
+          className="w-40 h-26 "
         />
-        <img 
-          src="/mainlogo.png" 
-          alt="QuDemo Main Logo" 
-          className="w-8 h-8 object-contain"
-        />
-        <span className="text-lg md:text-xl font-semibold text-gray-800">
-          QuDemo
-        </span>
       </div>
 
       {/* Center - Backend Switcher - COMMENTED OUT */}

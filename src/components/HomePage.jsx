@@ -85,9 +85,13 @@ const HomePage = () => {
       <div className="relative z-10 bg-black/50 flex flex-col min-h-screen overflow-x-hidden max-w-full">
         {/* Navigation Bar */}
         <div className="flex justify-between items-center p-4 md:p-6 max-w-full">
-          <div className="flex items-center">
-            <h1 className="text-xl md:text-2xl font-bold text-white">Qudemo</h1>
-          </div>
+            <div className="flex items-center">
+              <img 
+                src="/Qudemologo.png" 
+                alt="Qudemo Logo" 
+                className="w-40 h-26"
+              />
+            </div>
           <div className="flex items-center gap-2 md:gap-6">
             {/* Blog - Hidden on mobile, shown on desktop */}
             <div className="hidden md:block text-white font-medium px-6 md:px-8 py-2 bg-gray-900/90 rounded-[20px] border border-gray-600/40 hover:bg-gray-800/90 transition-all duration-200">
@@ -96,7 +100,10 @@ const HomePage = () => {
             {isLoggedIn ? (
               <div className="flex items-center gap-2 md:gap-4">
                 {/* User email - Responsive text and padding */}
-                <div className="text-white font-medium px-3 md:px-6 py-2 bg-gray-900/90 rounded-[20px] border border-gray-600/40 text-xs md:text-sm">
+                <div 
+                  onClick={() => navigate('/profile')}
+                  className="text-white font-medium px-3 md:px-6 py-2 bg-gray-900/90 rounded-[20px] border border-gray-600/40 text-xs md:text-sm hover:bg-gray-800/90 transition-all duration-200 cursor-pointer"
+                >
                   <span className="hidden sm:inline">{userEmail}</span>
                   <span className="sm:hidden">{userEmail.split('@')[0]}</span>
                 </div>
@@ -521,6 +528,16 @@ const HomePage = () => {
                 >
                   mail@qudemo.com
                 </a>
+              </div>
+              
+              {/* Privacy Policy Link */}
+              <div className="mb-8">
+                <p 
+                  onClick={() => navigate('/privacypolicy')}
+                  className="text-blue-400 hover:text-blue-300 text-sm font-medium cursor-pointer transition-colors duration-200 underline"
+                >
+                  Privacy Policy
+                </p>
               </div>
               
               {/* Copyright */}

@@ -24,6 +24,7 @@ const EditQudemo = () => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
+  const [removingVideoId, setRemovingVideoId] = useState(null);
   
   // Form states
   const [title, setTitle] = useState('');
@@ -128,8 +129,99 @@ const EditQudemo = () => {
     setShowVideoForm(false);
   };
 
-  const removeVideo = (videoId) => {
-    setVideos(videos.filter(v => v.id !== videoId));
+  const removeVideo = async (videoId) => {
+    try {
+      setRemovingVideoId(videoId);
+      
+      // Remove video from local state first
+      const updatedVideos = videos.filter(v => v.id !== videoId);
+      setVideos(updatedVideos);
+      
+      // If this was the last video, delete the entire QuDemo
+      if (updatedVideos.length === 0) {
+        const confirmDelete = window.confirm(
+          `This is the last video in "${qudemo.title}". Deleting it will remove the entire QuDemo. Are you sure you want to continue?`
+        );
+        
+        if (confirmDelete) {
+          await deleteEntireQudemo();
+        } else {
+          // User cancelled, restore the video
+          setVideos(videos);
+        }
+      } else {
+        // Save the updated videos list
+        await saveVideoChanges(updatedVideos);
+      }
+    } catch (error) {
+      console.error('Error removing video:', error);
+      // Restore the video on error
+      setVideos(videos);
+      alert('Failed to remove video. Please try again.');
+    } finally {
+      setRemovingVideoId(null);
+    }
+  };
+
+  const deleteEntireQudemo = async () => {
+    try {
+      setSaving(true);
+      const token = localStorage.getItem('accessToken');
+      const response = await fetch(getNodeApiUrl(`/api/qudemos/${id}`), {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        alert('QuDemo deleted successfully because it had no videos remaining.');
+        navigate('/qudemos');
+      } else {
+        alert('Failed to delete QuDemo: ' + (data.error || 'Unknown error'));
+        // Restore the video on error
+        setVideos(videos);
+      }
+    } catch (error) {
+      console.error('Error deleting QuDemo:', error);
+      alert('Failed to delete QuDemo. Please try again.');
+      // Restore the video on error
+      setVideos(videos);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const saveVideoChanges = async (updatedVideos) => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await fetch(getNodeApiUrl(`/api/qudemos/${id}`), {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          title,
+          description,
+          videos: updatedVideos,
+          knowledgeSources
+        })
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        console.log('Video removed successfully');
+      } else {
+        throw new Error(data.error || 'Failed to update QuDemo');
+      }
+    } catch (error) {
+      console.error('Error saving video changes:', error);
+      throw error;
+    }
   };
 
   const addKnowledgeSource = () => {
@@ -432,9 +524,16 @@ const EditQudemo = () => {
                       </div>
                       <button
                         onClick={() => removeVideo(video.id)}
-                        className="text-red-600 hover:text-red-800"
+                        disabled={removingVideoId === video.id || saving}
+                        className={`text-red-600 hover:text-red-800 disabled:opacity-50 disabled:cursor-not-allowed ${
+                          removingVideoId === video.id ? 'animate-pulse' : ''
+                        }`}
                       >
-                        <TrashIcon className="h-5 w-5" />
+                        {removingVideoId === video.id ? (
+                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-red-600"></div>
+                        ) : (
+                          <TrashIcon className="h-5 w-5" />
+                        )}
                       </button>
                     </div>
                   ))

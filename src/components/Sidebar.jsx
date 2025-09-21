@@ -77,7 +77,7 @@ const Sidebar = () => {
         </div>
 
         {/* Menu Links */}
-        <nav className="flex flex-col mt-20 space-y-6 px-4 text-gray-600">
+        <nav className="flex flex-col mt-32 space-y-6 px-4 text-gray-600">
           {menuItems.map(({ name, icon: Icon, path }) => (
             <NavLink
               key={name}
