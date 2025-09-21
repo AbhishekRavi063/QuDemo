@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { NavLink, Link, useLocation } from 'react-router-dom';
 import {
   ClockIcon,
-  ChartBarIcon,
+  // ChartBarIcon, // COMMENTED OUT - Insights & Analytics hidden
   Cog6ToothIcon,
-  ChatBubbleLeftEllipsisIcon,
+  // ChatBubbleLeftEllipsisIcon, // COMMENTED OUT - Buyer Interactions hidden
   Squares2X2Icon,
   Bars3Icon,
   XMarkIcon,
@@ -17,13 +17,16 @@ import {
 } from '@heroicons/react/24/outline';
 
 const menuItems = [
-  { name: 'Overview', icon: ClockIcon, path: '/overview' },
+  // OVERVIEW - TEMPORARILY COMMENTED OUT
+  // { name: 'Overview', icon: ClockIcon, path: '/overview' },
   { name: 'Create QuDemo', icon: PlusIcon, path: '/create' },
   // CUSTOMER PAGE - COMMENTED OUT (NOT IN USE)
   // { name: 'Customers', icon: UsersIcon, path: '/customers' },
   { name: 'Qudemos', icon: PlayIcon, path: '/qudemos' },
-  { name: 'Buyer Interactions', icon: ChatBubbleLeftEllipsisIcon, path: '/interactions' },
-  { name: 'Insights & Analytics', icon: ChartBarIcon, path: '/analytics' },
+  // BUYER INTERACTIONS - TEMPORARILY COMMENTED OUT
+  // { name: 'Buyer Interactions', icon: ChatBubbleLeftEllipsisIcon, path: '/interactions' },
+  // INSIGHTS & ANALYTICS - TEMPORARILY COMMENTED OUT
+  // { name: 'Insights & Analytics', icon: ChartBarIcon, path: '/analytics' },
   // TEST RUNNER - TEMPORARILY COMMENTED OUT
   // { name: 'Test Runner', icon: BeakerIcon, path: '/test-runner' },
 ];
@@ -41,7 +44,7 @@ const Sidebar = () => {
   return (
     <>
       {/* Hamburger toggle button - visible on mobile */}
-      <div className="md:hidden fixed top-16 left-4 z-50">
+      <div className="md:hidden fixed top-4 left-4 z-50">
         <button
           onClick={() => setIsOpen(true)}
           className="bg-blue-600 text-white p-2 rounded-full shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
@@ -74,7 +77,7 @@ const Sidebar = () => {
         </div>
 
         {/* Menu Links */}
-        <nav className="flex flex-col mt-4 space-y-6 px-4 text-gray-600">
+        <nav className="flex flex-col mt-20 space-y-6 px-4 text-gray-600">
           {menuItems.map(({ name, icon: Icon, path }) => (
             <NavLink
               key={name}

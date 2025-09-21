@@ -673,16 +673,15 @@ const PublicQudemoShare = () => {
               </div>
 
               {/* Footer */}
-              <div className="p-4 flex flex-col sm:flex-row sm:justify-between items-center text-xs gap-2 bg-white border-t">
-                <span className="text-gray-500">Powered by Qudemo AI</span>
-                <div className="flex gap-2">
-                  <button className="text-blue-600 font-semibold hover:underline border border-gray-300 rounded px-3 py-1.5">
-                    FAQs
-                  </button>
-                  <button className="text-blue-600 font-semibold hover:underline border border-gray-300 rounded px-3 py-1.5">
-                    Schedule Meeting
-                  </button>
-                </div>
+              <div className="p-4 flex justify-center items-center text-xs bg-white border-t">
+                <span className="text-gray-500">
+                  Powered by <span 
+                    onClick={() => window.location.href = '/'}
+                    className="text-blue-600 hover:text-blue-800 cursor-pointer font-semibold"
+                  >
+                    Qudemo
+                  </span> AI
+                </span>
               </div>
             </div>
           </div>

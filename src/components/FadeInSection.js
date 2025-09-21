@@ -12,7 +12,7 @@ const FadeInSection = ({ children, delay = 0 }) => {
       ref={ref}
       initial={{ opacity: 0, y: 40 }}
       animate={inView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 1.2, ease: "easeOut", delay }}
+      transition={{ duration: 0.6, ease: "easeOut", delay }}
     >
       {children}
     </motion.div>

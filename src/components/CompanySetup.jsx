@@ -8,9 +8,7 @@ const CompanySetup = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: '',
-    description: '',
-    website: '',
-    logo: ''
+    website: ''
   });
   const [formErrors, setFormErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -27,21 +25,9 @@ const CompanySetup = () => {
       errors.name = 'Company name must be at least 2 characters';
     }
     
-    // Description is required
-    if (!formData.description.trim()) {
-      errors.description = 'Company description is required';
-    } else if (formData.description.trim().length < 10) {
-      errors.description = 'Description must be at least 10 characters';
-    }
-    
     // Website is optional, but if provided, must be valid URL
     if (formData.website && !isValidUrl(formData.website)) {
       errors.website = 'Please enter a valid website URL';
-    }
-    
-    // Logo is optional, but if provided, must be valid URL
-    if (formData.logo && !isValidUrl(formData.logo)) {
-      errors.logo = 'Please enter a valid logo URL';
     }
     
     setFormErrors(errors);
@@ -109,9 +95,9 @@ const CompanySetup = () => {
         },
         body: JSON.stringify({
           name: formData.name.trim(),
-          description: formData.description.trim() || 'No description provided',
+          description: 'No description provided',
           website: formData.website.trim() || null,
-          logo: formData.logo.trim() || null
+          logo: null
         })
       });
       
@@ -193,29 +179,6 @@ const CompanySetup = () => {
               </div>
             </div>
 
-            {/* Description */}
-            <div>
-              <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-                Description *
-              </label>
-              <div className="mt-1">
-                <textarea
-                  id="description"
-                  name="description"
-                  rows={3}
-                  required
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  className={`appearance-none block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm ${
-                    formErrors.description ? 'border-red-300' : 'border-gray-300'
-                  }`}
-                  placeholder="Brief description of your company (required)"
-                />
-                {formErrors.description && (
-                  <p className="mt-1 text-sm text-red-600">{formErrors.description}</p>
-                )}
-              </div>
-            </div>
 
             {/* Website */}
             <div>
@@ -240,28 +203,6 @@ const CompanySetup = () => {
               </div>
             </div>
 
-            {/* Logo URL */}
-            <div>
-              <label htmlFor="logo" className="block text-sm font-medium text-gray-700">
-                Logo URL (Optional)
-              </label>
-              <div className="mt-1">
-                <input
-                  id="logo"
-                  name="logo"
-                  type="url"
-                  value={formData.logo}
-                  onChange={handleInputChange}
-                  className={`appearance-none block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm ${
-                    formErrors.logo ? 'border-red-300' : 'border-gray-300'
-                  }`}
-                  placeholder="https://yourcompany.com/logo.png (optional)"
-                />
-                {formErrors.logo && (
-                  <p className="mt-1 text-sm text-red-600">{formErrors.logo}</p>
-                )}
-              </div>
-            </div>
 
             {/* Error Message */}
             {error && (

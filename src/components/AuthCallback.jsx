@@ -18,8 +18,8 @@ const AuthCallback = () => {
         console.log('🚨 AuthCallback: Current host:', currentHost);
         console.log('🚨 AuthCallback: This indicates Vercel domain configuration issue');
         
-        // Always redirect to /overview instead of preserving the hash
-        const redirectUrl = `${window.location.origin}/overview`;
+              // Always redirect to /create instead of preserving the hash
+              const redirectUrl = `${window.location.origin}/create`;
         
         console.log('🚨 AuthCallback: Redirecting to:', redirectUrl);
         window.location.replace(redirectUrl);
@@ -225,15 +225,15 @@ const AuthCallback = () => {
           // Dispatch custom event to trigger company refresh
           window.dispatchEvent(new CustomEvent('authCompleted'));
           
-          setTimeout(() => {
-            console.log('🔍 AuthCallback: Navigating to overview page');
-            
-            // Use current domain to avoid production redirects in development
-            const currentOrigin = window.location.origin;
-            console.log('🔍 AuthCallback: Current origin:', currentOrigin);
-            console.log('🔍 AuthCallback: Using direct redirect to /overview');
-            window.location.href = `${currentOrigin}/overview`;
-          }, 500);
+                setTimeout(() => {
+                  console.log('🔍 AuthCallback: Navigating to create page');
+                  
+                  // Use current domain to avoid production redirects in development
+                  const currentOrigin = window.location.origin;
+                  console.log('🔍 AuthCallback: Current origin:', currentOrigin);
+                  console.log('🔍 AuthCallback: Using direct redirect to /create');
+                  window.location.href = `${currentOrigin}/create`;
+                }, 500);
         } else {
           console.log('🔍 AuthCallback: No tokens found in URL hash, redirecting to login');
           navigate('/login');

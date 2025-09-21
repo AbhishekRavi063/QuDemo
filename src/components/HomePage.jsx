@@ -1,12 +1,59 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { StarBorder } from "./ui/star-border";
 import FadeInSection from "./FadeInSection";
-import { navigateToOverview } from '../utils/navigation';
+import { navigateToCreate } from '../utils/navigation';
 
 const HomePage = () => {
   const [openFAQ, setOpenFAQ] = useState(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userEmail, setUserEmail] = useState('');
   const navigate = useNavigate();
+
+  // Check authentication state on home page load
+  useEffect(() => {
+    console.log('🏠 HomePage: Component mounted');
+    console.log('🏠 HomePage: Current URL:', window.location.href);
+    
+    const checkAuthState = () => {
+      const accessToken = localStorage.getItem('accessToken');
+      const refreshToken = localStorage.getItem('refreshToken');
+      const user = localStorage.getItem('user');
+      
+      console.log('🏠 HomePage: Token check - Access:', !!accessToken, 'Refresh:', !!refreshToken, 'User:', !!user);
+      
+      if (accessToken && refreshToken && user) {
+        setIsLoggedIn(true);
+        try {
+          const userData = JSON.parse(user);
+          setUserEmail(userData.email || '');
+          console.log('🏠 HomePage: User logged in, email:', userData.email);
+        } catch (error) {
+          console.error('🏠 HomePage: Error parsing user data:', error);
+        }
+      } else {
+        setIsLoggedIn(false);
+        setUserEmail('');
+        console.log('🏠 HomePage: User not logged in');
+      }
+    };
+    
+    // Check auth state immediately and on storage changes
+    checkAuthState();
+    
+    const handleStorageChange = (e) => {
+      if (e.key === 'accessToken' || e.key === 'refreshToken' || e.key === 'user') {
+        console.log('🏠 HomePage: Storage change detected, rechecking auth state');
+        checkAuthState();
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
 
   const toggleFAQ = (index) => {
     setOpenFAQ(openFAQ === index ? null : index);
@@ -37,20 +84,39 @@ const HomePage = () => {
       
       <div className="relative z-10 bg-black/50 flex flex-col min-h-screen overflow-x-hidden max-w-full">
         {/* Navigation Bar */}
-        <div className="flex justify-between items-center p-6 max-w-full">
+        <div className="flex justify-between items-center p-4 md:p-6 max-w-full">
           <div className="flex items-center">
-            <h1 className="text-2xl font-bold text-white">Qudemo</h1>
+            <h1 className="text-xl md:text-2xl font-bold text-white">Qudemo</h1>
           </div>
-          <div className="flex items-center gap-6">
-            <div className="text-white font-medium px-8 py-2 bg-gray-900/90 rounded-[20px] border border-gray-600/40 hover:bg-gray-800/90 transition-all duration-200">
+          <div className="flex items-center gap-2 md:gap-6">
+            {/* Blog - Hidden on mobile, shown on desktop */}
+            <div className="hidden md:block text-white font-medium px-6 md:px-8 py-2 bg-gray-900/90 rounded-[20px] border border-gray-600/40 hover:bg-gray-800/90 transition-all duration-200">
               Blog
             </div>
-            <div 
-              onClick={() => navigate('/login')}
-              className="text-white font-medium px-8 py-2 bg-gray-900/90 rounded-[20px] border border-gray-600/40 hover:bg-gray-800/90 transition-all duration-200 cursor-pointer"
-            >
-              Login
-            </div>
+            {isLoggedIn ? (
+              <div className="flex items-center gap-2 md:gap-4">
+                {/* User email - Responsive text and padding */}
+                <div className="text-white font-medium px-3 md:px-6 py-2 bg-gray-900/90 rounded-[20px] border border-gray-600/40 text-xs md:text-sm">
+                  <span className="hidden sm:inline">{userEmail}</span>
+                  <span className="sm:hidden">{userEmail.split('@')[0]}</span>
+                </div>
+                {/* Dashboard button - Responsive text and padding */}
+                <div 
+                  onClick={() => navigate('/create')}
+                  className="text-white font-medium px-4 md:px-8 py-2 bg-blue-600/90 rounded-[20px] border border-blue-500/40 hover:bg-blue-700/90 transition-all duration-200 cursor-pointer text-sm md:text-base"
+                >
+                  <span className="hidden sm:inline">Dashboard</span>
+                  <span className="sm:hidden">Dash</span>
+                </div>
+              </div>
+            ) : (
+              <div 
+                onClick={() => navigate('/login')}
+                className="text-white font-medium px-4 md:px-8 py-2 bg-gray-900/90 rounded-[20px] border border-gray-600/40 hover:bg-gray-800/90 transition-all duration-200 cursor-pointer text-sm md:text-base"
+              >
+                Login
+              </div>
+            )}
           </div>
         </div>
 
@@ -86,7 +152,7 @@ const HomePage = () => {
                 Engage your prospects with an AI Powered demo that answers their questions in real time.
               </p>
               <StarBorder
-                onClick={() => navigateToOverview(navigate)}
+                onClick={() => navigateToCreate(navigate)}
                 color="#3b82f6"
                 className="text-white font-bold text-lg"
               >
@@ -97,7 +163,7 @@ const HomePage = () => {
         </FadeInSection>
 
         {/* AI-Driven Efficiency Section */}
-        <FadeInSection delay={0.4}>
+        <FadeInSection delay={0.1}>
           <div className="flex justify-center items-center min-h-[80vh] px-6 mt-32">
             <div className="max-w-6xl text-center">
             {/* AI-Driven Efficiency Badge */}
@@ -172,7 +238,7 @@ const HomePage = () => {
         </FadeInSection>
 
         {/* Why Choose Us Section */}
-        <FadeInSection delay={0.6}>
+        <FadeInSection delay={0.2}>
           <div className="py-20 px-6">
           <div className="max-w-6xl mx-auto text-center">
             {/* Badge */}
@@ -247,7 +313,7 @@ const HomePage = () => {
         </FadeInSection>
 
         {/* Founders Note Section */}
-        <FadeInSection delay={0.8}>
+        <FadeInSection delay={0.3}>
           <div className="py-32 px-6">
           <div className="max-w-4xl mx-auto text-center">
             {/* Founders Note Badge */}
@@ -262,7 +328,7 @@ const HomePage = () => {
             
             {/* Quote */}
             <blockquote className="text-3xl md:text-4xl font-bold text-white leading-relaxed mb-12">
-              We believe <span className="text-blue-400">Demo</span> should feel like real
+              We believe a <span className="text-blue-400">Demo</span> should feel like real
               <br />
               conversations, not one-way presentations
               <br />
@@ -416,7 +482,7 @@ const HomePage = () => {
         </FadeInSection>
 
         {/* Final Call-to-Action Section */}
-        <FadeInSection delay={1.0}>
+        <FadeInSection delay={0.4}>
           <div className="py-20 px-6 relative">
           <div className="max-w-4xl mx-auto text-center relative">
             {/* Blue Glow Effect */}

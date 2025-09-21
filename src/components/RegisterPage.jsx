@@ -66,11 +66,11 @@ const RegisterPage = () => {
         localStorage.setItem('refreshToken', data.data.tokens.refreshToken);
         localStorage.setItem('user', JSON.stringify(data.data.user));
         
-        // Redirect to dashboard (not login) - will trigger company check
-        const currentOrigin = window.location.origin;
-        console.log('🔍 RegisterPage: Redirecting to overview, current domain:', currentOrigin);
-        console.log('🔍 RegisterPage: Using direct redirect to /overview');
-        window.location.href = `${currentOrigin}/overview`;
+            // Redirect to create page (not login) - will trigger company check
+            const currentOrigin = window.location.origin;
+            console.log('🔍 RegisterPage: Redirecting to create page, current domain:', currentOrigin);
+            console.log('🔍 RegisterPage: Using direct redirect to /create');
+            window.location.href = `${currentOrigin}/create`;
       } else {
         if (data.details && Array.isArray(data.details)) {
           setRegisterError(data.details.join(' '));

@@ -163,7 +163,7 @@ const DashboardLayout = ({ children }) => {
       <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header onMenuClick={() => setSidebarOpen(true)} />
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100">
+        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 mt-16">
           <div className="container mx-auto px-2 sm:px-6 py-4 sm:py-8">
             {children}
           </div>
@@ -193,33 +193,64 @@ function App() {
     }
   }, []);
 
+  // Debug: Monitor token changes globally
+  useEffect(() => {
+    console.log('🔍 App: Global token monitoring started');
+    
+    const checkGlobalTokens = () => {
+      const accessToken = localStorage.getItem('accessToken');
+      const refreshToken = localStorage.getItem('refreshToken');
+      const user = localStorage.getItem('user');
+      
+      console.log('🔍 App: Global token check - Access:', !!accessToken, 'Refresh:', !!refreshToken, 'User:', !!user);
+    };
+    
+    // Check tokens on app load
+    checkGlobalTokens();
+    
+    // Listen for storage changes
+    const handleStorageChange = (e) => {
+      if (e.key === 'accessToken' || e.key === 'refreshToken' || e.key === 'user') {
+        console.log('🔍 App: Storage change detected for key:', e.key, 'New value exists:', !!e.newValue);
+        checkGlobalTokens();
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
   return (
     <Router>
       <BackendProvider>
-        <CompanyProvider>
-          <NotificationProvider>
-            <div className="App">
-          <Routes>
-            {/* Public Routes */}
-            <Route path="/" element={<HomePage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-            <Route path="/auth/callback" element={<AuthCallback />} />
-            <Route path="/share/:shareToken" element={<PublicQudemoShare />} />
-            
-            {/* Protected Routes */}
-            <Route 
-              path="/overview" 
-              element={
-                <ProtectedRoute>
-                  <CompanyCheck>
-                    <DashboardLayout>
-                      <Overview />
-                    </DashboardLayout>
-                  </CompanyCheck>
-                </ProtectedRoute>
-              } 
-            />
+        <NotificationProvider>
+          <div className="App">
+            <Routes>
+              {/* Public Routes */}
+              <Route path="/" element={<HomePage />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+              <Route path="/auth/callback" element={<AuthCallback />} />
+              <Route path="/share/:shareToken" element={<PublicQudemoShare />} />
+              
+              {/* Protected Routes - Wrapped with CompanyProvider */}
+              <Route 
+                path="/overview" 
+                element={
+                  <CompanyProvider>
+                    <ProtectedRoute>
+                      <CompanyCheck>
+                        <DashboardLayout>
+                          <Overview />
+                        </DashboardLayout>
+                      </CompanyCheck>
+                    </ProtectedRoute>
+                  </CompanyProvider>
+                } 
+              />
             {/* CUSTOMER PAGE ROUTE - COMMENTED OUT (NOT IN USE)
             <Route 
               path="/customers" 
@@ -235,118 +266,135 @@ function App() {
             <Route 
               path="/create" 
               element={
-                <ProtectedRoute>
-                  <CompanyCheck>
-                    <DashboardLayout>
-                      <CreateQuDemo />
-                    </DashboardLayout>
-                  </CompanyCheck>
-                </ProtectedRoute>
+                <CompanyProvider>
+                  <ProtectedRoute>
+                    <CompanyCheck>
+                      <DashboardLayout>
+                        <CreateQuDemo />
+                      </DashboardLayout>
+                    </CompanyCheck>
+                  </ProtectedRoute>
+                </CompanyProvider>
               } 
             />
             <Route 
               path="/qudemos" 
               element={
-                <ProtectedRoute>
-                  <CompanyCheck>
-                    <DashboardLayout>
-                      <Qudemos />
-                    </DashboardLayout>
-                  </CompanyCheck>
-                </ProtectedRoute>
+                <CompanyProvider>
+                  <ProtectedRoute>
+                    <CompanyCheck>
+                      <DashboardLayout>
+                        <Qudemos />
+                      </DashboardLayout>
+                    </CompanyCheck>
+                  </ProtectedRoute>
+                </CompanyProvider>
               } 
             />
             <Route 
               path="/edit-qudemo/:id" 
               element={
-                <ProtectedRoute>
-                  <CompanyCheck>
-                    <DashboardLayout>
-                      <EditQudemo />
-                    </DashboardLayout>
-                  </CompanyCheck>
-                </ProtectedRoute>
+                <CompanyProvider>
+                  <ProtectedRoute>
+                    <CompanyCheck>
+                      <DashboardLayout>
+                        <EditQudemo />
+                      </DashboardLayout>
+                    </CompanyCheck>
+                  </ProtectedRoute>
+                </CompanyProvider>
               } 
             />
             <Route 
               path="/interactions" 
               element={
-                <ProtectedRoute>
-                  <CompanyCheck>
-                    <DashboardLayout>
-                      <BuyerInteractions />
-                    </DashboardLayout>
-                  </CompanyCheck>
-                </ProtectedRoute>
+                <CompanyProvider>
+                  <ProtectedRoute>
+                    <CompanyCheck>
+                      <DashboardLayout>
+                        <BuyerInteractions />
+                      </DashboardLayout>
+                    </CompanyCheck>
+                  </ProtectedRoute>
+                </CompanyProvider>
               } 
             />
             <Route 
               path="/analytics" 
               element={
-                <ProtectedRoute>
-                  <CompanyCheck>
-                    <DashboardLayout>
-                      <InsightsAnalytics />
-                    </DashboardLayout>
-                  </CompanyCheck>
-                </ProtectedRoute>
+                <CompanyProvider>
+                  <ProtectedRoute>
+                    <CompanyCheck>
+                      <DashboardLayout>
+                        <InsightsAnalytics />
+                      </DashboardLayout>
+                    </CompanyCheck>
+                  </ProtectedRoute>
+                </CompanyProvider>
               } 
             />
             <Route 
               path="/profile" 
               element={
-                <ProtectedRoute>
-                  <CompanyCheck>
-                    <DashboardLayout>
-                      <ProfilePage />
-                    </DashboardLayout>
-                  </CompanyCheck>
-                </ProtectedRoute>
+                <CompanyProvider>
+                  <ProtectedRoute>
+                    <CompanyCheck>
+                      <DashboardLayout>
+                        <ProfilePage />
+                      </DashboardLayout>
+                    </CompanyCheck>
+                  </ProtectedRoute>
+                </CompanyProvider>
               } 
             />
             <Route 
               path="/settings" 
               element={
-                <ProtectedRoute>
-                  <CompanyCheck>
-                    <DashboardLayout>
-                      <SettingsPage />
-                    </DashboardLayout>
-                  </CompanyCheck>
-                </ProtectedRoute>
+                <CompanyProvider>
+                  <ProtectedRoute>
+                    <CompanyCheck>
+                      <DashboardLayout>
+                        <SettingsPage />
+                      </DashboardLayout>
+                    </CompanyCheck>
+                  </ProtectedRoute>
+                </CompanyProvider>
               } 
             />
             <Route 
               path="/companies" 
               element={
-                <ProtectedRoute>
-                  <CompanyCheck>
-                    <DashboardLayout>
-                      <CompanyManagement />
-                    </DashboardLayout>
-                  </CompanyCheck>
-                </ProtectedRoute>
+                <CompanyProvider>
+                  <ProtectedRoute>
+                    <CompanyCheck>
+                      <DashboardLayout>
+                        <CompanyManagement />
+                      </DashboardLayout>
+                    </CompanyCheck>
+                  </ProtectedRoute>
+                </CompanyProvider>
               } 
             />
             <Route 
               path="/test-runner" 
               element={
-                <ProtectedRoute>
-                  <CompanyCheck>
-                    <DashboardLayout>
-                      <TestRunner />
-                    </DashboardLayout>
-                  </CompanyCheck>
-                </ProtectedRoute>
+                <CompanyProvider>
+                  <ProtectedRoute>
+                    <CompanyCheck>
+                      <DashboardLayout>
+                        <TestRunner />
+                      </DashboardLayout>
+                    </CompanyCheck>
+                  </ProtectedRoute>
+                </CompanyProvider>
               } 
             />
             
             {/* Catch all route */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
-            </div>
-          </NotificationProvider>
-        </CompanyProvider>
+          </div>
+        </NotificationProvider>
       </BackendProvider>
     </Router>
   );

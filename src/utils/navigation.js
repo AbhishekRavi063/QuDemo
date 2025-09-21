@@ -1,5 +1,5 @@
 // Navigation utility to ensure we stay on the correct domain
-export const navigateToOverview = (navigate) => {
+export const navigateToCreate = (navigate) => {
   const currentDomain = window.location.origin;
   console.log('🔍 Navigation: Current domain:', currentDomain);
   console.log('🔍 Navigation: Current URL:', window.location.href);
@@ -8,8 +8,8 @@ export const navigateToOverview = (navigate) => {
   
   // Use React Router navigation for same-origin requests
   console.log('🔍 Navigation: Using React Router navigation');
-  console.log('🔍 Navigation: Calling navigate("/overview")');
-  navigate('/overview');
+  console.log('🔍 Navigation: Calling navigate("/create")');
+  navigate('/create');
 };
 
 export const navigateToLogin = (navigate) => {

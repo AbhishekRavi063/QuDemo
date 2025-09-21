@@ -343,28 +343,13 @@ export default function ProfilePage() {
                   </div>
 
                   {/* Company Details */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block font-medium mb-2 text-gray-700">Company Name</label>
-                      <div className="w-full border border-gray-200 rounded-lg px-3 py-2 bg-gray-50 text-gray-900">
-                        {company.name || 'Not provided'}
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <label className="block font-medium mb-2 text-gray-700">Display Name</label>
-                      <div className="w-full border border-gray-200 rounded-lg px-3 py-2 bg-gray-50 text-gray-900">
-                        {company.display_name || company.name || 'Not provided'}
-                      </div>
+                  <div>
+                    <label className="block font-medium mb-2 text-gray-700">Company Name</label>
+                    <div className="w-full border border-gray-200 rounded-lg px-3 py-2 bg-gray-50 text-gray-900">
+                      {company.name || 'Not provided'}
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block font-medium mb-2 text-gray-700">Description</label>
-                    <div className="w-full border border-gray-200 rounded-lg px-3 py-2 bg-gray-50 text-gray-900 min-h-[80px]">
-                      {company.description || 'No description provided'}
-                    </div>
-                  </div>
 
                   <div>
                     <label className="block font-medium mb-2 text-gray-700">Website</label>
@@ -384,23 +369,6 @@ export default function ProfilePage() {
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block font-medium mb-2 text-gray-700">Logo URL</label>
-                    <div className="w-full border border-gray-200 rounded-lg px-3 py-2 bg-gray-50 text-gray-900">
-                      {company.logo_url ? (
-                        <a 
-                          href={company.logo_url} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:text-blue-800 underline"
-                        >
-                          {company.logo_url}
-                        </a>
-                      ) : (
-                        'Not provided'
-                      )}
-                    </div>
-                  </div>
 
                   {/* Company Status */}
                   <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">

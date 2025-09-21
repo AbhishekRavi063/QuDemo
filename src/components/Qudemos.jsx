@@ -9,7 +9,6 @@ import {
   EyeIcon,
   PencilIcon,
   TrashIcon,
-  DocumentDuplicateIcon,
   ShareIcon,
   EllipsisVerticalIcon,
   PlusIcon,
@@ -181,9 +180,6 @@ const Qudemos = () => {
       case 'edit':
         navigate(`/edit-qudemo/${qudemo.id}`);
         break;
-      case 'duplicate':
-        await duplicateQudemo(qudemo);
-        break;
       case 'delete':
         const confirmDelete = window.confirm(
           `Are you sure you want to delete "${qudemo.title}"?\n\nThis action will permanently delete:\n• The qudemo and all its videos\n• All knowledge sources\n• All analytics data\n\nThis action cannot be undone.`
@@ -203,30 +199,6 @@ const Qudemos = () => {
     }
   };
 
-  const duplicateQudemo = async (qudemo) => {
-    try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch(getNodeApiUrl(`/api/qudemos/${qudemo.id}/duplicate`), {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        alert('Qudemo duplicated successfully!');
-        fetchQudemos(); // Refresh the list
-      } else {
-        alert('Failed to duplicate qudemo: ' + (data.error || 'Unknown error'));
-      }
-    } catch (error) {
-      console.error('Error duplicating qudemo:', error);
-      alert('Failed to duplicate qudemo');
-    }
-  };
 
   const deleteQudemo = async (qudemoId) => {
     try {
@@ -385,39 +357,53 @@ const Qudemos = () => {
                 )}
                 {qudemo.videos && qudemo.videos.length > 0 ? (
                   <div className="w-full h-full bg-black flex items-center justify-center">
-                    <div className="relative w-full h-full">
-                      {/* Show thumbnail image instead of video player for cards */}
-                      <div className="w-full h-full bg-gray-900 flex items-center justify-center">
-                        {qudemo.videos[0].thumbnail_url ? (
-                          <img 
-                            src={qudemo.videos[0].thumbnail_url} 
-                            alt={qudemo.title}
-                            className="w-full h-full object-cover"
-                            style={{ borderRadius: '0.5rem 0.5rem 0 0' }}
+                    <div className="relative w-full h-full group">
+                      {/* Video Player Preview */}
+                      <div className="w-full h-full bg-gray-900 flex items-center justify-center overflow-hidden">
+                        <div className="w-full h-full">
+                          <ReactPlayer
+                            url={qudemo.videos[0].video_url}
+                            width="100%"
+                            height="100%"
+                            controls={false}
+                            playing={false}
+                            muted={true}
+                            loop={true}
+                            className="rounded-t-lg"
+                            config={{
+                              file: {
+                                attributes: {
+                                  style: { borderRadius: '0.5rem 0.5rem 0 0' }
+                                }
+                              }
+                            }}
                           />
-                        ) : (
-                          <div className="text-center">
-                            <VideoCameraIcon className="w-12 h-12 text-gray-400 mx-auto mb-2" />
-                            <p className="text-gray-500 text-sm">Video Preview</p>
-                          </div>
-                        )}
+                        </div>
                       </div>
+                      
                       {/* Play Button Overlay */}
-                      <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             handleDropdownAction('preview', qudemo);
                           }}
-                          className="w-16 h-16 bg-black bg-opacity-50 rounded-full flex items-center justify-center hover:bg-opacity-70 transition-all"
+                          className="w-16 h-16 bg-black bg-opacity-60 rounded-full flex items-center justify-center hover:bg-opacity-80 hover:scale-110 transition-all duration-300 shadow-lg"
                         >
-                          <PlayIcon className="w-8 h-8 text-white" />
+                          <PlayIcon className="w-8 h-8 text-white ml-1" />
                         </button>
                       </div>
+                      
+                      {/* Video Duration Badge */}
+                      {qudemo.videos[0].duration && (
+                        <div className="absolute bottom-2 right-2 bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded">
+                          {qudemo.videos[0].duration}
+                        </div>
+                      )}
                     </div>
                   </div>
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center">
+                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
                     <div className="text-center">
                       <VideoCameraIcon className="w-12 h-12 text-gray-400 mx-auto mb-2" />
                       <p className="text-gray-500 text-sm">No video</p>
@@ -467,16 +453,6 @@ const Qudemos = () => {
                         </button>
                         <button
                           onClick={(e) => {
-                            e.stopPropagation();
-                            handleDropdownAction('duplicate', qudemo);
-                          }}
-                          className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center space-x-2"
-                        >
-                          <DocumentDuplicateIcon className="w-4 h-4" />
-                          <span>Duplicate</span>
-                        </button>
-                        <button
-                          onClick={(e) => {
                             console.log('🔗 Frontend (Qudemos): Share button clicked in dropdown');
                             e.stopPropagation();
                             handleDropdownAction('share', qudemo);
@@ -509,9 +485,19 @@ const Qudemos = () => {
                   </div>
                 </div>
 
-                <p className="text-gray-600 text-sm mb-3 line-clamp-2">
-                  {qudemo.description || 'No description available'}
-                </p>
+                {/* Share Link Button */}
+                <div className="mb-3">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDropdownAction('share', qudemo);
+                    }}
+                    className="flex items-center space-x-2 text-blue-600 hover:text-blue-800 transition-colors duration-200"
+                  >
+                    <ShareIcon className="w-4 h-4" />
+                    <span className="text-sm font-medium">Share Link</span>
+                  </button>
+                </div>
 
                 {/* Stats */}
                 <div className="flex items-center justify-between text-sm text-gray-500">

@@ -75,11 +75,11 @@ const LoginPage = () => {
         localStorage.setItem('refreshToken', data.data.tokens.refreshToken);
         localStorage.setItem('user', JSON.stringify(data.data.user));
         
-        // Redirect to dashboard
-        const currentOrigin = window.location.origin;
-        console.log('🔍 LoginPage: Redirecting to overview, current domain:', currentOrigin);
-        console.log('🔍 LoginPage: Using direct redirect to /overview');
-        window.location.href = `${currentOrigin}/overview`;
+            // Redirect to create page
+            const currentOrigin = window.location.origin;
+            console.log('🔍 LoginPage: Redirecting to create page, current domain:', currentOrigin);
+            console.log('🔍 LoginPage: Using direct redirect to /create');
+            window.location.href = `${currentOrigin}/create`;
       } else {
         setLoginError(data.error || 'Login failed');
       }
