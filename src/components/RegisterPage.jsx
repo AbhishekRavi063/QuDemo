@@ -144,64 +144,67 @@ const RegisterPage = () => {
             </Link>
           </p>
         </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="rounded-md shadow-sm -space-y-px">
-            <input
-              name="firstName"
-              type="text"
-              autoComplete="given-name"
-              required
-              className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-              placeholder="First Name"
-              value={formData.firstName}
-              onChange={handleInputChange}
-            />
-            {errors.firstName && <p className="text-red-500 text-xs">{errors.firstName}</p>}
-            <input
-              name="lastName"
-              type="text"
-              autoComplete="family-name"
-              required
-              className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-              placeholder="Last Name"
-              value={formData.lastName}
-              onChange={handleInputChange}
-            />
-            {errors.lastName && <p className="text-red-500 text-xs">{errors.lastName}</p>}
-            <input
-              name="email"
-              type="email"
-              autoComplete="email"
-              required
-              className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-              placeholder="Email address"
-              value={formData.email}
-              onChange={handleInputChange}
-            />
-            {errors.email && <p className="text-red-500 text-xs">{errors.email}</p>}
-            <input
-              name="password"
-              type="password"
-              autoComplete="new-password"
-              required
-              className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-              placeholder="Password"
-              value={formData.password}
-              onChange={handleInputChange}
-            />
-            {errors.password && <p className="text-red-500 text-xs">{errors.password}</p>}
-          </div>
-          {registerError && <p className="text-red-500 text-sm">{registerError}</p>}
-          <div>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-            >
-              {isLoading ? 'Creating...' : 'Create Account'}
-            </button>
-          </div>
-        </form>
+        {/* Email/Password form hidden */}
+        <div style={{ display: 'none' }}>
+          <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+            <div className="rounded-md shadow-sm -space-y-px">
+              <input
+                name="firstName"
+                type="text"
+                autoComplete="given-name"
+                required
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                placeholder="First Name"
+                value={formData.firstName}
+                onChange={handleInputChange}
+              />
+              {errors.firstName && <p className="text-red-500 text-xs">{errors.firstName}</p>}
+              <input
+                name="lastName"
+                type="text"
+                autoComplete="family-name"
+                required
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                placeholder="Last Name"
+                value={formData.lastName}
+                onChange={handleInputChange}
+              />
+              {errors.lastName && <p className="text-red-500 text-xs">{errors.lastName}</p>}
+              <input
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                placeholder="Email address"
+                value={formData.email}
+                onChange={handleInputChange}
+              />
+              {errors.email && <p className="text-red-500 text-xs">{errors.email}</p>}
+              <input
+                name="password"
+                type="password"
+                autoComplete="new-password"
+                required
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                placeholder="Password"
+                value={formData.password}
+                onChange={handleInputChange}
+              />
+              {errors.password && <p className="text-red-500 text-xs">{errors.password}</p>}
+            </div>
+            {registerError && <p className="text-red-500 text-sm">{registerError}</p>}
+            <div>
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              >
+                {isLoading ? 'Creating...' : 'Create Account'}
+              </button>
+            </div>
+          </form>
+        </div>
         <button
           type="button"
           onClick={handleGoogleSignUp}
