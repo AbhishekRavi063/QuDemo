@@ -116,11 +116,13 @@ const AuthCallback = () => {
             console.log('🔍 AuthCallback: Checking if user exists in backend...');
             let response;
             try {
+              console.log('🔍 AuthCallback: Making profile check request to:', getNodeApiUrl('/api/auth/profile'));
               response = await fetch(getNodeApiUrl('/api/auth/profile'), {
                 headers: {
                   'Authorization': `Bearer ${access_token}` // Use Supabase token temporarily for profile check
                 }
               });
+              console.log('🔍 AuthCallback: Profile check response received:', response.status, response.statusText);
             } catch (profileError) {
               console.error('Profile check failed:', profileError);
               // If profile check fails, redirect to login instead of using fallback tokens
@@ -157,6 +159,7 @@ const AuthCallback = () => {
               if (!createUserResponse.ok) {
                 const errorData = await createUserResponse.json();
                 console.error('Failed to create user in backend:', errorData);
+                console.error('🔍 AuthCallback: Full error response:', errorData);
                 setError('Failed to create user account. Please try again.');
                 // setIsProcessing(false); // Not used
                 return;
@@ -165,6 +168,7 @@ const AuthCallback = () => {
                 
                 // Get the backend tokens if available
                 const backendData = await createUserResponse.json();
+                console.log('🔍 AuthCallback: Backend response data:', backendData);
                 if (backendData.success && backendData.data.tokens) {
                   console.log('🔍 AuthCallback: Using backend tokens for consistency');
                   localStorage.setItem('accessToken', backendData.data.tokens.accessToken);
@@ -250,7 +254,7 @@ const AuthCallback = () => {
     };
 
     handleAuthCallback();
-  }, [navigate, hasProcessed]);
+  }, [navigate]);
 
   if (error) {
     return (
