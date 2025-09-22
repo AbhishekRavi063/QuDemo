@@ -606,7 +606,7 @@ const PublicQudemoShare = () => {
               </div>
 
               {/* Chat Messages */}
-              <div className="flex-1 p-3 overflow-y-auto space-y-3 bg-gray-50 text-sm">
+              <div className="flex-1 px-3 py-1 overflow-y-auto space-y-3 bg-gray-50 text-sm">
                 {messages.map((msg, idx) => (
                   <div
                     key={idx}
@@ -641,14 +641,14 @@ const PublicQudemoShare = () => {
               </div>
 
               {/* Input */}
-              <div className="p-3 border-t flex items-center gap-2">
+              <div className="px-3 py-1 border-t flex items-center gap-2">
                 <input
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
                   onKeyDown={handleKeyPress}
                   type="text"
                   placeholder="Ask a question about this qudemo..."
-                  className="flex-1 px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="flex-1 px-3 py-1 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 <button
                   onClick={handleSendMessage}
@@ -660,7 +660,7 @@ const PublicQudemoShare = () => {
               </div>
 
               {/* Footer */}
-              <div className="p-4 flex justify-center items-center text-xs bg-white border-t">
+              <div className="px-2 py-0 flex justify-center items-center text-xs bg-white border-t">
                 <span className="text-gray-500">
                   Powered by <span 
                     onClick={() => window.location.href = '/'}

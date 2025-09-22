@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useCompany } from '../context/CompanyContext';
+import { Bars3Icon } from '@heroicons/react/24/outline';
 // Backend switcher imports - COMMENTED OUT
 // import {
 //   ChevronDownIcon,
@@ -9,7 +10,7 @@ import { useCompany } from '../context/CompanyContext';
 // import { useBackend } from '../context/BackendContext';
 // import { useState, useEffect, useRef } from 'react';
 
-export default function Header() {
+export default function Header({ onMenuClick }) {
   const { company } = useCompany();
   const [userProfileImage, setUserProfileImage] = useState(null);
   const [userInitials, setUserInitials] = useState('A');
@@ -72,12 +73,21 @@ export default function Header() {
 
   return (
     <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 md:px-6 py-0 bg-white border-b shadow-sm">
-      {/* Left - Logo */}
+      {/* Left - Menu Button (Mobile) + Logo */}
       <div className="flex items-center">
+        {/* Mobile Menu Button */}
+        <button
+          onClick={onMenuClick}
+          className="md:hidden mr-3 p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <Bars3Icon className="h-6 w-6" />
+        </button>
+        
+        {/* Logo */}
         <img 
           src="/Qudemo.svg" 
           alt="Qudemo Logo" 
-          className="w-40 h-26 "
+          className="w-40 h-26"
         />
       </div>
 
