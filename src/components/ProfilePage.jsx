@@ -19,8 +19,6 @@ export default function ProfilePage() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [jobTitle, setJobTitle] = useState("");
 
   // Delete company modal state
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -41,7 +39,13 @@ export default function ProfilePage() {
   });
 
   const [profilePicture, setProfilePicture] = useState("");
-  const fileInputRef = React.useRef();
+  
+  // Company editing state
+  const [isEditingCompany, setIsEditingCompany] = useState(false);
+  const [companyName, setCompanyName] = useState("");
+  const [companyWebsite, setCompanyWebsite] = useState("");
+  const [companyLogo, setCompanyLogo] = useState(null);
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
@@ -55,6 +59,14 @@ export default function ProfilePage() {
     }
     setIsLoading(false);
   }, []);
+
+  // Populate company editing fields when company data is loaded
+  useEffect(() => {
+    if (company) {
+      setCompanyName(company.name || "");
+      setCompanyWebsite(company.website || "");
+    }
+  }, [company]);
 
   const tabs = [
     { name: "Personal Info", key: "personal" },
@@ -81,25 +93,60 @@ export default function ProfilePage() {
     </button>
   );
 
-  const handleUploadClick = () => {
-    if (fileInputRef.current) fileInputRef.current.click();
+
+
+  // Company update functions
+  const handleCompanyLogoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setCompanyLogo(file);
+    }
   };
 
-  const handleFileChange = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    // Optionally: validate file type/size here
+  const handleUploadCompanyLogo = async () => {
+    if (!companyLogo) return;
+    
+    setIsUploadingLogo(true);
     try {
-      const userData = localStorage.getItem('user');
-      if (!userData) throw new Error("User not logged in");
-      const user = JSON.parse(userData);
-      const userId = user.id || user.userId || user._id;
       const formData = new FormData();
-      formData.append('image', file);
+      formData.append('logo', companyLogo);
+      formData.append('companyId', company.id);
+      
       const token = localStorage.getItem('accessToken');
-      const res = await axios.put(
-        getNodeApiUrl(`/api/users/${userId}/profile-picture`),
-        { imageUrl: await toBase64(file) },
+      const response = await axios.post(
+        getNodeApiUrl('/api/companies/upload-logo'),
+        formData,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+
+      if (response.data.success) {
+        // Refresh company data
+        window.location.reload();
+      } else {
+        alert('Failed to upload company logo.');
+      }
+    } catch (error) {
+      console.error('Logo upload error:', error);
+      alert('Failed to upload company logo.');
+    } finally {
+      setIsUploadingLogo(false);
+    }
+  };
+
+  const handleUpdateCompany = async () => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await axios.put(
+        getNodeApiUrl(`/api/companies/${company.id}`),
+        {
+          name: companyName,
+          website: companyWebsite,
+        },
         {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -107,24 +154,18 @@ export default function ProfilePage() {
           },
         }
       );
-      if (res.data.success && res.data.data.profile_picture) {
-        setProfilePicture(res.data.data.profile_picture);
-        // Optionally update localStorage user
-        const updatedUser = { ...user, profile_picture: res.data.data.profile_picture };
-        localStorage.setItem('user', JSON.stringify(updatedUser));
+
+      if (response.data.success) {
+        // Refresh company data
+        window.location.reload();
+      } else {
+        alert('Failed to update company details.');
       }
-    } catch (err) {
-      alert('Failed to upload profile picture.');
+    } catch (error) {
+      console.error('Company update error:', error);
+      alert('Failed to update company details.');
     }
   };
-
-  // Helper to convert file to base64 (if backend expects base64 string)
-  const toBase64 = (file) => new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = (error) => reject(error);
-  });
 
   // Delete company function
   const handleDeleteCompany = async () => {
@@ -213,47 +254,32 @@ export default function ProfilePage() {
         <div className="p-8">
           {activeTab === "personal" && (
             <form>
-              <h2 className="text-xl font-semibold mb-2">Personal Information</h2>
-              <p className="text-gray-500 mb-6">Update your personal details and contact information</p>
               
               {/* Profile Picture */}
               <div className="mb-8">
-                <div className="font-medium mb-4">Profile Picture</div>
-                <div className="flex items-center space-x-4">
+                <div className="font-medium mb-4 text-center">Profile Picture</div>
+                <div className="flex justify-center">
                   {profilePicture ? (
                     <img
                       src={profilePicture}
                       alt="Profile"
                       className="w-20 h-20 bg-gray-300 rounded-full object-cover border"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        e.target.nextSibling.style.display = 'flex';
+                      }}
                     />
-                  ) : (
-                    <div className="w-20 h-20 bg-gray-300 rounded-full flex items-center justify-center text-white font-semibold text-2xl">
-                      {/* Optionally show initials or leave blank */}
-                      {firstName.charAt(0)}{lastName.charAt(0)}
-                    </div>
-                  )}
-                  <div>
-                    <button
-                      type="button"
-                      className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition text-sm"
-                      onClick={handleUploadClick}
-                    >
-                      Upload Photo
-                    </button>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      ref={fileInputRef}
-                      style={{ display: 'none' }}
-                      onChange={handleFileChange}
-                    />
-                    <p className="text-gray-500 text-sm mt-1">JPG, PNG or GIF. Max size 2MB.</p>
+                  ) : null}
+                  <div 
+                    className={`w-20 h-20 bg-gray-300 rounded-full flex items-center justify-center text-white font-semibold text-2xl ${profilePicture ? 'hidden' : 'flex'}`}
+                  >
+                    {firstName.charAt(0)}{lastName.charAt(0)}
                   </div>
                 </div>
               </div>
 
               {/* Name Fields */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 text-left">
                 <div>
                   <label className="block font-medium mb-2">First Name</label>
                   <input
@@ -275,7 +301,7 @@ export default function ProfilePage() {
               </div>
 
               {/* Email */}
-              <div className="mb-6">
+              <div className="mb-6 text-left">
                 <label className="block font-medium mb-2">Email Address</label>
                 <input
                   type="email"
@@ -285,27 +311,6 @@ export default function ProfilePage() {
                 />
               </div>
 
-              {/* Phone */}
-              <div className="mb-6">
-                <label className="block font-medium mb-2">Phone Number</label>
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-
-              {/* Job Title */}
-              <div className="mb-6">
-                <label className="block font-medium mb-2">Job Title</label>
-                <input
-                  type="text"
-                  value={jobTitle}
-                  onChange={(e) => setJobTitle(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
 
               <button
                 type="button"
@@ -318,60 +323,119 @@ export default function ProfilePage() {
 
           {activeTab === "company" && (
             <div>
-              <h2 className="text-xl font-semibold mb-2">Company Information</h2>
-              <p className="text-gray-500 mb-6">View your company details and settings</p>
+              <div className="flex justify-end items-center mb-6">
+                <button
+                  onClick={() => setIsEditingCompany(!isEditingCompany)}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                >
+                  {isEditingCompany ? 'Cancel' : 'Edit Company'}
+                </button>
+              </div>
               
               {company ? (
                 <div className="space-y-6">
                   {/* Company Logo */}
-                  <div className="flex items-center space-x-4">
-                    {company.logo_url ? (
-                      <img
-                        src={company.logo_url}
-                        alt="Company Logo"
-                        className="w-20 h-20 bg-gray-300 rounded-lg object-cover border"
-                      />
-                    ) : (
-                      <div className="w-20 h-20 bg-gray-300 rounded-lg flex items-center justify-center text-gray-500 font-semibold text-lg">
-                        {company.name?.charAt(0) || 'C'}
-                      </div>
-                    )}
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900">{company.name}</h3>
-                      <p className="text-gray-500">Company Logo</p>
-                    </div>
-                  </div>
-
-                  {/* Company Details */}
-                  <div>
-                    <label className="block font-medium mb-2 text-gray-700">Company Name</label>
-                    <div className="w-full border border-gray-200 rounded-lg px-3 py-2 bg-gray-50 text-gray-900">
-                      {company.name || 'Not provided'}
-                    </div>
-                  </div>
-
-
-                  <div>
-                    <label className="block font-medium mb-2 text-gray-700">Website</label>
-                    <div className="w-full border border-gray-200 rounded-lg px-3 py-2 bg-gray-50 text-gray-900">
-                      {company.website ? (
-                        <a 
-                          href={company.website} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:text-blue-800 underline"
-                        >
-                          {company.website}
-                        </a>
+                  <div className="text-center">
+                    <label className="block font-medium mb-4 text-gray-700">Company Logo</label>
+                    <div className="flex flex-col items-center space-y-4">
+                      {company.logo_url ? (
+                        <img
+                          src={company.logo_url}
+                          alt="Company Logo"
+                          className="w-20 h-20 bg-gray-300 rounded-lg object-cover border"
+                        />
                       ) : (
-                        'Not provided'
+                        <div className="w-20 h-20 bg-gray-300 rounded-lg flex items-center justify-center text-gray-500 font-semibold text-lg">
+                          {company.name?.charAt(0) || 'C'}
+                        </div>
+                      )}
+                      {isEditingCompany && (
+                        <div className="flex flex-col items-center space-y-2">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleCompanyLogoChange}
+                            className="text-sm text-gray-500"
+                          />
+                          {companyLogo && (
+                            <button
+                              onClick={handleUploadCompanyLogo}
+                              disabled={isUploadingLogo}
+                              className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700 disabled:bg-gray-400"
+                            >
+                              {isUploadingLogo ? 'Uploading...' : 'Upload Logo'}
+                            </button>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>
 
+                  {/* Company Details */}
+                  <div className="text-left">
+                    <label className="block font-medium mb-2 text-gray-700">Company Name</label>
+                    {isEditingCompany ? (
+                      <input
+                        type="text"
+                        value={companyName}
+                        onChange={(e) => setCompanyName(e.target.value)}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    ) : (
+                      <div className="w-full border border-gray-200 rounded-lg px-3 py-2 bg-gray-50 text-gray-900">
+                        {company.name || 'Not provided'}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="text-left">
+                    <label className="block font-medium mb-2 text-gray-700">Website</label>
+                    {isEditingCompany ? (
+                      <input
+                        type="url"
+                        value={companyWebsite}
+                        onChange={(e) => setCompanyWebsite(e.target.value)}
+                        placeholder="https://example.com"
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    ) : (
+                      <div className="w-full border border-gray-200 rounded-lg px-3 py-2 bg-gray-50 text-gray-900">
+                        {company.website ? (
+                          <a 
+                            href={company.website} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800 underline"
+                          >
+                            {company.website}
+                          </a>
+                        ) : (
+                          'Not provided'
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Save Company Changes */}
+                  {isEditingCompany && (
+                    <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+                      <button
+                        onClick={() => setIsEditingCompany(false)}
+                        className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleUpdateCompany}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                      >
+                        Save Changes
+                      </button>
+                    </div>
+                  )}
 
                   {/* Company Status */}
-                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg text-left">
                     <div>
                       <h4 className="font-medium text-gray-900">Company Status</h4>
                       <p className="text-sm text-gray-500">Current status of your company account</p>

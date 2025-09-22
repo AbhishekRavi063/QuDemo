@@ -220,20 +220,48 @@ const AuthCallback = () => {
           }
 
           // Small delay to ensure user is fully created before navigation
-          console.log('🔍 AuthCallback: User sync complete, triggering company refresh...');
+          console.log('🔍 AuthCallback: User sync complete, checking company status...');
           
-          // Dispatch custom event to trigger company refresh
-          window.dispatchEvent(new CustomEvent('authCompleted'));
-          
-                setTimeout(() => {
-                  console.log('🔍 AuthCallback: Navigating to home page');
-                  
-                  // Use current domain to avoid production redirects in development
-                  const currentOrigin = window.location.origin;
-                  console.log('🔍 AuthCallback: Current origin:', currentOrigin);
-                  console.log('🔍 AuthCallback: Using direct redirect to /');
-                  window.location.href = `${currentOrigin}/`;
-                }, 500);
+          // Check if user has a company to determine redirect destination
+          try {
+            const companyResponse = await fetch(getNodeApiUrl('/api/companies'), {
+              headers: {
+                'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+              }
+            });
+            
+            const companyData = await companyResponse.json();
+            console.log('🔍 AuthCallback: Company check response:', companyData);
+            
+            // Dispatch custom event to trigger company refresh
+            window.dispatchEvent(new CustomEvent('authCompleted'));
+            
+            setTimeout(() => {
+              const currentOrigin = window.location.origin;
+              
+              if (companyData.success && companyData.data && companyData.data.length > 0) {
+                // User has a company - redirect to qudemos page
+                console.log('🔍 AuthCallback: User has company, redirecting to /qudemos');
+                window.location.href = `${currentOrigin}/qudemos`;
+              } else {
+                // User has no company - redirect to create page
+                console.log('🔍 AuthCallback: User has no company, redirecting to /create');
+                window.location.href = `${currentOrigin}/create`;
+              }
+            }, 500);
+          } catch (companyError) {
+            console.error('Failed to check company status:', companyError);
+            // Fallback to create page if company check fails
+            console.log('🔍 AuthCallback: Company check failed, redirecting to /create as fallback');
+            
+            // Dispatch custom event to trigger company refresh
+            window.dispatchEvent(new CustomEvent('authCompleted'));
+            
+            setTimeout(() => {
+              const currentOrigin = window.location.origin;
+              window.location.href = `${currentOrigin}/create`;
+            }, 500);
+          }
         } else {
           console.log('🔍 AuthCallback: No tokens found in URL hash, redirecting to login');
           navigate('/login');

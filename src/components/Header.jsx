@@ -1,4 +1,6 @@
 import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useCompany } from '../context/CompanyContext';
 // Backend switcher imports - COMMENTED OUT
 // import {
 //   ChevronDownIcon,
@@ -8,10 +10,46 @@ import { Link } from 'react-router-dom';
 // import { useState, useEffect, useRef } from 'react';
 
 export default function Header() {
+  const { company } = useCompany();
+  const [userProfileImage, setUserProfileImage] = useState(null);
+  const [userInitials, setUserInitials] = useState('A');
+  
   // Backend switcher state and functions - COMMENTED OUT
   // const { selectedBackend, currentBackend, switchBackend, getAvailableBackends } = useBackend();
   // const [isBackendDropdownOpen, setIsBackendDropdownOpen] = useState(false);
   // const dropdownRef = useRef(null);
+
+  // Fetch user profile image on component mount
+  useEffect(() => {
+    const fetchUserProfile = () => {
+      try {
+        const userData = localStorage.getItem('user');
+        if (userData) {
+          const user = JSON.parse(userData);
+          
+          // Priority: Company logo first, then Google profile picture
+          if (company?.logo_url) {
+            setUserProfileImage(company.logo_url);
+          } else if (user.profile_picture) {
+            setUserProfileImage(user.profile_picture);
+          } else {
+            setUserProfileImage(null);
+          }
+          
+          // Set initials from user data
+          if (user.firstName && user.lastName) {
+            setUserInitials(`${user.firstName[0]}${user.lastName[0]}`.toUpperCase());
+          } else if (user.email) {
+            setUserInitials(user.email[0].toUpperCase());
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+      }
+    };
+
+    fetchUserProfile();
+  }, [company?.logo_url]); // Re-run when company logo changes
 
   // const handleBackendChange = (backendId) => {
   //   switchBackend(backendId);
@@ -37,7 +75,7 @@ export default function Header() {
       {/* Left - Logo */}
       <div className="flex items-center">
         <img 
-          src="/Qudemologo.png" 
+          src="/Qudemo.svg" 
           alt="Qudemo Logo" 
           className="w-40 h-26 "
         />
@@ -84,8 +122,26 @@ export default function Header() {
       <div className="flex items-center gap-4 md:gap-6">
         {/* Profile Icon Only */}
         <Link to="/profile">
-          <div className="w-8 h-8 bg-gray-300 rounded-full cursor-pointer hover:ring-2 ring-blue-500 flex items-center justify-center text-white font-semibold text-sm transition-all duration-200 hover:bg-gray-400">
-            A
+          <div 
+            className="w-12 h-12 rounded-full cursor-pointer hover:ring-2 ring-blue-500 overflow-hidden transition-all duration-200 hover:bg-gray-100"
+            title={company?.logo_url ? "Company Logo" : userProfileImage ? "Profile Picture" : "Profile"}
+          >
+            {userProfileImage ? (
+              <img 
+                src={userProfileImage} 
+                alt={company?.logo_url ? "Company Logo" : "Profile Picture"} 
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  e.target.nextSibling.style.display = 'flex';
+                }}
+              />
+            ) : null}
+            <div 
+              className={`w-full h-full bg-gray-300 flex items-center justify-center text-gray-700 font-semibold text-lg ${userProfileImage ? 'hidden' : 'flex'}`}
+            >
+              {userInitials}
+            </div>
           </div>
         </Link>
       </div>

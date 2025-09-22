@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { StarBorder } from "./ui/star-border";
 import FadeInSection from "./FadeInSection";
 import { navigateToCreate } from '../utils/navigation';
+import { getNodeApiUrl } from '../config/api';
 
 const HomePage = () => {
   const [openFAQ, setOpenFAQ] = useState(null);
@@ -15,7 +16,7 @@ const HomePage = () => {
     console.log('🏠 HomePage: Component mounted');
     console.log('🏠 HomePage: Current URL:', window.location.href);
     
-    const checkAuthState = () => {
+    const checkAuthState = async () => {
       const accessToken = localStorage.getItem('accessToken');
       const refreshToken = localStorage.getItem('refreshToken');
       const user = localStorage.getItem('user');
@@ -28,6 +29,9 @@ const HomePage = () => {
           const userData = JSON.parse(user);
           setUserEmail(userData.email || '');
           console.log('🏠 HomePage: User logged in, email:', userData.email);
+          
+          // Note: Removed automatic redirect to allow users to see the homepage
+          // Users can manually navigate to /qudemos or /create via the buttons
         } catch (error) {
           console.error('🏠 HomePage: Error parsing user data:', error);
         }
@@ -87,16 +91,12 @@ const HomePage = () => {
         <div className="flex justify-between items-center p-4 md:p-6 max-w-full">
             <div className="flex items-center">
               <img 
-                src="/Qudemologo.png" 
+                src="/Qudemo LP.svg" 
                 alt="Qudemo Logo" 
                 className="w-40 h-26"
               />
             </div>
           <div className="flex items-center gap-2 md:gap-6">
-            {/* Blog - Hidden on mobile, shown on desktop */}
-            <div className="hidden md:block text-white font-medium px-6 md:px-8 py-2 bg-gray-900/90 rounded-[20px] border border-gray-600/40 hover:bg-gray-800/90 transition-all duration-200">
-              Blog
-            </div>
             {isLoggedIn ? (
               <div className="flex items-center gap-2 md:gap-4">
                 {/* User email - Responsive text and padding */}
@@ -118,7 +118,7 @@ const HomePage = () => {
               </div>
             ) : (
               <div 
-                onClick={() => navigate('/login')}
+                onClick={() => navigate('/login', { state: { from: '/' } })}
                 className="text-white font-medium px-4 md:px-8 py-2 bg-gray-900/90 rounded-[20px] border border-gray-600/40 hover:bg-gray-800/90 transition-all duration-200 cursor-pointer text-sm md:text-base"
               >
                 Login
@@ -128,46 +128,42 @@ const HomePage = () => {
         </div>
 
         {/* Customer Social Proof */}
-        <FadeInSection>
-          <div className="flex justify-center mt-8 mb-4">
-            <div className="flex items-center gap-2 text-white">
-              <div className="flex -space-x-2">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <div
-                    key={i}
-                    className="w-8 h-8 rounded-full bg-gray-400 border-2 border-black flex items-center justify-center text-xs font-bold"
-                  >
-                    {String.fromCharCode(64 + i)}
-                  </div>
-                ))}
-              </div>
-              <span className="text-sm text-gray-300 ml-2">
-                Join 426 + other loving customers
-              </span>
+        <div className="flex justify-center mt-8 mb-4">
+          <div className="flex items-center gap-2 text-white">
+            <div className="flex -space-x-2">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div
+                  key={i}
+                  className="w-8 h-8 rounded-full bg-gray-400 border-2 border-black flex items-center justify-center text-xs font-bold"
+                >
+                  {String.fromCharCode(64 + i)}
+                </div>
+              ))}
             </div>
+            <span className="text-sm text-gray-300 ml-2">
+              Join 426 + other loving customers
+            </span>
           </div>
-        </FadeInSection>
+        </div>
 
         {/* Hero Section */}
-        <FadeInSection>
-          <div className="flex justify-center items-center min-h-[60vh] px-6">
-            <div className="max-w-4xl text-center">
-              <h1 className="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
-                Turn Your Video Demo Into Interactive Demo
-              </h1>
-              <p className="text-xl md:text-2xl text-gray-300 mb-8 max-w-3xl mx-auto">
-                Engage your prospects with an AI Powered demo that answers their questions in real time.
-              </p>
-              <StarBorder
-                onClick={() => navigateToCreate(navigate)}
-                color="#3b82f6"
-                className="text-white font-bold text-lg"
-              >
-                Get Started Now
-              </StarBorder>
-            </div>
+        <div className="flex justify-center items-center min-h-[60vh] px-6">
+          <div className="max-w-4xl text-center">
+            <h1 className="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
+              Turn Your Video Demo Into Interactive Demo
+            </h1>
+            <p className="text-xl md:text-2xl text-gray-300 mb-8 max-w-3xl mx-auto">
+              Engage your prospects with an AI Powered demo that answers their questions in real time.
+            </p>
+            <StarBorder
+              onClick={() => navigateToCreate(navigate)}
+              color="#3b82f6"
+              className="text-white font-bold text-lg"
+            >
+              Get Started Now
+            </StarBorder>
           </div>
-        </FadeInSection>
+        </div>
 
         {/* AI-Driven Efficiency Section */}
         <FadeInSection delay={0.1}>

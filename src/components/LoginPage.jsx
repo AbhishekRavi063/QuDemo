@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { getNodeApiUrl } from '../config/api';
 import { supabase } from '../config/supabase';
 // import { navigateToOverview } from '../utils/navigation'; // Not used anymore
 
 const LoginPage = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -13,7 +15,6 @@ const LoginPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  // const navigate = useNavigate(); // Not used anymore
 
   const validateForm = () => {
     const newErrors = {};
@@ -75,11 +76,16 @@ const LoginPage = () => {
         localStorage.setItem('refreshToken', data.data.tokens.refreshToken);
         localStorage.setItem('user', JSON.stringify(data.data.user));
         
-            // Redirect to create page
-            const currentOrigin = window.location.origin;
-            console.log('🔍 LoginPage: Redirecting to create page, current domain:', currentOrigin);
-            console.log('🔍 LoginPage: Using direct redirect to /create');
-            window.location.href = `${currentOrigin}/create`;
+        // Check if user came from homepage, if so stay there, otherwise redirect to qudemos
+        const fromHomepage = location.state?.from === '/' || document.referrer.includes(window.location.origin + '/');
+        
+        if (fromHomepage) {
+          console.log('🔍 LoginPage: User came from homepage, staying on homepage');
+          navigate('/', { replace: true });
+        } else {
+          console.log('🔍 LoginPage: Redirecting to qudemos page');
+          navigate('/qudemos', { replace: true });
+        }
       } else {
         setLoginError(data.error || 'Login failed');
       }

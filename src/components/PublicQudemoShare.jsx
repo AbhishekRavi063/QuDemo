@@ -463,13 +463,11 @@ const PublicQudemoShare = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-4">
-              {company?.logo_url && (
-                <img 
-                  src={company.logo_url} 
-                  alt={company.name} 
-                  className="h-8 w-8 rounded"
-                />
-              )}
+              <img 
+                src={company?.logo_url || "/Qudemo.svg"} 
+                alt={company?.name || "Qudemo"} 
+                className="w-40 h-26"
+              />
               <div>
                 <h1 className="text-lg font-semibold text-gray-900">{qudemo.title}</h1>
                 <p className="text-sm text-gray-500 flex items-center">

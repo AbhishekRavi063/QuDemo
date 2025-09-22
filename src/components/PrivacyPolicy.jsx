@@ -24,7 +24,7 @@ const PrivacyPolicy = () => {
         <div className="flex justify-between items-center p-4 md:p-6 max-w-full">
           <div className="flex items-center">
             <img 
-              src="/Qudemologo.png" 
+              src="/Qudemo LP.svg" 
               alt="Qudemo Logo" 
               className="w-40 h-26"
             />

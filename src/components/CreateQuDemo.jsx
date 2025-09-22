@@ -440,69 +440,57 @@ const CreateQuDemo = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      <div className="bg-white rounded-lg border border-gray-200 p-8">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">Create New Qudemo</h2>
-          <p className="text-gray-600">
-            Create an interactive demo that allows buyers to learn about your product at their own pace.
-          </p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-8">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-8">
+      <div className="w-full max-w-md mx-auto px-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
           {/* Qudemo Title */}
-          <div className="flex justify-center">
-            <div className="w-full max-w-md">
-              <label className="block font-bold text-gray-700 mb-2 text-center">
-                Qudemo Title <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={title}
-                onChange={e => setTitle(e.target.value)}
-                placeholder="Enter qudemo title"
-                required
-                className="w-full border border-gray-300 px-4 py-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
+          <div>
+            <label className="block text-sm font-bold text-gray-900 mb-2">
+              Qudemo Title <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={title}
+              onChange={e => setTitle(e.target.value)}
+              placeholder="Enter qudemo title"
+              required
+              className="w-full border border-gray-300 px-4 py-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
           </div>
 
           {/* Video URL */}
-          <div className="flex justify-center">
-            <div className="w-full max-w-2xl">
-              <label className="block font-bold text-gray-700 mb-2 text-center">
-                Video URL
-              </label>
-              {videoUrls.map((url, index) => (
-                <div className="flex items-center gap-2 mb-2" key={index}>
-                  <input
-                    type="text"
-                    value={url}
-                    onChange={e => handleVideoUrlChange(index, e.target.value)}
-                    placeholder="https://www.loom.com/share/your-video-id or https://vimeo.com/your-video-id"
-                    className="flex-1 border border-gray-300 px-4 py-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                  {videoUrls.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => removeVideoUrlField(index)}
-                      className="text-red-500 hover:text-red-700 p-2"
-                    >
-                      <XMarkIcon className="h-5 w-5" />
-                    </button>
-                  )}
-                </div>
-              ))}
-              <div className="text-center mt-2">
-                <button
-                  type="button"
-                  onClick={addVideoUrlField}
-                  className="text-blue-600 hover:underline text-sm font-medium"
-                >
-                  + Add another video
-                </button>
+          <div>
+            <label className="block text-sm font-bold text-gray-900 mb-2">
+              Link to Loom or YouTube demo videos
+            </label>
+            {videoUrls.map((url, index) => (
+              <div className="flex items-center gap-2 mb-2" key={index}>
+                <input
+                  type="text"
+                  value={url}
+                  onChange={e => handleVideoUrlChange(index, e.target.value)}
+                  placeholder="https://www.loom.com/share/your-video-id or https://youtube.com/watch?v="
+                  className="flex-1 border border-gray-300 px-4 py-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+                {videoUrls.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => removeVideoUrlField(index)}
+                    className="text-red-500 hover:text-red-700 p-2"
+                  >
+                    <XMarkIcon className="h-5 w-5" />
+                  </button>
+                )}
               </div>
+            ))}
+            <div className="text-center mt-2">
+              <button
+                type="button"
+                onClick={addVideoUrlField}
+                className="text-blue-600 hover:underline text-sm font-medium flex items-center justify-center gap-1"
+              >
+                <span className="text-blue-600 font-bold">+</span> Add another video
+              </button>
             </div>
           </div>
 
@@ -559,15 +547,13 @@ const CreateQuDemo = () => {
         */}
 
           {/* Submit Button */}
-          <div className="flex justify-center">
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full max-w-md bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-bold py-3 px-6 rounded-lg transition-colors duration-200"
-            >
-              {isSubmitting ? 'Processing Content...' : 'Create Qudemo'}
-            </button>
-          </div>
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-bold py-3 px-6 rounded-lg transition-colors duration-200"
+          >
+            {isSubmitting ? 'Processing Content...' : 'Create Qudemo'}
+          </button>
 
           {/* Processing Indicator */}
           {isSubmitting && (
