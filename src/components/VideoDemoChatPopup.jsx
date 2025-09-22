@@ -249,6 +249,31 @@ const VideoDemoChatPopup = ({ onClose }) => {
             playing={playing}
             width="100%"
             height="100%"
+            config={{
+              youtube: {
+                playerVars: {
+                  rel: 0,
+                  modestbranding: 1,
+                  iv_load_policy: 3,
+                  fs: 0,
+                  cc_load_policy: 0,
+                  disablekb: 1,
+                  playsinline: 1,
+                  showinfo: 0,
+                  loop: 0,
+                  end: 0,
+                  wmode: 'opaque',
+                  origin: window.location.origin,
+                  widget_referrer: window.location.origin,
+                  html5: 1,
+                  vq: 'hd720',
+                  disable_polymer: 1,
+                  no_https: 1,
+                  hl: 'en',
+                  cc_lang_pref: 'en'
+                }
+              }
+            }}
           />
         </div>
 

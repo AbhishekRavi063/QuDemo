@@ -17,7 +17,6 @@ const CreateQuDemo = () => {
   const [success, setSuccess] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [lastSubmissionTime, setLastSubmissionTime] = useState(0); // Track last submission time
-  const fileInputRefs = useRef([]);
   
   // Video processing notification state
 
@@ -208,41 +207,6 @@ const CreateQuDemo = () => {
   //   return { isValid: true, error: null };
   // };
 
-  const handleFileUpload = async (index, event) => {
-    const file = event.target.files[0];
-    if (!file) return;
-    setError("");
-    setSuccess("");
-    setIsSubmitting(true);
-    try {
-      const token = localStorage.getItem('accessToken');
-      const formData = new FormData();
-      formData.append('video', file);
-      formData.append('companyId', company.id);
-      // You may want to add more fields as needed
-      const res = await fetch(getNodeApiUrl('/api/video/upload'), {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: formData
-      });
-      const data = await res.json();
-      if (res.ok && data.success && data.videoUrl) {
-        // Set the uploaded video URL in the corresponding field
-        const updated = [...videoUrls];
-        updated[index] = data.videoUrl;
-        setVideoUrls(updated);
-        setSuccess("Video uploaded successfully!");
-      } else {
-        setError(data.error || "Failed to upload video.");
-      }
-    } catch (err) {
-      setError("Network error. Please try again.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -517,23 +481,8 @@ const CreateQuDemo = () => {
                     value={url}
                     onChange={e => handleVideoUrlChange(index, e.target.value)}
                     placeholder="https://www.loom.com/share/your-video-id or https://vimeo.com/your-video-id"
-                    className="flex-1 border border-gray-300 px-4 py-3 rounded-l-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="flex-1 border border-gray-300 px-4 py-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
-                  <input
-                    type="file"
-                    accept="video/*"
-                    style={{ display: 'none' }}
-                    ref={el => fileInputRefs.current[index] = el}
-                    onChange={e => handleFileUpload(index, e)}
-                  />
-                  <button
-                    type="button"
-                    className="px-4 py-3 border border-l-0 border-gray-300 rounded-r-lg bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium"
-                    onClick={() => fileInputRefs.current[index]?.click()}
-                    disabled={isSubmitting}
-                  >
-                    Upload
-                  </button>
                   {videoUrls.length > 1 && (
                     <button
                       type="button"

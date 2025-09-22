@@ -115,7 +115,7 @@ const LoginPage = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `https://qudemo.com/auth/callback`
+          redirectTo: `${window.location.origin}/auth/callback`
         }
       });
 

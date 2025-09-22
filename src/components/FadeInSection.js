@@ -5,6 +5,7 @@ const FadeInSection = ({ children, delay = 0 }) => {
   const { ref, inView } = useInView({
     triggerOnce: true,
     threshold: 0.1,
+    rootMargin: "0px 0px -50px 0px",
   });
 
   return (

@@ -1,30 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-
-const FadeInSection = ({ children, delay = 0 }) => {
-  const [isVisible, setVisible] = React.useState(false);
-  const domRef = React.useRef();
-
-  React.useEffect(() => {
-    const observer = new IntersectionObserver(entries => {
-      entries.forEach(entry => setVisible(entry.isIntersecting));
-    });
-    observer.observe(domRef.current);
-    return () => observer.unobserve(domRef.current);
-  }, []);
-
-  return (
-    <motion.div
-      ref={domRef}
-      initial={{ opacity: 0, y: 40 }}
-      animate={isVisible ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.6, ease: "easeOut", delay }}
-    >
-      {children}
-    </motion.div>
-  );
-};
+import FadeInSection from './FadeInSection';
 
 const PrivacyPolicy = () => {
   const navigate = useNavigate();
@@ -66,12 +43,12 @@ const PrivacyPolicy = () => {
         <FadeInSection delay={0.1}>
           <div className="flex justify-center items-start px-6 py-12">
             <div className="max-w-4xl w-full">
-              <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-8 md:p-12 shadow-2xl">
-                <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+              <div className="bg-white/20 backdrop-blur-md rounded-2xl p-8 md:p-12 shadow-2xl border border-white/30">
+                <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
                   Privacy Policy
                 </h1>
                 
-                <div className="text-gray-600 mb-8">
+                <div className="text-gray-200 mb-8">
                   <p className="text-lg">Last updated: 21/09/2025</p>
                   <p className="text-lg mt-4">
                     At Qudemo, we care about your privacy. This page explains what information we collect, 
@@ -82,8 +59,8 @@ const PrivacyPolicy = () => {
                 <div className="space-y-8">
                   {/* Section 1 */}
                   <div>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-4">1. Information We Collect</h2>
-                    <ul className="space-y-4 text-gray-700">
+                    <h2 className="text-2xl font-bold text-white mb-4">1. Information We Collect</h2>
+                    <ul className="space-y-4 text-gray-200">
                       <li className="flex items-start">
                         <span className="text-blue-600 font-bold mr-3">•</span>
                         <span><strong>Account details:</strong> name, email, and login info when you sign up.</span>
@@ -105,8 +82,8 @@ const PrivacyPolicy = () => {
 
                   {/* Section 2 */}
                   <div>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-4">2. How We Use Your Information</h2>
-                    <ul className="space-y-4 text-gray-700">
+                    <h2 className="text-2xl font-bold text-white mb-4">2. How We Use Your Information</h2>
+                    <ul className="space-y-4 text-gray-200">
                       <li className="flex items-start">
                         <span className="text-blue-600 font-bold mr-3">•</span>
                         <span>To provide and improve Qudemo's features.</span>
@@ -128,8 +105,8 @@ const PrivacyPolicy = () => {
 
                   {/* Section 3 */}
                   <div>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-4">3. How We Share Information</h2>
-                    <div className="space-y-4 text-gray-700">
+                    <h2 className="text-2xl font-bold text-white mb-4">3. How We Share Information</h2>
+                    <div className="space-y-4 text-gray-200">
                       <p className="font-semibold">We do not sell your data.</p>
                       <p>We may share it only with:</p>
                       <ul className="space-y-2 ml-4">
@@ -147,8 +124,8 @@ const PrivacyPolicy = () => {
 
                   {/* Section 4 */}
                   <div>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-4">4. Your Choices</h2>
-                    <ul className="space-y-4 text-gray-700">
+                    <h2 className="text-2xl font-bold text-white mb-4">4. Your Choices</h2>
+                    <ul className="space-y-4 text-gray-200">
                       <li className="flex items-start">
                         <span className="text-blue-600 font-bold mr-3">•</span>
                         <span>You can access, update, or delete your account anytime.</span>
@@ -166,20 +143,20 @@ const PrivacyPolicy = () => {
 
                   {/* Section 5 */}
                   <div>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-4">5. Security</h2>
-                    <p className="text-gray-700">
+                    <h2 className="text-2xl font-bold text-white mb-4">5. Security</h2>
+                    <p className="text-gray-200">
                       We take reasonable steps to protect your data.
                     </p>
                   </div>
 
                   {/* Section 6 */}
                   <div>
-                    <h2 className="text-2xl font-bold text-gray-900 mb-4">6. Contact Us</h2>
-                    <p className="text-gray-700">
+                    <h2 className="text-2xl font-bold text-white mb-4">6. Contact Us</h2>
+                    <p className="text-gray-200">
                       If you have any questions about this policy or your data, please reach out:{' '}
                       <a 
                         href="mailto:mail@qudemo.com" 
-                        className="text-blue-600 hover:text-blue-800 underline"
+                        className="text-blue-300 hover:text-blue-200 underline"
                       >
                         mail@qudemo.com
                       </a>

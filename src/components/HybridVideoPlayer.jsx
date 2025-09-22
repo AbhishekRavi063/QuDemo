@@ -73,6 +73,95 @@ const HybridVideoPlayer = ({
       console.log(`🎬 Loom iframe loaded, letting parent component handle seeking to ${startTime}s`);
       // Don't try to seek here - let VideoDemoChatPopup handle it
     }
+    
+    // Hide YouTube suggestions after iframe loads
+    if (videoType === 'youtube') {
+      setTimeout(() => {
+        hideYouTubeSuggestions();
+      }, 1000);
+      
+      // Set up periodic check to hide suggestions that might appear later
+      const interval = setInterval(() => {
+        hideYouTubeSuggestions();
+      }, 2000);
+      
+      // Clear interval after 30 seconds
+      setTimeout(() => {
+        clearInterval(interval);
+      }, 30000);
+    }
+  };
+
+  // Function to hide YouTube suggestions
+  const hideYouTubeSuggestions = () => {
+    try {
+      const iframe = currentIframeRef?.current;
+      if (iframe && iframe.contentWindow) {
+        // Try to access the iframe's document
+        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+        if (iframeDoc) {
+          // Hide all possible YouTube suggestion elements
+          const selectors = [
+            '.ytp-endscreen',
+            '.ytp-endscreen-content',
+            '.ytp-endscreen-preview',
+            '.ytp-endscreen-element',
+            '.ytp-endscreen-video',
+            '.ytp-endscreen-playlist',
+            '.ytp-endscreen-next',
+            '.ytp-endscreen-previous',
+            '.ytp-endscreen-close',
+            '.ytp-endscreen-close-button',
+            '.ytp-endscreen-close-icon',
+            '.ytp-endscreen-close-svg',
+            '.ytp-endscreen-close-path',
+            '.ytp-endscreen-close-circle',
+            '.ytp-endscreen-close-rect',
+            '.ytp-endscreen-close-polygon',
+            '.ytp-endscreen-close-line',
+            '.ytp-endscreen-close-ellipse',
+            '.ytp-endscreen-close-text',
+            '.ytp-endscreen-close-tspan',
+            '.ytp-endscreen-close-textpath',
+            '.ytp-endscreen-close-clippath',
+            '.ytp-endscreen-close-defs',
+            '.ytp-endscreen-close-g',
+            '.ytp-endscreen-close-svg',
+            '.ytp-endscreen-close-use',
+            '.ytp-endscreen-close-image',
+            '.ytp-endscreen-close-pattern',
+            '.ytp-endscreen-close-mask',
+            '.ytp-endscreen-close-marker',
+            '.ytp-endscreen-close-symbol',
+            '.ytp-endscreen-close-view',
+            '.ytp-endscreen-close-animate',
+            '.ytp-endscreen-close-animateTransform',
+            '.ytp-endscreen-close-animateMotion',
+            '.ytp-endscreen-close-set',
+            '.ytp-endscreen-close-discard',
+            '.ytp-endscreen-close-switch',
+            '.ytp-endscreen-close-foreignObject',
+            '.ytp-endscreen-close-mpath'
+          ];
+          
+          selectors.forEach(selector => {
+            const elements = iframeDoc.querySelectorAll(selector);
+            elements.forEach(element => {
+              element.style.display = 'none';
+              element.style.visibility = 'hidden';
+              element.style.opacity = '0';
+              element.style.height = '0';
+              element.style.width = '0';
+              element.style.overflow = 'hidden';
+            });
+          });
+          
+          console.log('🎬 YouTube suggestions hidden via JavaScript');
+        }
+      }
+    } catch (error) {
+      console.log('🎬 Could not access iframe content to hide suggestions:', error);
+    }
   };
 
           // Handle timestamp changes
@@ -280,8 +369,8 @@ const HybridVideoPlayer = ({
         // Ensure startTime is properly formatted for YouTube
         const ytStart = startTime && startTime > 0 ? `&start=${Math.floor(startTime)}` : '';
         const autoplay = playing ? '1' : '0';
-        // Use YouTube Player API v2 for better timestamp control
-        const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=${autoplay}&muted=0&enablejsapi=1&controls=1&rel=0&modestbranding=1&version=3&playerapiid=ytplayer${ytStart}`;
+        // Use YouTube nocookie domain for better control and no suggestions
+        const embedUrl = `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=${autoplay}&muted=0&enablejsapi=1&controls=1&rel=0&modestbranding=1&version=3&playerapiid=ytplayer&iv_load_policy=3&fs=0&cc_load_policy=0&disablekb=1&playsinline=1&showinfo=0&loop=0&end=0&start=${Math.floor(startTime) || 0}&wmode=opaque&origin=${window.location.origin}&widget_referrer=${window.location.origin}&html5=1&vq=hd720&disable_polymer=1&no_https=1&hl=en&cc_lang_pref=en&cc_load_policy=0&iv_load_policy=3&fs=0&rel=0&showinfo=0&modestbranding=1&playsinline=1&enablejsapi=1&origin=${window.location.origin}&widget_referrer=${window.location.origin}&html5=1&vq=hd720${ytStart}`;
         
         console.log(`🎬 YouTube embed URL: autoplay=${autoplay}, startTime=${startTime}, playing=${playing}`);
         

@@ -614,18 +614,6 @@ const QudemoPreview = ({ qudemo, onClose }) => {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <button
-                onClick={() => {
-                  if (window.confirm('Are you sure you want to clear the chat history?')) {
-                    setMessages([]);
-                    localStorage.removeItem(chatKey);
-                  }
-                }}
-                className="text-white hover:text-gray-200 text-xs px-2 py-1 rounded border border-white/30 hover:bg-white/10"
-                title="Clear chat history"
-              >
-                Clear Chat
-              </button>
               <XMarkIcon
                 className="h-5 w-5 cursor-pointer"
                 onClick={onClose}
