@@ -142,7 +142,7 @@ const BuyerDetailsModal = ({ buyer, onClose }) => {
 
   // Generate a summary from questions and answers (max 100 words)
   const generateSummary = (questions) => {
-    if (!questions || questions.length === 0) return "No interactions yet.";
+    if (!questions || questions.length === 0) return "No interactions yet..";
     // Simple summary: extract main topics from questions and answers
     let summary = "";
     let topics = [];
