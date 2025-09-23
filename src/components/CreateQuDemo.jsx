@@ -279,7 +279,7 @@ const CreateQuDemo = () => {
       const qudemoId = createResult.data.id;
       console.log('✅ Qudemo created successfully:', qudemoId);
 
-      setSuccess("🎉 Qudemo created successfully! Now processing all content automatically...");
+      setSuccess("Please wait, your video is now processing. This may take a few minutes. Once it's ready, you'll be redirected to your Qudemos page.");
 
       // Process all content automatically using the new endpoint
       
@@ -313,7 +313,8 @@ const CreateQuDemo = () => {
               successMessage += `\n⏱️ Processing order: ${processing_order.join(' → ')}`;
             }
             
-            setSuccess(successMessage);
+            // Hide the processing message and show completion
+            setSuccess("");
           } else {
             // Handle processing failure with detailed error message
             const { processing_errors, has_anti_bot_protection } = contentResult; // message not used
@@ -397,7 +398,8 @@ const CreateQuDemo = () => {
         }
       }
 
-      setSuccess("🎉 Qudemo created and all content processed successfully! Redirecting to Qudemos...");
+      // Hide the processing message
+      setSuccess("");
       
       // Reset form
       setTitle("");
@@ -440,9 +442,19 @@ const CreateQuDemo = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-8">
-      <div className="w-full max-w-md mx-auto px-4">
-        <form onSubmit={handleSubmit} className="space-y-6">
+    <div className="min-h-screen bg-gray-50 flex items-start justify-center pt-8">
+      <div className="w-full max-w-2xl mx-auto px-4">
+        {/* Main Heading and Subheading */}
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-3">
+            Create New Qudemo
+          </h1>
+          <p className="text-lg text-gray-600">
+            Create an interactive demo that allows buyers to learn about your product at their own pace.
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-6 mt-16">
           {/* Qudemo Title */}
           <div>
             <label className="block text-sm font-bold text-gray-900 mb-2 text-left">
@@ -590,18 +602,20 @@ const CreateQuDemo = () => {
           </div>
         )}
 
-        {/* Success Message */}
+        {/* Processing Message Popup */}
         {success && (
-          <div className="mt-6 bg-green-50 border border-green-200 rounded-lg p-4">
-            <div className="flex items-start">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-green-800">Success</h3>
-                <div className="mt-2 text-sm text-green-700 whitespace-pre-line">{success}</div>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 max-w-md w-full mx-4" style={{ margin: '0 auto' }}>
+              <div className="flex items-start">
+                <div className="flex-shrink-0">
+                  <svg className="h-6 w-6 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.293l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-lg font-medium text-blue-800">Processing</h3>
+                  <div className="mt-2 text-sm text-blue-700">{success}</div>
+                </div>
               </div>
             </div>
           </div>

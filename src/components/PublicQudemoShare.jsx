@@ -463,21 +463,18 @@ const PublicQudemoShare = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-4">
-              <img 
-                src={company?.logo_url || "/Qudemo.svg"} 
-                alt={company?.name || "Qudemo"} 
-                className="w-40 h-26"
-              />
               <div>
-                <h1 className="text-lg font-semibold text-gray-900">{qudemo.title}</h1>
-                <p className="text-sm text-gray-500 flex items-center">
+                <h1 className="text-lg font-semibold text-gray-900 flex items-center">
                   <BuildingOfficeIcon className="h-4 w-4 mr-1" />
                   {company?.name || 'Unknown Company'}
+                </h1>
+                <p className="text-sm text-gray-500">
+                  {qudemo.title}
                 </p>
               </div>
             </div>
             <div className="text-sm text-gray-500">
-              Shared QuDemo
+              Shared Qudemo
             </div>
           </div>
         </div>
@@ -642,13 +639,18 @@ const PublicQudemoShare = () => {
 
               {/* Input */}
               <div className="px-3 py-1 border-t flex items-center gap-2">
-                <input
+                <textarea
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
                   onKeyDown={handleKeyPress}
-                  type="text"
                   placeholder="Ask a question about this qudemo..."
-                  className="flex-1 px-3 py-1 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  rows={1}
+                  className="flex-1 px-3 py-1 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none overflow-hidden"
+                  style={{ minHeight: '2.5rem', maxHeight: '7.5rem' }}
+                  onInput={(e) => {
+                    e.target.style.height = 'auto';
+                    e.target.style.height = Math.min(e.target.scrollHeight, 7.5 * 16) + 'px';
+                  }}
                 />
                 <button
                   onClick={handleSendMessage}

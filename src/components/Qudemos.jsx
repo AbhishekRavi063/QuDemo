@@ -61,6 +61,13 @@ const Qudemos = () => {
   // Share functionality
   const handleShareQudemo = async (qudemo) => {
     console.log('🔗 Frontend (Qudemos): handleShareQudemo called with qudemo:', qudemo);
+    
+    // Prevent multiple simultaneous requests for the same qudemo
+    if (sharingQudemo && sharingQudemo.id === qudemo.id) {
+      console.log('🔗 Frontend (Qudemos): Share request already in progress for this qudemo, ignoring');
+      return;
+    }
+    
     setSharingQudemo(qudemo);
     try {
       const token = localStorage.getItem('accessToken');
@@ -81,6 +88,13 @@ const Qudemos = () => {
         const data = await response.json();
         setShareLink(data.shareUrl);
         setShowShareModal(true);
+        
+        // Show different message based on whether it's a new or existing link
+        if (data.isNewLink) {
+          showNotification('Share link generated successfully!', 'success');
+        } else {
+          showNotification('Share link retrieved successfully!', 'success');
+        }
       } else {
         const data = await response.json();
         console.error('❌ Failed to generate share link:', data.error);
@@ -579,7 +593,7 @@ const Qudemos = () => {
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">Share QuDemo</h3>
+                <h3 className="text-lg font-semibold text-gray-900">Share Qudemo</h3>
                 <button
                   onClick={() => setShowShareModal(false)}
                   className="text-gray-400 hover:text-gray-600"
@@ -592,7 +606,7 @@ const Qudemos = () => {
               
               <div className="mb-4">
                 <p className="text-sm text-gray-600 mb-2">
-                  Share this QuDemo with anyone using the link below:
+                  Share this Qudemo with anyone using the link below:
                 </p>
                 <div className="flex items-center space-x-2">
                   <input
@@ -616,7 +630,7 @@ const Qudemos = () => {
               <div className="bg-blue-50 p-3 rounded-lg">
                 <p className="text-sm text-blue-800">
                   <strong>Note:</strong> This link is public and can be accessed by anyone without authentication. 
-                  The shared page will show your company name and the QuDemo content.
+                  The shared page will show your company name and the Qudemo content.
                 </p>
               </div>
               

@@ -72,13 +72,13 @@ export default function Header({ onMenuClick }) {
   // }, []);
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 md:px-6 py-0 bg-white border-b shadow-sm">
+    <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 md:px-6 py-1 bg-white border-b shadow-sm">
       {/* Left - Menu Button (Mobile) + Logo */}
       <div className="flex items-center">
         {/* Mobile Menu Button */}
         <button
           onClick={onMenuClick}
-          className="md:hidden mr-3 p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="md:hidden mr-2 p-1 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           <Bars3Icon className="h-6 w-6" />
         </button>
@@ -87,7 +87,7 @@ export default function Header({ onMenuClick }) {
         <img 
           src="/Qudemo.svg" 
           alt="Qudemo Logo" 
-          className="w-40 h-26"
+          className="w-48 h-32"
         />
       </div>
 
@@ -133,7 +133,7 @@ export default function Header({ onMenuClick }) {
         {/* Profile Icon Only */}
         <Link to="/profile">
           <div 
-            className="w-12 h-12 rounded-full cursor-pointer hover:ring-2 ring-blue-500 overflow-hidden transition-all duration-200 hover:bg-gray-100"
+            className="w-10 h-10 rounded-full cursor-pointer hover:ring-2 ring-blue-500 overflow-hidden transition-all duration-200 hover:bg-gray-100"
             title={company?.logo_url ? "Company Logo" : userProfileImage ? "Profile Picture" : "Profile"}
           >
             {userProfileImage ? (

@@ -658,13 +658,18 @@ const QudemoPreview = ({ qudemo, onClose }) => {
 
           {/* Input */}
           <div className="px-3 py-1 border-t flex items-center gap-2">
-            <input
+            <textarea
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyDown={handleKeyPress}
-              type="text"
               placeholder="Ask a question about this qudemo..."
-              className="flex-1 px-3 py-1 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              rows={1}
+              className="flex-1 px-3 py-1 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none overflow-hidden"
+              style={{ minHeight: '2.5rem', maxHeight: '7.5rem' }}
+              onInput={(e) => {
+                e.target.style.height = 'auto';
+                e.target.style.height = Math.min(e.target.scrollHeight, 7.5 * 16) + 'px';
+              }}
             />
             <button
               onClick={handleSendMessage}

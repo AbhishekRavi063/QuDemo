@@ -20,9 +20,9 @@ const CompanySetup = () => {
     
     // Name is required
     if (!formData.name.trim()) {
-      errors.name = 'Company name is required';
+      errors.name = 'Organization name is required';
     } else if (formData.name.trim().length < 2) {
-      errors.name = 'Company name must be at least 2 characters';
+      errors.name = 'Organization name must be at least 2 characters';
     }
     
     // Website is optional, but if provided, must be valid URL
@@ -108,27 +108,27 @@ const CompanySetup = () => {
       console.log('🔍 CompanySetup: Response data:', data);
       
       if (data.success) {
-        setSuccess('🎉 Company created successfully! Setting up your workspace...');
+        setSuccess('🎉 Organization created successfully! Setting up your workspace...');
         
         // Refresh company context
         console.log('🔄 Refreshing company context...');
         await refreshCompany();
         console.log('✅ Company context refreshed');
         
-        // Redirect to main dashboard after a short delay
-        console.log('🚀 Redirecting to dashboard in 2 seconds...');
+        // Redirect to create page after a short delay
+        console.log('🚀 Redirecting to create page in 2 seconds...');
         setTimeout(() => {
-          console.log('🚀 Navigating to dashboard now');
-          navigate('/');
+          console.log('🚀 Navigating to create page now');
+          navigate('/create');
         }, 2000);
       } else {
         if (response.status === 409) {
-          setError('You already have a company! Redirecting to dashboard...');
+          setError('You already have an organization! Redirecting to create page...');
           setTimeout(() => {
-            navigate('/');
+            navigate('/create');
           }, 2000);
         } else {
-          setError(data.error || 'Failed to create company. Please try again.');
+          setError(data.error || 'Failed to create organization. Please try again.');
         }
       }
     } catch (error) {
@@ -147,7 +147,7 @@ const CompanySetup = () => {
             Welcome to QuDemo! 🚀
           </h2>
           <p className="text-gray-600 mb-8">
-            Let's set up your company to get started
+            Let's set up your organization to get started
           </p>
         </div>
       </div>
@@ -158,7 +158,7 @@ const CompanySetup = () => {
             {/* Company Name */}
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                Company Name *
+                Organization Name *
               </label>
               <div className="mt-1">
                 <input
@@ -171,7 +171,7 @@ const CompanySetup = () => {
                   className={`appearance-none block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm ${
                     formErrors.name ? 'border-red-300' : 'border-gray-300'
                   }`}
-                  placeholder="Enter your company name"
+                  placeholder="Enter your organization name"
                 />
                 {formErrors.name && (
                   <p className="mt-1 text-sm text-red-600">{formErrors.name}</p>
@@ -195,7 +195,7 @@ const CompanySetup = () => {
                   className={`appearance-none block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm ${
                     formErrors.website ? 'border-red-300' : 'border-gray-300'
                   }`}
-                  placeholder="https://yourcompany.com (optional)"
+                  placeholder="https://yourorganization.com (optional)"
                 />
                 {formErrors.website && (
                   <p className="mt-1 text-sm text-red-600">{formErrors.website}</p>
@@ -225,7 +225,7 @@ const CompanySetup = () => {
                 disabled={isSubmitting}
                 className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isSubmitting ? 'Creating Company...' : 'Create Company & Continue'}
+                {isSubmitting ? 'Creating Organization...' : 'Create Organization & Continue'}
               </button>
             </div>
           </form>

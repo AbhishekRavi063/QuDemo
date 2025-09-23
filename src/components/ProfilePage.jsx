@@ -70,7 +70,7 @@ export default function ProfilePage() {
 
   const tabs = [
     { name: "Personal Info", key: "personal" },
-    { name: "Company", key: "company" },
+    { name: "Organization", key: "company" },
     // PREFERENCES AND SECURITY TABS - TEMPORARILY COMMENTED OUT
     // { name: "Preferences", key: "preferences" },
     // { name: "Security", key: "security" },
@@ -170,7 +170,7 @@ export default function ProfilePage() {
   // Delete company function
   const handleDeleteCompany = async () => {
     if (deleteConfirmText !== "DELETE") {
-      showError("Please type 'DELETE' to confirm company deletion.");
+      showError("Please type 'DELETE' to confirm organization deletion.");
       return;
     }
 
@@ -208,7 +208,7 @@ export default function ProfilePage() {
           navigate('/');
         }, 2000);
       } else {
-        showError(data.error || 'Failed to delete company. Please try again.');
+        showError(data.error || 'Failed to delete organization. Please try again.');
       }
     } catch (error) {
       console.error('Delete company error:', error);
@@ -328,7 +328,7 @@ export default function ProfilePage() {
                   onClick={() => setIsEditingCompany(!isEditingCompany)}
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
                 >
-                  {isEditingCompany ? 'Cancel' : 'Edit Company'}
+                  {isEditingCompany ? 'Cancel' : 'Edit Organization'}
                 </button>
               </div>
               
@@ -336,12 +336,12 @@ export default function ProfilePage() {
                 <div className="space-y-6">
                   {/* Company Logo */}
                   <div className="text-center">
-                    <label className="block font-medium mb-4 text-gray-700">Company Logo</label>
+                    <label className="block font-medium mb-4 text-gray-700">Organization Logo</label>
                     <div className="flex flex-col items-center space-y-4">
                       {company.logo_url ? (
                         <img
                           src={company.logo_url}
-                          alt="Company Logo"
+                          alt="Organization Logo"
                           className="w-20 h-20 bg-gray-300 rounded-lg object-cover border"
                         />
                       ) : (
@@ -373,7 +373,7 @@ export default function ProfilePage() {
 
                   {/* Company Details */}
                   <div className="text-left">
-                    <label className="block font-medium mb-2 text-gray-700">Company Name</label>
+                    <label className="block font-medium mb-2 text-gray-700">Organization Name</label>
                     {isEditingCompany ? (
                       <input
                         type="text"
@@ -437,8 +437,8 @@ export default function ProfilePage() {
                   {/* Company Status */}
                   <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg text-left">
                     <div>
-                      <h4 className="font-medium text-gray-900">Company Status</h4>
-                      <p className="text-sm text-gray-500">Current status of your company account</p>
+                      <h4 className="font-medium text-gray-900">Organization Status</h4>
+                      <p className="text-sm text-gray-500">Current status of your organization account</p>
                     </div>
                     <div className="flex items-center space-x-2">
                       <div className={`w-3 h-3 rounded-full ${company.is_active ? 'bg-green-500' : 'bg-red-500'}`}></div>
@@ -474,13 +474,13 @@ export default function ProfilePage() {
                           </h3>
                           <div className="mt-2 text-sm text-red-700">
                             <p>
-                              Deleting your company will permanently remove all data including:
+                              Deleting your organization will permanently remove all data including:
                             </p>
                             <ul className="list-disc list-inside mt-2 space-y-1">
                               <li>All QuDemos and their videos</li>
                               <li>All transcript files and knowledge sources</li>
                               <li>All analytics and interaction data</li>
-                              <li>Company settings and configuration</li>
+                              <li>Organization settings and configuration</li>
                             </ul>
                             <p className="mt-2 font-medium">
                               This action cannot be undone.
@@ -492,7 +492,7 @@ export default function ProfilePage() {
                               onClick={() => setShowDeleteModal(true)}
                               className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
                             >
-                              Delete Company
+                              Delete Organization
                             </button>
                           </div>
                         </div>
@@ -507,8 +507,8 @@ export default function ProfilePage() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                     </svg>
                   </div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Company Found</h3>
-                  <p className="text-gray-500">You don't have a company associated with your account.</p>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Organization Found</h3>
+                  <p className="text-gray-500">You don't have an organization associated with your account.</p>
                 </div>
               )}
             </div>
@@ -696,20 +696,20 @@ export default function ProfilePage() {
               </div>
               <div className="ml-3">
                 <h3 className="text-lg font-medium text-gray-900">
-                  Delete Company
+                  Delete Organization
                 </h3>
               </div>
             </div>
             
             <div className="mb-4">
               <p className="text-sm text-gray-500 mb-4">
-                This action will permanently delete your company and all associated data:
+                This action will permanently delete your organization and all associated data:
               </p>
               <ul className="text-sm text-gray-600 list-disc list-inside space-y-1 mb-4">
                 <li>All QuDemos and their videos</li>
                 <li>All transcript files and knowledge sources</li>
                 <li>All analytics and interaction data</li>
-                <li>Company settings and configuration</li>
+                <li>Organization settings and configuration</li>
               </ul>
               <p className="text-sm text-gray-500 mb-4">
                 <strong>This action cannot be undone.</strong>
@@ -744,7 +744,7 @@ export default function ProfilePage() {
                 disabled={isDeleting || deleteConfirmText !== "DELETE"}
                 className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed rounded-md transition-colors"
               >
-                {isDeleting ? 'Deleting...' : 'Delete Company'}
+                {isDeleting ? 'Deleting...' : 'Delete Organization'}
               </button>
             </div>
           </div>

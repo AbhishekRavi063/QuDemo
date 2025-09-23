@@ -19,7 +19,7 @@ import {
 const menuItems = [
   // OVERVIEW - TEMPORARILY COMMENTED OUT
   // { name: 'Overview', icon: ClockIcon, path: '/overview' },
-  { name: 'Create QuDemo', icon: PlusIcon, path: '/create' },
+  { name: 'Create Qudemo', icon: PlusIcon, path: '/create' },
   // CUSTOMER PAGE - COMMENTED OUT (NOT IN USE)
   // { name: 'Customers', icon: UsersIcon, path: '/customers' },
   { name: 'Qudemos', icon: PlayIcon, path: '/qudemos' },

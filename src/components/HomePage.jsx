@@ -93,7 +93,7 @@ const HomePage = () => {
               <img 
                 src="/Qudemo LP.svg" 
                 alt="Qudemo Logo" 
-                className="w-40 h-26"
+                className="w-48 h-32"
               />
             </div>
           <div className="flex items-center gap-2 md:gap-6">
