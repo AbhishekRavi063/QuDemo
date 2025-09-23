@@ -72,7 +72,7 @@ export default function Header({ onMenuClick }) {
   // }, []);
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 md:px-6 py-1 bg-white border-b shadow-sm">
+    <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-3 md:px-5 py-1 bg-white border-b shadow-sm h-20">
       {/* Left - Menu Button (Mobile) + Logo */}
       <div className="flex items-center">
         {/* Mobile Menu Button */}
@@ -87,7 +87,7 @@ export default function Header({ onMenuClick }) {
         <img 
           src="/Qudemo.svg" 
           alt="Qudemo Logo" 
-          className="w-48 h-32"
+          className="w-44 h-28"
         />
       </div>
 
@@ -129,7 +129,7 @@ export default function Header({ onMenuClick }) {
       </div> */}
 
       {/* Right - Icons */}
-      <div className="flex items-center gap-4 md:gap-6">
+      <div className="flex items-center gap-2 md:gap-3">
         {/* Profile Icon Only */}
         <Link to="/profile">
           <div 

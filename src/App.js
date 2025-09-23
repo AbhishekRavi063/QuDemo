@@ -12,7 +12,7 @@ import Sidebar from './components/Sidebar';
 // import DemoHomePage from './components/DemoHomePage';
 import CreateQuDemo from './components/CreateQuDemo';
 import Qudemos from './components/Qudemos';
-import EditQudemo from './components/EditQudemo';
+import ViewQudemo from './components/EditQudemo';
 import BuyerInteractions from './components/BuyerInteractions';
 import InsightsAnalytics from './components/InsightsAnalytics';
 import ProfilePage from './components/ProfilePage';
@@ -294,13 +294,13 @@ function App() {
               } 
             />
             <Route 
-              path="/edit-qudemo/:id" 
+              path="/view-qudemo/:id" 
               element={
                 <CompanyProvider>
                   <ProtectedRoute>
                     <CompanyCheck>
                       <DashboardLayout>
-                        <EditQudemo />
+                        <ViewQudemo />
                       </DashboardLayout>
                     </CompanyCheck>
                   </ProtectedRoute>

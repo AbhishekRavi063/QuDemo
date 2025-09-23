@@ -144,7 +144,7 @@ const CompanySetup = () => {
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="text-center">
           <h2 className="text-3xl font-bold text-gray-900 mb-2">
-            Welcome to QuDemo! 🚀
+            Welcome to Qudemo! 🚀
           </h2>
           <p className="text-gray-600 mb-8">
             Let's set up your organization to get started

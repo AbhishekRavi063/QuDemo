@@ -127,24 +127,6 @@ const HomePage = () => {
           </div>
         </div>
 
-        {/* Customer Social Proof */}
-        <div className="flex justify-center mt-8 mb-4">
-          <div className="flex items-center gap-2 text-white">
-            <div className="flex -space-x-2">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <div
-                  key={i}
-                  className="w-8 h-8 rounded-full bg-gray-400 border-2 border-black flex items-center justify-center text-xs font-bold"
-                >
-                  {String.fromCharCode(64 + i)}
-                </div>
-              ))}
-            </div>
-            <span className="text-sm text-gray-300 ml-2">
-              Join 426 + other loving customers
-            </span>
-          </div>
-        </div>
 
         {/* Hero Section */}
         <div className="flex justify-center items-center min-h-[60vh] px-6">
@@ -155,13 +137,12 @@ const HomePage = () => {
             <p className="text-xl md:text-2xl text-gray-300 mb-8 max-w-3xl mx-auto">
               Engage your prospects with an AI Powered demo that answers their questions in real time.
             </p>
-            <StarBorder
+            <button
               onClick={() => navigateToCreate(navigate)}
-              color="#3b82f6"
-              className="text-white font-bold text-lg"
+              className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg px-8 py-3 rounded-[20px] transition-colors duration-200"
             >
               Get Started Now
-            </StarBorder>
+            </button>
           </div>
         </div>
 

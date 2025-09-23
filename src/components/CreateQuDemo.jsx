@@ -17,6 +17,7 @@ const CreateQuDemo = () => {
   const [success, setSuccess] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [lastSubmissionTime, setLastSubmissionTime] = useState(0); // Track last submission time
+  const [urlValidationErrors, setUrlValidationErrors] = useState({}); // Track validation errors for each URL
   
   // Video processing notification state
 
@@ -27,7 +28,6 @@ const CreateQuDemo = () => {
   // const [isProcessingKnowledge, setIsProcessingKnowledge] = useState(false); // Not used
   // const [knowledgeSources, setKnowledgeSources] = useState([]); // Not used
   // const [currentTaskId, setCurrentTaskId] = useState(null); // Not used
-  const [scrapingProgress, setScrapingProgress] = useState(null);
   // const [progressInterval, setProgressInterval] = useState(null); // Not used
   // const documentInputRef = useRef(null); // Not used
 
@@ -50,6 +50,52 @@ const CreateQuDemo = () => {
     const updated = [...videoUrls];
     updated[index] = value;
     setVideoUrls(updated);
+
+    // Real-time validation
+    if (value.trim()) {
+      const validation = validateVideoUrl(value);
+      setUrlValidationErrors(prev => ({
+        ...prev,
+        [index]: validation.isValid ? null : validation.error
+      }));
+    } else {
+      setUrlValidationErrors(prev => ({
+        ...prev,
+        [index]: null
+      }));
+    }
+  };
+
+  // Link validation function
+  const validateVideoUrl = (url) => {
+    if (!url || !url.trim()) {
+      return { isValid: false, error: "Video URL is required" };
+    }
+
+    const trimmedUrl = url.trim();
+    
+    // Check if it's a valid URL format
+    try {
+      new URL(trimmedUrl);
+    } catch {
+      return { isValid: false, error: "Please enter a valid URL" };
+    }
+
+    // Check if it's YouTube
+    if (trimmedUrl.includes('youtube.com') || trimmedUrl.includes('youtu.be')) {
+      return { isValid: true, type: 'youtube' };
+    }
+
+    // Check if it's Loom
+    if (trimmedUrl.includes('loom.com')) {
+      return { isValid: true, type: 'loom' };
+    }
+
+    // If it's neither YouTube nor Loom
+    return { 
+      isValid: false, 
+      error: "Only YouTube and Loom video links are supported. Please provide a valid YouTube or Loom URL." 
+    };
   };
 
   const addVideoUrlField = () => {
@@ -59,6 +105,23 @@ const CreateQuDemo = () => {
   const removeVideoUrlField = (index) => {
     const updated = videoUrls.filter((_, i) => i !== index);
     setVideoUrls(updated);
+    
+    // Clean up validation errors for removed field
+    setUrlValidationErrors(prev => {
+      const newErrors = { ...prev };
+      delete newErrors[index];
+      // Shift remaining errors down
+      const shiftedErrors = {};
+      Object.keys(newErrors).forEach(key => {
+        const keyIndex = parseInt(key);
+        if (keyIndex > index) {
+          shiftedErrors[keyIndex - 1] = newErrors[key];
+        } else if (keyIndex < index) {
+          shiftedErrors[keyIndex] = newErrors[key];
+        }
+      });
+      return shiftedErrors;
+    });
   };
 
   // Knowledge Sources handlers - COMMENTED OUT (not used)
@@ -232,13 +295,21 @@ const CreateQuDemo = () => {
         return;
       }
 
-      // Check if any content is provided
+      // Validate video URLs
       const validVideoUrls = videoUrls.filter(url => url.trim());
-      // const validWebsiteUrl = websiteUrl.trim(); // Not used
       
-      if (validVideoUrls.length === 0) { // Removed websiteUrl check
-        setError("Please provide at least one video URL or website URL to create a QuDemo.");
+      if (validVideoUrls.length === 0) {
+        setError("Please provide at least one video URL to create a QuDemo.");
         return;
+      }
+
+      // Validate each video URL
+      for (let i = 0; i < validVideoUrls.length; i++) {
+        const validation = validateVideoUrl(validVideoUrls[i]);
+        if (!validation.isValid) {
+          setError(`Video ${i + 1}: ${validation.error}`);
+          return;
+        }
       }
 
       // Create qudemo first
@@ -246,12 +317,15 @@ const CreateQuDemo = () => {
         title: title || "Untitled Qudemo",
         description: "No description provided",
         companyId: company.id,
-        videos: videoUrls.filter(url => url.trim()).map((url, index) => ({
-          url: url.trim(),
-          type: url.includes('loom.com') ? 'loom' : 'youtube',
-          title: `Video ${index + 1}`,
-          order: index + 1
-        })),
+        videos: validVideoUrls.map((url, index) => {
+          const validation = validateVideoUrl(url);
+          return {
+            url: url.trim(),
+            type: validation.type,
+            title: `Video ${index + 1}`,
+            order: index + 1
+          };
+        }),
         knowledgeSources: sources.filter(source => source.trim()).map(source => ({
           url: source.trim(),
           type: 'website'
@@ -450,7 +524,7 @@ const CreateQuDemo = () => {
             Create New Qudemo
           </h1>
           <p className="text-lg text-gray-600">
-            Create an interactive demo that allows buyers to learn about your product at their own pace.
+            Create an interactive demo that allows Prospects to learn about your product at their own pace.
           </p>
         </div>
 
@@ -476,22 +550,40 @@ const CreateQuDemo = () => {
               Link to Loom or YouTube demo videos
             </label>
             {videoUrls.map((url, index) => (
-              <div className="flex items-center gap-2 mb-2" key={index}>
-                <input
-                  type="text"
-                  value={url}
-                  onChange={e => handleVideoUrlChange(index, e.target.value)}
-                  placeholder="https://www.loom.com/share/your-video-id or https://youtube.com/watch?v="
-                  className="flex-1 border border-gray-300 px-4 py-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-                {videoUrls.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => removeVideoUrlField(index)}
-                    className="text-red-500 hover:text-red-700 p-2"
-                  >
-                    <XMarkIcon className="h-5 w-5" />
-                  </button>
+              <div key={index} className="mb-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <input
+                    type="text"
+                    value={url}
+                    onChange={e => handleVideoUrlChange(index, e.target.value)}
+                    placeholder="https://www.loom.com/share/your-video-id or https://youtube.com/watch?v="
+                    className={`flex-1 border px-4 py-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                      urlValidationErrors[index] 
+                        ? 'border-red-500 bg-red-50' 
+                        : url.trim() && !urlValidationErrors[index] 
+                          ? 'border-green-500 bg-green-50' 
+                          : 'border-gray-300'
+                    }`}
+                  />
+                  {videoUrls.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeVideoUrlField(index)}
+                      className="text-red-500 hover:text-red-700 p-2"
+                    >
+                      <XMarkIcon className="h-5 w-5" />
+                    </button>
+                  )}
+                </div>
+                {urlValidationErrors[index] && (
+                  <p className="text-red-500 text-sm mt-1 ml-1">
+                    {urlValidationErrors[index]}
+                  </p>
+                )}
+                {url.trim() && !urlValidationErrors[index] && (
+                  <p className="text-green-600 text-sm mt-1 ml-1">
+                    ✓ Valid {url.includes('loom.com') ? 'Loom' : 'YouTube'} URL
+                  </p>
                 )}
               </div>
             ))}
@@ -567,13 +659,6 @@ const CreateQuDemo = () => {
             {isSubmitting ? 'Processing Content...' : 'Create Qudemo'}
           </button>
 
-          {/* Processing Indicator */}
-          {isSubmitting && (
-            <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-blue-100 border border-blue-300 text-blue-800 px-6 py-3 rounded shadow z-20 text-center w-[320px] animate-fade-in">
-              <div className="font-semibold mb-1">Content is being processed...</div>
-              <div className="text-xs">Videos and website content are being processed. This may take some time.</div>
-            </div>
-          )}
         </form>
 
         {/* Error Message */}
@@ -605,8 +690,19 @@ const CreateQuDemo = () => {
         {/* Processing Message Popup */}
         {success && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 max-w-md w-full mx-4" style={{ margin: '0 auto' }}>
-              <div className="flex items-start">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 max-w-md w-full mx-4 relative" style={{ margin: '0 auto' }}>
+              {/* Close Button */}
+              <button
+                onClick={() => setSuccess("")}
+                className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-full p-1"
+                title="Close (processing will continue)"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+              
+              <div className="flex items-start pr-8">
                 <div className="flex-shrink-0">
                   <svg className="h-6 w-6 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.293l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clipRule="evenodd" />
@@ -615,72 +711,15 @@ const CreateQuDemo = () => {
                 <div className="ml-3">
                   <h3 className="text-lg font-medium text-blue-800">Processing</h3>
                   <div className="mt-2 text-sm text-blue-700">{success}</div>
+                  <div className="mt-2 text-xs text-blue-600">
+                    You can close this popup - processing will continue in the background
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         )}
       </div>
-      
-      {/* Video Processing Notification */}
-      {scrapingProgress && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-lg font-semibold text-blue-900">
-              {scrapingProgress.status === 'completed' ? '✅' : scrapingProgress.status === 'failed' ? '❌' : '🔄'} Smart Scraping Progress
-            </h3>
-            <span className={`font-medium ${
-              scrapingProgress.status === 'completed' ? 'text-green-600' : scrapingProgress.status === 'failed' ? 'text-red-600' : 'text-blue-600'
-            }`}>
-              {scrapingProgress.status.charAt(0).toUpperCase() + scrapingProgress.status.slice(1)}
-            </span>
-          </div>
-          
-          {scrapingProgress.progress && (
-            <div className="mb-3">
-              <div className="flex justify-between text-sm text-gray-600 mb-1">
-                <span>Progress: {scrapingProgress.progress.current}/{scrapingProgress.progress.total}</span>
-                <span>{scrapingProgress.progress.percentage.toFixed(1)}%</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div 
-                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${scrapingProgress.progress.percentage}%` }}
-                ></div>
-              </div>
-            </div>
-          )}
-          
-          {scrapingProgress.stats && (
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div className="bg-white rounded p-2">
-                <div className="font-medium text-green-700">✅ Scraped</div>
-                <div className="text-lg font-bold">{scrapingProgress.stats.urls_scraped}</div>
-              </div>
-              <div className="bg-white rounded p-2">
-                <div className="font-medium text-orange-700">⏭️ Skipped</div>
-                <div className="text-lg font-bold">{scrapingProgress.stats.urls_skipped}</div>
-              </div>
-            </div>
-          )}
-          
-          {scrapingProgress.current_url && (
-            <div className="mt-3 text-sm text-gray-600">
-              <div className="font-medium">Current URL:</div>
-              <div className="truncate">{scrapingProgress.current_url}</div>
-            </div>
-          )}
-          
-          {scrapingProgress.status === 'completed' && (
-            <button
-              onClick={() => setScrapingProgress(null)} // Simplified - just close the progress
-              className="mt-3 text-sm text-blue-600 hover:text-blue-800"
-            >
-              Close Progress
-            </button>
-          )}
-        </div>
-      )}
     </div>
   );
 };

@@ -209,7 +209,7 @@ const Qudemos = () => {
         setPreviewingQudemo(qudemo);
         break;
       case 'edit':
-        navigate(`/edit-qudemo/${qudemo.id}`);
+        navigate(`/view-qudemo/${qudemo.id}`);
         break;
       case 'delete':
         setQudemoToDelete(qudemo);
@@ -493,7 +493,7 @@ const Qudemos = () => {
                           className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center space-x-2"
                         >
                           <PencilIcon className="w-4 h-4" />
-                          <span>Edit</span>
+                          <span>View</span>
                         </button>
                         <button
                           onClick={(e) => {
@@ -653,7 +653,7 @@ const Qudemos = () => {
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">Delete QuDemo</h3>
+                <h3 className="text-lg font-semibold text-gray-900">Delete Qudemo</h3>
                 <button
                   onClick={handleCancelDelete}
                   className="text-gray-400 hover:text-gray-600"
@@ -676,14 +676,14 @@ const Qudemos = () => {
                         <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                       </svg>
                     </div>
-                    <div className="ml-3">
+                    <div className="ml-3 text-left">
                       <h4 className="text-sm font-medium text-red-800">This action will permanently delete:</h4>
-                      <ul className="mt-2 text-sm text-red-700 list-disc list-inside space-y-1">
+                      <ul className="mt-2 text-sm text-red-700 list-disc list-inside space-y-1 text-left">
                         <li>The qudemo and all its videos</li>
                         <li>All knowledge sources</li>
                         <li>All analytics data</li>
                       </ul>
-                      <p className="mt-2 text-sm font-medium text-red-800">This action cannot be undone.</p>
+                      <p className="mt-2 text-sm font-medium text-red-800 text-left">This action cannot be undone.</p>
                     </div>
                   </div>
                 </div>
@@ -700,7 +700,7 @@ const Qudemos = () => {
                   onClick={handleConfirmDelete}
                   className="px-4 py-2 bg-red-600 text-white hover:bg-red-700 rounded-lg transition-colors duration-200"
                 >
-                  Delete QuDemo
+                  Delete Qudemo
                 </button>
               </div>
             </div>
