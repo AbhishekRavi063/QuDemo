@@ -445,7 +445,7 @@ const CreateQuDemo = () => {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Qudemo Title */}
           <div>
-            <label className="block text-sm font-bold text-gray-900 mb-2">
+            <label className="block text-sm font-bold text-gray-900 mb-2 text-left">
               Qudemo Title <span className="text-red-500">*</span>
             </label>
             <input
@@ -460,7 +460,7 @@ const CreateQuDemo = () => {
 
           {/* Video URL */}
           <div>
-            <label className="block text-sm font-bold text-gray-900 mb-2">
+            <label className="block text-sm font-bold text-gray-900 mb-2 text-left">
               Link to Loom or YouTube demo videos
             </label>
             {videoUrls.map((url, index) => (

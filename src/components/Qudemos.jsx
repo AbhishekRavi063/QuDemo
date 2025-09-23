@@ -29,6 +29,8 @@ const Qudemos = () => {
   const [sharingQudemo, setSharingQudemo] = useState(null);
   const [shareLink, setShareLink] = useState('');
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [qudemoToDelete, setQudemoToDelete] = useState(null);
   const { company } = useCompany();
   const navigate = useNavigate();
 
@@ -100,6 +102,21 @@ const Qudemos = () => {
       console.error('❌ Failed to copy to clipboard:', err);
       showNotification('Failed to copy link. Please copy manually.', 'error');
     }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (qudemoToDelete) {
+      setDeletingQudemoId(qudemoToDelete.id);
+      setShowDeleteModal(false);
+      await deleteQudemo(qudemoToDelete.id);
+      setDeletingQudemoId(null);
+      setQudemoToDelete(null);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteModal(false);
+    setQudemoToDelete(null);
   };
 
   // Helper function to get relative time
@@ -181,14 +198,8 @@ const Qudemos = () => {
         navigate(`/edit-qudemo/${qudemo.id}`);
         break;
       case 'delete':
-        const confirmDelete = window.confirm(
-          `Are you sure you want to delete "${qudemo.title}"?\n\nThis action will permanently delete:\n• The qudemo and all its videos\n• All knowledge sources\n• All analytics data\n\nThis action cannot be undone.`
-        );
-        if (confirmDelete) {
-          setDeletingQudemoId(qudemo.id);
-          await deleteQudemo(qudemo.id);
-          setDeletingQudemoId(null);
-        }
+        setQudemoToDelete(qudemo);
+        setShowDeleteModal(true);
         break;
       case 'share':
         console.log('🔗 Frontend (Qudemos): Share action selected for qudemo:', qudemo);
@@ -294,11 +305,7 @@ const Qudemos = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Qudemos</h1>
-          <p className="text-gray-600">Manage and preview your interactive demos</p>
-        </div>
+      <div className="flex justify-end items-center">
         <div className="flex items-center space-x-2">
           <button
             onClick={fetchQudemos}
@@ -508,17 +515,30 @@ const Qudemos = () => {
                   </div>
                 </div>
 
-                {/* Share Link Button */}
-                <div className="mb-3">
+                {/* Action Buttons */}
+                <div className="mb-3 space-y-2">
+                  {/* Preview Button */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDropdownAction('preview', qudemo);
+                    }}
+                    className="w-full flex items-center justify-center space-x-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 transition-colors duration-200 py-2 px-3 rounded-lg border border-blue-200"
+                  >
+                    <PlayIcon className="w-4 h-4" />
+                    <span className="text-sm font-medium">Preview Qudemo</span>
+                  </button>
+                  
+                  {/* Share Button */}
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       handleDropdownAction('share', qudemo);
                     }}
-                    className="flex items-center space-x-2 text-blue-600 hover:text-blue-800 transition-colors duration-200"
+                    className="w-full flex items-center justify-center space-x-2 text-green-600 hover:text-green-800 hover:bg-green-50 transition-colors duration-200 py-2 px-3 rounded-lg border border-green-200"
                   >
                     <ShareIcon className="w-4 h-4" />
-                    <span className="text-sm font-medium">Share Link</span>
+                    <span className="text-sm font-medium">Share Qudemo</span>
                   </button>
                 </div>
 
@@ -606,6 +626,67 @@ const Qudemos = () => {
                   className="px-4 py-2 text-gray-600 hover:text-gray-800"
                 >
                   Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Custom Delete Confirmation Modal */}
+      {showDeleteModal && qudemoToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">Delete QuDemo</h3>
+                <button
+                  onClick={handleCancelDelete}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              
+              <div className="mb-6">
+                <p className="text-sm text-gray-600 mb-4">
+                  Are you sure you want to delete <strong>"{qudemoToDelete.title}"</strong>?
+                </p>
+                
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0">
+                      <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div className="ml-3">
+                      <h4 className="text-sm font-medium text-red-800">This action will permanently delete:</h4>
+                      <ul className="mt-2 text-sm text-red-700 list-disc list-inside space-y-1">
+                        <li>The qudemo and all its videos</li>
+                        <li>All knowledge sources</li>
+                        <li>All analytics data</li>
+                      </ul>
+                      <p className="mt-2 text-sm font-medium text-red-800">This action cannot be undone.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={handleCancelDelete}
+                  className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirmDelete}
+                  className="px-4 py-2 bg-red-600 text-white hover:bg-red-700 rounded-lg transition-colors duration-200"
+                >
+                  Delete QuDemo
                 </button>
               </div>
             </div>
