@@ -461,39 +461,41 @@ export default function ProfilePage() {
 
                   {/* Delete Company Button */}
                   <div className="pt-6 border-t border-gray-200">
-                    <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                      <div className="flex items-start">
-                        <div className="flex-shrink-0">
-                          <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                          </svg>
-                        </div>
-                        <div className="ml-3 flex-1">
-                          <h3 className="text-sm font-medium text-red-800">
-                            Danger Zone
-                          </h3>
-                          <div className="mt-2 text-sm text-red-700">
-                            <p>
-                              Deleting your organization will permanently remove all data including:
-                            </p>
-                            <ul className="list-disc list-inside mt-2 space-y-1">
-                              <li>All QuDemos and their videos</li>
-                              <li>All transcript files and knowledge sources</li>
-                              <li>All analytics and interaction data</li>
-                              <li>Organization settings and configuration</li>
-                            </ul>
-                            <p className="mt-2 font-medium">
-                              This action cannot be undone.
-                            </p>
+                    <div className="flex justify-center">
+                      <div className="bg-red-50 border border-red-200 rounded-lg p-4 max-w-md w-full">
+                        <div className="flex items-start">
+                          <div className="flex-shrink-0">
+                            <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                            </svg>
                           </div>
-                          <div className="mt-4">
-                            <button
-                              type="button"
-                              onClick={() => setShowDeleteModal(true)}
-                              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-                            >
-                              Delete Organization
-                            </button>
+                          <div className="ml-3 flex-1 text-left">
+                            <h3 className="text-sm font-medium text-red-800 text-left">
+                              Danger Zone
+                            </h3>
+                            <div className="mt-2 text-sm text-red-700 text-left">
+                              <p className="text-left">
+                                Deleting your organization will permanently remove all data including:
+                              </p>
+                              <ul className="list-disc list-inside mt-2 space-y-1 text-left">
+                                <li>All QuDemos and their videos</li>
+                                <li>All transcript files and knowledge sources</li>
+                                <li>All analytics and interaction data</li>
+                                <li>Organization settings and configuration</li>
+                              </ul>
+                              <p className="mt-2 font-medium text-left">
+                                This action cannot be undone.
+                              </p>
+                            </div>
+                            <div className="mt-4 flex justify-center">
+                              <button
+                                type="button"
+                                onClick={() => setShowDeleteModal(true)}
+                                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                              >
+                                Delete Organization
+                              </button>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -701,20 +703,20 @@ export default function ProfilePage() {
               </div>
             </div>
             
-            <div className="mb-4">
-              <p className="text-sm text-gray-500 mb-4">
+            <div className="mb-4 text-left">
+              <p className="text-sm text-gray-500 mb-4 text-left">
                 This action will permanently delete your organization and all associated data:
               </p>
-              <ul className="text-sm text-gray-600 list-disc list-inside space-y-1 mb-4">
+              <ul className="text-sm text-gray-600 list-disc list-inside space-y-1 mb-4 text-left">
                 <li>All QuDemos and their videos</li>
                 <li>All transcript files and knowledge sources</li>
                 <li>All analytics and interaction data</li>
                 <li>Organization settings and configuration</li>
               </ul>
-              <p className="text-sm text-gray-500 mb-4">
+              <p className="text-sm text-gray-500 mb-4 text-left">
                 <strong>This action cannot be undone.</strong>
               </p>
-              <p className="text-sm text-gray-700 mb-2">
+              <p className="text-sm text-gray-700 mb-2 text-left">
                 To confirm deletion, type <strong>DELETE</strong> in the box below:
               </p>
               <input

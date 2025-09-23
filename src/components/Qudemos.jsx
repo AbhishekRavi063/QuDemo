@@ -665,7 +665,7 @@ const Qudemos = () => {
               </div>
               
               <div className="mb-6">
-                <p className="text-sm text-gray-600 mb-4">
+                <p className="text-sm text-gray-600 mb-4 text-left">
                   Are you sure you want to delete <strong>"{qudemoToDelete.title}"</strong>?
                 </p>
                 

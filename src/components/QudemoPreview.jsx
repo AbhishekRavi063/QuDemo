@@ -681,7 +681,7 @@ const QudemoPreview = ({ qudemo, onClose }) => {
           </div>
 
           {/* Footer */}
-          <div className="px-2 py-0 flex justify-center items-center text-xs bg-white border-t">
+          <div className="px-2 py-2 flex justify-center items-center text-xs bg-white border-t">
             <span className="text-gray-500">
               Powered by <span 
                 onClick={() => window.location.href = '/'}

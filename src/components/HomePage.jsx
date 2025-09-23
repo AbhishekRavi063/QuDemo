@@ -296,34 +296,10 @@ const HomePage = () => {
           </div>
         </FadeInSection>
 
-        {/* Founders Note Section */}
+        {/* FAQ Section */}
         <FadeInSection delay={0.3}>
           <div className="py-32 px-6">
           <div className="max-w-4xl mx-auto text-center">
-            {/* Founders Note Badge */}
-            <div className="flex justify-center mb-8">
-              <StarBorder
-                color="#2934ff"
-                className="text-blue-100 text-sm font-medium"
-              >
-                FOUNDERS NOTE
-              </StarBorder>
-            </div>
-            
-            {/* Quote */}
-            <blockquote className="text-3xl md:text-4xl font-bold text-white leading-relaxed mb-12">
-              We believe a <span className="text-blue-400">Demo</span> should feel like real
-              <br />
-              conversations, not one-way presentations
-              <br />
-              letting customers ask questions and get
-              <br />
-              instant answers
-            </blockquote>
-            
-            {/* Divider */}
-            <div className="w-full h-px bg-gray-600 mb-16"></div>
-            
             {/* FAQ Section Badge */}
             <div className="flex justify-center mb-8 mt-44">
               <StarBorder
@@ -364,7 +340,7 @@ const HomePage = () => {
                 </div>
                 {openFAQ === 0 && (
                   <div className="px-6 pb-6 text-gray-300 text-left">
-                    AI-powered platform that transforms demo videos into interactive experiences with real-time Q&A.
+                    Qudemo is an AI video assistant that makes your demo videos interactive. Viewers can ask questions, get instant answers and jump straight to the exact moment in the video where the answer is shown.
                   </div>
                 )}
               </div>
@@ -387,7 +363,7 @@ const HomePage = () => {
                 </div>
                 {openFAQ === 1 && (
                   <div className="px-6 pb-6 text-gray-300 text-left">
-                    Upload your video, AI analyzes it, and viewers can ask questions while watching.
+                    Upload your video, generate a Qudemo, and share the link. Viewers can ask questions in chat, get instant answers, and jump to the exact video moment.
                   </div>
                 )}
               </div>
@@ -410,7 +386,8 @@ const HomePage = () => {
                 </div>
                 {openFAQ === 2 && (
                   <div className="px-6 pb-6 text-gray-300 text-left">
-                    Sales teams, product managers, and anyone creating demo videos for better engagement.
+                    B2B SaaS teams sharing pre-recorded product videos with prospects.<br/><br/>
+                    Qudemo can also be used by startups, educators, learners and anyone using demo or product videos to engage customers.
                   </div>
                 )}
               </div>
@@ -433,7 +410,7 @@ const HomePage = () => {
                 </div>
                 {openFAQ === 3 && (
                   <div className="px-6 pb-6 text-gray-300 text-left">
-                    No technical setup required! Just sign up and upload your video.
+                    No, just upload your youtube/loom video, Create Qudemo and Share it anywhere
                   </div>
                 )}
               </div>
@@ -456,7 +433,7 @@ const HomePage = () => {
                 </div>
                 {openFAQ === 4 && (
                   <div className="px-6 pb-6 text-gray-300 text-left">
-                    5x more engagement, better conversions, and instant answers to prospect questions.
+                    Customers get answers faster and you get more qualified leads.
                   </div>
                 )}
               </div>
@@ -493,6 +470,30 @@ const HomePage = () => {
               <p className="text-xl text-gray-300 mb-16 max-w-3xl mx-auto">
                 Join Qudemo to create more engaging, interactive video experiences that save time for everyone.
               </p>
+              
+              {/* Founders Note Section */}
+              <div className="mb-16 mt-24">
+                {/* Founders Note Badge */}
+                <div className="flex justify-center mb-8">
+                  <StarBorder
+                    color="#2934ff"
+                    className="text-blue-100 text-sm font-medium"
+                  >
+                    FOUNDERS NOTE
+                  </StarBorder>
+                </div>
+                
+                {/* Quote */}
+                <blockquote className="text-3xl md:text-4xl font-bold text-white leading-relaxed">
+                  We believe a <span className="text-blue-400">Demo</span> should feel like real
+                  <br />
+                  conversations, not one-way presentations
+                  <br />
+                  letting customers ask questions and get
+                  <br />
+                  instant answers
+                </blockquote>
+              </div>
               
               {/* Contact Section */}
               <div className="mb-8">

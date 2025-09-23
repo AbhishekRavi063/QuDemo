@@ -98,6 +98,17 @@ const CreateQuDemo = () => {
     };
   };
 
+  // Check if all video URLs are valid
+  const areAllUrlsValid = () => {
+    if (videoUrls.length === 0) return false;
+    
+    return videoUrls.every((url, index) => {
+      if (!url.trim()) return false;
+      const validation = validateVideoUrl(url);
+      return validation.isValid;
+    });
+  };
+
   const addVideoUrlField = () => {
     setVideoUrls([...videoUrls, ""]);
   };
@@ -524,7 +535,7 @@ const CreateQuDemo = () => {
             Create New Qudemo
           </h1>
           <p className="text-lg text-gray-600">
-            Create an interactive demo that allows Prospects to learn about your product at their own pace.
+            Create an interactive demo that allows prospects to learn about your product at their own pace.
           </p>
         </div>
 
@@ -653,8 +664,12 @@ const CreateQuDemo = () => {
           {/* Submit Button */}
           <button
             type="submit"
-            disabled={isSubmitting}
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-bold py-3 px-6 rounded-lg transition-colors duration-200"
+            disabled={isSubmitting || !areAllUrlsValid()}
+            className={`w-full font-bold py-3 px-6 rounded-lg transition-colors duration-200 ${
+              isSubmitting || !areAllUrlsValid()
+                ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                : 'bg-blue-600 hover:bg-blue-700 text-white'
+            }`}
           >
             {isSubmitting ? 'Processing Content...' : 'Create Qudemo'}
           </button>
