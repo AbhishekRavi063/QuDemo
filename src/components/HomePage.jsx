@@ -131,12 +131,27 @@ const HomePage = () => {
             <p className="text-xl md:text-2xl text-gray-300 mb-8 max-w-3xl mx-auto">
               Engage your prospects with an AI Powered demo that answers their questions in real time.
             </p>
-            <button
-              onClick={() => navigateToCreate(navigate)}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg px-8 py-3 rounded-[20px] transition-colors duration-200"
-            >
-              Get Started Now
-            </button>
+            {/* Button and Product Hunt Badge Container */}
+            <div className="flex items-center justify-center gap-6">
+              <button
+                onClick={() => navigateToCreate(navigate)}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg px-12 py-4 rounded-lg transition-colors duration-200"
+                style={{width: '250px', height: '54px'}}
+              >
+                Get Started Now
+              </button>
+              
+              {/* Product Hunt Badge */}
+              <a href="https://www.producthunt.com/products/qudemo?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-qudemo" target="_blank" rel="noopener noreferrer">
+                <img 
+                  src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1019477&theme=light&t=1758701258188" 
+                  alt="Qudemo - Make your demo videos Interactive using AI | Product Hunt" 
+                  style={{width: '250px', height: '54px'}} 
+                  width="250" 
+                  height="54" 
+                />
+              </a>
+            </div>
           </div>
         </div>
 
