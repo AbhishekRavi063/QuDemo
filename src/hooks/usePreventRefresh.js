@@ -17,8 +17,6 @@ export const usePreventRefresh = () => {
     const isFirefox = /Firefox/.test(navigator.userAgent);
     const isSafari = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
 
-    console.log('Browser detected:', { isChrome, isFirefox, isSafari });
-
     // Prevent page unload
     const handleBeforeUnload = (e) => {
       e.preventDefault();
@@ -29,30 +27,30 @@ export const usePreventRefresh = () => {
     // Prevent page hide
     const handlePageHide = (e) => {
       e.preventDefault();
-      console.log('Page hide prevented');
+
     };
 
     // Handle page show
     const handlePageShow = (e) => {
-      console.log('Page show detected');
+
       // Restore state if needed
       const savedState = sessionStorage.getItem('qudemoPageState');
       if (savedState) {
         const state = JSON.parse(savedState);
         if (state.url !== window.location.href) {
-          console.log('URL changed, preventing refresh');
+
         }
       }
     };
 
     // Handle visibility change
     const handleVisibilityChange = () => {
-      console.log('Visibility changed to:', document.visibilityState);
+
       if (document.visibilityState === 'visible') {
-        console.log('Page became visible - preventing refresh');
+
         // Force a small delay to prevent immediate refresh
         setTimeout(() => {
-          console.log('Page stability check completed');
+
         }, 100);
       }
     };
@@ -61,7 +59,7 @@ export const usePreventRefresh = () => {
     if (isChrome) {
       // Chrome-specific: Prevent memory pressure
       if ('memory' in performance) {
-        console.log('Chrome memory usage:', performance.memory);
+
       }
     }
 
@@ -69,7 +67,7 @@ export const usePreventRefresh = () => {
       // Firefox-specific: Use page visibility API more aggressively
       document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') {
-          console.log('Firefox: Page became visible');
+
         }
       });
     }
@@ -78,7 +76,7 @@ export const usePreventRefresh = () => {
       // Safari-specific: Handle page cache
       window.addEventListener('pageshow', (e) => {
         if (e.persisted) {
-          console.log('Safari: Page loaded from cache');
+
         }
       });
     }
@@ -97,7 +95,7 @@ export const usePreventRefresh = () => {
     // Add a heartbeat to keep the page alive
     const heartbeat = setInterval(() => {
       if (document.visibilityState === 'visible') {
-        console.log('Heartbeat - keeping page alive');
+
       }
     }, 30000); // Every 30 seconds
 

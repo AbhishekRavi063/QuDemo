@@ -13,8 +13,6 @@ import {
 import { getVideoApiUrl, getNodeApiUrl } from "../config/api";
 import { useBackend } from "../context/BackendContext";
 
-
-
 const pendingFollowUps = [
   {
     name: "Michael Davis",
@@ -802,8 +800,6 @@ const BuyerInteractions = () => {
 
 export default BuyerInteractions;
 
-
-
 const PendingFollowUpTab = ({ setSelectedBuyer, getBuyerFromPending }) => {
   return (
     <div className="bg-white p-6 rounded-xl shadow-sm">
@@ -933,5 +929,4 @@ const HighEngagementTab = ({ setSelectedBuyer, getBuyerFromHigh }) => {
     </div>
   );
 };
-
 

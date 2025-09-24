@@ -58,8 +58,6 @@ const CompanyManagement = () => {
       newErrors.name = 'Company name can only contain letters, numbers, hyphens, and underscores';
     }
 
-
-
     if (formData.website && !/^https?:\/\/.+/.test(formData.website)) {
       newErrors.website = 'Website must be a valid URL';
     }
@@ -167,7 +165,6 @@ const CompanyManagement = () => {
         }, 5000);
         
         // Show success notification (you can implement a toast notification here)
-        console.log('✅ Company deleted successfully:', data.message);
       } else {
         setError(data.error || 'Failed to delete company');
         console.error('❌ Delete company failed:', data.error);

@@ -27,13 +27,13 @@ const CustomVideoPlayer = ({
   // Handle startTime changes
   useEffect(() => {
     if (videoRef.current && startTime > 0 && videoRef.current.readyState >= 2) {
-      console.log(`🎬 Updating video position to ${startTime}s`);
+
       videoRef.current.currentTime = startTime;
       
       // Force play when timestamp changes (even if user manually paused)
       if (playing) {
-        console.log(`🎬 Forcing play due to new timestamp`);
-        videoRef.current.play().catch(e => console.log('Force play failed:', e));
+
+        videoRef.current.play().catch(e => {});
         setIsPlaying(true);
         if (onPlay) onPlay();
       }
@@ -47,7 +47,7 @@ const CustomVideoPlayer = ({
       
       // Set start time if provided
       if (startTime > 0) {
-        console.log(`🎬 Setting video start time to ${startTime}s`);
+
         videoRef.current.currentTime = startTime;
       }
       
@@ -70,15 +70,15 @@ const CustomVideoPlayer = ({
         // Try to play with audio
         if (playing) {
           videoRef.current.play().catch(e => {
-            console.log('Autoplay with audio prevented, will try muted autoplay:', e);
+
             // Fallback to muted autoplay
             videoRef.current.muted = true;
             setIsMuted(true);
-            videoRef.current.play().catch(e2 => console.log('Muted autoplay also prevented:', e2));
+            videoRef.current.play().catch(e2 => {});
           });
         }
       } catch (error) {
-        console.log('Error enabling audio immediately:', error);
+
       }
     }
   };
@@ -156,7 +156,7 @@ const CustomVideoPlayer = ({
         
         // Try to play if not already playing
         if (!isPlaying) {
-          videoRef.current.play().catch(e => console.log('Play prevented:', e));
+          videoRef.current.play().catch(e => {});
         }
       }
     }

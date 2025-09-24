@@ -18,7 +18,7 @@ const HybridVideoPlayer = ({
   className = '',
   iframeRef
 }) => {
-  console.log('🎬 HybridVideoPlayer props:', { url, startTime, playing, controls });
+
   const [audioEnabled, setAudioEnabled] = useState(true); // Start with audio enabled
   const [hasUserInteracted, setHasUserInteracted] = useState(true); // Assume user has interacted
   const internalIframeRef = useRef(null);
@@ -54,7 +54,7 @@ const HybridVideoPlayer = ({
           }, '*');
         }
       } catch (error) {
-        console.log('Could not send postMessage to iframe:', error);
+
       }
     }
   };
@@ -70,7 +70,7 @@ const HybridVideoPlayer = ({
 
     // For Loom, let the parent component handle seeking to avoid conflicts
     if (videoType === 'loom' && currentIframeRef && startTime > 0) {
-      console.log(`🎬 Loom iframe loaded, letting parent component handle seeking to ${startTime}s`);
+
       // Don't try to seek here - let VideoDemoChatPopup handle it
     }
     
@@ -155,27 +155,25 @@ const HybridVideoPlayer = ({
               element.style.overflow = 'hidden';
             });
           });
-          
-          console.log('🎬 YouTube suggestions hidden via JavaScript');
+
         }
       }
     } catch (error) {
-      console.log('🎬 Could not access iframe content to hide suggestions:', error);
+
     }
   };
 
           // Handle timestamp changes
   useEffect(() => {
-    console.log(`🎬 HybridVideoPlayer: startTime prop changed to ${startTime}s (type: ${typeof startTime})`);
+
     if (startTime > 0 && currentIframeRef) {
-      console.log(`🎬 Timestamp changed to ${startTime}s, updating video position`);
-      
+
       // For YouTube videos, we need to reload the iframe with the new timestamp
       if (videoType === 'youtube') {
         const currentSrc = currentIframeRef.src;
         const newSrc = getEmbedUrl(); // This will include the new startTime
         if (currentSrc !== newSrc) {
-          console.log(`🎬 Reloading YouTube iframe with new timestamp: ${startTime}s`);
+
           currentIframeRef.src = newSrc;
           
           // Also try to seek after a short delay to ensure the iframe is loaded
@@ -186,9 +184,9 @@ const HybridVideoPlayer = ({
                   type: 'seekTo',
                   seconds: Math.floor(startTime)
                 }, '*');
-                console.log(`🎬 Sent seekTo message for YouTube: ${startTime}s`);
+
               } catch (e) {
-                console.log('🎬 Could not send seekTo message to YouTube iframe:', e);
+
               }
             }
           }, 1000);
@@ -228,10 +226,9 @@ const HybridVideoPlayer = ({
                 event: 'command',
                 func: 'playVideo'
               }, '*');
-              
-              console.log(`🎬 Sent multiple seek messages for YouTube: ${startTime}s`);
+
             } catch (e) {
-              console.log('🎬 Could not send seek messages to YouTube iframe:', e);
+
             }
           }
         }, 2000);
@@ -245,16 +242,16 @@ const HybridVideoPlayer = ({
               const script = iframeWindow.document.createElement('script');
               script.src = 'https://www.youtube.com/iframe_api';
               script.onload = () => {
-                console.log('🎬 YouTube Player API script loaded');
+
                 // Try to seek using the API
                 if (iframeWindow.YT && iframeWindow.YT.Player) {
-                  console.log('🎬 YouTube Player API available, attempting to seek');
+
                 }
               };
               iframeWindow.document.head.appendChild(script);
             }
           } catch (e) {
-            console.log('🎬 Could not inject YouTube Player API script:', e);
+
           }
         }, 3000);
       }
@@ -264,7 +261,7 @@ const HybridVideoPlayer = ({
         const currentSrc = currentIframeRef.src;
         const newSrc = getEmbedUrl(); // This will include the new startTime
         if (currentSrc !== newSrc) {
-          console.log(`🎬 Reloading Loom iframe with new timestamp: ${startTime}s`);
+
           currentIframeRef.src = newSrc;
           
           // Also try to seek after a short delay to ensure the iframe is loaded
@@ -275,9 +272,9 @@ const HybridVideoPlayer = ({
                   method: 'seekTo',
                   value: Math.floor(startTime)
                 }, '*');
-                console.log(`🎬 Sent seekTo message for Loom: ${startTime}s`);
+
               } catch (e) {
-                console.log('🎬 Could not send seekTo message to Loom iframe:', e);
+
               }
             }
           }, 1000);
@@ -289,7 +286,7 @@ const HybridVideoPlayer = ({
         const currentSrc = currentIframeRef.src;
         const newSrc = getEmbedUrl(); // This will include the new startTime
         if (currentSrc !== newSrc) {
-          console.log(`🎬 Reloading Vimeo iframe with new timestamp: ${startTime}s`);
+
           currentIframeRef.src = newSrc;
         }
       }
@@ -298,10 +295,9 @@ const HybridVideoPlayer = ({
 
   // Handle playing prop changes - force play when playing becomes true
   useEffect(() => {
-    console.log(`🎬 HybridVideoPlayer: playing prop changed to ${playing}`);
+
     if (playing && currentIframeRef && currentIframeRef.contentWindow) {
-      console.log(`🎬 Forcing video to play due to playing prop change`);
-      
+
       // For YouTube videos, send play command
       if (videoType === 'youtube') {
         try {
@@ -315,10 +311,9 @@ const HybridVideoPlayer = ({
           currentIframeRef.contentWindow.postMessage({
             type: 'play'
           }, '*');
-          
-          console.log(`🎬 Sent play commands for YouTube`);
+
         } catch (e) {
-          console.log('🎬 Could not send play message to YouTube iframe:', e);
+
         }
       }
       
@@ -328,10 +323,9 @@ const HybridVideoPlayer = ({
           currentIframeRef.contentWindow.postMessage({
             method: 'play'
           }, '*');
-          
-          console.log(`🎬 Sent play command for Loom`);
+
         } catch (e) {
-          console.log('🎬 Could not send play message to Loom iframe:', e);
+
         }
       }
       
@@ -341,10 +335,9 @@ const HybridVideoPlayer = ({
           currentIframeRef.contentWindow.postMessage({
             method: 'play'
           }, '*');
-          
-          console.log(`🎬 Sent play command for Vimeo`);
+
         } catch (e) {
-          console.log('🎬 Could not send play message to Vimeo iframe:', e);
+
         }
       }
     }
@@ -371,11 +364,7 @@ const HybridVideoPlayer = ({
         const autoplay = playing ? '1' : '0';
         // Use YouTube nocookie domain for better control and no suggestions
         const embedUrl = `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=${autoplay}&muted=0&enablejsapi=1&controls=1&rel=0&modestbranding=1&version=3&playerapiid=ytplayer&iv_load_policy=3&fs=0&cc_load_policy=0&disablekb=1&playsinline=1&showinfo=0&loop=0&end=0&start=${Math.floor(startTime) || 0}&wmode=opaque&origin=${window.location.origin}&widget_referrer=${window.location.origin}&html5=1&vq=hd720&disable_polymer=1&no_https=1&hl=en&cc_lang_pref=en&cc_load_policy=0&iv_load_policy=3&fs=0&rel=0&showinfo=0&modestbranding=1&playsinline=1&enablejsapi=1&origin=${window.location.origin}&widget_referrer=${window.location.origin}&html5=1&vq=hd720${ytStart}`;
-        
-        console.log(`🎬 YouTube embed URL: autoplay=${autoplay}, startTime=${startTime}, playing=${playing}`);
-        
-        console.log(`🎬 Generated YouTube embed URL with startTime ${startTime}s:`, embedUrl);
-        console.log(`🎬 startTime value: ${startTime}, Type: ${typeof startTime}, Truthy: ${!!startTime}, > 0: ${startTime > 0}`);
+
         return embedUrl;
 
       case 'loom':
@@ -390,14 +379,12 @@ const HybridVideoPlayer = ({
           // Build base embed URL with parameters
           const autoplay = playing ? '1' : '0';
           let embedUrl = `https://www.loom.com/embed/${videoId}?autoplay=${autoplay}&hide_share=1&hide_title=1&muted=0&enablejsapi=1&allowfullscreen=1&showinfo=0&controls=1&rel=0`;
-          
-          console.log(`🎬 Loom embed URL: autoplay=${autoplay}, startTime=${startTime}, playing=${playing}`);
-          
+
           // Add timestamp - prioritize startTime prop over existing URL timestamp
           const timestampToUse = startTime && startTime > 0 ? Math.floor(startTime) : existingTimestamp;
           if (timestampToUse) {
             embedUrl += `&t=${timestampToUse}`;
-            console.log(`🎬 Loom embed URL with timestamp: ${timestampToUse}s`);
+
           }
           
           return embedUrl;
@@ -411,8 +398,7 @@ const HybridVideoPlayer = ({
           const vimeoTime = startTime && startTime > 0 ? `#t=${Math.floor(startTime)}s` : '';
           const autoplay = playing ? '1' : '0';
           const embedUrl = videoId ? `https://player.vimeo.com/video/${videoId}?autoplay=${autoplay}&muted=0&controls=1${vimeoTime}` : url;
-          
-          console.log(`🎬 Vimeo embed URL: autoplay=${autoplay}, startTime=${startTime}, playing=${playing}`);
+
           return embedUrl;
         }
         return url;

@@ -93,8 +93,6 @@ export default function ProfilePage() {
     </button>
   );
 
-
-
   // Company update functions
   const handleCompanyLogoChange = (e) => {
     const file = e.target.files[0];
@@ -174,13 +172,10 @@ export default function ProfilePage() {
       return;
     }
 
-    console.log('🗑️ Starting company deletion...');
     setIsDeleting(true);
     try {
       const token = localStorage.getItem('accessToken');
-      console.log('🗑️ Making DELETE request to:', getNodeApiUrl('/api/companies'));
-      console.log('🗑️ Token exists:', !!token);
-      
+
       const response = await fetch(getNodeApiUrl('/api/companies'), {
         method: 'DELETE',
         headers: {
@@ -189,20 +184,16 @@ export default function ProfilePage() {
         }
       });
 
-      console.log('🗑️ Delete response status:', response.status);
-      console.log('🗑️ Delete response ok:', response.ok);
-      
       const data = await response.json();
-      console.log('🗑️ Delete response data:', data);
 
       if (data.success) {
-        console.log('✅ Company deletion successful, refreshing context...');
+
         showSuccess('Company deleted successfully! You will be redirected to create a new company.');
         // Force clear company context immediately
         setCompany(null);
         // Refresh company context to ensure it's cleared
         await refreshCompany();
-        console.log('✅ Company context refreshed, navigating to home...');
+
         // Navigate to home page (which will show CompanySetup due to no company)
         setTimeout(() => {
           navigate('/');
@@ -310,7 +301,6 @@ export default function ProfilePage() {
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
-
 
               <button
                 type="button"

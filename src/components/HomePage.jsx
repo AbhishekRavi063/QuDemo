@@ -13,23 +13,18 @@ const HomePage = () => {
 
   // Check authentication state on home page load
   useEffect(() => {
-    console.log('🏠 HomePage: Component mounted');
-    console.log('🏠 HomePage: Current URL:', window.location.href);
-    
+
     const checkAuthState = async () => {
       const accessToken = localStorage.getItem('accessToken');
       const refreshToken = localStorage.getItem('refreshToken');
       const user = localStorage.getItem('user');
-      
-      console.log('🏠 HomePage: Token check - Access:', !!accessToken, 'Refresh:', !!refreshToken, 'User:', !!user);
-      
+
       if (accessToken && refreshToken && user) {
         setIsLoggedIn(true);
         try {
           const userData = JSON.parse(user);
           setUserEmail(userData.email || '');
-          console.log('🏠 HomePage: User logged in, email:', userData.email);
-          
+
           // Note: Removed automatic redirect to allow users to see the homepage
           // Users can manually navigate to /qudemos or /create via the buttons
         } catch (error) {
@@ -38,7 +33,7 @@ const HomePage = () => {
       } else {
         setIsLoggedIn(false);
         setUserEmail('');
-        console.log('🏠 HomePage: User not logged in');
+
       }
     };
     
@@ -47,7 +42,7 @@ const HomePage = () => {
     
     const handleStorageChange = (e) => {
       if (e.key === 'accessToken' || e.key === 'refreshToken' || e.key === 'user') {
-        console.log('🏠 HomePage: Storage change detected, rechecking auth state');
+
         checkAuthState();
       }
     };
@@ -126,7 +121,6 @@ const HomePage = () => {
             )}
           </div>
         </div>
-
 
         {/* Hero Section */}
         <div className="flex justify-center items-center min-h-[60vh] px-6">

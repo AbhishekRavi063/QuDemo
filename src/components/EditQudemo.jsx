@@ -46,18 +46,12 @@ const ViewQudemo = () => {
     }
   };
 
-
-
-
-
   const getVideoType = (url) => {
     if (url.includes('youtube.com') || url.includes('youtu.be')) return 'youtube';
     if (url.includes('loom.com')) return 'loom';
     if (url.includes('vimeo.com')) return 'vimeo';
     return null;
   };
-
-
 
   if (loading) {
     return (
@@ -147,7 +141,6 @@ const ViewQudemo = () => {
                   {qudemo.title || 'Untitled Qudemo'}
                 </div>
               </div>
-              
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="bg-gray-50 p-4 rounded-lg">
@@ -206,7 +199,6 @@ const ViewQudemo = () => {
 
             </div>
           )}
-
 
         </div>
       </div>

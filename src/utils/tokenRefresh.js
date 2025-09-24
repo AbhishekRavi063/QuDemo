@@ -9,12 +9,8 @@ export const refreshAccessToken = async () => {
     const refreshToken = localStorage.getItem('refreshToken');
     
     if (!refreshToken) {
-      console.log('❌ TokenRefresh: No refresh token found');
       return { success: false, error: 'No refresh token found' };
     }
-
-    console.log('🔄 TokenRefresh: Attempting to refresh access token');
-    
     const response = await fetch(getNodeApiUrl('/api/auth/refresh'), {
       method: 'POST',
       headers: {
@@ -26,11 +22,9 @@ export const refreshAccessToken = async () => {
     const data = await response.json();
 
     if (response.ok && data.success) {
-      console.log('✅ TokenRefresh: Access token refreshed successfully');
       localStorage.setItem('accessToken', data.data.accessToken);
       return { success: true, accessToken: data.data.accessToken };
     } else {
-      console.log('❌ TokenRefresh: Failed to refresh token:', data.error);
       return { success: false, error: data.error || 'Failed to refresh token' };
     }
   } catch (error) {
@@ -69,13 +63,9 @@ export const authenticatedFetch = async (url, options = {}) => {
 
   // If the request fails with 401/403, try to refresh the token
   if ((response.status === 401 || response.status === 403) && response.status !== 429) {
-    console.log('🔄 AuthenticatedFetch: Token expired, attempting refresh');
-    
     const refreshResult = await refreshAccessToken();
     
     if (refreshResult.success) {
-      console.log('✅ AuthenticatedFetch: Token refreshed, retrying request');
-      
       // Retry the request with the new token
       const newHeaders = {
         ...headers,
@@ -89,7 +79,6 @@ export const authenticatedFetch = async (url, options = {}) => {
       
       response = await fetch(url, retryOptions);
     } else {
-      console.log('❌ AuthenticatedFetch: Token refresh failed, clearing tokens');
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
       localStorage.removeItem('user');
@@ -108,12 +97,10 @@ export const clearAuthTokens = async () => {
     const { supabase } = await import('../config/supabase');
     await supabase.auth.signOut();
   } catch (error) {
-    console.log('Supabase signout error (non-critical):', error);
   }
   
   // Clear localStorage tokens
   localStorage.removeItem('accessToken');
   localStorage.removeItem('refreshToken');
   localStorage.removeItem('user');
-  console.log('🧹 Auth tokens and session cleared');
 };

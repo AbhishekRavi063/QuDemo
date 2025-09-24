@@ -68,8 +68,7 @@ const RegisterPage = () => {
         
             // Redirect to create page (not login) - will trigger company check
             const currentOrigin = window.location.origin;
-            console.log('🔍 RegisterPage: Redirecting to create page, current domain:', currentOrigin);
-            console.log('🔍 RegisterPage: Using direct redirect to /create');
+
             window.location.href = `${currentOrigin}/create`;
       } else {
         if (data.details && Array.isArray(data.details)) {
@@ -102,7 +101,7 @@ const RegisterPage = () => {
 
     try {
       // Clear any existing session and tokens before starting new OAuth
-      console.log('🧹 RegisterPage: Clearing existing session for fresh Google sign-up');
+
       const { clearAuthTokens } = await import('../utils/tokenRefresh');
       await clearAuthTokens();
       

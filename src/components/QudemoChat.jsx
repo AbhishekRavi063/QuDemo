@@ -36,7 +36,7 @@ const QudemoChat = ({ qudemoId, qudemoTitle }) => {
     if (currentTimestamp > 0) {
       // When timestamp changes, ensure video is ready to play
       setIsPlaying(true);
-      console.log(`Timestamp changed to ${currentTimestamp}s, video state reset to play`);
+
     }
   }, [currentTimestamp]);
 
@@ -60,7 +60,7 @@ const QudemoChat = ({ qudemoId, qudemoTitle }) => {
       const token = localStorage.getItem('accessToken');
       
       if (!token) {
-        console.log('❌ QudemoChat: No access token found');
+
         setMessages(prev => [...prev, {
           sender: "AI",
           text: "Please log in to ask questions.",
@@ -82,7 +82,7 @@ const QudemoChat = ({ qudemoId, qudemoTitle }) => {
 
       // Handle authentication errors after refresh attempt
       if (response.status === 401 || response.status === 403) {
-        console.log('❌ QudemoChat: Authentication failed even after refresh attempt');
+
         clearAuthTokens();
         
         setMessages(prev => [...prev, {
@@ -98,10 +98,6 @@ const QudemoChat = ({ qudemoId, qudemoTitle }) => {
       }
 
       const data = await response.json();
-      console.log('🔍 QudemoChat: Full response data:', data);
-      console.log('🔍 QudemoChat: video_url:', data.video_url);
-      console.log('🔍 QudemoChat: start:', data.start);
-      console.log('🔍 QudemoChat: answer_source:', data.answer_source);
 
       if (data.success) {
         const aiMessage = {
@@ -135,14 +131,11 @@ const QudemoChat = ({ qudemoId, qudemoTitle }) => {
           
           // Enhanced logging for hybrid Q&A
           if (data.searchMethod === 'hybrid') {
-            console.log(`🎯 Hybrid Q&A timestamp: ${data.start}s (${data.formattedTimestamp})`);
-            console.log(`🎯 Hybrid scores:`, data.hybridScores);
-            console.log(`🎯 Confidence: ${data.confidence}, Search score: ${data.searchScore}`);
+
           } else {
-            console.log(`📹 Standard Q&A timestamp: ${data.start}s`);
+
           }
-          
-          console.log(`🎬 Video URL: ${data.video_url}, Answer source: ${data.answer_source}`);
+
         }
       } else {
         const errorMessage = {
@@ -191,13 +184,12 @@ const QudemoChat = ({ qudemoId, qudemoTitle }) => {
     
     // Force video to play when jumping to timestamp
     // This ensures the video jumps even if it was manually paused
-    console.log(`Playing video at ${formatTimestamp(timestamp)}`);
-    
+
     // If this is a different timestamp than current, force play state
     if (timestamp !== currentTimestamp) {
       setIsPlaying(true);
       // Reset any paused state to ensure video can jump
-      console.log(`New timestamp detected, forcing play state`);
+
     }
   };
 
@@ -205,7 +197,7 @@ const QudemoChat = ({ qudemoId, qudemoTitle }) => {
     // Reset video state when needed
     setIsPlaying(false);
     setCurrentTimestamp(0);
-    console.log('Video state reset');
+
   };
 
   const renderMessage = (message, index) => {

@@ -57,11 +57,6 @@ const TestRunner = () => {
     try {
       const text = await csvFile.text();
       const testCases = parseCSV(text);
-      
-      console.log(`🧪 Running ${testCases.length} test cases on ${currentBackend.name}`);
-      console.log(`📍 Backend URL: ${pythonApiUrl}`);
-      console.log(`⏰ Test started at: ${new Date().toISOString()}`);
-      
       const results = [];
       let totalError = 0;
       let passedTests = 0;
@@ -131,11 +126,6 @@ const TestRunner = () => {
 
       const avgError = totalError / testCases.length;
       const passRate = (passedTests / testCases.length) * 100;
-
-      console.log(`✅ Test completed on ${currentBackend.name}`);
-      console.log(`📊 Results: ${passedTests}/${testCases.length} passed (${passRate.toFixed(1)}%)`);
-      console.log(`⏱️ Average error: ${avgError.toFixed(2)}s`);
-
       setTestResults({
         backend: currentBackend.name,
         totalTests: testCases.length,
@@ -164,13 +154,7 @@ const TestRunner = () => {
 
     const allBackends = getAvailableBackends();
     const allResults = [];
-
-    console.log(`🧪 Running tests on all ${allBackends.length} backends`);
-    console.log(`⏰ Multi-backend test started at: ${new Date().toISOString()}`);
-
     for (const backend of allBackends) {
-      console.log(`\n🔄 Switching to ${backend.name}...`);
-      
       // Switch to this backend
       switchBackend(backend.id);
       
@@ -180,9 +164,6 @@ const TestRunner = () => {
       // Run tests on this backend
       const text = await csvFile.text();
       const testCases = parseCSV(text);
-      
-      console.log(`📍 Testing on: ${backend.pythonUrl || backend.prodPythonUrl}`);
-      
       const results = [];
       let totalError = 0;
       let passedTests = 0;
@@ -238,10 +219,6 @@ const TestRunner = () => {
 
       const avgError = totalError / testCases.length;
       const passRate = (passedTests / testCases.length) * 100;
-
-      console.log(`✅ ${backend.name} completed: ${passedTests}/${testCases.length} passed (${passRate.toFixed(1)}%)`);
-      console.log(`⏱️ ${backend.name} average error: ${avgError.toFixed(2)}s`);
-
       allResults.push({
         backend: backend.name,
         totalTests: testCases.length,
@@ -251,10 +228,6 @@ const TestRunner = () => {
         results
       });
     }
-
-    console.log(`\n🎉 All backend tests completed!`);
-    console.log(`📊 Summary: ${allResults.map(r => `${r.backend}: ${r.passRate.toFixed(1)}%`).join(', ')}`);
-
     setTestResults({
       backend: 'All Backends',
       totalTests: allResults[0]?.totalTests || 0,

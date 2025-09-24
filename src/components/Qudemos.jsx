@@ -60,19 +60,15 @@ const Qudemos = () => {
 
   // Share functionality
   const handleShareQudemo = async (qudemo) => {
-    console.log('🔗 Frontend (Qudemos): handleShareQudemo called with qudemo:', qudemo);
     
     // Prevent multiple simultaneous requests for the same qudemo
     if (sharingQudemo && sharingQudemo.id === qudemo.id) {
-      console.log('🔗 Frontend (Qudemos): Share request already in progress for this qudemo, ignoring');
       return;
     }
     
     setSharingQudemo(qudemo);
     try {
       const token = localStorage.getItem('accessToken');
-      console.log('🔗 Frontend (Qudemos): Making POST request to:', getNodeApiUrl(`/api/qudemos/${qudemo.id}/share`));
-      console.log('🔗 Frontend (Qudemos): Token exists:', !!token);
       
       const response = await fetch(getNodeApiUrl(`/api/qudemos/${qudemo.id}/share`), {
         method: 'POST',
@@ -81,8 +77,6 @@ const Qudemos = () => {
           'Content-Type': 'application/json'
         }
       });
-      
-      console.log('🔗 Frontend (Qudemos): Response status:', response.status);
 
       if (response.ok) {
         const data = await response.json();
@@ -169,7 +163,6 @@ const Qudemos = () => {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        console.log('✅ Qudemos fetched successfully:', data.data);
         setQudemos(data.data || []);
       } else {
         console.error('❌ Failed to fetch qudemos:', data.error);
@@ -201,7 +194,6 @@ const Qudemos = () => {
   // }, [company]);
 
   const handleDropdownAction = async (action, qudemo) => {
-    console.log('🔗 Frontend (Qudemos): handleDropdownAction called with action:', action, 'qudemo:', qudemo);
     setDropdownOpen(null);
 
     switch (action) {
@@ -216,14 +208,12 @@ const Qudemos = () => {
         setShowDeleteModal(true);
         break;
       case 'share':
-        console.log('🔗 Frontend (Qudemos): Share action selected for qudemo:', qudemo);
         handleShareQudemo(qudemo);
         break;
       default:
         break;
     }
   };
-
 
   const deleteQudemo = async (qudemoId) => {
     try {
@@ -251,10 +241,8 @@ const Qudemos = () => {
         // Clean up localStorage data for the deleted qudemo
         const chatKey = `qudemo_chat_${qudemoId}`;
         localStorage.removeItem(chatKey);
-        console.log(`🧹 Cleaned up localStorage for deleted qudemo: ${qudemoId}`);
         
         // Show success message
-        console.log('✅ Qudemo deleted successfully');
         
         // Show success notification
         showNotification('Qudemo deleted successfully!', 'success');
@@ -497,7 +485,6 @@ const Qudemos = () => {
                         </button>
                         <button
                           onClick={(e) => {
-                            console.log('🔗 Frontend (Qudemos): Share button clicked in dropdown');
                             e.stopPropagation();
                             handleDropdownAction('share', qudemo);
                           }}

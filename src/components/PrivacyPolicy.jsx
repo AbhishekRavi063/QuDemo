@@ -48,9 +48,9 @@ const PrivacyPolicy = () => {
                   Privacy Policy
                 </h1>
                 
-                <div className="text-gray-200 mb-8">
-                  <p className="text-lg">Last updated: 21/09/2025</p>
-                  <p className="text-lg mt-4">
+                <div className="text-gray-200 mb-8 text-left">
+                  <p className="text-lg text-center">Last updated: 21/09/2025</p>
+                  <p className="text-lg mt-4 text-left">
                     At Qudemo, we care about your privacy. This page explains what information we collect, 
                     how we use it, and your rights.
                   </p>
@@ -59,7 +59,7 @@ const PrivacyPolicy = () => {
                 <div className="space-y-8">
                   {/* Section 1 */}
                   <div>
-                    <h2 className="text-2xl font-bold text-white mb-4">1. Information We Collect</h2>
+                    <h2 className="text-2xl font-bold text-white mb-4 text-left">1. Information We Collect</h2>
                     <ul className="space-y-4 text-gray-200">
                       <li className="flex items-start">
                         <span className="text-blue-600 font-bold mr-3">•</span>
@@ -82,7 +82,7 @@ const PrivacyPolicy = () => {
 
                   {/* Section 2 */}
                   <div>
-                    <h2 className="text-2xl font-bold text-white mb-4">2. How We Use Your Information</h2>
+                    <h2 className="text-2xl font-bold text-white mb-4 text-left">2. How We Use Your Information</h2>
                     <ul className="space-y-4 text-gray-200">
                       <li className="flex items-start">
                         <span className="text-blue-600 font-bold mr-3">•</span>
@@ -105,10 +105,10 @@ const PrivacyPolicy = () => {
 
                   {/* Section 3 */}
                   <div>
-                    <h2 className="text-2xl font-bold text-white mb-4">3. How We Share Information</h2>
-                    <div className="space-y-4 text-gray-200">
-                      <p className="font-semibold">We do not sell your data.</p>
-                      <p>We may share it only with:</p>
+                    <h2 className="text-2xl font-bold text-white mb-4 text-left">3. How We Share Information</h2>
+                    <div className="space-y-4 text-gray-200 text-left">
+                      <p className="font-semibold text-left">We do not sell your data.</p>
+                      <p className="text-left">We may share it only with:</p>
                       <ul className="space-y-2 ml-4">
                         <li className="flex items-start">
                           <span className="text-blue-600 font-bold mr-3">•</span>
@@ -124,7 +124,7 @@ const PrivacyPolicy = () => {
 
                   {/* Section 4 */}
                   <div>
-                    <h2 className="text-2xl font-bold text-white mb-4">4. Your Choices</h2>
+                    <h2 className="text-2xl font-bold text-white mb-4 text-left">4. Your Choices</h2>
                     <ul className="space-y-4 text-gray-200">
                       <li className="flex items-start">
                         <span className="text-blue-600 font-bold mr-3">•</span>
@@ -143,15 +143,15 @@ const PrivacyPolicy = () => {
 
                   {/* Section 5 */}
                   <div>
-                    <h2 className="text-2xl font-bold text-white mb-4">5. Security</h2>
-                    <p className="text-gray-200">
+                    <h2 className="text-2xl font-bold text-white mb-4 text-left">5. Security</h2>
+                    <p className="text-gray-200 text-left">
                       We take reasonable steps to protect your data.
                     </p>
                   </div>
 
                   {/* Section 6 */}
                   <div>
-                    <h2 className="text-2xl font-bold text-white mb-4">6. Contact Us</h2>
+                    <h2 className="text-2xl font-bold text-white mb-4 text-left">6. Contact Us</h2>
                     <p className="text-gray-200">
                       If you have any questions about this policy or your data, please reach out:{' '}
                       <a 

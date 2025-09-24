@@ -44,9 +44,7 @@ const KnowledgeDataPreview = ({ companyName, qudemoId, onDataUpdate }) => {
         const endpoint = qudemoId 
           ? `/api/knowledge/sources/${encodeURIComponent(companyName)}/${qudemoId}`
           : `/api/knowledge/sources/${encodeURIComponent(companyName)}`;
-        
-        console.log(`🔍 DEBUG: Fetching knowledge sources from: ${endpoint}`);
-        
+
         const response = await fetch(getNodeApiUrl(endpoint), {
           headers: {
             'Authorization': `Bearer ${token}`
@@ -103,9 +101,7 @@ const KnowledgeDataPreview = ({ companyName, qudemoId, onDataUpdate }) => {
       if (response.ok) {
         const data = await response.json();
         if (data.success && data.data) {
-          console.log('📄 Received content data:', data.data);
-          console.log('📄 Data structure:', JSON.stringify(data.data, null, 2));
-          
+
           // Extract content chunks from the response (handle both new and old formats)
           const content_chunks = data.data.chunks || [];
           const qa_pairs = data.data.qa_pairs || []; // Handle old format
@@ -132,10 +128,7 @@ const KnowledgeDataPreview = ({ companyName, qudemoId, onDataUpdate }) => {
               });
             });
           }
-          
-          console.log('📄 Content chunks:', content_chunks);
-          console.log('📄 Stats:', stats);
-            
+
             // Process content chunks into knowledge items
             let knowledge_items = [];
             
@@ -196,8 +189,7 @@ const KnowledgeDataPreview = ({ companyName, qudemoId, onDataUpdate }) => {
               });
             } else {
               // Fallback: Create preview content from metadata
-              console.log('📄 No content chunks found, creating fallback preview from metadata');
-              
+
                              const metadata = data.data.metadata; // Get metadata from data.data
               if (metadata) {
                 // Create a meaningful preview from the metadata
@@ -234,10 +226,7 @@ ${metadata.description || 'Website content has been processed and is available f
                 });
               }
             }
-          
-          console.log('📄 Processed knowledge items:', knowledge_items.length);
-          console.log('📄 Sample knowledge item:', knowledge_items[0]);
-          
+
                       // Update the source with real extracted data
             const updatedSource = {
               ...source,
@@ -260,8 +249,7 @@ ${metadata.description || 'Website content has been processed and is available f
                 knowledge_items: knowledge_items
               }
             };
-          
-          console.log('📄 Updated source with extracted data:', updatedSource.extracted_data);
+
           setSelectedSource(updatedSource);
         }
       } else {
@@ -320,8 +308,6 @@ ${metadata.description || 'Website content has been processed and is available f
           onDataUpdate(knowledgeSources.filter(source => source.id !== sourceId));
         }
 
-        console.log('✅ Knowledge source deleted successfully from database and vector store');
-        
       } catch (error) {
         console.error('Error deleting knowledge source:', error);
         
@@ -436,7 +422,6 @@ ${metadata.description || 'Website content has been processed and is available f
 
               {/* Knowledge Items */}
               <div className="space-y-4">
-                {console.log('🔍 Rendering knowledge items:', selectedSource.extracted_data.knowledge_items?.length || 0)}
                 {selectedSource.extracted_data.knowledge_items && selectedSource.extracted_data.knowledge_items.length > 0 ? (
                   selectedSource.extracted_data.knowledge_items.map((item, index) => (
                     <div

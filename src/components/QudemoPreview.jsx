@@ -66,7 +66,6 @@ const TypingIndicator = () => (
 );
 
 const cleanMessageText = (text) => {
-  console.log('🔍 cleanMessageText input:', text);
   
   // Remove unwanted patterns
   let cleaned = text
@@ -75,16 +74,12 @@ const cleanMessageText = (text) => {
     .replace(/\s{2,}/g, " ")
     .trim();
 
-  console.log('🔍 After removing patterns:', cleaned);
-
   // Ensure bullet points and numbers are on new lines
   cleaned = cleaned
     // New line before bullets (•, -, *) if not already at line start
     .replace(/\s*([•\-*])\s+/g, "<br/>$1 ")
     // New line before numbered lists (1., 2., etc.) if not already at line start
     .replace(/\s*(\d+\.)\s+/g, "<br/>$1 ");
-
-  console.log('🔍 After bullet/number formatting:', cleaned);
 
   // Convert URLs to clickable links
   cleaned = cleaned.replace(
@@ -93,15 +88,11 @@ const cleanMessageText = (text) => {
       `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-blue-600 underline">${url}</a>`
   );
 
-  console.log('🔍 After URL conversion:', cleaned);
-
   // Split at each '– ' and wrap each in <p> tags, preserving the intro as its own paragraph
   const parts = cleaned.split(/(?=– )/g);
-  console.log('🔍 Parts after splitting:', parts);
-  
+
   const result = parts.map(part => `<p>${part.trim()}</p>`).join("");
-  console.log('🔍 Final result:', result);
-  
+
   return result;
 };
 
@@ -207,7 +198,7 @@ const QudemoPreview = ({ qudemo, onClose }) => {
   
   // Debug: Monitor currentTimestamp state changes
   useEffect(() => {
-    console.log('🎬 QudemoPreview: currentTimestamp state changed to:', currentTimestamp, 'Type:', typeof currentTimestamp);
+
   }, [currentTimestamp]);
 
   // Cleanup function to ensure messages are saved when component unmounts
@@ -228,7 +219,7 @@ const QudemoPreview = ({ qudemo, onClose }) => {
       videoElements.forEach(video => {
         video.muted = false;
         video.volume = 1.0;
-        video.play().catch(e => console.log('Autoplay prevented:', e));
+        video.play().catch(e => {});
       });
       
       // Also handle ReactPlayer instances
@@ -239,7 +230,7 @@ const QudemoPreview = ({ qudemo, onClose }) => {
           try {
             iframe.contentWindow.postMessage({ type: 'unmute' }, '*');
           } catch (e) {
-            console.log('Could not unmute Loom video:', e);
+
           }
         }
       });
@@ -259,12 +250,10 @@ const QudemoPreview = ({ qudemo, onClose }) => {
     setIsTyping(true);
 
     try {
-      console.log('🔍 Sending Q&A request for qudemo:', qudemo.id);
-      console.log('🔍 Question:', userQuestion);
-      
+
       const token = localStorage.getItem('accessToken');
       if (!token) {
-        console.log('❌ QudemoPreview: No access token found');
+
         setMessages(prev => [...prev, {
           sender: "AI",
           text: "Please log in to ask questions.",
@@ -276,9 +265,7 @@ const QudemoPreview = ({ qudemo, onClose }) => {
       
       // Call the Node.js backend Q&A endpoint which will forward to Python backend
       const askUrl = getNodeApiUrl(`/api/qa/qudemo/${qudemo.id}`);
-      console.log('🔍 Calling API URL:', askUrl);
-      console.log('🔍 Request payload:', { question: userQuestion });
-      
+
       let response;
       try {
         response = await axios.post(askUrl, {
@@ -293,13 +280,11 @@ const QudemoPreview = ({ qudemo, onClose }) => {
       } catch (error) {
         // Handle token expiration
         if (error.response && (error.response.status === 401 || error.response.status === 403)) {
-          console.log('🔄 QudemoPreview: Token expired, attempting refresh');
-          
+
           const refreshResult = await refreshAccessToken();
           
           if (refreshResult.success) {
-            console.log('✅ QudemoPreview: Token refreshed, retrying request');
-            
+
             // Retry the request with the new token
             response = await axios.post(askUrl, {
               question: userQuestion
@@ -311,7 +296,7 @@ const QudemoPreview = ({ qudemo, onClose }) => {
               timeout: 30000
             });
           } else {
-            console.log('❌ QudemoPreview: Token refresh failed');
+
             clearAuthTokens();
             throw error; // Re-throw to be handled by the catch block
           }
@@ -319,20 +304,11 @@ const QudemoPreview = ({ qudemo, onClose }) => {
           throw error; // Re-throw non-auth errors
         }
       }
-      
-      console.log('✅ Q&A response:', response.data);
-      console.log('🎬 Video fields in response:', {
-        video_url: response.data?.video_url,
-        start: response.data?.start,
-        end: response.data?.end,
-        video_title: response.data?.video_title
-      });
-      
+
       // Process the response and handle video switching
       try {
         const aiAnswer = response.data?.answer || 'Sorry, I could not find an answer.';
-        console.log('🔍 Extracted answer:', aiAnswer);
-        
+
         // Check for video navigation data in the response
         let targetVideoUrl = null;
         let timestamp = 0;
@@ -341,10 +317,7 @@ const QudemoPreview = ({ qudemo, onClose }) => {
         if (response.data && response.data.video_url) {
           targetVideoUrl = response.data.video_url;
           timestamp = response.data.start || 0;
-          console.log('🎬 Using direct video fields:', { url: targetVideoUrl, timestamp });
-          console.log('🎬 Raw response data:', response.data);
-          console.log('🎬 Start time value:', response.data.start, 'Type:', typeof response.data.start);
-          
+
           // Ensure timestamp is a number and convert to seconds if needed
           if (typeof timestamp === 'string') {
             timestamp = parseFloat(timestamp);
@@ -355,12 +328,10 @@ const QudemoPreview = ({ qudemo, onClose }) => {
           
           // Additional validation - ensure timestamp is reasonable
           if (timestamp < 0 || timestamp > 36000) { // Max 10 hours
-            console.log('⚠️ Timestamp out of reasonable range, resetting to 0');
+
             timestamp = 0;
           }
-          
-          console.log('🎬 Processed timestamp:', timestamp, 'Type:', typeof timestamp);
-          console.log('🎬 Final timestamp value for video player:', timestamp);
+
         }
         // Fallback: check sources array for video sources
         else if (response.data && response.data.sources && response.data.sources.length > 0) {
@@ -372,7 +343,7 @@ const QudemoPreview = ({ qudemo, onClose }) => {
           if (videoSource) {
             targetVideoUrl = videoSource.url;
             timestamp = videoSource.start_timestamp;
-            console.log('🎬 Found video source in sources:', { url: targetVideoUrl, timestamp });
+
           }
         }
         
@@ -385,11 +356,7 @@ const QudemoPreview = ({ qudemo, onClose }) => {
         
         // Switch video if we have a valid video URL
         if (targetVideoUrl) {
-          console.log('🎬 Switching to video:', targetVideoUrl, 'at timestamp:', timestamp);
-          console.log('🎬 About to set currentTimestamp to:', timestamp);
-          console.log('🔍 DEBUG: Qudemo videos array:', qudemo.videos);
-          console.log('🔍 DEBUG: Looking for video URL:', targetVideoUrl);
-          
+
           // First, pause the current video to ensure clean transition
           setIsPlaying(false);
           
@@ -401,19 +368,17 @@ const QudemoPreview = ({ qudemo, onClose }) => {
             const targetId = extractVideoId(targetVideoUrl);
             return vId && targetId && vId === targetId;
           });
-          console.log('🔍 DEBUG: Video index found:', videoIndex);
-          
+
           if (videoIndex !== -1) {
-            console.log('🎬 Found video at index:', videoIndex);
+
             setCurrentVideoIndex(videoIndex);
             setCurrentTimestamp(timestamp);
-            console.log('🎬 currentTimestamp set to:', timestamp);
+
           } else {
-            console.log('⚠️ Video not found in qudemo videos array');
-            console.log('🔍 DEBUG: Available video URLs:', qudemo.videos?.map(v => v.video_url));
+
             // Try to set timestamp anyway if we have a valid timestamp
             if (timestamp !== undefined) {
-              console.log('🎬 Setting timestamp anyway since we have a valid timestamp');
+
               setCurrentTimestamp(timestamp);
             }
           }
@@ -422,7 +387,7 @@ const QudemoPreview = ({ qudemo, onClose }) => {
           // This ensures the video player responds to the new timestamp
           setTimeout(() => {
             if (timestamp !== undefined) {
-              console.log('🎬 Force seeking to timestamp:', timestamp);
+
               // Update timestamp and start playing
               setCurrentTimestamp(timestamp);
               setIsPlaying(true);
@@ -435,10 +400,10 @@ const QudemoPreview = ({ qudemo, onClose }) => {
                 try {
                   if (videoPlayerRef.current.seekTo) {
                     videoPlayerRef.current.seekTo(timestamp);
-                    console.log('🎬 Direct seek successful');
+
                   }
                 } catch (error) {
-                  console.log('🎬 Direct seek failed, using state update:', error);
+
                 }
               }
             }
@@ -446,8 +411,7 @@ const QudemoPreview = ({ qudemo, onClose }) => {
         }
         
         setIsTyping(false);
-        console.log('🔍 Message added successfully');
-        
+
       } catch (processingError) {
         console.error('❌ Processing failed:', processingError);
         
@@ -465,7 +429,7 @@ const QudemoPreview = ({ qudemo, onClose }) => {
       
       // Handle authentication errors specifically
       if (error.response && (error.response.status === 401 || error.response.status === 403)) {
-        console.log('❌ QudemoPreview: Authentication failed even after refresh attempt');
+
         clearAuthTokens();
         
         const errorMessage = {
@@ -517,12 +481,10 @@ const QudemoPreview = ({ qudemo, onClose }) => {
                 startTime={currentTimestamp}
                 style={{ width: '100%', height: '100%', background: 'black' }}
                 onReady={() => {
-                  console.log('Video ready for chat');
-                  console.log('🎬 Video ready - currentTimestamp:', currentTimestamp, 'Type:', typeof currentTimestamp);
-                  console.log('🎬 Video ready - startTime prop passed:', currentTimestamp);
+
                 }}
                 onPlay={() => {
-                  console.log('Video playing in chat');
+
                 }}
                 iframeRef={loomIframeRef}
               />

@@ -68,7 +68,6 @@ const CompanySetup = () => {
     
     // Prevent duplicate submissions
     if (isSubmitting) {
-      console.log('🚫 Already submitting, ignoring duplicate request');
       return;
     }
     
@@ -78,9 +77,6 @@ const CompanySetup = () => {
     
     try {
       const token = localStorage.getItem('accessToken');
-      console.log('🔍 CompanySetup: Creating company with token:', token ? 'exists' : 'missing');
-      console.log('🔍 CompanySetup: Token length:', token?.length || 0);
-      
       // Validate authentication before proceeding
       if (!token) {
         setError('Authentication required. Please log in again.');
@@ -100,25 +96,14 @@ const CompanySetup = () => {
           logo: null
         })
       });
-      
-      console.log('🔍 CompanySetup: Response status:', response.status);
-      console.log('🔍 CompanySetup: Response ok:', response.ok);
-      
       const data = await response.json();
-      console.log('🔍 CompanySetup: Response data:', data);
-      
       if (data.success) {
         setSuccess('🎉 Organization created successfully! Setting up your workspace...');
         
         // Refresh company context
-        console.log('🔄 Refreshing company context...');
         await refreshCompany();
-        console.log('✅ Company context refreshed');
-        
         // Redirect to create page after a short delay
-        console.log('🚀 Redirecting to create page in 2 seconds...');
         setTimeout(() => {
-          console.log('🚀 Navigating to create page now');
           navigate('/create');
         }, 2000);
       } else {
@@ -179,7 +164,6 @@ const CompanySetup = () => {
               </div>
             </div>
 
-
             {/* Website */}
             <div>
               <label htmlFor="website" className="block text-sm font-medium text-gray-700">
@@ -202,7 +186,6 @@ const CompanySetup = () => {
                 )}
               </div>
             </div>
-
 
             {/* Error Message */}
             {error && (

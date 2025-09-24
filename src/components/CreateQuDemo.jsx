@@ -6,7 +6,6 @@ import { useCompany } from "../context/CompanyContext";
 import { getNodeApiUrl } from "../config/api";
 import { useNavigate } from "react-router-dom";
 
-
 const CreateQuDemo = () => {
   const { company, isLoading } = useCompany();
   const navigate = useNavigate();
@@ -21,7 +20,6 @@ const CreateQuDemo = () => {
   
   // Video processing notification state
 
-  
   // New state for Product Knowledge Sources
   // const [websiteUrl, setWebsiteUrl] = useState(""); // Not used
   // const [documentFile, setDocumentFile] = useState(null); // Not used
@@ -281,7 +279,6 @@ const CreateQuDemo = () => {
   //   return { isValid: true, error: null };
   // };
 
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -343,8 +340,6 @@ const CreateQuDemo = () => {
         }))
       };
 
-      console.log('🎯 Creating qudemo with data:', qudemoData);
-
       const token = localStorage.getItem('accessToken');
       const createResponse = await fetch(getNodeApiUrl('/api/qudemos'), {
         method: 'POST',
@@ -362,7 +357,6 @@ const CreateQuDemo = () => {
       }
 
       const qudemoId = createResult.data.id;
-      console.log('✅ Qudemo created successfully:', qudemoId);
 
       setSuccess("Please wait, your video is now processing. This may take a few minutes. Once it's ready, you'll be redirected to your Qudemos page.");
 

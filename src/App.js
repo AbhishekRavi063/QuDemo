@@ -47,7 +47,6 @@ const ProtectedRoute = ({ children }) => {
       }
 
       try {
-        console.log('🔐 Checking authentication with token:', token ? 'exists' : 'missing');
         
         // First try a simple profile check without automatic refresh
         const response = await fetch(getNodeApiUrl('/api/auth/profile'), {
@@ -56,14 +55,9 @@ const ProtectedRoute = ({ children }) => {
           }
         });
 
-        console.log('🔐 Auth check response status:', response.status);
-        console.log('🔐 Auth check response ok:', response.ok);
-
         if (response.ok) {
-          console.log('✅ Authentication successful');
           setIsAuthenticated(true);
         } else if (response.status === 401 || response.status === 403) {
-          console.log('🔄 Token expired, attempting refresh...');
           
           // Try to refresh the token
           const refreshToken = localStorage.getItem('refreshToken');
@@ -80,7 +74,6 @@ const ProtectedRoute = ({ children }) => {
               if (refreshResponse.ok) {
                 const refreshData = await refreshResponse.json();
                 if (refreshData.success && refreshData.data.accessToken) {
-                  console.log('✅ Token refreshed successfully');
                   localStorage.setItem('accessToken', refreshData.data.accessToken);
                   setIsAuthenticated(true);
                   return;
@@ -91,11 +84,9 @@ const ProtectedRoute = ({ children }) => {
             }
           }
           
-          console.log('❌ Authentication failed, clearing tokens');
           clearAuthTokens();
           setIsAuthenticated(false);
         } else {
-          console.log('❌ Authentication failed with status:', response.status);
           clearAuthTokens();
           setIsAuthenticated(false);
         }
@@ -112,7 +103,6 @@ const ProtectedRoute = ({ children }) => {
   }, []);
 
   if (isLoading) {
-    console.log('🔐 Authentication check in progress...');
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
@@ -121,11 +111,8 @@ const ProtectedRoute = ({ children }) => {
   }
 
   if (!isAuthenticated) {
-    console.log('🔐 User not authenticated, redirecting to login');
     return <Navigate to="/login" replace />;
   }
-
-  console.log('🔐 User authenticated, showing protected content');
 
   return children;
 };
@@ -133,8 +120,6 @@ const ProtectedRoute = ({ children }) => {
 // Company Check Component
 const CompanyCheck = ({ children }) => {
   const { company, isLoading } = useCompany();
-
-  console.log('🏢 CompanyCheck: isLoading:', isLoading, 'company:', !!company);
 
   if (isLoading) {
     return (
@@ -146,12 +131,10 @@ const CompanyCheck = ({ children }) => {
 
   // If no company exists, show company setup
   if (!company) {
-    console.log('🏢 CompanyCheck: No company found, showing CompanySetup');
     return <CompanySetup />;
   }
 
   // If company exists, show the dashboard
-  console.log('🏢 CompanyCheck: Company found, showing dashboard');
   return children;
 };
 
@@ -181,7 +164,6 @@ function App() {
   useEffect(() => {
     const wasRedirected = checkDomainOnLoad();
     if (wasRedirected) {
-      console.log('🔍 App: Domain redirect triggered, stopping execution');
       return;
     }
   }, []);
@@ -189,21 +171,18 @@ function App() {
   // Clean up hash from URL if present
   useEffect(() => {
     if (window.location.hash === '#') {
-      console.log('🔍 App: Cleaning up empty hash from URL');
       window.history.replaceState(null, null, window.location.pathname + window.location.search);
     }
   }, []);
 
   // Debug: Monitor token changes globally
   useEffect(() => {
-    console.log('🔍 App: Global token monitoring started');
     
     const checkGlobalTokens = () => {
       const accessToken = localStorage.getItem('accessToken');
       const refreshToken = localStorage.getItem('refreshToken');
       const user = localStorage.getItem('user');
       
-      console.log('🔍 App: Global token check - Access:', !!accessToken, 'Refresh:', !!refreshToken, 'User:', !!user);
     };
     
     // Check tokens on app load
@@ -212,7 +191,6 @@ function App() {
     // Listen for storage changes
     const handleStorageChange = (e) => {
       if (e.key === 'accessToken' || e.key === 'refreshToken' || e.key === 'user') {
-        console.log('🔍 App: Storage change detected for key:', e.key, 'New value exists:', !!e.newValue);
         checkGlobalTokens();
       }
     };

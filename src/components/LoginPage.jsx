@@ -80,10 +80,10 @@ const LoginPage = () => {
         const fromHomepage = location.state?.from === '/' || document.referrer.includes(window.location.origin + '/');
         
         if (fromHomepage) {
-          console.log('🔍 LoginPage: User came from homepage, staying on homepage');
+
           navigate('/', { replace: true });
         } else {
-          console.log('🔍 LoginPage: Redirecting to qudemos page');
+
           navigate('/qudemos', { replace: true });
         }
       } else {
@@ -114,7 +114,7 @@ const LoginPage = () => {
 
     try {
       // Clear any existing session and tokens before starting new OAuth
-      console.log('🧹 LoginPage: Clearing existing session for fresh Google sign-in');
+
       const { clearAuthTokens } = await import('../utils/tokenRefresh');
       await clearAuthTokens();
       
