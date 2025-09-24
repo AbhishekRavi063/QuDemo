@@ -135,7 +135,7 @@ const HomePage = () => {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6">
               <button
                 onClick={() => navigateToCreate(navigate)}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-base sm:text-lg px-8 sm:px-12 py-3 sm:py-4 rounded-lg transition-colors duration-200 w-[250px] sm:w-auto sm:min-w-[250px] sm:h-[54px]"
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-base sm:text-lg px-8 sm:px-12 py-3 sm:py-4 rounded-lg transition-colors duration-200 w-[250px] sm:w-auto sm:min-w-[250px] sm:h-[54px] flex items-center justify-center"
               >
                 Get Started Now
               </button>
@@ -167,7 +167,7 @@ const HomePage = () => {
             </div>
 
             {/* Main Heading */}
-            <h2 className="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
+            <h2 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight">
               Create Qudemo in Minutes.
             </h2>
 
@@ -317,7 +317,7 @@ const HomePage = () => {
             </div>
             
             {/* Quote */}
-            <blockquote className="text-3xl md:text-4xl font-bold text-white leading-relaxed">
+            <blockquote className="text-4xl md:text-4xl font-bold text-white leading-relaxed">
               We believe a <span className="text-blue-400">Demo</span> should feel like real
               <br />
               conversations, not one-way presentations
