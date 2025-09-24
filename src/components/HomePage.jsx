@@ -296,12 +296,40 @@ const HomePage = () => {
           </div>
         </FadeInSection>
 
-        {/* FAQ Section */}
+        {/* Founders Note Section */}
         <FadeInSection delay={0.3}>
-          <div className="py-32 px-6">
+          <div className="py-20 px-6">
+          <div className="max-w-4xl mx-auto text-center">
+            {/* Founders Note Badge */}
+            <div className="flex justify-center mb-8">
+              <StarBorder
+                color="#2934ff"
+                className="text-blue-100 text-sm font-medium"
+              >
+                FOUNDERS NOTE
+              </StarBorder>
+            </div>
+            
+            {/* Quote */}
+            <blockquote className="text-3xl md:text-4xl font-bold text-white leading-relaxed">
+              We believe a <span className="text-blue-400">Demo</span> should feel like real
+              <br />
+              conversations, not one-way presentations
+              <br />
+              letting customers ask questions and get
+              <br />
+              instant answers
+            </blockquote>
+          </div>
+          </div>
+        </FadeInSection>
+
+        {/* FAQ Section */}
+        <FadeInSection delay={0.4}>
+          <div className="py-16 px-6">
           <div className="max-w-4xl mx-auto text-center">
             {/* FAQ Section Badge */}
-            <div className="flex justify-center mb-8 mt-44">
+            <div className="flex justify-center mb-8 mt-16">
               <StarBorder
                 color="#2934ff"
                 className="text-blue-100 text-sm font-medium"
@@ -443,7 +471,7 @@ const HomePage = () => {
         </FadeInSection>
 
         {/* Final Call-to-Action Section */}
-        <FadeInSection delay={0.4}>
+        <FadeInSection delay={0.5}>
           <div className="py-20 px-6 relative">
           <div className="max-w-4xl mx-auto text-center relative">
             {/* Blue Glow Effect */}
@@ -471,32 +499,11 @@ const HomePage = () => {
                 Join Qudemo to create more engaging, interactive video experiences that save time for everyone.
               </p>
               
-              {/* Founders Note Section */}
-              <div className="mb-16 mt-24">
-                {/* Founders Note Badge */}
-                <div className="flex justify-center mb-8">
-                  <StarBorder
-                    color="#2934ff"
-                    className="text-blue-100 text-sm font-medium"
-                  >
-                    FOUNDERS NOTE
-                  </StarBorder>
-                </div>
-                
-                {/* Quote */}
-                <blockquote className="text-3xl md:text-4xl font-bold text-white leading-relaxed">
-                  We believe a <span className="text-blue-400">Demo</span> should feel like real
-                  <br />
-                  conversations, not one-way presentations
-                  <br />
-                  letting customers ask questions and get
-                  <br />
-                  instant answers
-                </blockquote>
-              </div>
-              
               {/* Contact Section */}
               <div className="mb-8">
+                {/* Horizontal Line */}
+                <div className="border-t border-blue-500 mb-8"></div>
+                
                 <p className="text-lg text-gray-300 mb-4">
                   Any queries or support?
                 </p>
