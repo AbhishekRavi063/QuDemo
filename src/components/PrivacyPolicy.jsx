@@ -152,7 +152,7 @@ const PrivacyPolicy = () => {
                   {/* Section 6 */}
                   <div>
                     <h2 className="text-2xl font-bold text-white mb-4 text-left">6. Contact Us</h2>
-                    <p className="text-gray-200">
+                    <p className="text-gray-200 text-left">
                       If you have any questions about this policy or your data, please reach out:{' '}
                       <a 
                         href="mailto:mail@qudemo.com" 
