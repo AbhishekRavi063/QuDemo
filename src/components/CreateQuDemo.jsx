@@ -554,6 +554,9 @@ const CreateQuDemo = () => {
             <label className="block text-sm font-bold text-gray-900 mb-2 text-left">
               Link to Loom or YouTube demo videos
             </label>
+            <p className="text-xs text-gray-500 mb-3 text-left">
+              Note: Unlisted YouTube videos will not be processed
+            </p>
             {videoUrls.map((url, index) => (
               <div key={index} className="mb-4">
                 <div className="flex items-center gap-2 mb-1">

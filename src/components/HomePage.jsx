@@ -8,6 +8,7 @@ import { getNodeApiUrl } from '../config/api';
 const HomePage = () => {
   const [openFAQ, setOpenFAQ] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [productHuntBadgeUrl, setProductHuntBadgeUrl] = useState('');
   const [userEmail, setUserEmail] = useState('');
   const navigate = useNavigate();
 
@@ -52,6 +53,28 @@ const HomePage = () => {
     return () => {
       window.removeEventListener('storage', handleStorageChange);
     };
+  }, []);
+
+  // Generate fresh Product Hunt badge URL
+  useEffect(() => {
+    const generateBadgeUrl = () => {
+      // Generate a fresh URL with current timestamp to get live data
+      const baseUrl = "https://api.producthunt.com/widgets/embed-image/v1/featured.svg";
+      const params = new URLSearchParams({
+        post_id: "1019477",
+        theme: "light",
+        t: Date.now().toString() // Current timestamp for fresh data
+      });
+      setProductHuntBadgeUrl(`${baseUrl}?${params.toString()}`);
+    };
+
+    // Generate initial URL
+    generateBadgeUrl();
+
+    // Refresh the badge every 5 minutes to get updated numbers
+    const refreshInterval = setInterval(generateBadgeUrl, 5 * 60 * 1000);
+
+    return () => clearInterval(refreshInterval);
   }, []);
 
   const toggleFAQ = (index) => {
@@ -143,9 +166,13 @@ const HomePage = () => {
               {/* Product Hunt Badge */}
               <a href="https://www.producthunt.com/products/qudemo?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-qudemo" target="_blank" rel="noopener noreferrer" className="w-auto sm:w-auto">
                 <img 
-                  src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1019477&theme=light&t=1758701258188" 
+                  src={productHuntBadgeUrl || "https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1019477&theme=light"}
                   alt="Qudemo - Make your demo videos Interactive using AI | Product Hunt" 
                   className="w-[250px] h-[54px] sm:w-[250px] sm:h-[54px] mx-auto sm:mx-0"
+                  onError={(e) => {
+                    // Fallback to static image if API fails
+                    e.target.src = "https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1019477&theme=light";
+                  }}
                 />
               </a>
             </div>
