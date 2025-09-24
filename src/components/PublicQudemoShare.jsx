@@ -173,6 +173,30 @@ const PublicQudemoShare = () => {
           setQudemo(data.data);
           setCompany(data.data.company);
           
+          // Update page title and meta tags dynamically
+          const qudemoTitle = data.data.title;
+          const companyName = data.data.company?.name || data.data.company?.display_name || 'Company';
+          
+          // Update document title
+          document.title = `${qudemoTitle} - ${companyName} | Qudemo`;
+          
+          // Update meta description
+          const metaDescription = document.querySelector('meta[name="description"]');
+          if (metaDescription) {
+            metaDescription.setAttribute('content', `Interactive demo: ${qudemoTitle} by ${companyName}. Ask questions and get instant answers with video timestamps.`);
+          }
+          
+          // Update Open Graph tags
+          const ogTitle = document.querySelector('meta[property="og:title"]');
+          if (ogTitle) {
+            ogTitle.setAttribute('content', `${qudemoTitle} - ${companyName}`);
+          }
+          
+          const ogDescription = document.querySelector('meta[property="og:description"]');
+          if (ogDescription) {
+            ogDescription.setAttribute('content', `Interactive demo: ${qudemoTitle} by ${companyName}. Ask questions and get instant answers with video timestamps.`);
+          }
+          
           // Initialize with welcome message
           const welcomeMessage = {
             sender: "AI",
