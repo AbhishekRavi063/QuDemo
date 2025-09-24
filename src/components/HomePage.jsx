@@ -125,30 +125,27 @@ const HomePage = () => {
         {/* Hero Section */}
         <div className="flex justify-center items-center min-h-[60vh] px-6">
           <div className="max-w-4xl text-center">
-            <h1 className="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
+            <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight">
               Turn Your Video Demo Into Interactive Demo
             </h1>
             <p className="text-xl md:text-2xl text-gray-300 mb-8 max-w-3xl mx-auto">
               Engage your prospects with an AI Powered demo that answers their questions in real time.
             </p>
             {/* Button and Product Hunt Badge Container */}
-            <div className="flex items-center justify-center gap-6">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6">
               <button
                 onClick={() => navigateToCreate(navigate)}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg px-12 py-4 rounded-lg transition-colors duration-200"
-                style={{width: '250px', height: '54px'}}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-base sm:text-lg px-8 sm:px-12 py-3 sm:py-4 rounded-lg transition-colors duration-200 w-[250px] sm:w-auto sm:min-w-[250px] sm:h-[54px]"
               >
                 Get Started Now
               </button>
               
               {/* Product Hunt Badge */}
-              <a href="https://www.producthunt.com/products/qudemo?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-qudemo" target="_blank" rel="noopener noreferrer">
+              <a href="https://www.producthunt.com/products/qudemo?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-qudemo" target="_blank" rel="noopener noreferrer" className="w-auto sm:w-auto">
                 <img 
                   src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1019477&theme=light&t=1758701258188" 
                   alt="Qudemo - Make your demo videos Interactive using AI | Product Hunt" 
-                  style={{width: '250px', height: '54px'}} 
-                  width="250" 
-                  height="54" 
+                  className="w-[250px] h-[54px] sm:w-[250px] sm:h-[54px] mx-auto sm:mx-0"
                 />
               </a>
             </div>
