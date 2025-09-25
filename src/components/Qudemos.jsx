@@ -388,6 +388,7 @@ const Qudemos = () => {
                                   height="100%"
                                   frameBorder="0"
                                   allowFullScreen
+                                  title="Loom video preview"
                                   className="rounded-t-lg"
                                   style={{ borderRadius: '0.5rem 0.5rem 0 0' }}
                                   onError={() => {
