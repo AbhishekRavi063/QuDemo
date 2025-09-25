@@ -370,46 +370,101 @@ const Qudemos = () => {
                       {/* Video Player Preview */}
                       <div className="w-full h-full bg-gray-900 flex items-center justify-center overflow-hidden">
                         <div className="w-full h-full">
-                          <ReactPlayer
-                            url={qudemo.videos[0].video_url}
-                            width="100%"
-                            height="100%"
-                            controls={false}
-                            playing={false}
-                            muted={true}
-                            loop={true}
-                            className="rounded-t-lg"
-                            config={{
-                              file: {
-                                attributes: {
-                                  style: { borderRadius: '0.5rem 0.5rem 0 0' }
+                          {(() => {
+                            const videoUrl = qudemo.videos[0].video_url;
+                            const isLoomVideo = videoUrl && videoUrl.includes('loom.com');
+                            const isYouTubeVideo = videoUrl && (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be'));
+                            const isVimeoVideo = videoUrl && videoUrl.includes('vimeo.com');
+                            
+                            // For Loom videos, use custom iframe since ReactPlayer doesn't support them well
+                            if (isLoomVideo) {
+                              const loomVideoId = videoUrl.split('loom.com/share/')[1]?.split('?')[0];
+                              const loomEmbedUrl = `https://www.loom.com/embed/${loomVideoId}?autoplay=0&muted=1&hide_share=1&hide_title=1&hide_owner=1&hide_embed_top_bar=1`;
+                              
+                              return (
+                                <iframe
+                                  src={loomEmbedUrl}
+                                  width="100%"
+                                  height="100%"
+                                  frameBorder="0"
+                                  allowFullScreen
+                                  className="rounded-t-lg"
+                                  style={{ borderRadius: '0.5rem 0.5rem 0 0' }}
+                                  onError={() => {
+                                    console.warn('Loom video preview failed to load');
+                                  }}
+                                />
+                              );
+                            }
+                            
+                            // For YouTube, Vimeo, and other videos, use ReactPlayer
+                            return (
+                              <ReactPlayer
+                                url={videoUrl}
+                                width="100%"
+                                height="100%"
+                                controls={false}
+                                playing={false}
+                                muted={true}
+                                loop={true}
+                                className="rounded-t-lg"
+                                onError={(error) => {
+                                  console.warn('Video preview error:', error);
+                                }}
+                                onReady={() => {
+                                  console.log('Video preview ready');
+                                }}
+                                fallback={
+                                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600">
+                                    <div className="text-center text-white">
+                                      <PlayIcon className="w-12 h-12 mx-auto mb-2 opacity-80" />
+                                      <p className="text-sm opacity-80">Video Preview</p>
+                                    </div>
+                                  </div>
                                 }
-                              },
-                              youtube: {
-                                playerVars: {
-                                  rel: 0,
-                                  modestbranding: 1,
-                                  iv_load_policy: 3,
-                                  fs: 0,
-                                  cc_load_policy: 0,
-                                  disablekb: 1,
-                                  playsinline: 1,
-                                  showinfo: 0,
-                                  loop: 0,
-                                  end: 0,
-                                  wmode: 'opaque',
-                                  origin: window.location.origin,
-                                  widget_referrer: window.location.origin,
-                                  html5: 1,
-                                  vq: 'hd720',
-                                  disable_polymer: 1,
-                                  no_https: 1,
-                                  hl: 'en',
-                                  cc_lang_pref: 'en'
-                                }
-                              }
-                            }}
-                          />
+                                config={{
+                                  file: {
+                                    attributes: {
+                                      style: { borderRadius: '0.5rem 0.5rem 0 0' }
+                                    }
+                                  },
+                                  youtube: {
+                                    playerVars: {
+                                      rel: 0,
+                                      modestbranding: 1,
+                                      iv_load_policy: 3,
+                                      fs: 0,
+                                      cc_load_policy: 0,
+                                      disablekb: 1,
+                                      playsinline: 1,
+                                      showinfo: 0,
+                                      loop: 0,
+                                      end: 0,
+                                      wmode: 'opaque',
+                                      origin: window.location.origin,
+                                      widget_referrer: window.location.origin,
+                                      html5: 1,
+                                      vq: 'hd720',
+                                      disable_polymer: 1,
+                                      no_https: 1,
+                                      hl: 'en',
+                                      cc_lang_pref: 'en'
+                                    }
+                                  },
+                                  vimeo: {
+                                    playerVars: {
+                                      autoplay: false,
+                                      controls: false,
+                                      muted: true,
+                                      loop: true,
+                                      playsinline: true,
+                                      preload: 'metadata'
+                                    }
+                                  }
+                                }}
+                              />
+                            );
+                          })()}
                         </div>
                       </div>
                       
