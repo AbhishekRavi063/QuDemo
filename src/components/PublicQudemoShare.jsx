@@ -148,6 +148,8 @@ const PublicQudemoShare = () => {
   const [showLoomTimestamp, setShowLoomTimestamp] = useState(false);
   const [loomTimestampMessage, setLoomTimestampMessage] = useState('');
   const [videoRefreshKey, setVideoRefreshKey] = useState(0);
+  const [suggestedQuestions, setSuggestedQuestions] = useState([]);
+  const [loadingSuggestedQuestions, setLoadingSuggestedQuestions] = useState(false);
   const messagesEndRef = useRef(null);
   const loomIframeRef = useRef();
   const videoPlayerRef = useRef(null);
@@ -217,6 +219,47 @@ const PublicQudemoShare = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // Fetch suggested questions when qudemo is loaded
+  useEffect(() => {
+    if (qudemo?.id && company?.name) {
+      fetchSuggestedQuestions();
+    }
+  }, [qudemo?.id, company?.name]);
+
+  const fetchSuggestedQuestions = async () => {
+    try {
+      setLoadingSuggestedQuestions(true);
+      console.log('🔍 Fetching suggested questions for QuDemo:', qudemo.id, 'Company:', company.name);
+      const response = await axios.get(`${getNodeApiUrl()}/api/qudemos/${qudemo.id}/suggested-questions`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+        }
+      });
+
+      console.log('📋 Suggested questions response:', response.data);
+      if (response.data.success) {
+        const questions = response.data.suggested_questions || [];
+        console.log('✅ Setting suggested questions:', questions);
+        setSuggestedQuestions(questions);
+      } else {
+        console.log('❌ API returned success: false');
+      }
+    } catch (error) {
+      console.error('❌ Error fetching suggested questions:', error);
+      // Don't show error to user, just silently fail
+    } finally {
+      setLoadingSuggestedQuestions(false);
+    }
+  };
+
+  const handleSuggestedQuestionClick = (question) => {
+    setInputMessage(question);
+    // Auto-send the suggested question
+    setTimeout(() => {
+      handleSendMessage(question);
+    }, 100);
+  };
+
   // Function to enable audio after user interaction
   const enableAudio = () => {
     setAudioEnabled(true);
@@ -244,10 +287,11 @@ const PublicQudemoShare = () => {
     }, 100);
   };
 
-  const handleSendMessage = async () => {
-    if (!inputMessage.trim() || isTyping || !qudemo) return;
+  const handleSendMessage = async (messageText = null) => {
+    const messageToSend = messageText || inputMessage.trim();
+    if (!messageToSend || isTyping || !qudemo) return;
 
-    const userQuestion = inputMessage;
+    const userQuestion = messageToSend;
     setMessages(prev => [...prev, {
       sender: "You",
       text: userQuestion,
@@ -580,18 +624,44 @@ const PublicQudemoShare = () => {
             {/* Chat Section */}
             <div className="w-full lg:w-1/3 flex flex-col bg-white border-l">
               {/* Header */}
-              <div className="bg-blue-600 text-white px-4 py-3 flex justify-between items-center">
-                <div className="flex items-center gap-4">
-                  <div className="font-semibold text-sm sm:text-base">
-                    Ask questions about this qudemo
+              <div className="bg-blue-600 text-white px-4 py-3">
+                <div className="flex justify-between items-center mb-2">
+                  <div className="flex items-center gap-4">
+                    <div className="font-semibold text-sm sm:text-base">
+                      Ask questions about this qudemo
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                </div>
+                
               </div>
 
               {/* Chat Messages */}
               <div className="flex-1 px-3 py-1 overflow-y-auto space-y-3 bg-gray-50 text-sm">
+                {/* Suggested Questions as Chat Messages */}
+                {suggestedQuestions.length > 0 && messages.length <= 1 && (
+                  <div className="space-y-2">
+                    <div className="flex justify-start">
+                      <div className="bg-white border rounded-xl px-4 py-2 max-w-[80%] text-gray-800">
+                        <div className="text-xs text-gray-600 mb-2 font-medium">Suggested questions:</div>
+                        <div className="flex flex-wrap gap-2">
+                          {suggestedQuestions.slice(0, 4).map((question, index) => (
+                            <button
+                              key={index}
+                              onClick={() => handleSuggestedQuestionClick(question)}
+                              className="text-xs bg-blue-50 border border-blue-200 rounded-full px-3 py-1 hover:bg-blue-100 hover:border-blue-300 transition-colors duration-200 text-blue-700"
+                              disabled={isTyping}
+                            >
+                              {question}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
                 {messages.map((msg, idx) => (
                   <div
                     key={idx}
@@ -624,6 +694,7 @@ const PublicQudemoShare = () => {
                 
                 <div ref={messagesEndRef} />
               </div>
+
 
               {/* Input */}
               <div className="px-3 py-1 border-t flex items-center gap-2">

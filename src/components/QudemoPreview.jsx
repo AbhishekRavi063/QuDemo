@@ -152,6 +152,8 @@ const QudemoPreview = ({ qudemo, onClose }) => {
   const [showLoomTimestamp, setShowLoomTimestamp] = useState(false);
   const [loomTimestampMessage, setLoomTimestampMessage] = useState('');
   const [videoRefreshKey, setVideoRefreshKey] = useState(0); // Force video player refresh
+  const [suggestedQuestions, setSuggestedQuestions] = useState([]);
+  const [loadingSuggestedQuestions, setLoadingSuggestedQuestions] = useState(false);
   const messagesEndRef = useRef(null);
   const loomIframeRef = useRef();
   const videoPlayerRef = useRef(null);
@@ -195,6 +197,58 @@ const QudemoPreview = ({ qudemo, onClose }) => {
       localStorage.setItem(chatKey, JSON.stringify(messages));
     }
   }, [messages, chatKey]);
+
+  // Fetch suggested questions when component mounts
+  useEffect(() => {
+    if (qudemo?.id) {
+      console.log('🚀 QudemoPreview: Starting to fetch suggested questions for:', qudemo.id);
+      fetchSuggestedQuestions();
+    } else {
+      console.log('❌ QudemoPreview: No qudemo.id available');
+    }
+  }, [qudemo?.id]);
+
+  const fetchSuggestedQuestions = async () => {
+    try {
+      setLoadingSuggestedQuestions(true);
+      console.log('🔍 Fetching suggested questions for QuDemo:', qudemo.id);
+      
+      const token = localStorage.getItem('accessToken');
+      console.log('🔑 Access token exists:', !!token);
+      console.log('🔑 Token preview:', token ? token.substring(0, 20) + '...' : 'No token');
+      
+      const apiUrl = `${getNodeApiUrl()}/api/qudemos/${qudemo.id}/suggested-questions`;
+      console.log('🌐 API URL:', apiUrl);
+      
+      const response = await axios.get(apiUrl, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      console.log('📋 Suggested questions response:', response.data);
+      if (response.data.success) {
+        const questions = response.data.suggested_questions || [];
+        console.log('✅ Setting suggested questions:', questions);
+        setSuggestedQuestions(questions);
+      } else {
+        console.log('❌ API returned success: false');
+      }
+    } catch (error) {
+      console.error('❌ Error fetching suggested questions:', error);
+      // Don't show error to user, just silently fail
+    } finally {
+      setLoadingSuggestedQuestions(false);
+    }
+  };
+
+  const handleSuggestedQuestionClick = (question) => {
+    setInputMessage(question);
+    // Auto-send the suggested question
+    setTimeout(() => {
+      handleSendMessage(question);
+    }, 100);
+  };
   
   // Debug: Monitor currentTimestamp state changes
   useEffect(() => {
@@ -237,10 +291,11 @@ const QudemoPreview = ({ qudemo, onClose }) => {
     }, 100);
   };
 
-  const handleSendMessage = async () => {
-    if (!inputMessage.trim() || isTyping) return;
+  const handleSendMessage = async (messageText = null) => {
+    const messageToSend = messageText || inputMessage.trim();
+    if (!messageToSend || isTyping) return;
 
-    const userQuestion = inputMessage;
+    const userQuestion = messageToSend;
     setMessages(prev => [...prev, {
       sender: "You",
       text: userQuestion,
@@ -569,40 +624,78 @@ const QudemoPreview = ({ qudemo, onClose }) => {
         {/* Chat Section */}
         <div className="w-full md:w-1/3 flex flex-col bg-white border-l">
           {/* Header */}
-          <div className="bg-blue-600 text-white px-4 py-3 flex justify-between items-center">
-            <div className="flex items-center gap-4">
-              <div className="font-semibold text-sm sm:text-base">
-                Ask questions about this qudemo
+          <div className="bg-blue-600 text-white px-4 py-3">
+            <div className="flex justify-between items-center mb-2">
+              <div className="flex items-center gap-4">
+                <div className="font-semibold text-sm sm:text-base">
+                  Ask questions about this qudemo
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <XMarkIcon
+                  className="h-5 w-5 cursor-pointer"
+                  onClick={onClose}
+                />
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <XMarkIcon
-                className="h-5 w-5 cursor-pointer"
-                onClick={onClose}
-              />
-            </div>
+            
           </div>
 
           {/* Chat Messages */}
           <div className="flex-1 px-3 py-1 overflow-y-auto space-y-3 bg-gray-50 text-sm">
+            {/* Suggested Questions as Chat Messages */}
+            {(() => {
+              console.log('🔍 QudemoPreview Render Check:');
+              console.log('  - suggestedQuestions.length:', suggestedQuestions.length);
+              console.log('  - messages.length:', messages.length);
+              console.log('  - suggestedQuestions:', suggestedQuestions);
+              console.log('  - Should show suggested questions:', suggestedQuestions.length > 0 && messages.length <= 1);
+              return null;
+            })()}
+            
             {messages.map((msg, idx) => (
-              <div
-                key={idx}
-                className={`flex ${msg.sender === "AI" ? "justify-start" : "justify-end"}`}
-              >
+              <div key={idx}>
                 <div
-                  className={`rounded-xl px-4 py-2 max-w-[80%] ${
-                    msg.sender === "AI"
-                      ? "bg-white border text-gray-800 text-left"
-                      : "bg-blue-600 text-white text-right"
-                  }`}
+                  className={`flex ${msg.sender === "AI" ? "justify-start" : "justify-end"}`}
                 >
-                  <span
-                    dangerouslySetInnerHTML={{
-                      __html: msg.text, // already cleaned before storing
-                    }}
-                  />
+                  <div
+                    className={`rounded-xl px-4 py-2 max-w-[80%] ${
+                      msg.sender === "AI"
+                        ? "bg-white border text-gray-800 text-left"
+                        : "bg-blue-600 text-white text-right"
+                    }`}
+                  >
+                    <span
+                      dangerouslySetInnerHTML={{
+                        __html: msg.text, // already cleaned before storing
+                      }}
+                    />
+                  </div>
                 </div>
+                
+                {/* Show suggested questions after the first AI message (welcome message) or greeting responses */}
+                {msg.sender === "AI" && (idx === 0 || msg.text.includes("Hi! I am an AI assistant for this demo")) && (
+                  <div className="px-3 py-2">
+                    <div className="text-xs text-gray-600 mb-2 font-medium">Suggested questions:</div>
+                    <div className="flex flex-wrap gap-2">
+                      {(suggestedQuestions.length > 0 ? suggestedQuestions : [
+                        "How do CRM action agents enhance sales teams?",
+                        "What are the differences between knowledge and action agents?", 
+                        "Why are AI agents not a threat to sales reps?",
+                        "What steps should RevOps take to implement AI agents?"
+                      ]).slice(0, 4).map((question, questionIndex) => (
+                        <button
+                          key={questionIndex}
+                          onClick={() => handleSuggestedQuestionClick(question)}
+                          className="text-xs bg-blue-50 border border-blue-200 rounded-full px-3 py-1 hover:bg-blue-100 hover:border-blue-300 transition-colors duration-200 text-blue-700"
+                          disabled={isTyping}
+                        >
+                          {question}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
             
@@ -617,6 +710,7 @@ const QudemoPreview = ({ qudemo, onClose }) => {
             
             <div ref={messagesEndRef} />
           </div>
+
 
           {/* Input */}
           <div className="px-3 py-1 border-t flex items-center gap-2">
