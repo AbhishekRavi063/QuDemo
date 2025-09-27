@@ -19,16 +19,11 @@ const CreateQuDemo = () => {
   const [lastSubmissionTime, setLastSubmissionTime] = useState(0); // Track last submission time
   const [urlValidationErrors, setUrlValidationErrors] = useState({}); // Track validation errors for each URL
   const [documents, setDocuments] = useState([]);
+  const [selectedFiles, setSelectedFiles] = useState([]);
   const [createdQudemoId, setCreatedQudemoId] = useState(null);
   
   // Video processing notification state
 
-  // New state for Product Knowledge Sources
-  const [websiteUrl, setWebsiteUrl] = useState("");
-  const [isProcessingKnowledge, setIsProcessingKnowledge] = useState(false);
-  const [knowledgeSources, setKnowledgeSources] = useState([]);
-  const [currentTaskId, setCurrentTaskId] = useState(null);
-  const [progressInterval, setProgressInterval] = useState(null);
 
   // const handleSourceChange = (index, value) => { // Not used
   //   const updated = [...sources];
@@ -99,17 +94,33 @@ const CreateQuDemo = () => {
 
   // Check if all video URLs are valid or if we have documents
   const areAllUrlsValid = () => {
-    // If we have documents, we don't need videos
-    if (documents.length > 0) return true;
+    console.log('🔍 CreateQuDemo: areAllUrlsValid called');
+    console.log('🔍 documents.length:', documents.length);
+    console.log('🔍 selectedFiles.length:', selectedFiles.length);
+    console.log('🔍 documents:', documents);
+    console.log('🔍 selectedFiles:', selectedFiles);
+    console.log('🔍 videoUrls:', videoUrls);
+    
+    // If we have documents (uploaded) or selected files, we don't need videos
+    if (documents.length > 0 || selectedFiles.length > 0) {
+      console.log('✅ Valid: Has documents or selected files');
+      return true;
+    }
     
     // If we have videos, they must be valid
-    if (videoUrls.length === 0) return false;
+    if (videoUrls.length === 0) {
+      console.log('❌ Invalid: No videos and no documents/files');
+      return false;
+    }
     
-    return videoUrls.every((url, index) => {
+    const isValid = videoUrls.every((url, index) => {
       if (!url.trim()) return false;
       const validation = validateVideoUrl(url);
       return validation.isValid;
     });
+    
+    console.log('🔍 Video validation result:', isValid);
+    return isValid;
   };
 
   const addVideoUrlField = () => {
@@ -138,10 +149,6 @@ const CreateQuDemo = () => {
     });
   };
 
-  // Knowledge Sources handlers
-  const handleWebsiteUrlChange = (e) => {
-    setWebsiteUrl(e.target.value);
-  };
 
 
   // Progress tracking functions - COMMENTED OUT (not used)
@@ -262,10 +269,19 @@ const CreateQuDemo = () => {
       // Validate video URLs
       const validVideoUrls = videoUrls.filter(url => url.trim());
       
-      // Check if we have either videos or documents
+      // Check if we have either videos or documents/files
       const hasDocuments = documents.length > 0;
+      const hasSelectedFiles = selectedFiles.length > 0;
       
-      if (validVideoUrls.length === 0 && !hasDocuments) {
+      console.log('🔍 Form validation:', {
+        validVideoUrls: validVideoUrls.length,
+        hasDocuments,
+        hasSelectedFiles,
+        documents: documents.length,
+        selectedFiles: selectedFiles.length
+      });
+      
+      if (validVideoUrls.length === 0 && !hasDocuments && !hasSelectedFiles) {
         setError("Please provide at least one video URL or upload documents to create a QuDemo.");
         return;
       }
@@ -570,39 +586,16 @@ const CreateQuDemo = () => {
             </div>
           </div>
 
-        {/* PRODUCT KNOWLEDGE SOURCES */}
+        {/* Document Upload Section */}
         <div className="mt-6">
-          <label className="block font-medium text-gray-700 mb-2">
-            Product Knowledge Sources
-          </label>
-          <p className="text-sm text-gray-600 mb-4">
-            Add website content and documents to enhance your AI assistant's knowledge base.
-          </p>
-
-          <div className="mb-6 p-4 border border-gray-200 rounded-lg">
-            <h4 className="font-medium text-gray-800 mb-2">🌐 Website Knowledge</h4>
-            <p className="text-sm text-gray-600 mb-3">
-              Enter a website URL to automatically scrape and add to your knowledge base. 
-              <span className="text-blue-600 font-medium"> This will be processed automatically when you save the QuDemo.</span>
-            </p>
-            <input
-              type="text"
-              value={websiteUrl}
-              onChange={handleWebsiteUrlChange}
-              placeholder="https://example.com/faq or https://docs.example.com"
-              className="w-full border border-gray-300 px-4 py-2 rounded-lg"
-            />
-          </div>
-
-          {/* Document Upload Section */}
           <div className="mb-6 p-4 border border-gray-200 rounded-lg">
             <DocumentUpload 
               qudemoId={createdQudemoId}
               companyName={company?.name}
               onDocumentsChange={setDocuments}
+              onSelectedFilesChange={setSelectedFiles}
             />
           </div>
-
         </div>
 
           {/* Submit Button */}

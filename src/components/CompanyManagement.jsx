@@ -52,10 +52,10 @@ const CompanyManagement = () => {
 
     if (!formData.name.trim()) {
       newErrors.name = 'Company name is required';
-    } else if (formData.name.length < 2) {
+    } else if (formData.name.trim().length < 2) {
       newErrors.name = 'Company name must be at least 2 characters';
-    } else if (!/^[a-zA-Z0-9_-]+$/.test(formData.name)) {
-      newErrors.name = 'Company name can only contain letters, numbers, hyphens, and underscores';
+    } else if (formData.name.trim().length > 100) {
+      newErrors.name = 'Company name must be less than 100 characters';
     }
 
     if (formData.website && !/^https?:\/\/.+/.test(formData.website)) {
@@ -310,13 +310,13 @@ const CompanyManagement = () => {
                     className={`mt-1 block w-full px-3 py-2 border ${
                       formErrors.name ? 'border-red-300' : 'border-gray-300'
                     } rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500`}
-                    placeholder="My Company (e.g., acme-corp)"
+                    placeholder="My Company (e.g., Acme Corp, settle.co)"
                   />
                   {formErrors.name && (
                     <p className="mt-1 text-sm text-red-600">{formErrors.name}</p>
                   )}
                   <p className="mt-1 text-sm text-gray-500">
-                    Use letters, numbers, hyphens, and underscores only. This will be used for all internal mappings.
+                    Enter your organization name. Spaces, dots, and special characters are allowed.
                   </p>
                 </div>
 

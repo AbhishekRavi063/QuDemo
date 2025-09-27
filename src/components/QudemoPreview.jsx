@@ -154,6 +154,7 @@ const QudemoPreview = ({ qudemo, onClose }) => {
   const [videoRefreshKey, setVideoRefreshKey] = useState(0); // Force video player refresh
   const [suggestedQuestions, setSuggestedQuestions] = useState([]);
   const [loadingSuggestedQuestions, setLoadingSuggestedQuestions] = useState(false);
+  const [showAllQuestions, setShowAllQuestions] = useState(false);
   const messagesEndRef = useRef(null);
   const loomIframeRef = useRef();
   const videoPlayerRef = useRef(null);
@@ -198,19 +199,26 @@ const QudemoPreview = ({ qudemo, onClose }) => {
     }
   }, [messages, chatKey]);
 
-  // Fetch suggested questions when component mounts
+  // Clear suggested questions and fetch new ones when QuDemo changes
   useEffect(() => {
     if (qudemo?.id) {
       console.log('🚀 QudemoPreview: Starting to fetch suggested questions for:', qudemo.id);
+      // Clear old suggested questions immediately
+      setSuggestedQuestions([]);
+      setLoadingSuggestedQuestions(true);
+      setShowAllQuestions(false); // Reset show all state
       fetchSuggestedQuestions();
     } else {
       console.log('❌ QudemoPreview: No qudemo.id available');
+      // Clear suggested questions when no QuDemo
+      setSuggestedQuestions([]);
+      setLoadingSuggestedQuestions(false);
+      setShowAllQuestions(false);
     }
   }, [qudemo?.id]);
 
   const fetchSuggestedQuestions = async () => {
     try {
-      setLoadingSuggestedQuestions(true);
       console.log('🔍 Fetching suggested questions for QuDemo:', qudemo.id);
       
       const token = localStorage.getItem('accessToken');
@@ -678,21 +686,37 @@ const QudemoPreview = ({ qudemo, onClose }) => {
                   <div className="px-3 py-2">
                     <div className="text-xs text-gray-600 mb-2 font-medium">Suggested questions:</div>
                     <div className="flex flex-wrap gap-2">
-                      {(suggestedQuestions.length > 0 ? suggestedQuestions : [
-                        "How do CRM action agents enhance sales teams?",
-                        "What are the differences between knowledge and action agents?", 
-                        "Why are AI agents not a threat to sales reps?",
-                        "What steps should RevOps take to implement AI agents?"
-                      ]).slice(0, 4).map((question, questionIndex) => (
+                      {(() => {
+                        const questions = suggestedQuestions.length > 0 ? suggestedQuestions : [
+                          "How do CRM action agents enhance sales teams?",
+                          "What are the differences between knowledge and action agents?", 
+                          "Why are AI agents not a threat to sales reps?",
+                          "What steps should RevOps take to implement AI agents?"
+                        ];
+                        const displayQuestions = showAllQuestions ? questions : questions.slice(0, 4);
+                        
+                        return displayQuestions.map((question, questionIndex) => (
+                          <button
+                            key={questionIndex}
+                            onClick={() => handleSuggestedQuestionClick(question)}
+                            className="text-xs bg-blue-50 border border-blue-200 rounded-full px-3 py-1 hover:bg-blue-100 hover:border-blue-300 transition-colors duration-200 text-blue-700"
+                            disabled={isTyping}
+                          >
+                            {question}
+                          </button>
+                        ));
+                      })()}
+                      
+                      {/* Show "More..." button if there are more than 4 questions and not showing all */}
+                      {suggestedQuestions.length > 4 && !showAllQuestions && (
                         <button
-                          key={questionIndex}
-                          onClick={() => handleSuggestedQuestionClick(question)}
-                          className="text-xs bg-blue-50 border border-blue-200 rounded-full px-3 py-1 hover:bg-blue-100 hover:border-blue-300 transition-colors duration-200 text-blue-700"
+                          onClick={() => setShowAllQuestions(true)}
+                          className="text-xs bg-gray-100 border border-gray-300 rounded-full px-3 py-1 hover:bg-gray-200 hover:border-gray-400 transition-colors duration-200 text-gray-700"
                           disabled={isTyping}
                         >
-                          {question}
+                          More...
                         </button>
-                      ))}
+                      )}
                     </div>
                   </div>
                 )}

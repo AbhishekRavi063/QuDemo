@@ -150,6 +150,7 @@ const PublicQudemoShare = () => {
   const [videoRefreshKey, setVideoRefreshKey] = useState(0);
   const [suggestedQuestions, setSuggestedQuestions] = useState([]);
   const [loadingSuggestedQuestions, setLoadingSuggestedQuestions] = useState(false);
+  const [showAllQuestions, setShowAllQuestions] = useState(false);
   const messagesEndRef = useRef(null);
   const loomIframeRef = useRef();
   const videoPlayerRef = useRef(null);
@@ -219,16 +220,26 @@ const PublicQudemoShare = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Fetch suggested questions when qudemo is loaded
+  // Clear suggested questions and fetch new ones when QuDemo or company changes
   useEffect(() => {
     if (qudemo?.id && company?.name) {
+      console.log('🚀 PublicQudemoShare: Starting to fetch suggested questions for:', qudemo.id, 'Company:', company.name);
+      // Clear old suggested questions immediately
+      setSuggestedQuestions([]);
+      setLoadingSuggestedQuestions(true);
+      setShowAllQuestions(false); // Reset show all state
       fetchSuggestedQuestions();
+    } else {
+      console.log('❌ PublicQudemoShare: Missing qudemo.id or company.name');
+      // Clear suggested questions when missing data
+      setSuggestedQuestions([]);
+      setLoadingSuggestedQuestions(false);
+      setShowAllQuestions(false);
     }
   }, [qudemo?.id, company?.name]);
 
   const fetchSuggestedQuestions = async () => {
     try {
-      setLoadingSuggestedQuestions(true);
       console.log('🔍 Fetching suggested questions for QuDemo:', qudemo.id, 'Company:', company.name);
       const response = await axios.get(getNodeApiUrl(`/api/qudemos/${qudemo.id}/suggested-questions`), {
         headers: {
@@ -646,16 +657,31 @@ const PublicQudemoShare = () => {
                       <div className="bg-white border rounded-xl px-4 py-2 max-w-[80%] text-gray-800">
                         <div className="text-xs text-gray-600 mb-2 font-medium">Suggested questions:</div>
                         <div className="flex flex-wrap gap-2">
-                          {suggestedQuestions.slice(0, 4).map((question, index) => (
+                          {(() => {
+                            const displayQuestions = showAllQuestions ? suggestedQuestions : suggestedQuestions.slice(0, 4);
+                            
+                            return displayQuestions.map((question, index) => (
+                              <button
+                                key={index}
+                                onClick={() => handleSuggestedQuestionClick(question)}
+                                className="text-xs bg-blue-50 border border-blue-200 rounded-full px-3 py-1 hover:bg-blue-100 hover:border-blue-300 transition-colors duration-200 text-blue-700"
+                                disabled={isTyping}
+                              >
+                                {question}
+                              </button>
+                            ));
+                          })()}
+                          
+                          {/* Show "More..." button if there are more than 4 questions and not showing all */}
+                          {suggestedQuestions.length > 4 && !showAllQuestions && (
                             <button
-                              key={index}
-                              onClick={() => handleSuggestedQuestionClick(question)}
-                              className="text-xs bg-blue-50 border border-blue-200 rounded-full px-3 py-1 hover:bg-blue-100 hover:border-blue-300 transition-colors duration-200 text-blue-700"
+                              onClick={() => setShowAllQuestions(true)}
+                              className="text-xs bg-gray-100 border border-gray-300 rounded-full px-3 py-1 hover:bg-gray-200 hover:border-gray-400 transition-colors duration-200 text-gray-700"
                               disabled={isTyping}
                             >
-                              {question}
+                              More...
                             </button>
-                          ))}
+                          )}
                         </div>
                       </div>
                     </div>
