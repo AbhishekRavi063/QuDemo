@@ -608,7 +608,7 @@ const Qudemos = () => {
                     </div>
                     <div className="flex items-center space-x-1">
                       <DocumentTextIcon className="w-4 h-4" />
-                      <span>{qudemo.knowledge_count || 0}</span>
+                      <span>{qudemo.document_count || 0}</span>
                     </div>
                   </div>
                   <div className="flex items-center space-x-1">

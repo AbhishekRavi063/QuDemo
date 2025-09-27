@@ -230,7 +230,7 @@ const PublicQudemoShare = () => {
     try {
       setLoadingSuggestedQuestions(true);
       console.log('🔍 Fetching suggested questions for QuDemo:', qudemo.id, 'Company:', company.name);
-      const response = await axios.get(`${getNodeApiUrl()}/api/qudemos/${qudemo.id}/suggested-questions`, {
+      const response = await axios.get(getNodeApiUrl(`/api/qudemos/${qudemo.id}/suggested-questions`), {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
         }

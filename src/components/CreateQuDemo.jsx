@@ -5,6 +5,7 @@ import {
 import { useCompany } from "../context/CompanyContext";
 import { getNodeApiUrl } from "../config/api";
 import { useNavigate } from "react-router-dom";
+import DocumentUpload from "./DocumentUpload";
 
 const CreateQuDemo = () => {
   const { company, isLoading } = useCompany();
@@ -17,17 +18,17 @@ const CreateQuDemo = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [lastSubmissionTime, setLastSubmissionTime] = useState(0); // Track last submission time
   const [urlValidationErrors, setUrlValidationErrors] = useState({}); // Track validation errors for each URL
+  const [documents, setDocuments] = useState([]);
+  const [createdQudemoId, setCreatedQudemoId] = useState(null);
   
   // Video processing notification state
 
   // New state for Product Knowledge Sources
-  // const [websiteUrl, setWebsiteUrl] = useState(""); // Not used
-  // const [documentFile, setDocumentFile] = useState(null); // Not used
-  // const [isProcessingKnowledge, setIsProcessingKnowledge] = useState(false); // Not used
-  // const [knowledgeSources, setKnowledgeSources] = useState([]); // Not used
-  // const [currentTaskId, setCurrentTaskId] = useState(null); // Not used
-  // const [progressInterval, setProgressInterval] = useState(null); // Not used
-  // const documentInputRef = useRef(null); // Not used
+  const [websiteUrl, setWebsiteUrl] = useState("");
+  const [isProcessingKnowledge, setIsProcessingKnowledge] = useState(false);
+  const [knowledgeSources, setKnowledgeSources] = useState([]);
+  const [currentTaskId, setCurrentTaskId] = useState(null);
+  const [progressInterval, setProgressInterval] = useState(null);
 
   // const handleSourceChange = (index, value) => { // Not used
   //   const updated = [...sources];
@@ -96,8 +97,12 @@ const CreateQuDemo = () => {
     };
   };
 
-  // Check if all video URLs are valid
+  // Check if all video URLs are valid or if we have documents
   const areAllUrlsValid = () => {
+    // If we have documents, we don't need videos
+    if (documents.length > 0) return true;
+    
+    // If we have videos, they must be valid
     if (videoUrls.length === 0) return false;
     
     return videoUrls.every((url, index) => {
@@ -133,17 +138,11 @@ const CreateQuDemo = () => {
     });
   };
 
-  // Knowledge Sources handlers - COMMENTED OUT (not used)
-  // const handleWebsiteUrlChange = (e) => {
-  //   setWebsiteUrl(e.target.value);
-  // };
+  // Knowledge Sources handlers
+  const handleWebsiteUrlChange = (e) => {
+    setWebsiteUrl(e.target.value);
+  };
 
-  // const handleDocumentUpload = (e) => {
-  //   const file = e.target.files[0];
-  //   if (file) {
-  //     setDocumentFile(file);
-  //   }
-  // };
 
   // Progress tracking functions - COMMENTED OUT (not used)
   // const startProgressTracking = (taskId) => {
@@ -186,49 +185,6 @@ const CreateQuDemo = () => {
   //   setScrapingProgress(null);
   // };
 
-  // const processDocumentKnowledge = async () => { // Not used
-  //   if (!documentFile) {
-  //     setError("Please select a document file");
-  //     return;
-  //   }
-
-  //   setIsProcessingKnowledge(true);
-  //   setError("");
-  //   setSuccess("");
-
-  //   try {
-  //     const token = localStorage.getItem('accessToken');
-  //     const formData = new FormData();
-  //     formData.append('file', documentFile);
-  //     formData.append('companyName', company.name);
-
-  //     const response = await fetch(getNodeApiUrl('/api/knowledge/process-document'), {
-  //       method: 'POST',
-  //       headers: {
-  //         'Authorization': `Bearer ${token}`
-  //       },
-  //       body: formData
-  //     });
-
-  //     const data = await response.json();
-
-  //     if (response.ok && data.success) {
-  //       setSuccess("Document knowledge processed successfully!");
-  //       setDocumentFile(null);
-  //       if (documentInputRef.current) {
-  //         documentInputRef.current.value = "";
-  //       }
-  //       // Refresh knowledge sources list
-  //       fetchKnowledgeSources();
-  //     } else {
-  //       setError(data.error || "Failed to process document");
-  //     }
-  //   } catch (err) {
-  //     setError("Network error. Please try again.");
-  //   } finally {
-  //     setIsProcessingKnowledge(false);
-  //   }
-  // };
 
   // const fetchKnowledgeSources = async () => { // Not used
   //   try {
@@ -306,8 +262,11 @@ const CreateQuDemo = () => {
       // Validate video URLs
       const validVideoUrls = videoUrls.filter(url => url.trim());
       
-      if (validVideoUrls.length === 0) {
-        setError("Please provide at least one video URL to create a QuDemo.");
+      // Check if we have either videos or documents
+      const hasDocuments = documents.length > 0;
+      
+      if (validVideoUrls.length === 0 && !hasDocuments) {
+        setError("Please provide at least one video URL or upload documents to create a QuDemo.");
         return;
       }
 
@@ -357,8 +316,13 @@ const CreateQuDemo = () => {
       }
 
       const qudemoId = createResult.data.id;
+      setCreatedQudemoId(qudemoId); // Set the created QuDemo ID
 
-      setSuccess("Please wait, your video is now processing. This may take a few minutes. Once it's ready, you'll be redirected to your Qudemos page.");
+      if (validVideoUrls.length > 0) {
+        setSuccess("Please wait, your video is now processing. This may take a few minutes. Once it's ready, you'll be redirected to your Qudemos page.");
+      } else {
+        setSuccess("QuDemo created successfully! Documents will be processed automatically.");
+      }
 
       // Process all content automatically using the new endpoint
       
@@ -606,8 +570,7 @@ const CreateQuDemo = () => {
             </div>
           </div>
 
-        {/* PRODUCT KNOWLEDGE SOURCES - TEMPORARILY COMMENTED OUT */}
-        {/*
+        {/* PRODUCT KNOWLEDGE SOURCES */}
         <div className="mt-6">
           <label className="block font-medium text-gray-700 mb-2">
             Product Knowledge Sources
@@ -631,32 +594,16 @@ const CreateQuDemo = () => {
             />
           </div>
 
+          {/* Document Upload Section */}
           <div className="mb-6 p-4 border border-gray-200 rounded-lg">
-            <h4 className="font-medium text-gray-800 mb-2">📄 Document Upload</h4>
-            <p className="text-sm text-gray-600 mb-3">
-              Upload PDF, DOC, DOCX, TXT, or CSV files to add to your knowledge base.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-2">
-              <input
-                type="file"
-                ref={documentInputRef}
-                onChange={handleDocumentUpload}
-                accept=".pdf,.doc,.docx,.txt,.csv"
-                className="flex-1 border border-gray-300 px-4 py-2 rounded-lg"
-              />
-              <button
-                type="button"
-                onClick={processDocumentKnowledge}
-                disabled={isProcessingKnowledge || !documentFile}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-              >
-                {isProcessingKnowledge ? 'Processing...' : 'Process Document'}
-              </button>
-            </div>
+            <DocumentUpload 
+              qudemoId={createdQudemoId}
+              companyName={company?.name}
+              onDocumentsChange={setDocuments}
+            />
           </div>
 
         </div>
-        */}
 
           {/* Submit Button */}
           <button

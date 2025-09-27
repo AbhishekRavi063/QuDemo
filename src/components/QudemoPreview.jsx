@@ -217,7 +217,7 @@ const QudemoPreview = ({ qudemo, onClose }) => {
       console.log('🔑 Access token exists:', !!token);
       console.log('🔑 Token preview:', token ? token.substring(0, 20) + '...' : 'No token');
       
-      const apiUrl = `${getNodeApiUrl()}/api/qudemos/${qudemo.id}/suggested-questions`;
+      const apiUrl = getNodeApiUrl(`/api/qudemos/${qudemo.id}/suggested-questions`);
       console.log('🌐 API URL:', apiUrl);
       
       const response = await axios.get(apiUrl, {
