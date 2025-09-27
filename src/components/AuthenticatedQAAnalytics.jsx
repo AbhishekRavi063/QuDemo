@@ -40,7 +40,7 @@ const AuthenticatedQAAnalytics = ({ companyId }) => {
 
     } catch (err) {
       console.error('Error fetching authenticated Q&A analytics:', err);
-      setError('Failed to load analytics data');
+      setError('Failed to load analytics data.');
     } finally {
       setLoading(false);
     }
