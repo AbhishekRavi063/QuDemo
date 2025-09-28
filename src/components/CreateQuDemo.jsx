@@ -23,7 +23,31 @@ const CreateQuDemo = () => {
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [createdQudemoId, setCreatedQudemoId] = useState(null);
   
+  // Error popup state
+  const [showErrorPopup, setShowErrorPopup] = useState(false);
+  const [errorPopupData, setErrorPopupData] = useState(null);
+  
   // Video processing notification state
+  
+  // Handle error popup close and redirect
+  const handleErrorPopupClose = () => {
+    setShowErrorPopup(false);
+    setErrorPopupData(null);
+    
+    // Reset form
+    setTitle("");
+    setVideoUrls([""]);
+    setWebsiteUrls([""]);
+    setSources([""]);
+    setDocuments([]);
+    setSelectedFiles([]);
+    setCreatedQudemoId(null);
+    
+    // Navigate to qudemos page after closing popup
+    setTimeout(() => {
+      navigate('/qudemos');
+    }, 100);
+  };
 
 
   // const handleSourceChange = (index, value) => { // Not used
@@ -445,78 +469,53 @@ const CreateQuDemo = () => {
 
           const contentResult = await contentResponse.json();
           
-          if (contentResult.success) {
-            const { videos_processed, website_processed, total_chunks, processing_order } = contentResult;
+          // Check for processing errors first, regardless of success status
+          if (contentResult.processing_errors && contentResult.processing_errors.length > 0) {
+            // Handle processing errors with popup
+            const { processing_errors, has_anti_bot_protection } = contentResult;
             
-            let successMessage = "🎉 All content processed successfully!";
-            if (videos_processed > 0) {
-              successMessage += `\n📹 ${videos_processed} video(s) processed`;
-            }
-            if (website_processed) {
-              successMessage += `\n🌐 Website processed (${total_chunks} chunks created)`;
-            }
-            if (processing_order.length > 0) {
-              successMessage += `\n⏱️ Processing order: ${processing_order.join(' → ')}`;
-            }
-            
-            // Hide the processing message and show completion
-            setSuccess("");
-          } else {
-            // Handle processing failure with detailed error message
-            const { processing_errors, has_anti_bot_protection } = contentResult; // message not used
-            
-            let errorMessage = "❌ Content processing failed!\n\n";
+            let errorMessage = "❌ Some content failed to process!\n\n";
             
             // Show specific failed content with detailed reasons
-            if (processing_errors && processing_errors.length > 0) {
-              errorMessage += "📋 Failed Content Details:\n\n";
-              
-              processing_errors.forEach((error, index) => {
-                if (error.type === 'website') {
-                  errorMessage += `🌐 WEBSITE FAILED:\n`;
-                  errorMessage += `   URL: ${error.url}\n`;
-                  errorMessage += `   Reason: ${error.error}\n`;
-                  
-                  if (error.error_type === 'crm_bot_detection') {
-                    errorMessage += `   🏢 CRM Site with Bot Protection\n`;
-                    errorMessage += `   💡 Suggestion: Upload documents instead of scraping\n`;
-                  } else if (error.error_type) {
-                    errorMessage += `   Error Type: ${error.error_type.toUpperCase()}\n`;
-                  }
-                  
-                  if (error.protection_detected) {
-                    errorMessage += `   🛡️ Anti-Bot Protection: YES\n`;
-                  }
-                  
-                  errorMessage += `\n`;
-                  
-                } else if (error.type === 'video') {
-                  errorMessage += `📹 VIDEO FAILED:\n`;
-                  errorMessage += `   URL: ${error.url}\n`;
-                  errorMessage += `   Reason: ${error.error}\n`;
-                  
-                  if (error.error_type) {
-                    errorMessage += `   Error Type: ${error.error_type.toUpperCase()}\n`;
-                  }
-                  
-                  errorMessage += `\n`;
+            errorMessage += "📋 Failed Content Details:\n\n";
+            
+            processing_errors.forEach((error, index) => {
+              if (error.type === 'website') {
+                errorMessage += `🌐 WEBSITE FAILED:\n`;
+                errorMessage += `   URL: ${error.url}\n`;
+                errorMessage += `   Reason: ${error.error}\n`;
+                
+                if (error.error_type === 'crm_bot_detection') {
+                  errorMessage += `   🏢 CRM Site with Bot Protection\n`;
+                  errorMessage += `   💡 Suggestion: Upload documents instead of scraping\n`;
+                } else if (error.error_type) {
+                  errorMessage += `   Error Type: ${error.error_type.toUpperCase()}\n`;
                 }
-              });
-            }
+                
+                if (error.protection_detected) {
+                  errorMessage += `   🛡️ Anti-Bot Protection: YES\n`;
+                }
+                
+                errorMessage += `\n`;
+                
+              } else if (error.type === 'video') {
+                errorMessage += `📹 VIDEO FAILED:\n`;
+                errorMessage += `   URL: ${error.url}\n`;
+                errorMessage += `   Reason: ${error.error}\n`;
+                
+                if (error.error_type) {
+                  errorMessage += `   Error Type: ${error.error_type.toUpperCase()}\n`;
+                }
+                
+                errorMessage += `\n`;
+              }
+            });
             
-            // Add general anti-bot protection notice if detected
-            if (has_anti_bot_protection) {
-              errorMessage += "🛡️ Anti-Bot Protection Summary:\n";
-              errorMessage += "One or more websites have security measures that prevent automated scraping.\n";
-              errorMessage += "This is common with sites using Cloudflare, reCAPTCHA, or similar protection.\n\n";
-            }
-            
-            // Add helpful suggestions based on what failed
-            errorMessage += "💡 What you can do:\n";
-            
+            // Add suggestions based on error types
             const hasWebsiteErrors = processing_errors?.some(e => e.type === 'website');
             const hasVideoErrors = processing_errors?.some(e => e.type === 'video');
             
+            errorMessage += "💡 What you can do:\n";
             if (hasWebsiteErrors && !hasVideoErrors) {
               const hasCrmErrors = processing_errors?.some(e => e.type === 'website' && e.error_type === 'crm_bot_detection');
               
@@ -543,15 +542,43 @@ const CreateQuDemo = () => {
               errorMessage += "• Contact support if you need assistance\n";
             }
             
-            errorMessage += "\n⚠️ QuDemo will not be created without successful content.";
+            errorMessage += "\n⚠️ QuDemo was created but some content failed to process.";
             
-            // Show error notification and don't redirect
-            setError(errorMessage);
-            return; // Don't proceed with navigation
+            // Show error popup instead of inline error
+            setErrorPopupData({
+              title: "Content Processing Issues",
+              message: errorMessage,
+              processingErrors: processing_errors,
+              hasAntiBotProtection: has_anti_bot_protection
+            });
+            setShowErrorPopup(true);
+            
+            // Exit early to prevent success flow from executing
+            return;
+          }
+          
+          // If no processing errors, proceed with success flow
+          if (contentResult.success) {
+            const { videos_processed, website_processed, total_chunks, processing_order } = contentResult;
+            
+            let successMessage = "🎉 All content processed successfully!";
+            if (videos_processed > 0) {
+              successMessage += `\n📹 ${videos_processed} video(s) processed`;
+            }
+            if (website_processed) {
+              successMessage += `\n🌐 Website processed (${total_chunks} chunks created)`;
+            }
+            if (processing_order.length > 0) {
+              successMessage += `\n⏱️ Processing order: ${processing_order.join(' → ')}`;
+            }
+            
+            // Hide the processing message and show completion
+            setSuccess("");
           }
         } catch (contentError) {
           console.error('❌ Content processing error:', contentError);
           setError(`Content processing failed: ${contentError.message}. The qudemo was created but content processing needs to be retried.`);
+          return; // Exit early to prevent success flow from executing
         }
       }
 
@@ -561,8 +588,11 @@ const CreateQuDemo = () => {
       // Reset form
       setTitle("");
       setVideoUrls([""]);
+      setWebsiteUrls([""]);
       setSources([""]);
-      // setWebsiteUrl(""); // Not used
+      setDocuments([]);
+      setSelectedFiles([]);
+      setCreatedQudemoId(null);
       
       // Navigate to qudemos page after a short delay to show success message
       setTimeout(() => {
@@ -847,6 +877,116 @@ const CreateQuDemo = () => {
           </div>
         )}
       </div>
+      
+      {/* Error Popup Modal */}
+      {showErrorPopup && errorPopupData && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                <svg className="w-6 h-6 text-yellow-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+                {errorPopupData.title}
+              </h3>
+              <button
+                onClick={handleErrorPopupClose}
+                className="text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-full p-1"
+              >
+                <XMarkIcon className="w-6 h-6" />
+              </button>
+            </div>
+            
+            {/* Content */}
+            <div className="mb-6">
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <h4 className="text-sm font-medium text-yellow-800">
+                      Processing Issues Detected
+                    </h4>
+                    <div className="mt-2 text-sm text-yellow-700">
+                      <p>Some content failed to process, but your QuDemo was created successfully with the content that did work.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Error Details */}
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h4 className="text-sm font-medium text-gray-900 mb-3">Failed Content Details:</h4>
+                <div className="space-y-3">
+                  {errorPopupData.processingErrors?.map((error, index) => (
+                    <div key={index} className="border border-gray-200 rounded-lg p-3">
+                      {error.type === 'website' && (
+                        <div>
+                          <div className="flex items-center mb-2">
+                            <svg className="w-4 h-4 text-blue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9v-9m0-9v9" />
+                            </svg>
+                            <span className="font-medium text-gray-900">Website Failed</span>
+                          </div>
+                          <div className="text-sm text-gray-600 mb-2">
+                            <strong>URL:</strong> {error.url}
+                          </div>
+                          <div className="text-sm text-gray-600 mb-2">
+                            <strong>Reason:</strong> {error.error}
+                          </div>
+                          {error.error_type === 'crm_bot_detection' && (
+                            <div className="bg-red-50 border border-red-200 rounded p-2">
+                              <div className="flex items-center">
+                                <svg className="w-4 h-4 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                                </svg>
+                                <span className="text-sm font-medium text-red-800">CRM Site with Bot Protection</span>
+                              </div>
+                              <p className="text-sm text-red-700 mt-1">
+                                💡 <strong>Suggestion:</strong> Upload documents instead of scraping this website
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      {error.type === 'video' && (
+                        <div>
+                          <div className="flex items-center mb-2">
+                            <svg className="w-4 h-4 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                            </svg>
+                            <span className="font-medium text-gray-900">Video Failed</span>
+                          </div>
+                          <div className="text-sm text-gray-600 mb-2">
+                            <strong>URL:</strong> {error.url}
+                          </div>
+                          <div className="text-sm text-gray-600">
+                            <strong>Reason:</strong> {error.error}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            
+            {/* Footer */}
+            <div className="flex justify-end">
+              <button
+                onClick={handleErrorPopupClose}
+                className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+              >
+                Continue to QuDemos
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
