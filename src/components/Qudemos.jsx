@@ -599,23 +599,36 @@ const Qudemos = () => {
                   </button>
                 </div>
 
-                {/* Stats */}
-                <div className="flex items-center justify-between text-sm text-gray-500">
-                  <div className="flex items-center space-x-4">
-                    <div className="flex items-center space-x-1">
-                      <VideoCameraIcon className="w-4 h-4" />
-                      <span>{qudemo.video_count || 0}</span>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <DocumentTextIcon className="w-4 h-4" />
-                      <span>{qudemo.document_count || 0}</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <ClockIcon className="w-4 h-4" />
-                    <span>{getRelativeTime(qudemo.created_at)}</span>
-                  </div>
-                </div>
+                 {/* Stats */}
+                 <div className="flex items-center justify-between text-sm text-gray-500">
+                   <div className="flex items-center space-x-4">
+                     {/* Video count - keep as is */}
+                     <div className="flex items-center space-x-1">
+                       <VideoCameraIcon className="w-4 h-4" />
+                       <span>{qudemo.video_count || 0}</span>
+                     </div>
+                     
+                     {/* Document icon - only show if documents were processed */}
+                     {qudemo.document_count > 0 && (
+                       <div className="flex items-center">
+                         <DocumentTextIcon className="w-4 h-4" />
+                       </div>
+                     )}
+                     
+                     {/* Website icon - only show if websites were processed */}
+                     {qudemo.website_count > 0 && (
+                       <div className="flex items-center">
+                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9v-9m0-9v9" />
+                         </svg>
+                       </div>
+                     )}
+                   </div>
+                   <div className="flex items-center space-x-1">
+                     <ClockIcon className="w-4 h-4" />
+                     <span>{getRelativeTime(qudemo.created_at)}</span>
+                   </div>
+                 </div>
               </div>
             </div>
           ))}

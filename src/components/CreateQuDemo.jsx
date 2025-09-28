@@ -12,6 +12,7 @@ const CreateQuDemo = () => {
   const navigate = useNavigate();
   const [title, setTitle] = useState("");
   const [videoUrls, setVideoUrls] = useState([""]);
+  const [websiteUrls, setWebsiteUrls] = useState([""]);
   const [sources, setSources] = useState([""]);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -60,6 +61,26 @@ const CreateQuDemo = () => {
     }
   };
 
+  const handleWebsiteUrlChange = (index, value) => {
+    const updated = [...websiteUrls];
+    updated[index] = value;
+    setWebsiteUrls(updated);
+
+    // Real-time validation
+    if (value.trim()) {
+      const validation = validateWebsiteUrl(value);
+      setUrlValidationErrors(prev => ({
+        ...prev,
+        [`website_${index}`]: validation.isValid ? null : validation.error
+      }));
+    } else {
+      setUrlValidationErrors(prev => ({
+        ...prev,
+        [`website_${index}`]: null
+      }));
+    }
+  };
+
   // Link validation function
   const validateVideoUrl = (url) => {
     if (!url || !url.trim()) {
@@ -92,7 +113,30 @@ const CreateQuDemo = () => {
     };
   };
 
-  // Check if all video URLs are valid or if we have documents
+  // Website URL validation function
+  const validateWebsiteUrl = (url) => {
+    if (!url || !url.trim()) {
+      return { isValid: false, error: "Website URL is required" };
+    }
+
+    const trimmedUrl = url.trim();
+    
+    // Check if it's a valid URL format
+    try {
+      new URL(trimmedUrl);
+    } catch {
+      return { isValid: false, error: "Please enter a valid URL" };
+    }
+
+    // Check if it's HTTP or HTTPS
+    if (!trimmedUrl.startsWith('http://') && !trimmedUrl.startsWith('https://')) {
+      return { isValid: false, error: "URL must start with http:// or https://" };
+    }
+
+    return { isValid: true, type: 'website' };
+  };
+
+  // Check if all URLs are valid or if we have documents
   const areAllUrlsValid = () => {
     console.log('🔍 CreateQuDemo: areAllUrlsValid called');
     console.log('🔍 documents.length:', documents.length);
@@ -100,26 +144,39 @@ const CreateQuDemo = () => {
     console.log('🔍 documents:', documents);
     console.log('🔍 selectedFiles:', selectedFiles);
     console.log('🔍 videoUrls:', videoUrls);
+    console.log('🔍 websiteUrls:', websiteUrls);
     
-    // If we have documents (uploaded) or selected files, we don't need videos
+    // If we have documents (uploaded) or selected files, we don't need videos or websites
     if (documents.length > 0 || selectedFiles.length > 0) {
       console.log('✅ Valid: Has documents or selected files');
       return true;
     }
     
-    // If we have videos, they must be valid
-    if (videoUrls.length === 0) {
-      console.log('❌ Invalid: No videos and no documents/files');
+    // Check if we have any valid content (videos or websites)
+    const hasValidVideos = videoUrls.some(url => url.trim() && validateVideoUrl(url.trim()).isValid);
+    const hasValidWebsites = websiteUrls.some(url => url.trim() && validateWebsiteUrl(url.trim()).isValid);
+    
+    if (!hasValidVideos && !hasValidWebsites) {
+      console.log('❌ Invalid: No valid videos or websites and no documents/files');
       return false;
     }
     
-    const isValid = videoUrls.every((url, index) => {
-      if (!url.trim()) return false;
+    // Check video URLs (only if they have content)
+    const videoUrlsValid = videoUrls.every((url, index) => {
+      if (!url.trim()) return true; // Empty URLs are valid (optional)
       const validation = validateVideoUrl(url);
       return validation.isValid;
     });
     
-    console.log('🔍 Video validation result:', isValid);
+    // Check website URLs (only if they have content)
+    const websiteUrlsValid = websiteUrls.every((url, index) => {
+      if (!url.trim()) return true; // Empty URLs are valid (optional)
+      const validation = validateWebsiteUrl(url);
+      return validation.isValid;
+    });
+    
+    const isValid = videoUrlsValid && websiteUrlsValid;
+    console.log('🔍 Validation result - Videos:', videoUrlsValid, 'Websites:', websiteUrlsValid, 'Overall:', isValid);
     return isValid;
   };
 
@@ -149,7 +206,35 @@ const CreateQuDemo = () => {
     });
   };
 
+  const addWebsiteUrlField = () => {
+    setWebsiteUrls([...websiteUrls, ""]);
+  };
 
+  const removeWebsiteUrlField = (index) => {
+    const updated = websiteUrls.filter((_, i) => i !== index);
+    setWebsiteUrls(updated);
+    
+    // Clean up validation errors for removed field
+    setUrlValidationErrors(prev => {
+      const newErrors = { ...prev };
+      delete newErrors[`website_${index}`];
+      // Shift remaining errors down
+      const shiftedErrors = {};
+      Object.keys(newErrors).forEach(key => {
+        if (key.startsWith('website_')) {
+          const keyIndex = parseInt(key.replace('website_', ''));
+          if (keyIndex > index) {
+            shiftedErrors[`website_${keyIndex - 1}`] = newErrors[key];
+          } else if (keyIndex < index) {
+            shiftedErrors[`website_${keyIndex}`] = newErrors[key];
+          }
+        } else {
+          shiftedErrors[key] = newErrors[key];
+        }
+      });
+      return shiftedErrors;
+    });
+  };
 
   // Progress tracking functions - COMMENTED OUT (not used)
   // const startProgressTracking = (taskId) => {
@@ -266,23 +351,25 @@ const CreateQuDemo = () => {
         return;
       }
 
-      // Validate video URLs
+      // Validate video URLs and website URLs
       const validVideoUrls = videoUrls.filter(url => url.trim());
+      const validWebsiteUrls = websiteUrls.filter(url => url.trim());
       
-      // Check if we have either videos or documents/files
+      // Check if we have either videos, websites, or documents/files
       const hasDocuments = documents.length > 0;
       const hasSelectedFiles = selectedFiles.length > 0;
       
       console.log('🔍 Form validation:', {
         validVideoUrls: validVideoUrls.length,
+        validWebsiteUrls: validWebsiteUrls.length,
         hasDocuments,
         hasSelectedFiles,
         documents: documents.length,
         selectedFiles: selectedFiles.length
       });
       
-      if (validVideoUrls.length === 0 && !hasDocuments && !hasSelectedFiles) {
-        setError("Please provide at least one video URL or upload documents to create a QuDemo.");
+      if (validVideoUrls.length === 0 && validWebsiteUrls.length === 0 && !hasDocuments && !hasSelectedFiles) {
+        setError("Please provide at least one video URL, website URL, or upload documents to create a QuDemo.");
         return;
       }
 
@@ -291,6 +378,15 @@ const CreateQuDemo = () => {
         const validation = validateVideoUrl(validVideoUrls[i]);
         if (!validation.isValid) {
           setError(`Video ${i + 1}: ${validation.error}`);
+          return;
+        }
+      }
+
+      // Validate each website URL
+      for (let i = 0; i < validWebsiteUrls.length; i++) {
+        const validation = validateWebsiteUrl(validWebsiteUrls[i]);
+        if (!validation.isValid) {
+          setError(`Website ${i + 1}: ${validation.error}`);
           return;
         }
       }
@@ -306,6 +402,15 @@ const CreateQuDemo = () => {
             url: url.trim(),
             type: validation.type,
             title: `Video ${index + 1}`,
+            order: index + 1
+          };
+        }),
+        websites: validWebsiteUrls.map((url, index) => {
+          const validation = validateWebsiteUrl(url);
+          return {
+            url: url.trim(),
+            type: validation.type,
+            title: `Website ${index + 1}`,
             order: index + 1
           };
         }),
@@ -334,15 +439,15 @@ const CreateQuDemo = () => {
       const qudemoId = createResult.data.id;
       setCreatedQudemoId(qudemoId); // Set the created QuDemo ID
 
-      if (validVideoUrls.length > 0) {
-        setSuccess("Please wait, your video is now processing. This may take a few minutes. Once it's ready, you'll be redirected to your Qudemos page.");
+      if (validVideoUrls.length > 0 || validWebsiteUrls.length > 0) {
+        setSuccess("Please wait, your content is now processing. This may take a few minutes. Once it's ready, you'll be redirected to your Qudemos page.");
       } else {
         setSuccess("QuDemo created successfully! Documents will be processed automatically.");
       }
 
       // Process all content automatically using the new endpoint
       
-      if (validVideoUrls.length > 0) { // Removed websiteUrl check
+      if (validVideoUrls.length > 0 || validWebsiteUrls.length > 0) {
         try {
           const contentResponse = await fetch(getNodeApiUrl(`/api/qudemos/process-content/${company.name}/${qudemoId}`), {
             method: 'POST',
@@ -352,7 +457,7 @@ const CreateQuDemo = () => {
             },
             body: JSON.stringify({
               video_urls: validVideoUrls,
-              website_url: null // Not used
+              website_urls: validWebsiteUrls
             })
           });
 
@@ -390,7 +495,10 @@ const CreateQuDemo = () => {
                   errorMessage += `   URL: ${error.url}\n`;
                   errorMessage += `   Reason: ${error.error}\n`;
                   
-                  if (error.error_type) {
+                  if (error.error_type === 'crm_bot_detection') {
+                    errorMessage += `   🏢 CRM Site with Bot Protection\n`;
+                    errorMessage += `   💡 Suggestion: Upload documents instead of scraping\n`;
+                  } else if (error.error_type) {
                     errorMessage += `   Error Type: ${error.error_type.toUpperCase()}\n`;
                   }
                   
@@ -428,9 +536,17 @@ const CreateQuDemo = () => {
             const hasVideoErrors = processing_errors?.some(e => e.type === 'video');
             
             if (hasWebsiteErrors && !hasVideoErrors) {
-              errorMessage += "• Try a different website URL (avoid sites with anti-bot protection)\n";
-              errorMessage += "• Use only video content for this QuDemo\n";
-              errorMessage += "• Contact the website owner for API access\n";
+              const hasCrmErrors = processing_errors?.some(e => e.type === 'website' && e.error_type === 'crm_bot_detection');
+              
+              if (hasCrmErrors) {
+                errorMessage += "• Upload documents instead of scraping CRM sites\n";
+                errorMessage += "• CRM sites (Salesforce, SurveySparrow, Zendesk) often block scraping\n";
+                errorMessage += "• Try regular help/documentation sites instead\n";
+              } else {
+                errorMessage += "• Try a different website URL (avoid sites with anti-bot protection)\n";
+                errorMessage += "• Use only video content for this QuDemo\n";
+                errorMessage += "• Contact the website owner for API access\n";
+              }
             } else if (hasVideoErrors && !hasWebsiteErrors) {
               errorMessage += "• Check that your video URLs are valid and accessible\n";
               errorMessage += "• Try different video URLs (YouTube, Loom, Vimeo)\n";
@@ -582,6 +698,83 @@ const CreateQuDemo = () => {
                 className="text-blue-600 hover:underline text-sm font-medium flex items-center justify-center gap-1"
               >
                 <span className="text-blue-600 font-bold">+</span> Add another video
+              </button>
+            </div>
+          </div>
+
+        {/* Website URL */}
+        <div className="mt-6">
+            <label className="block text-sm font-bold text-gray-900 mb-2 text-left">
+                Website URLs to scrape
+            </label>
+            <p className="text-xs text-gray-500 mb-3 text-left">
+                Enter website URLs to scrape content from. Only same-domain paths will be scraped.
+            </p>
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-3">
+                <div className="flex items-start">
+                    <div className="flex-shrink-0">
+                        <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                        </svg>
+                    </div>
+                    <div className="ml-3">
+                        <h3 className="text-sm font-medium text-yellow-800">
+                            CRM Sites Warning
+                        </h3>
+                        <div className="mt-1 text-sm text-yellow-700">
+                            <p>
+                                <strong>CRM websites</strong> (like Salesforce, SurveySparrow, Zendesk) often have bot detection that prevents scraping. 
+                                If a website fails to scrape, try uploading documents instead.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {websiteUrls.map((url, index) => (
+              <div key={index} className="mb-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <input
+                    type="text"
+                    value={url}
+                    onChange={e => handleWebsiteUrlChange(index, e.target.value)}
+                    placeholder="https://example.com/help or https://docs.example.com"
+                    className={`flex-1 border px-4 py-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                      urlValidationErrors[`website_${index}`] 
+                        ? 'border-red-500 bg-red-50' 
+                        : url.trim() && !urlValidationErrors[`website_${index}`] 
+                          ? 'border-green-500 bg-green-50' 
+                          : 'border-gray-300'
+                    }`}
+                  />
+                  {websiteUrls.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeWebsiteUrlField(index)}
+                      className="text-red-500 hover:text-red-700 p-2"
+                    >
+                      <XMarkIcon className="h-5 w-5" />
+                    </button>
+                  )}
+                </div>
+                {urlValidationErrors[`website_${index}`] && (
+                  <p className="text-red-500 text-sm mt-1 ml-1">
+                    {urlValidationErrors[`website_${index}`]}
+                  </p>
+                )}
+                {url.trim() && !urlValidationErrors[`website_${index}`] && (
+                  <p className="text-green-600 text-sm mt-1 ml-1">
+                    ✓ Valid website URL
+                  </p>
+                )}
+              </div>
+            ))}
+            <div className="text-center mt-2">
+              <button
+                type="button"
+                onClick={addWebsiteUrlField}
+                className="text-blue-600 hover:underline text-sm font-medium flex items-center justify-center gap-1"
+              >
+                <span className="text-blue-600 font-bold">+</span> Add another website
               </button>
             </div>
           </div>
