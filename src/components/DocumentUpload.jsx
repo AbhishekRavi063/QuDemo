@@ -245,10 +245,7 @@ const DocumentUpload = ({ qudemoId, companyName, onDocumentsChange, onSelectedFi
       <div>
         <h4 className="font-medium text-gray-800 mb-2">📄 Document Upload</h4>
         <p className="text-sm text-gray-600 mb-3">
-          Upload PDF, DOC, DOCX, TXT, PPT, PPTX, or CSV files to add to your knowledge base.
-        </p>
-        <p className="text-xs text-gray-500 mb-3">
-          Note: Unlisted YouTube videos will not be processed.
+          Upload PDF files to add to your knowledge base.
         </p>
         
         {!qudemoId && (
@@ -262,7 +259,7 @@ const DocumentUpload = ({ qudemoId, companyName, onDocumentsChange, onSelectedFi
 
       {/* Drag and Drop Upload Area */}
       <div 
-        className={`relative border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer ${
+        className={`relative border-2 border-dashed rounded-lg p-4 text-center transition-colors cursor-pointer ${
           dragActive 
             ? 'border-blue-500 bg-blue-50' 
             : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
@@ -282,18 +279,18 @@ const DocumentUpload = ({ qudemoId, companyName, onDocumentsChange, onSelectedFi
           className="hidden"
         />
         
-        <div className="space-y-4">
-          <div className="mx-auto w-16 h-16 text-blue-500">
+        <div className="space-y-2">
+          <div className="mx-auto w-10 h-10 text-blue-500">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className="w-full h-full">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
             </svg>
           </div>
           
           <div>
-            <p className="text-xl font-semibold text-gray-800 mb-2">
+            <p className="text-lg font-semibold text-gray-800 mb-1">
               {dragActive ? 'Drop files here' : 'Click to upload files'}
             </p>
-            <p className="text-sm text-gray-600 mb-3">
+            <p className="text-sm text-gray-600 mb-2">
               or drag and drop your files here
             </p>
             <div className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
