@@ -19,7 +19,6 @@ const DocumentUpload = ({ qudemoId, companyName, onDocumentsChange, onSelectedFi
   // Auto-upload files when qudemoId becomes available
   useEffect(() => {
     if (qudemoId && files.length > 0 && !uploading) {
-      console.log('📁 Auto-uploading files now that qudemoId is available:', qudemoId);
       // Upload files sequentially to avoid overwhelming the server
       const autoUpload = async () => {
         setUploading(true);
@@ -69,8 +68,6 @@ const DocumentUpload = ({ qudemoId, companyName, onDocumentsChange, onSelectedFi
   };
 
   const handleFileChange = (e) => {
-    console.log('📁 DocumentUpload: handleFileChange called');
-    console.log('📁 Selected files:', e.target.files);
     handleFiles(e.target.files);
   };
 
@@ -95,11 +92,7 @@ const DocumentUpload = ({ qudemoId, companyName, onDocumentsChange, onSelectedFi
   };
 
   const handleClick = () => {
-    console.log('📁 DocumentUpload: handleClick called');
-    console.log('📁 fileInputRef.current:', fileInputRef.current);
-    
     if (fileInputRef.current) {
-      console.log('📁 Triggering file input click...');
       fileInputRef.current.click();
     } else {
       console.error('📁 fileInputRef.current is null!');

@@ -413,7 +413,6 @@ const Qudemos = () => {
                                   console.warn('Video preview error:', error);
                                 }}
                                 onReady={() => {
-                                  console.log('Video preview ready');
                                 }}
                                 fallback={
                                   <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600">

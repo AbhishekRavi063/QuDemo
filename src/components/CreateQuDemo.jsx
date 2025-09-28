@@ -138,17 +138,9 @@ const CreateQuDemo = () => {
 
   // Check if all URLs are valid or if we have documents
   const areAllUrlsValid = () => {
-    console.log('🔍 CreateQuDemo: areAllUrlsValid called');
-    console.log('🔍 documents.length:', documents.length);
-    console.log('🔍 selectedFiles.length:', selectedFiles.length);
-    console.log('🔍 documents:', documents);
-    console.log('🔍 selectedFiles:', selectedFiles);
-    console.log('🔍 videoUrls:', videoUrls);
-    console.log('🔍 websiteUrls:', websiteUrls);
     
     // If we have documents (uploaded) or selected files, we don't need videos or websites
     if (documents.length > 0 || selectedFiles.length > 0) {
-      console.log('✅ Valid: Has documents or selected files');
       return true;
     }
     
@@ -157,7 +149,6 @@ const CreateQuDemo = () => {
     const hasValidWebsites = websiteUrls.some(url => url.trim() && validateWebsiteUrl(url.trim()).isValid);
     
     if (!hasValidVideos && !hasValidWebsites) {
-      console.log('❌ Invalid: No valid videos or websites and no documents/files');
       return false;
     }
     
@@ -176,7 +167,6 @@ const CreateQuDemo = () => {
     });
     
     const isValid = videoUrlsValid && websiteUrlsValid;
-    console.log('🔍 Validation result - Videos:', videoUrlsValid, 'Websites:', websiteUrlsValid, 'Overall:', isValid);
     return isValid;
   };
 
@@ -359,14 +349,6 @@ const CreateQuDemo = () => {
       const hasDocuments = documents.length > 0;
       const hasSelectedFiles = selectedFiles.length > 0;
       
-      console.log('🔍 Form validation:', {
-        validVideoUrls: validVideoUrls.length,
-        validWebsiteUrls: validWebsiteUrls.length,
-        hasDocuments,
-        hasSelectedFiles,
-        documents: documents.length,
-        selectedFiles: selectedFiles.length
-      });
       
       if (validVideoUrls.length === 0 && validWebsiteUrls.length === 0 && !hasDocuments && !hasSelectedFiles) {
         setError("Please provide at least one video URL, website URL, or upload documents to create a QuDemo.");

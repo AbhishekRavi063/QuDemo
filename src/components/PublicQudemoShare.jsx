@@ -223,14 +223,12 @@ const PublicQudemoShare = () => {
   // Clear suggested questions and fetch new ones when QuDemo or company changes
   useEffect(() => {
     if (qudemo?.id && company?.name) {
-      console.log('🚀 PublicQudemoShare: Starting to fetch suggested questions for:', qudemo.id, 'Company:', company.name);
       // Clear old suggested questions immediately
       setSuggestedQuestions([]);
       setLoadingSuggestedQuestions(true);
       setShowAllQuestions(false); // Reset show all state
       fetchSuggestedQuestions();
     } else {
-      console.log('❌ PublicQudemoShare: Missing qudemo.id or company.name');
       // Clear suggested questions when missing data
       setSuggestedQuestions([]);
       setLoadingSuggestedQuestions(false);
@@ -240,20 +238,15 @@ const PublicQudemoShare = () => {
 
   const fetchSuggestedQuestions = async () => {
     try {
-      console.log('🔍 Fetching suggested questions for QuDemo:', qudemo.id, 'Company:', company.name);
       const response = await axios.get(getNodeApiUrl(`/api/qudemos/${qudemo.id}/suggested-questions`), {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
         }
       });
 
-      console.log('📋 Suggested questions response:', response.data);
       if (response.data.success) {
         const questions = response.data.suggested_questions || [];
-        console.log('✅ Setting suggested questions:', questions);
         setSuggestedQuestions(questions);
-      } else {
-        console.log('❌ API returned success: false');
       }
     } catch (error) {
       console.error('❌ Error fetching suggested questions:', error);

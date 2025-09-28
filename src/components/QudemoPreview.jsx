@@ -202,14 +202,12 @@ const QudemoPreview = ({ qudemo, onClose }) => {
   // Clear suggested questions and fetch new ones when QuDemo changes
   useEffect(() => {
     if (qudemo?.id) {
-      console.log('🚀 QudemoPreview: Starting to fetch suggested questions for:', qudemo.id);
       // Clear old suggested questions immediately
       setSuggestedQuestions([]);
       setLoadingSuggestedQuestions(true);
       setShowAllQuestions(false); // Reset show all state
       fetchSuggestedQuestions();
     } else {
-      console.log('❌ QudemoPreview: No qudemo.id available');
       // Clear suggested questions when no QuDemo
       setSuggestedQuestions([]);
       setLoadingSuggestedQuestions(false);
@@ -219,14 +217,9 @@ const QudemoPreview = ({ qudemo, onClose }) => {
 
   const fetchSuggestedQuestions = async () => {
     try {
-      console.log('🔍 Fetching suggested questions for QuDemo:', qudemo.id);
-      
       const token = localStorage.getItem('accessToken');
-      console.log('🔑 Access token exists:', !!token);
-      console.log('🔑 Token preview:', token ? token.substring(0, 20) + '...' : 'No token');
       
       const apiUrl = getNodeApiUrl(`/api/qudemos/${qudemo.id}/suggested-questions`);
-      console.log('🌐 API URL:', apiUrl);
       
       const response = await axios.get(apiUrl, {
         headers: {
@@ -234,13 +227,9 @@ const QudemoPreview = ({ qudemo, onClose }) => {
         }
       });
 
-      console.log('📋 Suggested questions response:', response.data);
       if (response.data.success) {
         const questions = response.data.suggested_questions || [];
-        console.log('✅ Setting suggested questions:', questions);
         setSuggestedQuestions(questions);
-      } else {
-        console.log('❌ API returned success: false');
       }
     } catch (error) {
       console.error('❌ Error fetching suggested questions:', error);
@@ -653,11 +642,6 @@ const QudemoPreview = ({ qudemo, onClose }) => {
           <div className="flex-1 px-3 py-1 overflow-y-auto space-y-3 bg-gray-50 text-sm">
             {/* Suggested Questions as Chat Messages */}
             {(() => {
-              console.log('🔍 QudemoPreview Render Check:');
-              console.log('  - suggestedQuestions.length:', suggestedQuestions.length);
-              console.log('  - messages.length:', messages.length);
-              console.log('  - suggestedQuestions:', suggestedQuestions);
-              console.log('  - Should show suggested questions:', suggestedQuestions.length > 0 && messages.length <= 1);
               return null;
             })()}
             
