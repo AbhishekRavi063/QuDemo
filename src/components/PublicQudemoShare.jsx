@@ -445,7 +445,7 @@ const PublicQudemoShare = () => {
       }
 
     } catch (error) {
-      console.error('Chat error:', error);
+      console.error('Chat error:', error.message || error);
       const errorMessage = {
         sender: "AI",
         text: 'Sorry, I encountered an error while processing your request. Please try again.',

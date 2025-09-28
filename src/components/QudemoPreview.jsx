@@ -488,7 +488,7 @@ const QudemoPreview = ({ qudemo, onClose }) => {
       }
 
     } catch (error) {
-      console.error('Chat error:', error);
+      console.error('Chat error:', error.message || error);
       
       // Handle authentication errors specifically
       if (error.response && (error.response.status === 401 || error.response.status === 403)) {

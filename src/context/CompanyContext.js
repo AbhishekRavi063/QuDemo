@@ -86,7 +86,7 @@ export const CompanyProvider = ({ children }) => {
       }
     } catch (err) {
       setError('An error occurred while fetching company data.');
-      console.error('Fetch company error:', err);
+      console.error('Fetch company error:', err.message || err);
       setCompany(null);
     } finally {
       setIsLoading(false);

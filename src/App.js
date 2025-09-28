@@ -91,7 +91,7 @@ const ProtectedRoute = ({ children }) => {
           setIsAuthenticated(false);
         }
       } catch (error) {
-        console.error('Auth check error:', error);
+        console.error('Auth check error:', error.message || error);
         clearAuthTokens();
         setIsAuthenticated(false);
       } finally {

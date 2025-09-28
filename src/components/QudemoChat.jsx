@@ -149,7 +149,7 @@ const QudemoChat = ({ qudemoId, qudemoTitle }) => {
         setMessages(prev => [...prev, errorMessage]);
       }
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error('Error sending message:', error.message || error);
       const errorMessage = {
         sender: "AI",
         text: "I'm sorry, there was an error processing your question. Please try again.",
