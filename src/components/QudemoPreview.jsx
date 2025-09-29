@@ -137,10 +137,8 @@ const QudemoPreview = ({ qudemo, onClose }) => {
   const chatKey = `qudemo-chat-${qudemo?.id}`;
   
   // Load messages from localStorage or initialize with empty array
-  const [messages, setMessages] = useState(() => {
-    const saved = localStorage.getItem(chatKey);
-    return saved ? JSON.parse(saved) : [];
-  });
+  // Clear messages on page refresh by not loading from localStorage
+  const [messages, setMessages] = useState([]);
   
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -161,35 +159,23 @@ const QudemoPreview = ({ qudemo, onClose }) => {
   const loomIframeRef = useRef();
   const videoPlayerRef = useRef(null);
 
-  // Initialize with welcome message only if this is a new conversation
+  // Initialize with welcome message and clear previous messages on page refresh
   useEffect(() => {
     if (qudemo) {
-      // Check if we have saved messages for this qudemo
-      const saved = localStorage.getItem(chatKey);
-      if (saved && saved !== '[]') {
-        // Load existing messages
-        try {
-          const parsedMessages = JSON.parse(saved);
-          setMessages(parsedMessages);
-        } catch (e) {
-          console.error('Error parsing saved messages:', e);
-          // If parsing fails, start fresh and clean up corrupted data
-          localStorage.removeItem(chatKey);
-          setMessages([]);
-        }
-      } else {
-        // Only show welcome message if no saved messages exist
-        const welcomeMessage = {
-          sender: "AI",
-          text: `Welcome to the ${qudemo.title}! I'm your AI assistant for this qudemo. I can help you understand the content from the videos and knowledge sources. What would you like to know?`,
-          time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-        };
-        setMessages([welcomeMessage]);
-      }
+      // Clear any existing messages from localStorage
+      localStorage.removeItem(chatKey);
+      
+      // Always start with a fresh welcome message
+      const welcomeMessage = {
+        sender: "AI",
+        text: `Welcome to the ${qudemo.title}! I'm your AI assistant for this qudemo. I can help you understand the content from the videos and knowledge sources. What would you like to know?`,
+        time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+      };
+      setMessages([welcomeMessage]);
     }
   }, [qudemo, chatKey]);
 
-  // Auto-scroll to bottom when new messages arrive
+  // Auto-scroll to bottom when new messages arriveh
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
