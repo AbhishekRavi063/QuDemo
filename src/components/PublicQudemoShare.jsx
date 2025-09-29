@@ -640,58 +640,64 @@ const PublicQudemoShare = () => {
 
               {/* Chat Messages */}
               <div className="flex-1 px-3 py-1 overflow-y-auto space-y-3 bg-gray-50 text-sm">
-                {/* Suggested Questions as Chat Messages */}
-                {suggestedQuestions.length > 0 && messages.length <= 1 && (
-                  <div className="px-3 py-2">
-                    <div className="text-xs text-gray-600 mb-2 font-medium">Suggested questions:</div>
-                    <div className="flex flex-wrap gap-2">
-                      {(() => {
-                        const displayQuestions = showAllQuestions ? suggestedQuestions : suggestedQuestions.slice(0, 4);
-                        
-                        return displayQuestions.map((question, index) => (
-                          <button
-                            key={index}
-                            onClick={() => handleSuggestedQuestionClick(question)}
-                            className="text-xs bg-blue-50 border border-blue-200 rounded-full px-3 py-1 hover:bg-blue-100 hover:border-blue-300 transition-colors duration-200 text-blue-700"
-                            disabled={isTyping}
-                          >
-                            {question}
-                          </button>
-                        ));
-                      })()}
-                      
-                      {/* Show "More..." button if there are more than 4 questions and not showing all */}
-                      {suggestedQuestions.length > 4 && !showAllQuestions && (
-                        <button
-                          onClick={() => setShowAllQuestions(true)}
-                          className="text-xs bg-gray-100 border border-gray-300 rounded-full px-3 py-1 hover:bg-gray-200 hover:border-gray-400 transition-colors duration-200 text-gray-700"
-                          disabled={isTyping}
-                        >
-                          More...
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                )}
-                
                 {messages.map((msg, idx) => (
-                  <div
-                    key={idx}
-                    className={`flex ${msg.sender === "AI" ? "justify-start" : "justify-end"}`}
-                  >
+                  <div key={idx}>
                     <div
-                      className={`rounded-xl px-4 py-2 max-w-[80%] ${
-                        msg.sender === "AI"
-                          ? "bg-white border text-gray-800 text-left"
-                          : "bg-blue-600 text-white text-right"
-                      }`}
+                      className={`flex ${msg.sender === "AI" ? "justify-start" : "justify-end"}`}
                     >
-                      <span
-                        dangerouslySetInnerHTML={{
-                          __html: msg.text, // already cleaned before storing
-                        }}
-                      />
+                      <div
+                        className={`rounded-xl px-4 py-2 max-w-[80%] ${
+                          msg.sender === "AI"
+                            ? "bg-white border text-gray-800 text-left"
+                            : "bg-blue-600 text-white text-right"
+                        }`}
+                      >
+                        <span
+                          dangerouslySetInnerHTML={{
+                            __html: msg.text, // already cleaned before storing
+                          }}
+                        />
+                      </div>
                     </div>
+                    
+                    {/* Show suggested questions after the first AI message (welcome message) or greeting responses */}
+                    {msg.sender === "AI" && (idx === 0 || msg.text.includes("Hi! I am an AI assistant for this demo")) && (
+                      <div className="px-3 py-2">
+                        <div className="text-xs text-gray-600 mb-2 font-medium">Suggested questions:</div>
+                        <div className="flex flex-wrap gap-2">
+                          {(() => {
+                            // Only show suggested questions if they are actually loaded
+                            if (suggestedQuestions.length === 0) {
+                              return null; // Don't show any questions if none are loaded
+                            }
+                            
+                            const displayQuestions = showAllQuestions ? suggestedQuestions : suggestedQuestions.slice(0, 4);
+                            
+                            return displayQuestions.map((question, questionIndex) => (
+                              <button
+                                key={questionIndex}
+                                onClick={() => handleSuggestedQuestionClick(question)}
+                                className="text-xs bg-blue-50 border border-blue-200 rounded-full px-3 py-1 hover:bg-blue-100 hover:border-blue-300 transition-colors duration-200 text-blue-700"
+                                disabled={isTyping}
+                              >
+                                {question}
+                              </button>
+                            ));
+                          })()}
+                          
+                          {/* Show "More..." button if there are more than 4 questions and not showing all */}
+                          {suggestedQuestions.length > 4 && !showAllQuestions && (
+                            <button
+                              onClick={() => setShowAllQuestions(true)}
+                              className="text-xs bg-gray-100 border border-gray-300 rounded-full px-3 py-1 hover:bg-gray-200 hover:border-gray-400 transition-colors duration-200 text-gray-700"
+                              disabled={isTyping}
+                            >
+                              More...
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
                 
