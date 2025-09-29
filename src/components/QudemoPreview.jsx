@@ -215,6 +215,15 @@ const QudemoPreview = ({ qudemo, onClose }) => {
     }
   }, [qudemo?.id]);
 
+  // Cleanup suggested questions when component unmounts
+  useEffect(() => {
+    return () => {
+      setSuggestedQuestions([]);
+      setLoadingSuggestedQuestions(false);
+      setShowAllQuestions(false);
+    };
+  }, []);
+
   const fetchSuggestedQuestions = async () => {
     try {
       const token = localStorage.getItem('accessToken');
@@ -671,13 +680,12 @@ const QudemoPreview = ({ qudemo, onClose }) => {
                     <div className="text-xs text-gray-600 mb-2 font-medium">Suggested questions:</div>
                     <div className="flex flex-wrap gap-2">
                       {(() => {
-                        const questions = suggestedQuestions.length > 0 ? suggestedQuestions : [
-                          "How do CRM action agents enhance sales teams?",
-                          "What are the differences between knowledge and action agents?", 
-                          "Why are AI agents not a threat to sales reps?",
-                          "What steps should RevOps take to implement AI agents?"
-                        ];
-                        const displayQuestions = showAllQuestions ? questions : questions.slice(0, 4);
+                        // Only show suggested questions if they are actually loaded
+                        if (suggestedQuestions.length === 0) {
+                          return null; // Don't show any questions if none are loaded
+                        }
+                        
+                        const displayQuestions = showAllQuestions ? suggestedQuestions : suggestedQuestions.slice(0, 4);
                         
                         return displayQuestions.map((question, questionIndex) => (
                           <button
