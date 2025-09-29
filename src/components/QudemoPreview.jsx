@@ -155,6 +155,8 @@ const QudemoPreview = ({ qudemo, onClose }) => {
   const [suggestedQuestions, setSuggestedQuestions] = useState([]);
   const [loadingSuggestedQuestions, setLoadingSuggestedQuestions] = useState(false);
   const [showAllQuestions, setShowAllQuestions] = useState(false);
+  const [pythonData, setPythonData] = useState(null);
+  const [loadingPythonData, setLoadingPythonData] = useState(false);
   const messagesEndRef = useRef(null);
   const loomIframeRef = useRef();
   const videoPlayerRef = useRef(null);
@@ -223,6 +225,37 @@ const QudemoPreview = ({ qudemo, onClose }) => {
       setShowAllQuestions(false);
     };
   }, []);
+
+  // Fetch Python backend data when QuDemo changes
+  useEffect(() => {
+    if (qudemo?.id) {
+      fetchPythonData();
+    }
+  }, [qudemo?.id]);
+
+  const fetchPythonData = async () => {
+    try {
+      setLoadingPythonData(true);
+      const token = localStorage.getItem('accessToken');
+      
+      const apiUrl = getNodeApiUrl(`/api/qudemos/${qudemo.id}/python-data`);
+      
+      const response = await axios.get(apiUrl, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.data.success) {
+        setPythonData(response.data.data);
+      }
+    } catch (error) {
+      console.error('❌ Error fetching Python data:', error);
+      // Don't show error to user, just silently fail
+    } finally {
+      setLoadingPythonData(false);
+    }
+  };
 
   const fetchSuggestedQuestions = async () => {
     try {
@@ -634,7 +667,7 @@ const QudemoPreview = ({ qudemo, onClose }) => {
             <div className="flex justify-between items-center mb-2">
               <div className="flex items-center gap-4">
                 <div className="font-semibold text-sm sm:text-base">
-                  Ask questions about this qudemo
+                  {qudemo?.title || 'QuDemo Preview'}
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -645,6 +678,40 @@ const QudemoPreview = ({ qudemo, onClose }) => {
               </div>
             </div>
             
+            {/* QuDemo Stats */}
+            <div className="flex items-center gap-4 text-xs text-blue-100">
+              <div className="flex items-center gap-1">
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+                <span>{qudemo?.videos?.length || 0} videos</span>
+              </div>
+              
+              {qudemo?.documents?.length > 0 && (
+                <div className="flex items-center gap-1">
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <span>{qudemo.documents.length} docs</span>
+                </div>
+              )}
+              
+              {pythonData?.website_count > 0 && (
+                <div className="flex items-center gap-1">
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9v-9m0-9v9" />
+                  </svg>
+                  <span>{pythonData.website_count} websites</span>
+                </div>
+              )}
+              
+              {loadingPythonData && (
+                <div className="flex items-center gap-1">
+                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-100"></div>
+                  <span>Loading...</span>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Chat Messages */}

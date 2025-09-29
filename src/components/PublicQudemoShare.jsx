@@ -220,9 +220,9 @@ const PublicQudemoShare = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Clear suggested questions and fetch new ones when QuDemo or company changes
+  // Clear suggested questions and fetch new ones when shareToken is available
   useEffect(() => {
-    if (qudemo?.id && company?.name) {
+    if (shareToken) {
       // Clear old suggested questions immediately
       setSuggestedQuestions([]);
       setLoadingSuggestedQuestions(true);
@@ -234,15 +234,12 @@ const PublicQudemoShare = () => {
       setLoadingSuggestedQuestions(false);
       setShowAllQuestions(false);
     }
-  }, [qudemo?.id, company?.name]);
+  }, [shareToken]);
 
   const fetchSuggestedQuestions = async () => {
     try {
-      const response = await axios.get(getNodeApiUrl(`/api/qudemos/${qudemo.id}/suggested-questions`), {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-        }
-      });
+      // Use the public endpoint for shared QuDemos
+      const response = await axios.get(getNodeApiUrl(`/api/qudemos/share/${shareToken}/suggested-questions`));
 
       if (response.data.success) {
         const questions = response.data.suggested_questions || [];
@@ -645,38 +642,34 @@ const PublicQudemoShare = () => {
               <div className="flex-1 px-3 py-1 overflow-y-auto space-y-3 bg-gray-50 text-sm">
                 {/* Suggested Questions as Chat Messages */}
                 {suggestedQuestions.length > 0 && messages.length <= 1 && (
-                  <div className="space-y-2">
-                    <div className="flex justify-start">
-                      <div className="bg-white border rounded-xl px-4 py-2 max-w-[80%] text-gray-800">
-                        <div className="text-xs text-gray-600 mb-2 font-medium">Suggested questions:</div>
-                        <div className="flex flex-wrap gap-2">
-                          {(() => {
-                            const displayQuestions = showAllQuestions ? suggestedQuestions : suggestedQuestions.slice(0, 4);
-                            
-                            return displayQuestions.map((question, index) => (
-                              <button
-                                key={index}
-                                onClick={() => handleSuggestedQuestionClick(question)}
-                                className="text-xs bg-blue-50 border border-blue-200 rounded-full px-3 py-1 hover:bg-blue-100 hover:border-blue-300 transition-colors duration-200 text-blue-700"
-                                disabled={isTyping}
-                              >
-                                {question}
-                              </button>
-                            ));
-                          })()}
-                          
-                          {/* Show "More..." button if there are more than 4 questions and not showing all */}
-                          {suggestedQuestions.length > 4 && !showAllQuestions && (
-                            <button
-                              onClick={() => setShowAllQuestions(true)}
-                              className="text-xs bg-gray-100 border border-gray-300 rounded-full px-3 py-1 hover:bg-gray-200 hover:border-gray-400 transition-colors duration-200 text-gray-700"
-                              disabled={isTyping}
-                            >
-                              More...
-                            </button>
-                          )}
-                        </div>
-                      </div>
+                  <div className="px-3 py-2">
+                    <div className="text-xs text-gray-600 mb-2 font-medium">Suggested questions:</div>
+                    <div className="flex flex-wrap gap-2">
+                      {(() => {
+                        const displayQuestions = showAllQuestions ? suggestedQuestions : suggestedQuestions.slice(0, 4);
+                        
+                        return displayQuestions.map((question, index) => (
+                          <button
+                            key={index}
+                            onClick={() => handleSuggestedQuestionClick(question)}
+                            className="text-xs bg-blue-50 border border-blue-200 rounded-full px-3 py-1 hover:bg-blue-100 hover:border-blue-300 transition-colors duration-200 text-blue-700"
+                            disabled={isTyping}
+                          >
+                            {question}
+                          </button>
+                        ));
+                      })()}
+                      
+                      {/* Show "More..." button if there are more than 4 questions and not showing all */}
+                      {suggestedQuestions.length > 4 && !showAllQuestions && (
+                        <button
+                          onClick={() => setShowAllQuestions(true)}
+                          className="text-xs bg-gray-100 border border-gray-300 rounded-full px-3 py-1 hover:bg-gray-200 hover:border-gray-400 transition-colors duration-200 text-gray-700"
+                          disabled={isTyping}
+                        >
+                          More...
+                        </button>
+                      )}
                     </div>
                   </div>
                 )}
