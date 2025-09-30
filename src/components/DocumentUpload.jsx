@@ -267,7 +267,7 @@ const DocumentUpload = ({ qudemoId, companyName, onDocumentsChange, onSelectedFi
           ref={fileInputRef}
           type="file"
           onChange={handleFileChange}
-          accept=".pdf,.doc,.docx,.txt,.csv,.ppt,.pptx"
+          accept=".pdf"
           multiple
           className="hidden"
         />
@@ -293,7 +293,7 @@ const DocumentUpload = ({ qudemoId, companyName, onDocumentsChange, onSelectedFi
               Choose Files
             </div>
             <p className="text-xs text-gray-500 mt-3">
-              Supports: PDF, DOC, DOCX, TXT, CSV, PPT, PPTX
+              Supports: PDF only
             </p>
           </div>
         </div>

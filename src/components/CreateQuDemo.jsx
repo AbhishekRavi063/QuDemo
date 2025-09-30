@@ -714,7 +714,8 @@ const CreateQuDemo = () => {
           </div>
         </div>
 
-        {/* Website URL */}
+        {/* Website URL - COMMENTED OUT */}
+        {/* 
         <div className="mt-6">
             <label className="block text-sm font-bold text-gray-900 mb-2 text-left">
                 Website URLs to scrape
@@ -789,7 +790,8 @@ const CreateQuDemo = () => {
                 <span className="text-blue-600 font-bold">+</span> Add another website
               </button>
             </div>
-          </div>
+        </div>
+        */}
 
         {/* Document Upload Section */}
         <div className="mt-6">
