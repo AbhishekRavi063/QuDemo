@@ -2,12 +2,7 @@
   publish = "build"
   command = "npm run build"
 
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
-
-# Handle auth callback specifically
+# Handle auth callback specifically (must come before catch-all)
 [[redirects]]
   from = "/auth/callback"
   to = "/index.html"
@@ -17,4 +12,10 @@
 [[redirects]]
   from = "/api/*"
   to = "https://node-backend-1-21an.onrender.com/api/:splat"
+  status = 200
+
+# Catch-all for SPA routing (must come last)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
   status = 200

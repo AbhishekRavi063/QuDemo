@@ -23,7 +23,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build",
+    "build": "react-scripts build && cp public/_redirects build/_redirects",
     "eject": "react-scripts eject",
     "build:css": "tailwindcss -i ./src/index.css -o ./dist/output.css --watch"
   },

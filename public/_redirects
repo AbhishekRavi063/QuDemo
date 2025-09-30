@@ -1,8 +1,8 @@
 # Netlify redirects for Single Page Application
 # This ensures all routes are handled by React Router
 
-# Handle auth callback
+# Handle auth callback specifically
 /auth/callback /index.html 200
 
-# Handle all other routes
+# Handle all other routes (catch-all)
 /* /index.html 200
