@@ -796,7 +796,7 @@ const CreateQuDemo = () => {
         {/* Document Upload Section */}
         <div className="mt-6">
           <label className="block text-sm font-bold text-gray-900 mb-2 text-left">
-            📄 Product Upload
+            Product Document
           </label>
           <p className="text-xs text-gray-500 mb-3 text-left">
             Upload your product knowledge documents here
@@ -807,7 +807,7 @@ const CreateQuDemo = () => {
                 <span className="text-lg">💡</span>
               </div>
               <div className="ml-3">
-                <p className="text-sm text-blue-800">
+                <p className="text-sm text-blue-800 text-left">
                   Add any product knowledge doc and Qudemo AI will use them to pull out only the relevant information to answer your customer's questions
                 </p>
               </div>
