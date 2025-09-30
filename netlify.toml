@@ -1,0 +1,20 @@
+[build]
+  publish = "build"
+  command = "npm run build"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Handle auth callback specifically
+[[redirects]]
+  from = "/auth/callback"
+  to = "/index.html"
+  status = 200
+
+# Handle API routes (if any)
+[[redirects]]
+  from = "/api/*"
+  to = "https://node-backend-1-21an.onrender.com/api/:splat"
+  status = 200
