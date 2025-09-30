@@ -236,18 +236,11 @@ const DocumentUpload = ({ qudemoId, companyName, onDocumentsChange, onSelectedFi
   return (
     <div className="space-y-4">
       <div>
-        <h4 className="font-medium text-gray-800 mb-2">📄 Document Upload</h4>
+        <h4 className="font-medium text-gray-800 mb-2">📄 Product Upload</h4>
         <p className="text-sm text-gray-600 mb-3">
-          Upload PDF files to add to your knowledge base.
+          Upload your product knowledge documents here
         </p>
         
-        {!qudemoId && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">
-            <p className="text-sm text-blue-800">
-              💡 You can select files now, but they will be uploaded after creating the QuDemo.
-            </p>
-          </div>
-        )}
       </div>
 
       {/* Drag and Drop Upload Area */}
