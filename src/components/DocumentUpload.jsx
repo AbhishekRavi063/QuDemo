@@ -235,13 +235,6 @@ const DocumentUpload = ({ qudemoId, companyName, onDocumentsChange, onSelectedFi
 
   return (
     <div className="space-y-4">
-      <div>
-        <h4 className="font-medium text-gray-800 mb-2">📄 Product Upload</h4>
-        <p className="text-sm text-gray-600 mb-3">
-          Upload your product knowledge documents here
-        </p>
-        
-      </div>
 
       {/* Drag and Drop Upload Area */}
       <div 

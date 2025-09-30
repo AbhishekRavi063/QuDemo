@@ -795,6 +795,24 @@ const CreateQuDemo = () => {
 
         {/* Document Upload Section */}
         <div className="mt-6">
+          <label className="block text-sm font-bold text-gray-900 mb-2 text-left">
+            📄 Product Upload
+          </label>
+          <p className="text-xs text-gray-500 mb-3 text-left">
+            Upload your product knowledge documents here
+          </p>
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <span className="text-lg">💡</span>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-blue-800">
+                  Add any product knowledge doc and Qudemo AI will use them to pull out only the relevant information to answer your customer's questions
+                </p>
+              </div>
+            </div>
+          </div>
           <div className="mb-6 p-4 border border-gray-200 rounded-lg">
             <DocumentUpload 
               qudemoId={createdQudemoId}
@@ -802,8 +820,8 @@ const CreateQuDemo = () => {
               onDocumentsChange={setDocuments}
               onSelectedFilesChange={setSelectedFiles}
             />
+          </div>
         </div>
-            </div>
 
           {/* Submit Button */}
           <button
