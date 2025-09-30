@@ -729,8 +729,9 @@ const QudemoPreview = ({ qudemo, onClose }) => {
                 
                 {/* Show suggested questions after the first AI message (welcome message) or greeting responses */}
                 {msg.sender === "AI" && (idx === 0 || msg.text.includes("Hi! I am an AI assistant for this demo")) && (
-                  <div className="px-3 py-2">
-                    <div className="text-xs text-gray-600 mb-2 font-medium">Suggested questions:</div>
+                  <div className="flex justify-start px-3 py-2">
+                    <div className="max-w-[95%]">
+                      <div className="text-xs text-gray-600 mb-2 font-medium text-left">Suggested questions:</div>
                     <div className="flex flex-wrap gap-2">
                       {(() => {
                         // Only show suggested questions if they are actually loaded
@@ -744,7 +745,7 @@ const QudemoPreview = ({ qudemo, onClose }) => {
                           <button
                             key={questionIndex}
                             onClick={() => handleSuggestedQuestionClick(question)}
-                            className="text-xs bg-blue-50 border border-blue-200 rounded-full px-3 py-1 hover:bg-blue-100 hover:border-blue-300 transition-colors duration-200 text-blue-700"
+                            className="text-xs bg-blue-50 border border-blue-200 rounded-full px-4 py-2 hover:bg-blue-100 hover:border-blue-300 transition-colors duration-200 text-blue-700 text-left max-w-sm whitespace-normal"
                             disabled={isTyping}
                           >
                             {question}
@@ -756,12 +757,13 @@ const QudemoPreview = ({ qudemo, onClose }) => {
                       {suggestedQuestions.length > 4 && !showAllQuestions && (
                         <button
                           onClick={() => setShowAllQuestions(true)}
-                          className="text-xs bg-gray-100 border border-gray-300 rounded-full px-3 py-1 hover:bg-gray-200 hover:border-gray-400 transition-colors duration-200 text-gray-700"
+                          className="text-xs bg-gray-100 border border-gray-300 rounded-full px-4 py-2 hover:bg-gray-200 hover:border-gray-400 transition-colors duration-200 text-gray-700 text-left"
                           disabled={isTyping}
                         >
                           More...
                         </button>
                       )}
+                    </div>
                     </div>
                   </div>
                 )}

@@ -28,7 +28,7 @@ const CreateQuDemo = () => {
   const [errorPopupData, setErrorPopupData] = useState(null);
   
   // Video processing notification state
-  
+
   // Handle error popup close and redirect
   const handleErrorPopupClose = () => {
     setShowErrorPopup(false);
@@ -242,7 +242,7 @@ const CreateQuDemo = () => {
           } else if (keyIndex < index) {
             shiftedErrors[`website_${keyIndex}`] = newErrors[key];
           }
-        } else {
+      } else {
           shiftedErrors[key] = newErrors[key];
         }
       });
@@ -405,10 +405,10 @@ const CreateQuDemo = () => {
         videos: validVideoUrls.map((url, index) => {
           const validation = validateVideoUrl(url);
           return {
-            url: url.trim(),
+          url: url.trim(),
             type: validation.type,
-            title: `Video ${index + 1}`,
-            order: index + 1
+          title: `Video ${index + 1}`,
+          order: index + 1
           };
         }),
         websites: validWebsiteUrls.map((url, index) => {
@@ -477,39 +477,39 @@ const CreateQuDemo = () => {
             let errorMessage = "❌ Some content failed to process!\n\n";
             
             // Show specific failed content with detailed reasons
-            errorMessage += "📋 Failed Content Details:\n\n";
-            
-            processing_errors.forEach((error, index) => {
-              if (error.type === 'website') {
-                errorMessage += `🌐 WEBSITE FAILED:\n`;
-                errorMessage += `   URL: ${error.url}\n`;
-                errorMessage += `   Reason: ${error.error}\n`;
-                
+              errorMessage += "📋 Failed Content Details:\n\n";
+              
+              processing_errors.forEach((error, index) => {
+                if (error.type === 'website') {
+                  errorMessage += `🌐 WEBSITE FAILED:\n`;
+                  errorMessage += `   URL: ${error.url}\n`;
+                  errorMessage += `   Reason: ${error.error}\n`;
+                  
                 if (error.error_type === 'crm_bot_detection') {
                   errorMessage += `   🏢 CRM Site with Bot Protection\n`;
                   errorMessage += `   💡 Suggestion: Upload documents instead of scraping\n`;
                 } else if (error.error_type) {
-                  errorMessage += `   Error Type: ${error.error_type.toUpperCase()}\n`;
+                    errorMessage += `   Error Type: ${error.error_type.toUpperCase()}\n`;
+                  }
+                  
+                  if (error.protection_detected) {
+                    errorMessage += `   🛡️ Anti-Bot Protection: YES\n`;
+                  }
+                  
+                  errorMessage += `\n`;
+                  
+                } else if (error.type === 'video') {
+                  errorMessage += `📹 VIDEO FAILED:\n`;
+                  errorMessage += `   URL: ${error.url}\n`;
+                  errorMessage += `   Reason: ${error.error}\n`;
+                  
+                  if (error.error_type) {
+                    errorMessage += `   Error Type: ${error.error_type.toUpperCase()}\n`;
+                  }
+                  
+                  errorMessage += `\n`;
                 }
-                
-                if (error.protection_detected) {
-                  errorMessage += `   🛡️ Anti-Bot Protection: YES\n`;
-                }
-                
-                errorMessage += `\n`;
-                
-              } else if (error.type === 'video') {
-                errorMessage += `📹 VIDEO FAILED:\n`;
-                errorMessage += `   URL: ${error.url}\n`;
-                errorMessage += `   Reason: ${error.error}\n`;
-                
-                if (error.error_type) {
-                  errorMessage += `   Error Type: ${error.error_type.toUpperCase()}\n`;
-                }
-                
-                errorMessage += `\n`;
-              }
-            });
+              });
             
             // Add suggestions based on error types
             const hasWebsiteErrors = processing_errors?.some(e => e.type === 'website');
@@ -524,9 +524,9 @@ const CreateQuDemo = () => {
                 errorMessage += "• CRM sites (Salesforce, SurveySparrow, Zendesk) often block scraping\n";
                 errorMessage += "• Try regular help/documentation sites instead\n";
               } else {
-                errorMessage += "• Try a different website URL (avoid sites with anti-bot protection)\n";
-                errorMessage += "• Use only video content for this QuDemo\n";
-                errorMessage += "• Contact the website owner for API access\n";
+              errorMessage += "• Try a different website URL (avoid sites with anti-bot protection)\n";
+              errorMessage += "• Use only video content for this QuDemo\n";
+              errorMessage += "• Contact the website owner for API access\n";
               }
             } else if (hasVideoErrors && !hasWebsiteErrors) {
               errorMessage += "• Check that your video URLs are valid and accessible\n";
@@ -655,7 +655,7 @@ const CreateQuDemo = () => {
               required
               className="w-full border border-gray-300 px-4 py-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
-          </div>
+        </div>
 
           {/* Video URL */}
           <div>
@@ -681,14 +681,14 @@ const CreateQuDemo = () => {
                           : 'border-gray-300'
                     }`}
                   />
-                  {videoUrls.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => removeVideoUrlField(index)}
+                {videoUrls.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => removeVideoUrlField(index)}
                       className="text-red-500 hover:text-red-700 p-2"
-                    >
-                      <XMarkIcon className="h-5 w-5" />
-                    </button>
+                  >
+                    <XMarkIcon className="h-5 w-5" />
+                  </button>
                   )}
                 </div>
                 {urlValidationErrors[index] && (
@@ -704,21 +704,21 @@ const CreateQuDemo = () => {
               </div>
             ))}
             <div className="text-center mt-2">
-              <button
-                type="button"
-                onClick={addVideoUrlField}
+            <button
+              type="button"
+              onClick={addVideoUrlField}
                 className="text-blue-600 hover:underline text-sm font-medium flex items-center justify-center gap-1"
-              >
+            >
                 <span className="text-blue-600 font-bold">+</span> Add another video
-              </button>
-            </div>
+            </button>
           </div>
+        </div>
 
         {/* Website URL */}
         <div className="mt-6">
             <label className="block text-sm font-bold text-gray-900 mb-2 text-left">
                 Website URLs to scrape
-            </label>
+          </label>
             <p className="text-xs text-gray-500 mb-3 text-left">
                 Enter website URLs to scrape content from. Only same-domain paths will be scraped.
             </p>
@@ -745,8 +745,8 @@ const CreateQuDemo = () => {
             {websiteUrls.map((url, index) => (
               <div key={index} className="mb-4">
                 <div className="flex items-center gap-2 mb-1">
-                  <input
-                    type="text"
+            <input
+              type="text"
                     value={url}
                     onChange={e => handleWebsiteUrlChange(index, e.target.value)}
                     placeholder="https://example.com/help or https://docs.example.com"
@@ -767,7 +767,7 @@ const CreateQuDemo = () => {
                       <XMarkIcon className="h-5 w-5" />
                     </button>
                   )}
-                </div>
+          </div>
                 {urlValidationErrors[`website_${index}`] && (
                   <p className="text-red-500 text-sm mt-1 ml-1">
                     {urlValidationErrors[`website_${index}`]}
@@ -800,8 +800,8 @@ const CreateQuDemo = () => {
               onDocumentsChange={setDocuments}
               onSelectedFilesChange={setSelectedFiles}
             />
-          </div>
         </div>
+            </div>
 
           {/* Submit Button */}
           <button
@@ -860,12 +860,12 @@ const CreateQuDemo = () => {
               </button>
               
               <div className="flex items-start pr-8">
-                <div className="flex-shrink-0">
+              <div className="flex-shrink-0">
                   <svg className="h-6 w-6 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.293l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clipRule="evenodd" />
-                  </svg>
-                </div>
-                <div className="ml-3">
+                </svg>
+              </div>
+              <div className="ml-3">
                   <h3 className="text-lg font-medium text-blue-800">Processing</h3>
                   <div className="mt-2 text-sm text-blue-700">{success}</div>
                   <div className="mt-2 text-xs text-blue-600">
@@ -889,15 +889,15 @@ const CreateQuDemo = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
                 </svg>
                 {errorPopupData.title}
-              </h3>
+            </h3>
               <button
                 onClick={handleErrorPopupClose}
                 className="text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-full p-1"
               >
                 <XMarkIcon className="w-6 h-6" />
               </button>
-            </div>
-            
+          </div>
+          
             {/* Content */}
             <div className="mb-6">
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
@@ -906,15 +906,15 @@ const CreateQuDemo = () => {
                     <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                     </svg>
-                  </div>
+              </div>
                   <div className="ml-3">
                     <h4 className="text-sm font-medium text-yellow-800">
                       Processing Issues Detected
                     </h4>
                     <div className="mt-2 text-sm text-yellow-700">
                       <p>Some content failed to process, but your QuDemo was created successfully with the content that did work.</p>
-                    </div>
-                  </div>
+              </div>
+            </div>
                 </div>
               </div>
               
@@ -931,10 +931,10 @@ const CreateQuDemo = () => {
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9v-9m0-9v9" />
                             </svg>
                             <span className="font-medium text-gray-900">Website Failed</span>
-                          </div>
+              </div>
                           <div className="text-sm text-gray-600 mb-2">
                             <strong>URL:</strong> {error.url}
-                          </div>
+              </div>
                           <div className="text-sm text-gray-600 mb-2">
                             <strong>Reason:</strong> {error.error}
                           </div>
@@ -949,10 +949,10 @@ const CreateQuDemo = () => {
                               <p className="text-sm text-red-700 mt-1">
                                 💡 <strong>Suggestion:</strong> Upload documents instead of scraping this website
                               </p>
-                            </div>
-                          )}
-                        </div>
-                      )}
+            </div>
+          )}
+            </div>
+          )}
                       {error.type === 'video' && (
                         <div>
                           <div className="flex items-center mb-2">
@@ -977,12 +977,12 @@ const CreateQuDemo = () => {
             
             {/* Footer */}
             <div className="flex justify-end">
-              <button
+            <button
                 onClick={handleErrorPopupClose}
                 className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
-              >
+            >
                 Continue to QuDemos
-              </button>
+            </button>
             </div>
           </div>
         </div>
