@@ -5,6 +5,7 @@ import { getNodeApiUrl } from '../config/api';
 import ReactPlayer from "react-player";
 import HybridVideoPlayer from "./HybridVideoPlayer";
 import QudemoPreview from "./QudemoPreview";
+import UpgradeModal from "./UpgradeModal";
 import {
   EyeIcon,
   PencilIcon,
@@ -30,6 +31,7 @@ const Qudemos = () => {
   const [shareLink, setShareLink] = useState('');
   const [showShareModal, setShowShareModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [qudemoToDelete, setQudemoToDelete] = useState(null);
   const { company } = useCompany();
   const navigate = useNavigate();
@@ -91,8 +93,17 @@ const Qudemos = () => {
         }
       } else {
         const data = await response.json();
-        console.error('❌ Failed to generate share link:', data.error);
-        showNotification('Failed to generate share link. Please try again.', 'error');
+        
+        // CHECK FOR SUBSCRIPTION REQUIRED
+        if (data.requiresUpgrade || response.status === 403) {
+          console.log('⚠️ Subscription required for sharing');
+          showNotification('Upgrade to Pro to share QuDemos', 'error');
+          // Show upgrade modal
+          setShowUpgradeModal(true);
+        } else {
+          console.error('❌ Failed to generate share link:', data.error);
+          showNotification('Failed to generate share link. Please try again.', 'error');
+        }
       }
     } catch (err) {
       console.error('❌ Error generating share link:', err);
@@ -762,6 +773,12 @@ const Qudemos = () => {
           </div>
         </div>
       )}
+
+      {/* Upgrade Modal */}
+      <UpgradeModal 
+        isOpen={showUpgradeModal} 
+        onClose={() => setShowUpgradeModal(false)} 
+      />
     </div>
   );
 };

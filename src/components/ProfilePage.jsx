@@ -4,6 +4,7 @@ import axios from "axios";
 import { getNodeApiUrl } from "../config/api";
 import { useCompany } from "../context/CompanyContext";
 import { useNotification } from "../context/NotificationContext";
+import SubscriptionTab from "./SubscriptionTab";
 
 export default function ProfilePage() {
   const navigate = useNavigate();
@@ -71,6 +72,7 @@ export default function ProfilePage() {
   const tabs = [
     { name: "Personal Info", key: "personal" },
     { name: "Organization", key: "company" },
+    { name: "Subscription & Billing", key: "subscription" },
     // PREFERENCES AND SECURITY TABS - TEMPORARILY COMMENTED OUT
     // { name: "Preferences", key: "preferences" },
     // { name: "Security", key: "security" },
@@ -673,6 +675,10 @@ export default function ProfilePage() {
               </button>
             </form>
           )} */}
+
+          {activeTab === "subscription" && company && (
+            <SubscriptionTab companyId={company.id} />
+          )}
         </div>
       </div>
 

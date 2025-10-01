@@ -200,7 +200,13 @@ const PublicQudemoShare = () => {
           setMessages([welcomeMessage]);
         } else {
           const errorData = await response.json();
-          setError(errorData.error || 'Failed to load shared qudemo');
+          
+          // CHECK FOR SUBSCRIPTION EXPIRED
+          if (errorData.subscriptionExpired || response.status === 403) {
+            setError('subscription_expired');
+          } else {
+            setError(errorData.error || 'Failed to load shared qudemo');
+          }
         }
       } catch (err) {
         console.error('Error loading shared qudemo:', err);
@@ -467,6 +473,49 @@ const PublicQudemoShare = () => {
   }
 
   if (error) {
+    // Subscription expired error
+    if (error === 'subscription_expired') {
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 flex items-center justify-center px-4">
+          <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-8 text-center">
+            <div className="mb-6">
+              <div className="mx-auto w-20 h-20 bg-red-100 rounded-full flex items-center justify-center">
+                <XMarkIcon className="h-12 w-12 text-red-600" />
+              </div>
+            </div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">
+              QuDemo No Longer Available
+            </h1>
+            <div className="space-y-3 text-gray-600 mb-6">
+              <p className="text-lg">
+                This QuDemo is currently unavailable.
+              </p>
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-left">
+                <p className="text-sm text-red-800">
+                  <strong>Reason:</strong> The owner's subscription has ended or been downgraded to a Free plan.
+                </p>
+                <p className="text-sm text-red-700 mt-2">
+                  Public sharing is only available with Pro or Enterprise plans.
+                </p>
+              </div>
+            </div>
+            <div className="border-t pt-6">
+              <p className="text-sm text-gray-500 mb-4">
+                If you're the owner of this QuDemo:
+              </p>
+              <button
+                onClick={() => window.location.href = '/pricing'}
+                className="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all"
+              >
+                Upgrade to Restore Access
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Generic error
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
