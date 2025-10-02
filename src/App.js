@@ -28,6 +28,7 @@ import TestRunner from './components/TestRunner';
 import PublicQudemoShare from './components/PublicQudemoShare';
 import PrivacyPolicy from './components/PrivacyPolicy';
 import PricingPage from './components/PricingPage';
+import AnalyticsPage from './components/AnalyticsPage';
 import { CompanyProvider, useCompany } from './context/CompanyContext';
 import { BackendProvider } from './context/BackendContext';
 import { NotificationProvider } from './context/NotificationContext';
@@ -308,7 +309,7 @@ function App() {
                   <ProtectedRoute>
                     <CompanyCheck>
                       <DashboardLayout>
-                        <InsightsAnalytics />
+                        <AnalyticsPage />
                       </DashboardLayout>
                     </CompanyCheck>
                   </ProtectedRoute>

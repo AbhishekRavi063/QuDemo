@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { NavLink, Link, useLocation } from 'react-router-dom';
 import {
   ClockIcon,
-  // ChartBarIcon, // COMMENTED OUT - Insights & Analytics hidden
+  ChartBarIcon,
   Cog6ToothIcon,
   // ChatBubbleLeftEllipsisIcon, // COMMENTED OUT - Buyer Interactions hidden
   Squares2X2Icon,
@@ -25,8 +25,7 @@ const menuItems = [
   { name: 'Qudemos', icon: PlayIcon, path: '/qudemos' },
   // BUYER INTERACTIONS - TEMPORARILY COMMENTED OUT
   // { name: 'Buyer Interactions', icon: ChatBubbleLeftEllipsisIcon, path: '/interactions' },
-  // INSIGHTS & ANALYTICS - TEMPORARILY COMMENTED OUT
-  // { name: 'Insights & Analytics', icon: ChartBarIcon, path: '/analytics' },
+  { name: 'Analytics', icon: ChartBarIcon, path: '/analytics' },
   // TEST RUNNER - TEMPORARILY COMMENTED OUT
   // { name: 'Test Runner', icon: BeakerIcon, path: '/test-runner' },
 ];

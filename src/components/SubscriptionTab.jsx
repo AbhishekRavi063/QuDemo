@@ -73,7 +73,7 @@ const SubscriptionTab = ({ companyId }) => {
 
   const handleManageBilling = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
       const baseUrl = getApiUrl('node');
       const response = await fetch(`${baseUrl}/api/subscription/${companyId}/billing-portal`, {
         headers: {
@@ -97,7 +97,7 @@ const SubscriptionTab = ({ companyId }) => {
 
     setCancelling(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
       const baseUrl = getApiUrl('node');
       const response = await fetch(`${baseUrl}/api/subscription/${companyId}/cancel`, {
         method: 'POST',
