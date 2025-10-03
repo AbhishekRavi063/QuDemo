@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink, Link, useLocation } from 'react-router-dom';
+import { useCompany } from '../context/CompanyContext';
 import {
   ClockIcon,
   ChartBarIcon,
@@ -14,24 +15,25 @@ import {
   PlayIcon,
   ServerIcon,
   BeakerIcon,
+  LockClosedIcon,
 } from '@heroicons/react/24/outline';
 
-const menuItems = [
-  // OVERVIEW - TEMPORARILY COMMENTED OUT
-  // { name: 'Overview', icon: ClockIcon, path: '/overview' },
+// Base menu items (available to all users)
+const baseMenuItems = [
   { name: 'Create Qudemo', icon: PlusIcon, path: '/create' },
-  // CUSTOMER PAGE - COMMENTED OUT (NOT IN USE)
-  // { name: 'Customers', icon: UsersIcon, path: '/customers' },
   { name: 'Qudemos', icon: PlayIcon, path: '/qudemos' },
-  // BUYER INTERACTIONS - TEMPORARILY COMMENTED OUT
-  // { name: 'Buyer Interactions', icon: ChatBubbleLeftEllipsisIcon, path: '/interactions' },
-  { name: 'Analytics', icon: ChartBarIcon, path: '/analytics' },
-  // TEST RUNNER - TEMPORARILY COMMENTED OUT
-  // { name: 'Test Runner', icon: BeakerIcon, path: '/test-runner' },
+  { name: 'Analytics', icon: ChartBarIcon, path: '/analytics', requiresEnterprise: true },
 ];
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
   const location = useLocation();
+  const { company } = useCompany();
+  
+  // Check subscription status
+  const subscriptionPlan = company?.subscription_plan || 'free';
+  const subscriptionStatus = company?.subscription_status || 'active';
+  const isActive = ['active', 'trialing'].includes(subscriptionStatus);
+  const isEnterprise = subscriptionPlan === 'enterprise' && isActive;
 
   const handleLogout = async () => {
     const { clearAuthTokens } = await import('../utils/tokenRefresh');
@@ -69,22 +71,40 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
 
         {/* Menu Links */}
         <nav className="flex flex-col mt-20 md:mt-32 space-y-6 px-4 text-gray-600">
-          {menuItems.map(({ name, icon: Icon, path }) => (
-            <NavLink
-              key={name}
-              to={path}
-              onClick={() => setIsOpen(false)} // Close menu on mobile after click
-              className={({ isActive }) =>
-                `flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors duration-200 ${isActive
-                  ? 'bg-blue-50 font-semibold text-blue-700 border-l-4 border-blue-600'
-                  : 'hover:bg-gray-100 text-gray-700 hover:text-gray-900'
-                }`
-              }
-            >
-              {Icon && <Icon className="h-5 w-5" />}
-              <span>{name}</span>
-            </NavLink>
-          ))}
+          {/* Base menu items (available to all users) */}
+          {baseMenuItems.map(({ name, icon: Icon, path, requiresEnterprise }) => {
+            const showLock = requiresEnterprise && !isEnterprise;
+            const isAnalytics = name === 'Analytics';
+            
+            return (
+              <NavLink
+                key={name}
+                to={path}
+                onClick={() => setIsOpen(false)} // Close menu on mobile after click
+                className={({ isActive }) => {
+                  const baseClasses = "flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors duration-200";
+                  
+                  if (isActive) {
+                    if (isAnalytics && isEnterprise) {
+                      return `${baseClasses} bg-purple-50 font-semibold text-purple-700 border-l-4 border-purple-600`;
+                    } else {
+                      return `${baseClasses} bg-blue-50 font-semibold text-blue-700 border-l-4 border-blue-600`;
+                    }
+                  } else {
+                    if (showLock) {
+                      return `${baseClasses} text-gray-400 hover:bg-gray-100`;
+                    } else {
+                      return `${baseClasses} hover:bg-gray-100 text-gray-700 hover:text-gray-900`;
+                    }
+                  }
+                }}
+              >
+                {Icon && <Icon className="h-5 w-5" />}
+                {showLock && <LockClosedIcon className="h-3 w-3" />}
+                <span>{name}</span>
+              </NavLink>
+            );
+          })}
         </nav>
 
         {/* Bottom section with profile and settings */}

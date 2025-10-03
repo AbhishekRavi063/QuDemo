@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState } from 'react';
-import Notification from '../components/Notification';
+import React, { createContext, useContext, useState, useCallback } from 'react';
+import CustomNotification from '../components/CustomNotification';
 
 const NotificationContext = createContext();
 
@@ -14,43 +14,51 @@ export const useNotification = () => {
 export const NotificationProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([]);
 
-  const addNotification = (message, type = 'success', duration = 3000) => {
+  const showNotification = useCallback((message, type = 'info', duration = 4000) => {
     const id = Date.now() + Math.random();
     const notification = { id, message, type, duration };
     
     setNotifications(prev => [...prev, notification]);
     
-    // Auto remove after duration
-    setTimeout(() => {
-      removeNotification(id);
-    }, duration);
-  };
+    return id;
+  }, []);
 
-  const removeNotification = (id) => {
+  const removeNotification = useCallback((id) => {
     setNotifications(prev => prev.filter(notification => notification.id !== id));
-  };
+  }, []);
 
-  const showSuccess = (message, duration) => addNotification(message, 'success', duration);
-  const showError = (message, duration) => addNotification(message, 'error', duration);
-  const showWarning = (message, duration) => addNotification(message, 'warning', duration);
-  const showInfo = (message, duration) => addNotification(message, 'info', duration);
+  const showSuccess = useCallback((message, duration) => {
+    return showNotification(message, 'success', duration);
+  }, [showNotification]);
 
-  const value = {
-    addNotification,
-    removeNotification,
-    showSuccess,
-    showError,
-    showWarning,
-    showInfo
-  };
+  const showError = useCallback((message, duration) => {
+    return showNotification(message, 'error', duration);
+  }, [showNotification]);
+
+  const showWarning = useCallback((message, duration) => {
+    return showNotification(message, 'warning', duration);
+  }, [showNotification]);
+
+  const showInfo = useCallback((message, duration) => {
+    return showNotification(message, 'info', duration);
+  }, [showNotification]);
 
   return (
-    <NotificationContext.Provider value={value}>
+    <NotificationContext.Provider
+      value={{
+        showNotification,
+        showSuccess,
+        showError,
+        showWarning,
+        showInfo,
+        removeNotification
+      }}
+    >
       {children}
       {/* Render notifications */}
       <div className="fixed top-4 right-4 z-50 space-y-2">
-        {notifications.map(notification => (
-          <Notification
+        {notifications.map((notification) => (
+          <CustomNotification
             key={notification.id}
             message={notification.message}
             type={notification.type}

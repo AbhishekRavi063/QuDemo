@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCompany } from '../context/CompanyContext';
+import { useNotification } from '../context/NotificationContext';
 import { getNodeApiUrl } from '../config/api';
 import ReactPlayer from "react-player";
 import HybridVideoPlayer from "./HybridVideoPlayer";
@@ -17,13 +18,22 @@ import {
   ClockIcon,
   VideoCameraIcon,
   DocumentTextIcon,
-  ChartBarIcon
+  ChartBarIcon,
+  LockClosedIcon
 } from '@heroicons/react/24/outline';
 
 const Qudemos = () => {
   const [qudemos, setQudemos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { company } = useCompany();
+  
+  // Check subscription status
+  const subscriptionPlan = company?.subscription_plan || 'free';
+  const subscriptionStatus = company?.subscription_status || 'active';
+  const isActive = ['active', 'trialing'].includes(subscriptionStatus);
+  const isPro = ['pro', 'enterprise'].includes(subscriptionPlan) && isActive;
+  const isEnterprise = subscriptionPlan === 'enterprise' && isActive;
   const [previewingQudemo, setPreviewingQudemo] = useState(null);
   const [dropdownOpen, setDropdownOpen] = useState(null);
   const [deletingQudemoId, setDeletingQudemoId] = useState(null);
@@ -33,32 +43,9 @@ const Qudemos = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [qudemoToDelete, setQudemoToDelete] = useState(null);
-  const { company } = useCompany();
+  const [errorDetails, setErrorDetails] = useState(null);
   const navigate = useNavigate();
-
-  // Notification function
-  const showNotification = (message, type = 'info') => {
-    const notification = document.createElement('div');
-    const bgColor = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500';
-    notification.className = `fixed top-4 right-4 ${bgColor} text-white px-6 py-3 rounded-lg shadow-lg z-50 transform transition-all duration-300 translate-x-full`;
-    notification.textContent = message;
-    document.body.appendChild(notification);
-    
-    // Animate in
-    setTimeout(() => {
-      notification.classList.remove('translate-x-full');
-    }, 100);
-    
-    // Remove after 3 seconds
-    setTimeout(() => {
-      notification.classList.add('translate-x-full');
-      setTimeout(() => {
-        if (notification.parentNode) {
-          notification.parentNode.removeChild(notification);
-        }
-      }, 300);
-    }, 3000);
-  };
+  const { showSuccess, showError, showInfo } = useNotification();
 
   // Share functionality
   const handleShareQudemo = async (qudemo) => {
@@ -87,27 +74,49 @@ const Qudemos = () => {
         
         // Show different message based on whether it's a new or existing link
         if (data.isNewLink) {
-          showNotification('Share link generated successfully!', 'success');
+          showSuccess('Share link generated successfully!');
         } else {
-          showNotification('Share link retrieved successfully!', 'success');
+          showSuccess('Share link retrieved successfully!');
         }
       } else {
-        const data = await response.json();
+        const errorData = await response.json();
         
-        // CHECK FOR SUBSCRIPTION REQUIRED
-        if (data.requiresUpgrade || response.status === 403) {
-          console.log('⚠️ Subscription required for sharing');
-          showNotification('Upgrade to Pro to share QuDemos', 'error');
-          // Show upgrade modal
-          setShowUpgradeModal(true);
+        // Check if it's a subscription error
+        if (errorData.requiresUpgrade) {
+          if (errorData.isCancelled) {
+            // Show popup modal for cancelled subscriptions
+            setShowUpgradeModal(true);
+            // Store error details for the modal
+            setErrorDetails({
+              title: errorData.error,
+              message: errorData.message,
+              currentPlan: errorData.currentPlan,
+              isCancelled: true
+            });
+          } else if (errorData.currentPlan === 'free') {
+            showError('Share functionality requires Pro or Enterprise plan. Please upgrade to continue.');
+            // Optionally redirect to pricing page
+            setTimeout(() => {
+              window.location.href = '/pricing';
+            }, 2000);
+          } else {
+            // Show popup modal for other upgrade scenarios
+            setShowUpgradeModal(true);
+            setErrorDetails({
+              title: errorData.error,
+              message: errorData.message,
+              currentPlan: errorData.currentPlan,
+              isCancelled: false
+            });
+          }
         } else {
-          console.error('❌ Failed to generate share link:', data.error);
-          showNotification('Failed to generate share link. Please try again.', 'error');
+          console.error('❌ Failed to generate share link:', errorData.error);
+          showError('Failed to generate share link. Please try again.');
         }
       }
     } catch (err) {
       console.error('❌ Error generating share link:', err);
-      showNotification('Network error. Please try again.', 'error');
+      showError('Network error. Please try again.');
     } finally {
       setSharingQudemo(null);
     }
@@ -116,10 +125,10 @@ const Qudemos = () => {
   const copyShareLink = async () => {
     try {
       await navigator.clipboard.writeText(shareLink);
-      showNotification('Share link copied to clipboard!', 'success');
+      showSuccess('Share link copied to clipboard!');
     } catch (err) {
       console.error('❌ Failed to copy to clipboard:', err);
-      showNotification('Failed to copy link. Please copy manually.', 'error');
+      showError('Failed to copy link. Please copy manually.');
     }
   };
 
@@ -256,15 +265,15 @@ const Qudemos = () => {
         // Show success message
         
         // Show success notification
-        showNotification('Qudemo deleted successfully!', 'success');
+        showSuccess('Qudemo deleted successfully!');
         
       } else {
         console.error('❌ Failed to delete qudemo:', data.error);
-        showNotification('Failed to delete qudemo: ' + (data.error || 'Unknown error'), 'error');
+        showError('Failed to delete qudemo: ' + (data.error || 'Unknown error'));
       }
     } catch (error) {
       console.error('❌ Error deleting qudemo:', error);
-      showNotification('Failed to delete qudemo. Please try again.', 'error');
+      showError('Failed to delete qudemo. Please try again.');
     }
   };
 
@@ -554,9 +563,12 @@ const Qudemos = () => {
                             e.stopPropagation();
                             handleDropdownAction('share', qudemo);
                           }}
-                          className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center space-x-2"
+                          className={`w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center space-x-2 ${
+                            !isPro ? 'text-gray-400' : ''
+                          }`}
                         >
                           <ShareIcon className="w-4 h-4" />
+                          {!isPro && <LockClosedIcon className="w-3 h-3" />}
                           <span>Share</span>
                         </button>
                         <hr className="my-1" />
@@ -602,9 +614,14 @@ const Qudemos = () => {
                       e.stopPropagation();
                       handleDropdownAction('share', qudemo);
                     }}
-                    className="w-full flex items-center justify-center space-x-2 text-green-600 hover:text-green-800 hover:bg-green-50 transition-colors duration-200 py-2 px-3 rounded-lg border border-green-200"
+                    className={`w-full flex items-center justify-center space-x-2 transition-colors duration-200 py-2 px-3 rounded-lg border ${
+                      !isPro 
+                        ? 'text-gray-400 border-gray-200 hover:bg-gray-50' 
+                        : 'text-green-600 hover:text-green-800 hover:bg-green-50 border-green-200'
+                    }`}
                   >
                     <ShareIcon className="w-4 h-4" />
+                    {!isPro && <LockClosedIcon className="w-3 h-3" />}
                     <span className="text-sm font-medium">Share Qudemo</span>
                   </button>
                 </div>
@@ -777,7 +794,11 @@ const Qudemos = () => {
       {/* Upgrade Modal */}
       <UpgradeModal 
         isOpen={showUpgradeModal} 
-        onClose={() => setShowUpgradeModal(false)} 
+        onClose={() => {
+          setShowUpgradeModal(false);
+          setErrorDetails(null);
+        }}
+        errorDetails={errorDetails}
       />
     </div>
   );

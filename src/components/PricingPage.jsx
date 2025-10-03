@@ -1,12 +1,53 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CheckIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { CheckIcon, XMarkIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
 import { getApiUrl } from '../config/api';
+import { useCompany } from '../context/CompanyContext';
 
 const PricingPage = () => {
   const navigate = useNavigate();
+  const { company } = useCompany();
   const [billingCycle, setBillingCycle] = useState('monthly');
   const [loading, setLoading] = useState(null);
+  const [openFAQ, setOpenFAQ] = useState(null);
+
+  // Get current subscription info (with fallback for non-authenticated users)
+  const currentPlan = company?.subscription_plan || 'free';
+  const currentStatus = company?.subscription_status || 'active';
+  const isActive = ['active', 'trialing'].includes(currentStatus);
+  const isCancelled = ['cancelled', 'expired', 'past_due'].includes(currentStatus);
+  
+  // Check if user is authenticated (has company data)
+  const isAuthenticated = !!company;
+
+  // FAQ data
+  const faqData = [
+    {
+      id: 1,
+      question: "Can I change plans later?",
+      answer: "Yes! You can upgrade or downgrade your plan at any time. Changes take effect immediately."
+    },
+    {
+      id: 2,
+      question: "What happens to my shared QuDemos if I downgrade?",
+      answer: "If you downgrade to Free, all your shared QuDemo links will stop working immediately. Visitors will see a message that the QuDemo is no longer available."
+    },
+    {
+      id: 3,
+      question: "Can I cancel anytime?",
+      answer: "Absolutely! You can cancel your subscription at any time. You'll continue to have access until the end of your billing period."
+    },
+    {
+      id: 4,
+      question: "Is there a free trial?",
+      answer: "The Free plan is available forever with no credit card required. You can upgrade to Pro or Enterprise whenever you're ready to share your QuDemos."
+    }
+  ];
+
+  // Handle FAQ toggle
+  const toggleFAQ = (faqId) => {
+    setOpenFAQ(openFAQ === faqId ? null : faqId);
+  };
 
   const plans = {
     free: {
@@ -25,8 +66,9 @@ const PricingPage = () => {
         'Cannot generate share links',
         'Limited analytics'
       ],
-      cta: 'Current Plan',
-      highlight: false
+      cta: currentPlan === 'free' ? 'Current Plan' : 'Downgrade to Free',
+      highlight: false,
+      isCurrent: currentPlan === 'free' && isAuthenticated
     },
     pro: {
       name: 'Pro',
@@ -43,8 +85,12 @@ const PricingPage = () => {
         'Export data'
       ],
       limitations: [],
-      cta: 'Upgrade to Pro',
-      highlight: true
+      cta: currentPlan === 'pro' 
+        ? (isCancelled ? 'Renew Pro Plan' : 'Current Plan')
+        : 'Upgrade to Pro',
+      highlight: true,
+      isCurrent: currentPlan === 'pro' && isActive && isAuthenticated,
+      isCancelled: currentPlan === 'pro' && isCancelled && isAuthenticated
     },
     enterprise: {
       name: 'Enterprise',
@@ -63,8 +109,12 @@ const PricingPage = () => {
         'Custom integrations'
       ],
       limitations: [],
-      cta: 'Upgrade to Enterprise',
-      highlight: false
+      cta: currentPlan === 'enterprise' 
+        ? (isCancelled ? 'Renew Enterprise Plan' : 'Current Plan')
+        : 'Upgrade to Enterprise',
+      highlight: false,
+      isCurrent: currentPlan === 'enterprise' && isActive && isAuthenticated,
+      isCancelled: currentPlan === 'enterprise' && isCancelled && isAuthenticated
     }
   };
 
@@ -182,9 +232,23 @@ const PricingPage = () => {
                 key={key}
                 className={`bg-white rounded-2xl shadow-xl overflow-hidden transform transition-all hover:scale-105 ${
                   plan.highlight ? 'ring-4 ring-blue-500' : ''
+                } ${
+                  plan.isCurrent ? 'ring-4 ring-green-500' : ''
+                } ${
+                  plan.isCancelled ? 'ring-4 ring-red-500' : ''
                 }`}
               >
-                {plan.highlight && (
+                {plan.isCurrent && (
+                  <div className="bg-green-600 text-white text-center py-2 text-sm font-semibold">
+                    ✓ CURRENT PLAN
+                  </div>
+                )}
+                {plan.isCancelled && (
+                  <div className="bg-red-600 text-white text-center py-2 text-sm font-semibold">
+                    ⚠ CANCELLED
+                  </div>
+                )}
+                {plan.highlight && !plan.isCurrent && !plan.isCancelled && (
                   <div className="bg-blue-600 text-white text-center py-2 text-sm font-semibold">
                     MOST POPULAR
                   </div>
@@ -219,9 +283,13 @@ const PricingPage = () => {
                   {/* CTA Button */}
                   <button
                     onClick={() => handleSelectPlan(key)}
-                    disabled={key === 'free' || loading === key}
+                    disabled={key === 'free' || loading === key || plan.isCurrent}
                     className={`w-full py-3 px-6 rounded-lg font-semibold transition-all mb-6 ${
-                      plan.highlight
+                      plan.isCurrent
+                        ? 'bg-green-100 text-green-700 cursor-not-allowed'
+                        : plan.isCancelled
+                        ? 'bg-red-600 text-white hover:bg-red-700'
+                        : plan.highlight
                         ? 'bg-blue-600 text-white hover:bg-blue-700'
                         : key === 'free'
                         ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
@@ -258,50 +326,6 @@ const PricingPage = () => {
           })}
         </div>
 
-        {/* FAQ Section */}
-        <div className="mt-16 max-w-3xl mx-auto">
-          <h2 className="text-3xl font-bold text-center text-gray-900 mb-8">
-            Frequently Asked Questions
-          </h2>
-          <div className="bg-white rounded-xl shadow-lg p-8 space-y-6">
-            <div>
-              <h3 className="font-semibold text-lg text-gray-900 mb-2">
-                Can I change plans later?
-              </h3>
-              <p className="text-gray-600">
-                Yes! You can upgrade or downgrade your plan at any time. Changes take effect immediately.
-              </p>
-            </div>
-            <div>
-              <h3 className="font-semibold text-lg text-gray-900 mb-2">
-                What happens to my shared QuDemos if I downgrade?
-              </h3>
-              <p className="text-gray-600">
-                If you downgrade to Free, all your shared QuDemo links will stop working immediately. 
-                Visitors will see a message that the QuDemo is no longer available.
-              </p>
-            </div>
-            <div>
-              <h3 className="font-semibold text-lg text-gray-900 mb-2">
-                Can I cancel anytime?
-              </h3>
-              <p className="text-gray-600">
-                Absolutely! You can cancel your subscription at any time. You'll continue to have access 
-                until the end of your billing period.
-              </p>
-            </div>
-            <div>
-              <h3 className="font-semibold text-lg text-gray-900 mb-2">
-                Is there a free trial?
-              </h3>
-              <p className="text-gray-600">
-                The Free plan is available forever with no credit card required. You can upgrade to Pro 
-                or Enterprise whenever you're ready to share your QuDemos.
-              </p>
-            </div>
-          </div>
-        </div>
-
         {/* Back Button */}
         <div className="text-center mt-12">
           <button
@@ -310,6 +334,47 @@ const PricingPage = () => {
           >
             ← Back to Dashboard
           </button>
+        </div>
+
+        {/* FAQ Section */}
+        <div className="mt-16 max-w-3xl mx-auto">
+          <h2 className="text-3xl font-bold text-center text-gray-900 mb-8">
+            Frequently Asked Questions
+          </h2>
+          <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+            {faqData.map((faq, index) => (
+              <div key={faq.id} className={`border-b border-gray-200 last:border-b-0`}>
+                <button
+                  onClick={() => toggleFAQ(faq.id)}
+                  className="w-full px-8 py-6 text-left hover:bg-gray-50 transition-colors duration-200 focus:outline-none"
+                >
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-semibold text-lg text-gray-900 pr-4">
+                      {faq.question}
+                    </h3>
+                    <div className="flex-shrink-0">
+                      {openFAQ === faq.id ? (
+                        <ChevronUpIcon className="h-5 w-5 text-gray-500" />
+                      ) : (
+                        <ChevronDownIcon className="h-5 w-5 text-gray-500" />
+                      )}
+                    </div>
+                  </div>
+                </button>
+                <div
+                  className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                    openFAQ === faq.id ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+                  }`}
+                >
+                  <div className="px-8 pb-6 text-left">
+                    <p className="text-gray-600 leading-relaxed">
+                      {faq.answer}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>
