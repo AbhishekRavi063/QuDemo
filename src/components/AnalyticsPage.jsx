@@ -10,7 +10,8 @@ import {
   ArrowTopRightOnSquareIcon,
   ChevronDownIcon,
   ChevronRightIcon,
-  XCircleIcon
+  XCircleIcon,
+  UserIcon
 } from '@heroicons/react/24/outline';
 import { getApiUrl } from '../config/api';
 
@@ -270,11 +271,19 @@ const AnalyticsPage = () => {
                                 <div>
                                   <p className="text-sm font-medium text-gray-900">
                                     {share.share_token.substring(0, 8)}...
+                                    {share.client_name && (
+                                      <span className="ml-2 text-blue-600">
+                                        ({share.client_name})
+                                      </span>
+                                    )}
                                   </p>
                                   <p className="text-xs text-gray-500">
                                     Created: {formatDate(share.created_at)} | 
                                     Views: {share.access_count} | 
                                     Last accessed: {formatDate(share.last_accessed_at)}
+                                    {share.client_company && (
+                                      <span> | Client: {share.client_company}</span>
+                                    )}
                                   </p>
                                 </div>
                               </div>
@@ -303,7 +312,7 @@ const AnalyticsPage = () => {
                             {/* Expanded Share Link Details */}
                             {expandedShares.has(share.id) && (
                               <div className="mt-4 pt-4 border-t border-gray-100">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm mb-4">
                                   <div>
                                     <p className="font-medium text-gray-700">Share URL:</p>
                                     <p className="text-gray-600 break-all">{share.share_url}</p>
@@ -313,6 +322,42 @@ const AnalyticsPage = () => {
                                     <p className="text-gray-600">{formatDate(share.expires_at)}</p>
                                   </div>
                                 </div>
+
+                                {/* Client Information */}
+                                {(share.client_name || share.client_company || share.client_email) && (
+                                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                                    <h5 className="text-sm font-medium text-blue-900 mb-3 flex items-center">
+                                      <UserIcon className="h-4 w-4 mr-2" />
+                                      Client Information
+                                    </h5>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                                      {share.client_name && (
+                                        <div>
+                                          <p className="font-medium text-blue-800">Client Name:</p>
+                                          <p className="text-blue-700">{share.client_name}</p>
+                                        </div>
+                                      )}
+                                      {share.client_company && (
+                                        <div>
+                                          <p className="font-medium text-blue-800">Company:</p>
+                                          <p className="text-blue-700">{share.client_company}</p>
+                                        </div>
+                                      )}
+                                      {share.client_email && (
+                                        <div>
+                                          <p className="font-medium text-blue-800">Email:</p>
+                                          <p className="text-blue-700">{share.client_email}</p>
+                                        </div>
+                                      )}
+                                      {share.client_sl_no && (
+                                        <div>
+                                          <p className="font-medium text-blue-800">SL No:</p>
+                                          <p className="text-blue-700">{share.client_sl_no}</p>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
 
                                 {/* Q&A Data for this specific share */}
                                 <div className="mt-4">

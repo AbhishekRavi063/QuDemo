@@ -16,12 +16,14 @@ import {
   ServerIcon,
   BeakerIcon,
   LockClosedIcon,
+  UserGroupIcon,
 } from '@heroicons/react/24/outline';
 
 // Base menu items (available to all users)
 const baseMenuItems = [
   { name: 'Create Qudemo', icon: PlusIcon, path: '/create' },
   { name: 'Qudemos', icon: PlayIcon, path: '/qudemos' },
+  { name: 'Bulk Share', icon: UserGroupIcon, path: '/bulk-share', requiresEnterprise: true },
   { name: 'Analytics', icon: ChartBarIcon, path: '/analytics', requiresEnterprise: true },
 ];
 
@@ -33,6 +35,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   const subscriptionPlan = company?.subscription_plan || 'free';
   const subscriptionStatus = company?.subscription_status || 'active';
   const isActive = ['active', 'trialing'].includes(subscriptionStatus);
+  const isPro = ['pro', 'enterprise'].includes(subscriptionPlan) && isActive;
   const isEnterprise = subscriptionPlan === 'enterprise' && isActive;
 
   const handleLogout = async () => {
@@ -72,9 +75,10 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         {/* Menu Links */}
         <nav className="flex flex-col mt-20 md:mt-32 space-y-6 px-4 text-gray-600">
           {/* Base menu items (available to all users) */}
-          {baseMenuItems.map(({ name, icon: Icon, path, requiresEnterprise }) => {
-            const showLock = requiresEnterprise && !isEnterprise;
+          {baseMenuItems.map(({ name, icon: Icon, path, requiresEnterprise, requiresPro }) => {
+            const showLock = (requiresEnterprise && !isEnterprise) || (requiresPro && !isPro);
             const isAnalytics = name === 'Analytics';
+            const isBulkShare = name === 'Bulk Share';
             
             return (
               <NavLink
@@ -85,7 +89,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                   const baseClasses = "flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors duration-200";
                   
                   if (isActive) {
-                    if (isAnalytics && isEnterprise) {
+                    if ((isAnalytics || isBulkShare) && isEnterprise) {
                       return `${baseClasses} bg-purple-50 font-semibold text-purple-700 border-l-4 border-purple-600`;
                     } else {
                       return `${baseClasses} bg-blue-50 font-semibold text-blue-700 border-l-4 border-blue-600`;
