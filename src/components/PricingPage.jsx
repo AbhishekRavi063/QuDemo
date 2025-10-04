@@ -14,6 +14,7 @@ const PricingPage = () => {
   // Get current subscription info (with fallback for non-authenticated users)
   const currentPlan = company?.subscription_plan || 'free';
   const currentStatus = company?.subscription_status || 'active';
+  const currentBillingCycle = company?.billing_cycle || 'monthly';
   const isActive = ['active', 'trialing', 'on_trial'].includes(currentStatus);
   const isCancelled = ['cancelled', 'expired', 'past_due'].includes(currentStatus);
   
@@ -77,11 +78,11 @@ const PricingPage = () => {
         '✨ Public QuDemo sharing'
       ],
       limitations: [],
-      cta: currentPlan === 'pro' 
+      cta: currentPlan === 'pro' && currentBillingCycle === billingCycle
         ? (isCancelled ? 'Renew Pro Plan' : 'Current Plan')
         : 'Upgrade to Pro',
       highlight: true,
-      isCurrent: currentPlan === 'pro' && isActive && isAuthenticated,
+      isCurrent: currentPlan === 'pro' && currentBillingCycle === billingCycle && isActive && isAuthenticated,
       isCancelled: currentPlan === 'pro' && isCancelled && isAuthenticated
     },
     // ENTERPRISE CARD TEMPORARILY COMMENTED OUT FOR PRODUCTION
@@ -227,12 +228,12 @@ const PricingPage = () => {
                 className={`bg-white rounded-2xl shadow-xl overflow-hidden transform transition-all hover:scale-105 ${
                   plan.highlight ? 'ring-4 ring-blue-500' : ''
                 } ${
-                  plan.isCurrent ? 'ring-4 ring-green-500' : ''
+                  plan.isCurrent && currentBillingCycle === billingCycle ? 'ring-4 ring-green-500' : ''
                 } ${
                   plan.isCancelled ? 'ring-4 ring-red-500' : ''
                 }`}
               >
-                {plan.isCurrent && (
+                {plan.isCurrent && currentBillingCycle === billingCycle && (
                   <div className="bg-green-600 text-white text-center py-2 text-sm font-semibold">
                     ✓ CURRENT PLAN
                   </div>
@@ -277,9 +278,9 @@ const PricingPage = () => {
                   {/* CTA Button */}
                   <button
                     onClick={() => handleSelectPlan(key)}
-                    disabled={key === 'free' || loading === key || plan.isCurrent}
+                    disabled={key === 'free' || loading === key || (plan.isCurrent && currentBillingCycle === billingCycle)}
                     className={`w-full py-3 px-6 rounded-lg font-semibold transition-all mb-6 ${
-                      plan.isCurrent
+                      plan.isCurrent && currentBillingCycle === billingCycle
                         ? 'bg-green-100 text-green-700 cursor-not-allowed'
                         : plan.isCancelled
                         ? 'bg-red-600 text-white hover:bg-red-700'

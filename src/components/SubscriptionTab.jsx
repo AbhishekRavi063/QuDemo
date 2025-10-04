@@ -76,20 +76,32 @@ const SubscriptionTab = ({ companyId }) => {
 
   const handleManageBilling = async () => {
     try {
+      console.log('🔍 Manage Billing clicked for company:', companyId);
       const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
       const baseUrl = getApiUrl('node');
+      console.log('🔍 API URL:', `${baseUrl}/api/subscription/${companyId}/billing-portal`);
+      console.log('🔍 Token available:', token ? 'Yes' : 'No');
+      
       const response = await fetch(`${baseUrl}/api/subscription/${companyId}/billing-portal`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
 
+      console.log('🔍 Response status:', response.status);
       const data = await response.json();
+      console.log('🔍 Response data:', data);
+      
       if (data.success && data.portalUrl) {
+        console.log('🔍 Opening portal URL:', data.portalUrl);
         window.open(data.portalUrl, '_blank');
+      } else {
+        console.error('❌ No portal URL received:', data);
+        showError(data.error || 'Failed to get billing portal');
       }
     } catch (error) {
-      console.error('Error opening billing portal:', error);
+      console.error('❌ Error opening billing portal:', error);
+      showError('Failed to open billing portal');
     }
   };
 
@@ -139,7 +151,8 @@ const SubscriptionTab = ({ companyId }) => {
       cancelled: { color: 'bg-red-100 text-red-800', icon: XCircleIcon, text: 'Cancelled' },
       expired: { color: 'bg-red-100 text-red-800', icon: XCircleIcon, text: 'Expired' },
       past_due: { color: 'bg-yellow-100 text-yellow-800', icon: XCircleIcon, text: 'Past Due' },
-      trialing: { color: 'bg-blue-100 text-blue-800', icon: CheckCircleIcon, text: 'Trial' }
+      trialing: { color: 'bg-blue-100 text-blue-800', icon: CheckCircleIcon, text: 'Trial' },
+      on_trial: { color: 'bg-blue-100 text-blue-800', icon: CheckCircleIcon, text: 'Trial' }
     };
     return badges[status] || badges.active;
   };
@@ -204,7 +217,7 @@ const SubscriptionTab = ({ companyId }) => {
   const StatusIcon = statusBadge.icon;
   const isFree = subscription.plan === 'free';
   const isPaid = ['pro', 'enterprise'].includes(subscription.plan);
-  const isActive = subscription.status === 'active' || subscription.status === 'trialing';
+  const isActive = ['active', 'trialing', 'on_trial'].includes(subscription.status);
 
   return (
     <div className="space-y-6">
