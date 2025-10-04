@@ -20,7 +20,7 @@ const BulkSharePage = () => {
   // Check if user has Enterprise subscription
   const subscriptionPlan = company?.subscription_plan || 'free';
   const subscriptionStatus = company?.subscription_status || 'active';
-  const isEnterprise = subscriptionPlan === 'enterprise' && ['active', 'trialing'].includes(subscriptionStatus);
+  const isEnterprise = subscriptionPlan === 'enterprise' && ['active', 'trialing', 'on_trial'].includes(subscriptionStatus);
   const [selectedQuDemo, setSelectedQuDemo] = useState('');
   const [qudemos, setQudemos] = useState([]);
   const [file, setFile] = useState(null);

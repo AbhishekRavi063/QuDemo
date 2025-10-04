@@ -14,7 +14,7 @@ const PricingPage = () => {
   // Get current subscription info (with fallback for non-authenticated users)
   const currentPlan = company?.subscription_plan || 'free';
   const currentStatus = company?.subscription_status || 'active';
-  const isActive = ['active', 'trialing'].includes(currentStatus);
+  const isActive = ['active', 'trialing', 'on_trial'].includes(currentStatus);
   const isCancelled = ['cancelled', 'expired', 'past_due'].includes(currentStatus);
   
   // Check if user is authenticated (has company data)

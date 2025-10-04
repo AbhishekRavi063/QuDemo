@@ -34,7 +34,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   // Check subscription status
   const subscriptionPlan = company?.subscription_plan || 'free';
   const subscriptionStatus = company?.subscription_status || 'active';
-  const isActive = ['active', 'trialing'].includes(subscriptionStatus);
+  const isActive = ['active', 'trialing', 'on_trial'].includes(subscriptionStatus);
   const isPro = ['pro', 'enterprise'].includes(subscriptionPlan) && isActive;
   const isEnterprise = subscriptionPlan === 'enterprise' && isActive;
 
