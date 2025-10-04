@@ -56,10 +56,7 @@ const PricingPage = () => {
       description: 'Perfect for getting started',
       features: [
         'Create unlimited QuDemos',
-        'Preview QuDemos',
-        'Edit and manage QuDemos',
-        'Basic analytics',
-        'Email support'
+        'Preview QuDemos'
       ],
       limitations: [
         'No public sharing',
@@ -72,17 +69,12 @@ const PricingPage = () => {
     },
     pro: {
       name: 'Pro',
-      price: { monthly: 29, yearly: 290 },
+      price: { monthly: 25, yearly: 250 },
       description: 'For professionals and growing teams',
       features: [
         'Everything in Free',
         '✨ Generate share links',
-        '✨ Public QuDemo sharing',
-        'Advanced analytics',
-        'Priority support',
-        'Custom branding',
-        'Email notifications',
-        'Export data'
+        '✨ Public QuDemo sharing'
       ],
       limitations: [],
       cta: currentPlan === 'pro' 
@@ -92,30 +84,31 @@ const PricingPage = () => {
       isCurrent: currentPlan === 'pro' && isActive && isAuthenticated,
       isCancelled: currentPlan === 'pro' && isCancelled && isAuthenticated
     },
-    enterprise: {
-      name: 'Enterprise',
-      price: { monthly: 99, yearly: 990 },
-      description: 'For large teams and organizations',
-      features: [
-        'Everything in Pro',
-        '✨ Unlimited share links',
-        '✨ White-label options',
-        '✨ Custom domain',
-        'API access',
-        'SSO integration',
-        'Dedicated support',
-        'Team collaboration',
-        'Advanced security',
-        'Custom integrations'
-      ],
-      limitations: [],
-      cta: currentPlan === 'enterprise' 
-        ? (isCancelled ? 'Renew Enterprise Plan' : 'Current Plan')
-        : 'Upgrade to Enterprise',
-      highlight: false,
-      isCurrent: currentPlan === 'enterprise' && isActive && isAuthenticated,
-      isCancelled: currentPlan === 'enterprise' && isCancelled && isAuthenticated
-    }
+    // ENTERPRISE CARD TEMPORARILY COMMENTED OUT FOR PRODUCTION
+    // enterprise: {
+    //   name: 'Enterprise',
+    //   price: { monthly: 99, yearly: 990 },
+    //   description: 'For large teams and organizations',
+    //   features: [
+    //     'Everything in Pro',
+    //     '✨ Unlimited share links',
+    //     '✨ White-label options',
+    //     '✨ Custom domain',
+    //     'API access',
+    //     'SSO integration',
+    //     'Dedicated support',
+    //     'Team collaboration',
+    //     'Advanced security',
+    //     'Custom integrations'
+    //   ],
+    //   limitations: [],
+    //   cta: currentPlan === 'enterprise' 
+    //     ? (isCancelled ? 'Renew Enterprise Plan' : 'Current Plan')
+    //     : 'Upgrade to Enterprise',
+    //   highlight: false,
+    //   isCurrent: currentPlan === 'enterprise' && isActive && isAuthenticated,
+    //   isCancelled: currentPlan === 'enterprise' && isCancelled && isAuthenticated
+    // }
   };
 
   const handleSelectPlan = async (planName) => {
@@ -178,7 +171,8 @@ const PricingPage = () => {
       const yearly = plans[plan].price.yearly;
       const savings = monthly - yearly;
       const percentage = Math.round((savings / monthly) * 100);
-      return { amount: savings, percentage };
+      const monthsFree = Math.round(savings / plans[plan].price.monthly);
+      return { amount: savings, percentage, monthsFree };
     }
     return null;
   };
@@ -217,7 +211,7 @@ const PricingPage = () => {
             >
               Yearly
               <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
-                Save 20%
+                2 Months Free
               </span>
             </button>
           </div>
@@ -275,7 +269,7 @@ const PricingPage = () => {
                     </div>
                     {savings && (
                       <p className="text-sm text-green-600 mt-2">
-                        Save ${savings.amount}/year ({savings.percentage}% off)
+                        Save ${savings.amount}/year ({savings.monthsFree} months free)
                       </p>
                     )}
                   </div>
