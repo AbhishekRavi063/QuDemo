@@ -9,12 +9,15 @@ import {
   ChartBarIcon
 } from '@heroicons/react/24/outline';
 import { getApiUrl } from '../config/api';
+import { useNotification } from '../context/NotificationContext';
 
 const SubscriptionTab = ({ companyId }) => {
   const navigate = useNavigate();
+  const { showSuccess, showError } = useNotification();
   const [subscription, setSubscription] = useState(null);
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
 
   useEffect(() => {
     fetchSubscription();
@@ -91,10 +94,6 @@ const SubscriptionTab = ({ companyId }) => {
   };
 
   const handleCancelSubscription = async () => {
-    if (!window.confirm('Are you sure you want to cancel your subscription? All your shared QuDemos will stop working.')) {
-      return;
-    }
-
     setCancelling(true);
     try {
       const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
@@ -108,14 +107,18 @@ const SubscriptionTab = ({ companyId }) => {
 
       const data = await response.json();
       if (data.success) {
-        alert('Subscription cancelled successfully');
+        showSuccess('Subscription cancelled successfully');
         fetchSubscription();
+        // Refresh the page after a short delay to show the updated subscription status
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
       } else {
-        alert('Failed to cancel subscription');
+        showError('Failed to cancel subscription');
       }
     } catch (error) {
       console.error('Error cancelling subscription:', error);
-      alert('Failed to cancel subscription');
+      showError('Failed to cancel subscription');
     } finally {
       setCancelling(false);
     }
@@ -304,7 +307,7 @@ const SubscriptionTab = ({ companyId }) => {
               </button>
 
               <button
-                onClick={handleCancelSubscription}
+                onClick={() => setShowCancelModal(true)}
                 disabled={cancelling}
                 className="flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
               >
@@ -364,6 +367,41 @@ const SubscriptionTab = ({ companyId }) => {
                 Your subscription is no longer active. All shared QuDemo links have been disabled.
                 Reactivate your subscription to restore access.
               </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Custom Cancel Confirmation Modal */}
+      {showCancelModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="flex items-center mb-4">
+              <XCircleIcon className="h-8 w-8 text-red-600 mr-3" />
+              <h3 className="text-lg font-semibold text-gray-900">Cancel Subscription</h3>
+            </div>
+            
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to cancel your subscription? All your shared QuDemos will stop working and you'll lose access to premium features.
+            </p>
+            
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setShowCancelModal(false)}
+                className="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
+              >
+                Keep Subscription
+              </button>
+              <button
+                onClick={() => {
+                  setShowCancelModal(false);
+                  handleCancelSubscription();
+                }}
+                disabled={cancelling}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
+              >
+                {cancelling ? 'Cancelling...' : 'Yes, Cancel'}
+              </button>
             </div>
           </div>
         </div>

@@ -23,8 +23,8 @@ import {
 const baseMenuItems = [
   { name: 'Create Qudemo', icon: PlusIcon, path: '/create' },
   { name: 'Qudemos', icon: PlayIcon, path: '/qudemos' },
-  { name: 'Bulk Share', icon: UserGroupIcon, path: '/bulk-share', requiresEnterprise: true },
-  { name: 'Analytics', icon: ChartBarIcon, path: '/analytics', requiresEnterprise: true },
+  // { name: 'Bulk Share', icon: UserGroupIcon, path: '/bulk-share', requiresEnterprise: true }, // COMMENTED OUT FOR PRODUCTION
+  // { name: 'Analytics', icon: ChartBarIcon, path: '/analytics', requiresEnterprise: true }, // COMMENTED OUT FOR PRODUCTION
 ];
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
