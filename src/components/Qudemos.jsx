@@ -108,8 +108,8 @@ const Qudemos = () => {
     }
   };
 
-   // Share functionality
-   const handleShareQudemo = async (qudemo) => {
+  // Share functionality
+  const handleShareQudemo = async (qudemo) => {
      // Check if user has Pro/Enterprise plan first
      if (!isPro) {
        // Show upgrade popup for free users
@@ -320,11 +320,11 @@ const Qudemos = () => {
        console.log(`📊 Client data being sent to backend:`, clientData);
        console.log(`📊 ===== END PARSING SUMMARY =====`);
 
-       // Send to backend
-       const requestBody = {
-         qudemoId: qudemoToShare.id,
-         clientData: clientData
-       };
+        // Send to backend
+        const requestBody = {
+          qudemoId: qudemoToShare.id,
+          clientData: clientData
+        };
        
        console.log(`📊 Request body being sent:`, requestBody);
        

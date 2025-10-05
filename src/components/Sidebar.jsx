@@ -16,6 +16,7 @@ import {
   BeakerIcon,
   LockClosedIcon,
   UserGroupIcon,
+  DocumentArrowUpIcon,
 } from '@heroicons/react/24/outline';
 
 // Base menu items (available to all users)
@@ -132,6 +133,21 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
               Profile
+            </Link>
+            
+            <Link
+              to="/bulk-uploads"
+              className={`group flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors duration-200 ${
+                location.pathname === '/bulk-uploads'
+                  ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600'
+                  : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+              }`}
+              onClick={() => setIsOpen(false)}
+            >
+              <DocumentArrowUpIcon className={`mr-3 h-5 w-5 flex-shrink-0 ${
+                location.pathname === '/bulk-uploads' ? 'text-indigo-700' : 'text-gray-400 group-hover:text-gray-500'
+              }`} />
+              Bulk Upload
             </Link>
             
             {/* SETTINGS MENU - TEMPORARILY COMMENTED OUT */}

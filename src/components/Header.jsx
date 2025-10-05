@@ -1,7 +1,7 @@
-import { Link } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react';
 import { useCompany } from '../context/CompanyContext';
-import { Bars3Icon } from '@heroicons/react/24/outline';
+import { Bars3Icon, UserIcon, DocumentArrowUpIcon, ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
 // Backend switcher imports - COMMENTED OUT
 // import {
 //   ChevronDownIcon,
@@ -12,8 +12,11 @@ import { Bars3Icon } from '@heroicons/react/24/outline';
 
 export default function Header({ onMenuClick }) {
   const { company } = useCompany();
+  const navigate = useNavigate();
   const [userProfileImage, setUserProfileImage] = useState(null);
   const [userInitials, setUserInitials] = useState('A');
+  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
   
   // Backend switcher state and functions - COMMENTED OUT
   // const { selectedBackend, currentBackend, switchBackend, getAvailableBackends } = useBackend();
@@ -51,6 +54,28 @@ export default function Header({ onMenuClick }) {
 
     fetchUserProfile();
   }, [company?.logo_url]); // Re-run when company logo changes
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsProfileDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  // Handle logout
+  const handleLogout = () => {
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('user');
+    navigate('/');
+    setIsProfileDropdownOpen(false);
+  };
 
   // const handleBackendChange = (backendId) => {
   //   switchBackend(backendId);
@@ -130,9 +155,10 @@ export default function Header({ onMenuClick }) {
 
       {/* Right - Icons */}
       <div className="flex items-center gap-2 md:gap-3">
-        {/* Profile Icon Only */}
-        <Link to="/profile">
-          <div 
+        {/* Profile Dropdown */}
+        <div className="relative" ref={dropdownRef}>
+          <button
+            onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
             className="w-10 h-10 rounded-full cursor-pointer hover:ring-2 ring-blue-500 overflow-hidden transition-all duration-200 hover:bg-gray-100"
             title={company?.logo_url ? "Company Logo" : userProfileImage ? "Profile Picture" : "Profile"}
           >
@@ -152,8 +178,47 @@ export default function Header({ onMenuClick }) {
             >
               {userInitials}
             </div>
-          </div>
-        </Link>
+          </button>
+
+          {/* Dropdown Menu */}
+          {isProfileDropdownOpen && (
+            <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-50">
+              <div className="py-1">
+                <button
+                  onClick={() => {
+                    navigate('/profile');
+                    setIsProfileDropdownOpen(false);
+                  }}
+                  className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
+                >
+                  <UserIcon className="w-4 h-4" />
+                  <span>Profile</span>
+                </button>
+                
+                <button
+                  onClick={() => {
+                    navigate('/bulk-uploads');
+                    setIsProfileDropdownOpen(false);
+                  }}
+                  className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
+                >
+                  <DocumentArrowUpIcon className="w-4 h-4" />
+                  <span>Bulk Upload</span>
+                </button>
+                
+                <hr className="my-1" />
+                
+                <button
+                  onClick={handleLogout}
+                  className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center space-x-2"
+                >
+                  <ArrowRightOnRectangleIcon className="w-4 h-4" />
+                  <span>Logout</span>
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
