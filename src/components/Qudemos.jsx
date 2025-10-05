@@ -73,6 +73,11 @@ const Qudemos = () => {
 
   // Handle view details for interactions
   const handleViewDetails = (interaction) => {
+    console.log('🔍 Selected interaction data:', interaction);
+    console.log('🔍 Questions data:', interaction.questions);
+    if (interaction.questions && interaction.questions.length > 0) {
+      console.log('🔍 First question with timestamp:', interaction.questions[0]);
+    }
     setSelectedInteraction(interaction);
     setActiveTab('overview');
     setShowDetailsModal(true);
@@ -2119,7 +2124,9 @@ const Qudemos = () => {
                     <h4 className="font-medium text-gray-900 mb-4">Questions & Responses</h4>
                     <div className="space-y-6 max-h-96 overflow-y-auto">
                       {selectedInteraction.questions && selectedInteraction.questions.length > 0 ? (
-                        selectedInteraction.questions.map((qa, index) => (
+                        selectedInteraction.questions.map((qa, index) => {
+                          console.log(`🔍 Question ${index} data:`, qa);
+                          return (
                           <div key={index} className="space-y-3">
                             {/* Question */}
                             <div className="flex items-start space-x-3 bg-gray-100 rounded-lg p-3">
@@ -2142,11 +2149,27 @@ const Qudemos = () => {
                                 </div>
                               </div>
                               <div className="flex-1">
-                                <p className="text-sm text-gray-700">{qa.answer}</p>
+                                <div className="text-sm text-gray-700 whitespace-pre-wrap">{qa.answer.replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1').replace(/`(.*?)`/g, '$1')}</div>
+                                {qa.formatted_timestamp && (
+                                  <div className="mt-2 flex items-center space-x-2">
+                                    <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                    </svg>
+                                    <span className="text-xs text-blue-600 font-medium">
+                                      Video timestamp: {qa.formatted_timestamp}
+                                      {qa.start_timestamp && (
+                                        <span className="text-gray-500 ml-1">
+                                          ({Math.floor(qa.start_timestamp / 60)}:{(qa.start_timestamp % 60).toString().padStart(2, '0')})
+                                        </span>
+                                      )}
+                                    </span>
+                                  </div>
+                                )}
                               </div>
                             </div>
                           </div>
-                        ))
+                          );
+                        })
                       ) : (
                         <div className="text-center py-8">
                           <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
