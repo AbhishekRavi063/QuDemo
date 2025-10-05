@@ -28,7 +28,7 @@ import TestRunner from './components/TestRunner';
 import PublicQudemoShare from './components/PublicQudemoShare';
 import PrivacyPolicy from './components/PrivacyPolicy';
 import PricingPage from './components/PricingPage';
-import AnalyticsPage from './components/AnalyticsPage';
+import CustomerInteractionsPage from './components/CustomerInteractionsPage';
 import { CompanyProvider, useCompany } from './context/CompanyContext';
 import { BackendProvider } from './context/BackendContext';
 import { NotificationProvider } from './context/NotificationContext';
@@ -307,13 +307,13 @@ function App() {
               } 
             />
             <Route 
-              path="/analytics" 
+              path="/customer-interactions" 
               element={
                 <CompanyProvider>
                   <ProtectedRoute>
                     <CompanyCheck>
                       <DashboardLayout>
-                        <AnalyticsPage />
+                        <CustomerInteractionsPage />
                       </DashboardLayout>
                     </CompanyCheck>
                   </ProtectedRoute>

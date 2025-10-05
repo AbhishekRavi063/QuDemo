@@ -3,7 +3,6 @@ import { NavLink, Link, useLocation } from 'react-router-dom';
 import { useCompany } from '../context/CompanyContext';
 import {
   ClockIcon,
-  ChartBarIcon,
   Cog6ToothIcon,
   // ChatBubbleLeftEllipsisIcon, // COMMENTED OUT - Buyer Interactions hidden
   Squares2X2Icon,
@@ -21,9 +20,9 @@ import {
 
 // Base menu items (available to all users)
 const baseMenuItems = [
-  { name: 'Create Qudemo', icon: PlusIcon, path: '/create' },
-  { name: 'Qudemos', icon: PlayIcon, path: '/qudemos' },
-  { name: 'Analytics', icon: ChartBarIcon, path: '/analytics', requiresPro: true },
+    { name: 'Create Qudemo', icon: PlusIcon, path: '/create' },
+    { name: 'Qudemos', icon: PlayIcon, path: '/qudemos' },
+    { name: 'Interactions', icon: UserGroupIcon, path: '/customer-interactions', requiresPro: true },
 ];
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
