@@ -53,10 +53,60 @@ const Qudemos = () => {
    const [customers, setCustomers] = useState([]);
    const [showGeneratedLinksModal, setShowGeneratedLinksModal] = useState(false);
    const [generatedLinks, setGeneratedLinks] = useState([]);
-   const [showDownloadModal, setShowDownloadModal] = useState(false);
-   const [downloadData, setDownloadData] = useState(null);
+  const [showDownloadModal, setShowDownloadModal] = useState(false);
+  const [downloadData, setDownloadData] = useState(null);
+  const [selectedInteraction, setSelectedInteraction] = useState(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [showPeopleListModal, setShowPeopleListModal] = useState(false);
+  const [qudemoPeople, setQudemoPeople] = useState([]);
+  const [activeTab, setActiveTab] = useState('overview');
   const navigate = useNavigate();
   const { showSuccess, showError, showInfo } = useNotification();
+
+  // Format duration helper
+  const formatDuration = (seconds) => {
+    if (!seconds) return '0:00';
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
+
+  // Handle view details for interactions
+  const handleViewDetails = (interaction) => {
+    setSelectedInteraction(interaction);
+    setActiveTab('overview');
+    setShowDetailsModal(true);
+    setShowPeopleListModal(false);
+  };
+
+  const handleTabClick = (tabName) => {
+    setActiveTab(tabName);
+  };
+
+  // Fetch interactions for a specific QuDemo
+  const fetchQudemoInteractions = async (qudemoId) => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await fetch(getNodeApiUrl(`/api/analytics/qudemo-interactions/${qudemoId}`), {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        return data.data || [];
+      } else {
+        console.error('Failed to fetch QuDemo interactions');
+        return [];
+      }
+    } catch (error) {
+      console.error('Error fetching QuDemo interactions:', error);
+      return [];
+    }
+  };
 
    // Share functionality
    const handleShareQudemo = async (qudemo) => {
@@ -647,6 +697,16 @@ const Qudemos = () => {
       case 'edit':
         navigate(`/view-qudemo/${qudemo.id}`);
         break;
+      case 'interactions':
+        // Fetch interactions for this specific QuDemo and show people list
+        const interactions = await fetchQudemoInteractions(qudemo.id);
+        if (interactions.length > 0) {
+          setQudemoPeople(interactions);
+          setShowPeopleListModal(true);
+        } else {
+          showInfo('No interactions found for this QuDemo');
+        }
+        break;
       case 'delete':
         setQudemoToDelete(qudemo);
         setShowDeleteModal(true);
@@ -970,7 +1030,7 @@ const Qudemos = () => {
                           className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center space-x-2"
                         >
                           <EyeIcon className="w-4 h-4" />
-                          <span>Preview Qudemo</span>
+                          <span>Preview</span>
                         </button>
                         <button
                           onClick={(e) => {
@@ -981,6 +1041,16 @@ const Qudemos = () => {
                         >
                           <PencilIcon className="w-4 h-4" />
                           <span>View</span>
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDropdownAction('interactions', qudemo);
+                          }}
+                          className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center space-x-2"
+                        >
+                          <ChartBarIcon className="w-4 h-4" />
+                          <span>View Interactions</span>
                         </button>
                         <button
                           onClick={(e) => {
@@ -1029,7 +1099,7 @@ const Qudemos = () => {
                     className="w-full flex items-center justify-center space-x-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 transition-colors duration-200 py-2 px-3 rounded-lg border border-blue-200"
                   >
                     <PlayIcon className="w-4 h-4" />
-                    <span className="text-sm font-medium">Preview Qudemo</span>
+                    <span className="text-sm font-medium">Preview</span>
                   </button>
                   
                   {/* Share Button */}
@@ -1748,6 +1818,445 @@ const Qudemos = () => {
                   </svg>
                   Download Excel File
                 </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* People List Modal */}
+      {showPeopleListModal && qudemoPeople.length > 0 && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-hidden">
+            {/* Modal Header */}
+            <div className="px-6 py-4 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">QuDemo Interactions</h3>
+                  <p className="text-sm text-gray-500">
+                    {qudemoPeople[0]?.qudemo_title} - {qudemoPeople.length} people have interacted
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowPeopleListModal(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            {/* People List */}
+            <div className="p-6 overflow-y-auto max-h-96">
+              <div className="space-y-3">
+                {qudemoPeople.map((person, index) => (
+                  <div 
+                    key={index}
+                    className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+                    onClick={() => handleViewDetails(person)}
+                  >
+                    <div className="flex items-center space-x-4">
+                      <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
+                        {person.client_name ? person.client_name.charAt(0).toUpperCase() : 'U'}
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-gray-900">
+                          {person.client_name || 'Anonymous User'}
+                        </h4>
+                        <p className="text-sm text-gray-500">
+                          {person.client_company || person.client_email || 'No company info'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-6 text-sm text-gray-600">
+                      <div className="text-center">
+                        <p className="font-medium">{person.question_count}</p>
+                        <p className="text-xs">Questions</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="font-medium">{formatDuration(person.total_duration)}</p>
+                        <p className="text-xs">Time Spent</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="font-medium">{person.access_count}</p>
+                        <p className="text-xs">Views</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs text-gray-500">
+                          {person.last_accessed_at ? new Date(person.last_accessed_at).toLocaleDateString() : 'Never'}
+                        </p>
+                        <p className="text-xs text-gray-500">Last Active</p>
+                      </div>
+                      <button className="px-3 py-1 bg-white border border-blue-600 text-blue-600 text-xs rounded-md hover:bg-blue-600 hover:text-white transition-colors">
+                        View Details
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Interaction Details Modal */}
+      {showDetailsModal && selectedInteraction && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden">
+            {/* Modal Header */}
+            <div className="px-6 py-4 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <button
+                    onClick={() => {
+                      setShowDetailsModal(false);
+                      setShowPeopleListModal(true);
+                    }}
+                    className="text-gray-400 hover:text-gray-600 transition-colors mr-2"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+                  <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white text-lg font-semibold">
+                    {selectedInteraction.client_name ? selectedInteraction.client_name.charAt(0).toUpperCase() : 'I'}
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      {selectedInteraction.client_name || 'Interactions Overview'}
+                    </h3>
+                    <p className="text-sm text-gray-500">
+                      {selectedInteraction.client_company || selectedInteraction.qudemo_title}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    setShowDetailsModal(false);
+                    setShowPeopleListModal(true);
+                  }}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Content */}
+            <div className="flex-1 overflow-hidden">
+              {/* Tabs */}
+              <div className="border-b border-gray-200">
+                <nav className="flex">
+                  <button 
+                    onClick={() => handleTabClick('overview')}
+                    className={`flex-1 px-6 py-4 text-sm font-medium transition-colors ${
+                      activeTab === 'overview'
+                        ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
+                        : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    Overview
+                  </button>
+                  <button 
+                    onClick={() => handleTabClick('questions')}
+                    className={`flex-1 px-6 py-4 text-sm font-medium transition-colors ${
+                      activeTab === 'questions'
+                        ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
+                        : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    Questions
+                  </button>
+                  <button 
+                    onClick={() => handleTabClick('past-interactions')}
+                    className={`flex-1 px-6 py-4 text-sm font-medium transition-colors ${
+                      activeTab === 'past-interactions'
+                        ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
+                        : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    Past Interactions
+                  </button>
+                </nav>
+              </div>
+
+              {/* Tab Content */}
+              <div className="p-6 overflow-y-auto max-h-96">
+                {activeTab === 'overview' && (
+                  <>
+                    {/* AI Insight Summary */}
+                    <div className="border border-blue-200 rounded-lg p-4 bg-blue-50">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                        <span className="font-medium text-blue-900">AI Insight Summary</span>
+                      </div>
+                      <p className="text-blue-800">
+                        {selectedInteraction.questions && selectedInteraction.questions.length > 0
+                          ? `The prospect has shown interest in ${selectedInteraction.qudemo_title} with ${selectedInteraction.question_count} questions. They spent ${formatDuration(selectedInteraction.total_duration)} engaging with the demo, indicating active interest in your product.`
+                          : `The prospect accessed ${selectedInteraction.qudemo_title} but hasn't asked any questions yet. They spent ${formatDuration(selectedInteraction.total_duration)} viewing the demo.`
+                        }
+                      </p>
+                    </div>
+
+                    {/* Interaction Metrics */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {/* Demo Watched */}
+                      <div className="bg-white border border-gray-200 rounded-lg p-4">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M19 10a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-600">Demo Watched</p>
+                            <p className="text-lg font-semibold text-gray-900">{selectedInteraction.qudemo_title || 'Unknown Demo'}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Time Spent */}
+                      <div className="bg-white border border-gray-200 rounded-lg p-4">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                            <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-600">Time Spent</p>
+                            <p className="text-lg font-semibold text-gray-900">{formatDuration(selectedInteraction.total_duration)}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Questions Asked */}
+                      <div className="bg-white border border-gray-200 rounded-lg p-4">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                            <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                            </svg>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-600">Questions Asked</p>
+                            <p className="text-lg font-semibold text-gray-900">{selectedInteraction.question_count || 0}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Unique Link Details */}
+                    <div className="border border-blue-200 rounded-lg p-4 bg-blue-50">
+                      <div className="flex items-center space-x-2 mb-3">
+                        <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                        </svg>
+                        <span className="font-medium text-blue-900">Unique Link Details</span>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <div>
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                            Unique Customer Link
+                          </span>
+                        </div>
+                        
+                        <div className="flex items-center space-x-2">
+                          <span className="text-sm text-blue-800 font-medium">URL:</span>
+                          <code className="flex-1 bg-white border border-blue-200 rounded px-2 py-1 text-sm text-blue-900">
+                            {window.location.origin}/share/{selectedInteraction.share_token}
+                          </code>
+                          <button
+                            onClick={() => {
+                              navigator.clipboard.writeText(`${window.location.origin}/share/${selectedInteraction.share_token}`);
+                              // You could add a toast notification here
+                            }}
+                            className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+                          >
+                            Copy
+                          </button>
+                        </div>
+                        
+                        <div>
+                          <span className="text-sm text-blue-800">
+                            <span className="font-medium">Generated on:</span> {
+                              selectedInteraction.last_accessed_at 
+                                ? new Date(selectedInteraction.last_accessed_at).toLocaleDateString('en-US', {
+                                    month: 'numeric',
+                                    day: 'numeric',
+                                    year: 'numeric'
+                                  })
+                                : 'Unknown'
+                            }
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {activeTab === 'questions' && (
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <h4 className="font-medium text-gray-900 mb-4">Questions & Responses</h4>
+                    <div className="space-y-6 max-h-96 overflow-y-auto">
+                      {selectedInteraction.questions && selectedInteraction.questions.length > 0 ? (
+                        selectedInteraction.questions.map((qa, index) => (
+                          <div key={index} className="space-y-3">
+                            {/* Question */}
+                            <div className="flex items-start space-x-3 bg-gray-100 rounded-lg p-3">
+                              <div className="flex-shrink-0">
+                                <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                                  {selectedInteraction.client_name ? selectedInteraction.client_name.charAt(0).toUpperCase() : 'C'}
+                                </div>
+                              </div>
+                              <div className="flex-1">
+                                <p className="text-sm font-semibold text-gray-900">{qa.question}</p>
+                                <p className="text-xs text-gray-500 mt-1">Asked during session</p>
+                              </div>
+                            </div>
+                            
+                            {/* Answer */}
+                            <div className="flex items-start space-x-3 bg-white rounded-lg p-3">
+                              <div className="flex-shrink-0">
+                                <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-gray-600 text-xs font-medium">
+                                  AI
+                                </div>
+                              </div>
+                              <div className="flex-1">
+                                <p className="text-sm text-gray-700">{qa.answer}</p>
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-center py-8">
+                          <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <h3 className="mt-2 text-sm font-medium text-gray-900">No questions asked</h3>
+                          <p className="mt-1 text-sm text-gray-500">This customer hasn't asked any questions yet.</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === 'past-interactions' && (
+                  <div>
+                    <h4 className="font-medium text-gray-900 mb-4">Past Interactions History</h4>
+                    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Date
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Demo
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Questions
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Time Spent
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {selectedInteraction.questions && selectedInteraction.questions.length > 0 ? (
+                            (() => {
+                              // Group questions into sessions (same logic as backend)
+                              const questions = selectedInteraction.questions || [];
+                              if (questions.length === 0) return null;
+
+                              const SESSION_GAP_HOURS = 2;
+                              const SESSION_GAP_MS = SESSION_GAP_HOURS * 60 * 60 * 1000;
+                              
+                              const sessions = [];
+                              let currentSession = {
+                                questions: [questions[0]],
+                                startTime: questions[0].created_at,
+                                endTime: questions[0].created_at
+                              };
+
+                              for (let i = 1; i < questions.length; i++) {
+                                const timeDiff = new Date(questions[i].created_at) - new Date(questions[i-1].created_at);
+                                
+                                if (timeDiff > SESSION_GAP_MS) {
+                                  sessions.push(currentSession);
+                                  currentSession = {
+                                    questions: [questions[i]],
+                                    startTime: questions[i].created_at,
+                                    endTime: questions[i].created_at
+                                  };
+                                } else {
+                                  currentSession.questions.push(questions[i]);
+                                  currentSession.endTime = questions[i].created_at;
+                                }
+                              }
+                              sessions.push(currentSession);
+
+                              // Display each session as a row
+                              return sessions.map((session, sessionIndex) => {
+                                const sessionDate = new Date(session.startTime);
+                                const now = new Date();
+                                const diffTime = Math.abs(now - sessionDate);
+                                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                                
+                                let dateDisplay;
+                                if (diffDays === 1) {
+                                  dateDisplay = "Today";
+                                } else if (diffDays === 2) {
+                                  dateDisplay = "Yesterday";
+                                } else if (diffDays <= 7) {
+                                  dateDisplay = `${diffDays - 1} days ago`;
+                                } else {
+                                  dateDisplay = sessionDate.toLocaleDateString();
+                                }
+
+                                // Calculate session duration
+                                const sessionDuration = Math.floor((new Date(session.endTime) - new Date(session.startTime)) / 1000);
+                                const questionTime = session.questions.length * 45;
+                                const demoTime = sessionIndex === 0 ? Math.min(sessionDuration * 0.3, 300) : 0;
+                                const totalSessionTime = Math.max(sessionDuration + questionTime + demoTime, session.questions.length * 30);
+
+                                return (
+                                  <tr key={sessionIndex} className="hover:bg-gray-50">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                      {dateDisplay}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                      {selectedInteraction.qudemo_title || 'Product Demo'}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                      {session.questions.length}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                      {formatDuration(Math.min(totalSessionTime, 1800))}
+                                    </td>
+                                  </tr>
+                                );
+                              });
+                            })()
+                          ) : (
+                            <tr>
+                              <td colSpan="4" className="px-6 py-8 text-center text-sm text-gray-500">
+                                No past interactions found
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
