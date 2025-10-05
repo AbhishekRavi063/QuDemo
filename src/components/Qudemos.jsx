@@ -49,6 +49,19 @@ const Qudemos = () => {
 
   // Share functionality
   const handleShareQudemo = async (qudemo) => {
+    // Check if user has Pro/Enterprise plan first
+    if (!isPro) {
+      // Show upgrade popup for free users
+      setErrorDetails({
+        title: 'Share functionality requires Pro or Enterprise plan',
+        message: 'Upgrade to Pro or Enterprise to generate shareable links for your QuDemos.',
+        currentPlan: 'free',
+        subscriptionStatus: 'active',
+        isCancelled: false
+      });
+      setShowUpgradeModal(true);
+      return;
+    }
     
     // Prevent multiple simultaneous requests for the same qudemo
     if (sharingQudemo && sharingQudemo.id === qudemo.id) {
@@ -563,9 +576,7 @@ const Qudemos = () => {
                             e.stopPropagation();
                             handleDropdownAction('share', qudemo);
                           }}
-                          className={`w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center space-x-2 ${
-                            !isPro ? 'text-gray-400' : ''
-                          }`}
+                          className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center space-x-2"
                         >
                           <ShareIcon className="w-4 h-4" />
                           {!isPro && <LockClosedIcon className="w-3 h-3" />}
@@ -614,11 +625,7 @@ const Qudemos = () => {
                       e.stopPropagation();
                       handleDropdownAction('share', qudemo);
                     }}
-                    className={`w-full flex items-center justify-center space-x-2 transition-colors duration-200 py-2 px-3 rounded-lg border ${
-                      !isPro 
-                        ? 'text-gray-400 border-gray-200 hover:bg-gray-50' 
-                        : 'text-green-600 hover:text-green-800 hover:bg-green-50 border-green-200'
-                    }`}
+                    className="w-full flex items-center justify-center space-x-2 transition-colors duration-200 py-2 px-3 rounded-lg border text-green-600 hover:text-green-800 hover:bg-green-50 border-green-200"
                   >
                     <ShareIcon className="w-4 h-4" />
                     {!isPro && <LockClosedIcon className="w-3 h-3" />}

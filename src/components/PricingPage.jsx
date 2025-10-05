@@ -70,7 +70,7 @@ const PricingPage = () => {
     },
     pro: {
       name: 'Pro',
-      price: { monthly: 25, yearly: 250 },
+      price: { monthly: 29, yearly: 290 },
       description: 'For professionals and growing teams',
       features: [
         'Everything in Free',
@@ -219,7 +219,7 @@ const PricingPage = () => {
         </div>
 
         {/* Pricing Cards */}
-        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
           {Object.entries(plans).map(([key, plan]) => {
             const savings = getSavings(key);
             return (
