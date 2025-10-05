@@ -40,16 +40,440 @@ const Qudemos = () => {
   const [sharingQudemo, setSharingQudemo] = useState(null);
   const [shareLink, setShareLink] = useState('');
   const [showShareModal, setShowShareModal] = useState(false);
+   const [showShareOptionsModal, setShowShareOptionsModal] = useState(false);
+   const [showUniqueLinksModal, setShowUniqueLinksModal] = useState(false);
+   const [showFewUniqueLinksModal, setShowFewUniqueLinksModal] = useState(false);
+   const [showBulkUploadModal, setShowBulkUploadModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [qudemoToDelete, setQudemoToDelete] = useState(null);
-  const [errorDetails, setErrorDetails] = useState(null);
+   const [qudemoToShare, setQudemoToShare] = useState(null);
+   const [errorDetails, setErrorDetails] = useState(null);
+   const [selectedFile, setSelectedFile] = useState(null);
+   const [customers, setCustomers] = useState([]);
+   const [showGeneratedLinksModal, setShowGeneratedLinksModal] = useState(false);
+   const [generatedLinks, setGeneratedLinks] = useState([]);
+   const [showDownloadModal, setShowDownloadModal] = useState(false);
+   const [downloadData, setDownloadData] = useState(null);
   const navigate = useNavigate();
   const { showSuccess, showError, showInfo } = useNotification();
 
-  // Share functionality
-  const handleShareQudemo = async (qudemo) => {
-    
+   // Share functionality
+   const handleShareQudemo = async (qudemo) => {
+     // Check if user has Pro/Enterprise plan first
+     if (!isPro) {
+       // Show upgrade popup for free users
+       setErrorDetails({
+         title: 'Share functionality requires Pro or Enterprise plan',
+         message: 'Upgrade to Pro or Enterprise to generate shareable links for your QuDemos.',
+         currentPlan: 'free',
+         subscriptionStatus: 'active',
+         isCancelled: false
+       });
+       setShowUpgradeModal(true);
+       return;
+     }
+     
+     // Show share options modal for Pro/Enterprise users (don't generate link yet)
+     setQudemoToShare(qudemo);
+     setShowShareOptionsModal(true);
+   };
+
+   // Handle share option selection
+   const handleShareOption = async (option) => {
+     setShowShareOptionsModal(false);
+     
+     if (option === 'single') {
+       await generateSingleShareLink(qudemoToShare);
+     } else if (option === 'unique') {
+       // Show unique links modal instead of navigating directly
+       setShowUniqueLinksModal(true);
+     }
+   };
+
+   // Handle unique links option selection
+   const handleUniqueLinksOption = async (option) => {
+     setShowUniqueLinksModal(false);
+     
+     if (option === 'few') {
+       // Initialize with one empty customer for manual entry
+       setCustomers([{ name: '', email: '', company: '' }]);
+       // Show few unique links modal instead of navigating directly
+       setShowFewUniqueLinksModal(true);
+     } else if (option === 'bulk') {
+       // Show bulk upload modal instead of navigating directly
+       setShowBulkUploadModal(true);
+     }
+   };
+
+  // Handle file selection
+  const handleFileSelect = (event) => {
+    const file = event.target.files[0];
+    setSelectedFile(file);
+  };
+
+
+  // Remove selected file
+  const removeSelectedFile = () => {
+    setSelectedFile(null);
+    // Reset file input
+    const fileInput = document.getElementById('file-input');
+    if (fileInput) {
+      fileInput.value = '';
+    }
+  };
+
+   // Clear selected file when modal is closed
+   const handleBulkUploadModalClose = () => {
+     setShowBulkUploadModal(false);
+     removeSelectedFile();
+   };
+
+   // Handle bulk upload
+   const handleBulkUpload = async () => {
+     if (!selectedFile) {
+       showError('Please select a file first');
+       return;
+     }
+
+     try {
+       let clientData = [];
+       const fileExtension = selectedFile.name.toLowerCase().split('.').pop();
+       
+       if (fileExtension === 'csv') {
+         // Parse CSV file
+         const text = await selectedFile.text();
+         const lines = text.trim().split('\n');
+         
+         if (lines.length < 2) {
+           showError('CSV file must have at least a header row and one data row');
+           return;
+         }
+
+         const parseCSVLine = (line) => {
+           const result = [];
+           let current = '';
+           let inQuotes = false;
+           
+           for (let i = 0; i < line.length; i++) {
+             const char = line[i];
+             if (char === '"') {
+               inQuotes = !inQuotes;
+             } else if (char === ',' && !inQuotes) {
+               result.push(current.trim());
+               current = '';
+             } else {
+               current += char;
+             }
+           }
+           result.push(current.trim());
+           return result;
+         };
+         
+         const headers = parseCSVLine(lines[0]).map(h => h.replace(/"/g, '').trim().toLowerCase());
+         
+         const requiredHeaders = ['name', 'email', 'company'];
+         const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
+         
+         if (missingHeaders.length > 0) {
+           showError(`CSV file is missing required columns: ${missingHeaders.join(', ')}`);
+           return;
+         }
+
+         for (let i = 1; i < lines.length; i++) {
+           const values = parseCSVLine(lines[i]).map(v => v.replace(/"/g, '').trim());
+           const requiredColumnCount = 3;
+           if (values.length >= requiredColumnCount) {
+             const slNoIndex = headers.indexOf('sl no') !== -1 ? headers.indexOf('sl no') : headers.indexOf('slno');
+             const slNo = slNoIndex !== -1 ? (values[slNoIndex] || String(i)) : String(i);
+             
+             const client = {
+               slNo: slNo,
+               clientName: values[headers.indexOf('name')] || '',
+               email: values[headers.indexOf('email')] || '',
+               companyName: values[headers.indexOf('company')] || ''
+             };
+             
+             if (client.clientName && client.email) {
+               clientData.push(client);
+             }
+           }
+         }
+       } else if (fileExtension === 'xlsx' || fileExtension === 'xls') {
+         // Parse Excel file using SheetJS
+         try {
+           const XLSX = await import('xlsx');
+           const data = await selectedFile.arrayBuffer();
+           const workbook = XLSX.read(data);
+           
+           const worksheetName = workbook.SheetNames[0];
+           const worksheet = workbook.Sheets[worksheetName];
+           const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+            
+            if (jsonData.length < 2) {
+              showError('Excel file must have at least a header row and one data row');
+              return;
+            }
+            
+            const headers = jsonData[0].map(h => String(h).trim().toLowerCase());
+            const requiredHeaders = ['name', 'email', 'company'];
+            const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
+            
+            if (missingHeaders.length > 0) {
+              showError(`Excel file is missing required columns: ${missingHeaders.join(', ')}`);
+              return;
+            }
+            
+            for (let i = 1; i < jsonData.length; i++) {
+              const row = jsonData[i];
+              
+              if (!row || row.length === 0) continue;
+              
+              const hasData = row.some(cell => cell !== null && cell !== undefined && String(cell).trim() !== '');
+              if (!hasData) continue;
+              
+              const requiredColumnCount = 3;
+              if (row && row.length >= requiredColumnCount) {
+                const slNoIndex = headers.indexOf('sl no') !== -1 ? headers.indexOf('sl no') : headers.indexOf('slno');
+                const slNo = slNoIndex !== -1 ? (String(row[slNoIndex] || '').trim() || String(i)) : String(i);
+                
+                const client = {
+                  slNo: slNo,
+                  clientName: String(row[headers.indexOf('name')] || '').trim(),
+                  email: String(row[headers.indexOf('email')] || '').trim(),
+                  companyName: String(row[headers.indexOf('company')] || '').trim()
+                };
+                
+                if (client.clientName && client.email) {
+                  clientData.push(client);
+                }
+              }
+            }
+          } catch (xlsxError) {
+            console.error('❌ Error parsing Excel file:', xlsxError);
+            showError('Error parsing Excel file. Please ensure the file is not corrupted.');
+            return;
+          }
+       } else {
+         showError('Unsupported file format. Please upload a CSV or Excel (.xlsx/.xls) file.');
+         return;
+       }
+
+       if (clientData.length === 0) {
+         showError('No valid client data found in file. Please ensure each row has name and email.');
+         return;
+       }
+
+       console.log(`📊 ===== PARSING SUMMARY =====`);
+       console.log(`📊 File type: ${fileExtension.toUpperCase()}`);
+       console.log(`📊 Total clients parsed: ${clientData.length}`);
+       console.log(`📊 Client data being sent to backend:`, clientData);
+       console.log(`📊 ===== END PARSING SUMMARY =====`);
+
+       // Send to backend
+       const requestBody = {
+         qudemoId: qudemoToShare.id,
+         clientData: clientData
+       };
+       
+       console.log(`📊 Request body being sent:`, requestBody);
+       
+       const token = localStorage.getItem('accessToken');
+       const response = await fetch(getNodeApiUrl('/api/qudemos/bulk-share'), {
+         method: 'POST',
+         headers: {
+           'Authorization': `Bearer ${token}`,
+           'Content-Type': 'application/json'
+         },
+         body: JSON.stringify(requestBody)
+       });
+
+       if (response.ok) {
+         const data = await response.json();
+         
+         console.log(`📊 Backend response:`, data);
+         console.log(`📊 Generated links data:`, data.data);
+         
+         // Set download data and show download modal
+         setDownloadData(data.data || []);
+         setSelectedFile(null);
+         setShowBulkUploadModal(false);
+         setShowDownloadModal(true);
+         showSuccess(`Successfully generated ${data.data?.length || 0} bulk links!`);
+         
+         // Reset file input
+         const fileInput = document.getElementById('file-input');
+         if (fileInput) {
+           fileInput.value = '';
+         }
+       } else {
+         const errorData = await response.json();
+         
+         // Check if it's a subscription error
+         if (errorData.requiresUpgrade) {
+           if (errorData.isCancelled) {
+             // Show popup modal for cancelled subscriptions
+             setShowUpgradeModal(true);
+             setErrorDetails({
+               title: errorData.error,
+               message: errorData.message,
+               currentPlan: errorData.currentPlan,
+               isCancelled: true
+             });
+           } else {
+             // Show popup modal for other upgrade scenarios
+             setShowUpgradeModal(true);
+             setErrorDetails({
+               title: errorData.error,
+               message: errorData.message,
+               currentPlan: errorData.currentPlan,
+               isCancelled: false
+             });
+           }
+         } else {
+           console.error('❌ Failed to generate bulk links:', errorData.error);
+           showError('Failed to generate bulk links. Please try again.');
+         }
+       }
+     } catch (error) {
+       console.error('❌ Error generating bulk links:', error);
+       showError('Network error. Please try again.');
+     }
+   };
+
+   // Handle customer input changes
+   const handleCustomerChange = (index, field, value) => {
+     const updatedCustomers = [...customers];
+     updatedCustomers[index][field] = value;
+     setCustomers(updatedCustomers);
+   };
+
+   // Add another customer (max 5)
+   const addAnotherCustomer = () => {
+     if (customers.length < 5) {
+       setCustomers([...customers, { name: '', email: '', company: '' }]);
+     } else {
+       showError('Maximum 5 customers allowed');
+     }
+   };
+
+   // Remove customer
+   const removeCustomer = (index) => {
+     if (customers.length > 1) {
+       const updatedCustomers = customers.filter((_, i) => i !== index);
+       setCustomers(updatedCustomers);
+     }
+   };
+
+   // Handle generate few links
+   const handleGenerateFewLinks = async () => {
+     // Validate required fields
+     const validCustomers = customers.filter(customer => customer.name && customer.email);
+     if (validCustomers.length === 0) {
+       showError('Please fill in at least one customer with name and email');
+       return;
+     }
+
+     try {
+       const token = localStorage.getItem('accessToken');
+       const generatedLinksData = [];
+
+       // Generate unique links for each customer
+       for (const customer of validCustomers) {
+         const response = await fetch(getNodeApiUrl(`/api/qudemos/${qudemoToShare.id}/share`), {
+           method: 'POST',
+           headers: {
+             'Authorization': `Bearer ${token}`,
+             'Content-Type': 'application/json'
+           },
+           body: JSON.stringify({
+             customer_name: customer.name,
+             customer_email: customer.email,
+             customer_company: customer.company
+           })
+         });
+
+         if (response.ok) {
+           const data = await response.json();
+           generatedLinksData.push({
+             ...customer,
+             shareUrl: data.shareUrl,
+             shareId: data.shareId
+           });
+         } else {
+           showError(`Failed to generate link for ${customer.name}`);
+           return;
+         }
+       }
+
+       // Show results modal
+       setGeneratedLinks(generatedLinksData);
+       setShowFewUniqueLinksModal(false);
+       setShowGeneratedLinksModal(true);
+       showSuccess(`Successfully generated ${generatedLinksData.length} unique links!`);
+
+     } catch (error) {
+       console.error('Error generating links:', error);
+       showError('Failed to generate links. Please try again.');
+     }
+   };
+
+   // Copy link to clipboard
+   const copyLinkToClipboard = async (link) => {
+     try {
+       await navigator.clipboard.writeText(link);
+       showSuccess('Link copied to clipboard!');
+     } catch (err) {
+       console.error('Failed to copy link:', err);
+       showError('Failed to copy link. Please copy manually.');
+     }
+   };
+
+   // Handle download of generated file
+   const handleDownloadFile = async () => {
+     if (!downloadData) return;
+
+     try {
+       const XLSX = await import('xlsx');
+       
+       // Prepare data for download
+       const downloadRows = [
+         ['SL No', 'name', 'email', 'company', 'Shared QuDemo'] // Header row
+       ];
+
+       // Add data rows
+       downloadData.forEach((item, index) => {
+         downloadRows.push([
+           item.slNo || (index + 1),
+           item.clientName || '',
+           item.email || '',
+           item.companyName || '',
+           item.shareUrl || ''
+         ]);
+       });
+
+       // Create workbook and worksheet
+       const ws = XLSX.utils.aoa_to_sheet(downloadRows);
+       const wb = XLSX.utils.book_new();
+       XLSX.utils.book_append_sheet(wb, ws, 'Generated Links');
+
+       // Generate filename with timestamp
+       const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+       const filename = `bulk_share_links_${timestamp}.xlsx`;
+
+       // Download the file
+       XLSX.writeFile(wb, filename);
+       
+       showSuccess('File downloaded successfully!');
+       setShowDownloadModal(false);
+     } catch (error) {
+       console.error('❌ Error downloading file:', error);
+       showError('Failed to download file. Please try again.');
+     }
+   };
+
+  // Generate single share link
+  const generateSingleShareLink = async (qudemo) => {
     // Prevent multiple simultaneous requests for the same qudemo
     if (sharingQudemo && sharingQudemo.id === qudemo.id) {
       return;
@@ -730,6 +1154,475 @@ const Qudemos = () => {
         </div>
       )}
 
+       {/* Share Options Modal */}
+       {showShareOptionsModal && qudemoToShare && (
+         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+           <div className="bg-white rounded-lg shadow-xl max-w-lg w-full mx-4">
+             <div className="p-6">
+               <div className="relative mb-4">
+                 <h3 className="text-lg font-semibold text-gray-900 text-center">Share Qudemo</h3>
+                 <button
+                   onClick={() => setShowShareOptionsModal(false)}
+                   className="absolute right-0 top-0 text-gray-400 hover:text-gray-600"
+                 >
+                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                   </svg>
+                 </button>
+               </div>
+              
+              <div className="mb-6">
+                <p className="text-sm text-gray-600 mb-6 text-center">
+                  Choose how you'd like to share <strong>"{qudemoToShare.title}"</strong>
+                </p>
+                
+                <div className="space-y-4">
+                  {/* Single Link Option */}
+                  <button
+                    onClick={() => handleShareOption('single')}
+                    className="w-full p-6 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
+                  >
+                    <div className="text-center">
+                      <div className="flex items-center justify-center space-x-3 mb-3">
+                        <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                        </svg>
+                        <h4 className="font-medium text-gray-900 text-lg">Single Link</h4>
+                      </div>
+                      <p className="text-sm text-gray-600">Generate one shareable link that can be used by anyone</p>
+                    </div>
+                  </button>
+                  
+                  {/* Unique Links Option */}
+                  <button
+                    onClick={() => handleShareOption('unique')}
+                    className="w-full p-6 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
+                  >
+                    <div className="text-center">
+                      <div className="flex items-center justify-center space-x-3 mb-3">
+                        <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                        <h4 className="font-medium text-gray-900 text-lg">Unique Links</h4>
+                      </div>
+                      <p className="text-sm text-gray-600">Generate personalized links for specific customers with tracking</p>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+       )}
+
+       {/* Generate Unique Links Modal */}
+       {showUniqueLinksModal && qudemoToShare && (
+         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+           <div className="bg-white rounded-lg shadow-xl max-w-lg w-full mx-4">
+             <div className="p-6">
+               <div className="relative mb-4">
+                 <h3 className="text-lg font-semibold text-gray-900 text-center">Generate Unique Links</h3>
+                 <button
+                   onClick={() => setShowUniqueLinksModal(false)}
+                   className="absolute right-0 top-0 text-gray-400 hover:text-gray-600"
+                 >
+                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                   </svg>
+                 </button>
+               </div>
+               
+               <div className="mb-6">
+                 <p className="text-sm text-gray-600 mb-6 text-center">
+                   Choose how you'd like to create unique customer links
+                 </p>
+                 
+                 <div className="space-y-4">
+                   {/* Few Unique Links Option */}
+                   <button
+                     onClick={() => handleUniqueLinksOption('few')}
+                     className="w-full p-6 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
+                   >
+                     <div className="text-center">
+                       <div className="flex items-center justify-center space-x-3 mb-3">
+                         <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                         </svg>
+                         <h4 className="font-medium text-gray-900 text-lg">Few Unique Links</h4>
+                       </div>
+                       <p className="text-sm text-gray-600">Manually add customer details for a few personalized links</p>
+                     </div>
+                   </button>
+                   
+                   {/* Bulk Unique Links Option */}
+                   <button
+                     onClick={() => handleUniqueLinksOption('bulk')}
+                     className="w-full p-6 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
+                   >
+                     <div className="text-center">
+                       <div className="flex items-center justify-center space-x-3 mb-3">
+                         <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                         </svg>
+                         <h4 className="font-medium text-gray-900 text-lg">Bulk Unique Links</h4>
+                       </div>
+                       <p className="text-sm text-gray-600">Upload a CSV file with customer data to generate multiple links</p>
+                     </div>
+                   </button>
+                 </div>
+               </div>
+               
+               <div className="flex justify-end">
+                 <button
+                   onClick={() => setShowUniqueLinksModal(false)}
+                   className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                 >
+                   Back
+                 </button>
+               </div>
+             </div>
+           </div>
+         </div>
+       )}
+
+       {/* Bulk Upload Modal */}
+       {showBulkUploadModal && qudemoToShare && (
+         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+           <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4">
+             <div className="p-6">
+               <div className="relative mb-4">
+                 <h3 className="text-lg font-semibold text-gray-900 text-center">Bulk Generate Unique Links</h3>
+                 <button
+                   onClick={handleBulkUploadModalClose}
+                   className="absolute right-0 top-0 text-gray-400 hover:text-gray-600"
+                 >
+                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                   </svg>
+                 </button>
+               </div>
+               
+               <div className="mb-6">
+                 <p className="text-sm text-gray-600 mb-6 text-center">
+                   Upload customer data in CSV or Excel format to generate multiple personalized links. The system will create a "Shared QuDemo" column with the generated links.
+                 </p>
+                 
+                 <div className="space-y-4">
+                   {/* Upload CSV File Section */}
+                   <div>
+                     <h4 className="font-medium text-gray-900 mb-3">Upload File (CSV/XLSX)</h4>
+                     <div className="space-y-3">
+                       <input
+                         type="file"
+                         accept=".csv,.xlsx,.xls"
+                         onChange={handleFileSelect}
+                         className="hidden"
+                         id="file-input"
+                         key={selectedFile ? 'file-selected' : 'no-file'}
+                       />
+                       <label
+                         htmlFor="file-input"
+                         className="flex items-center justify-center space-x-2 w-full p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-400 hover:bg-blue-50 cursor-pointer transition-colors"
+                       >
+                         <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                         </svg>
+                         <span className="text-blue-600 font-medium">
+                           {selectedFile ? 'Change File' : 'Choose File (CSV/XLSX)'}
+                         </span>
+                       </label>
+                       <p className="text-xs text-gray-500 text-center">
+                         Upload a CSV or Excel file with customer data (SL No, name, email, company)
+                       </p>
+                       {selectedFile && (
+                         <div className="flex items-center justify-center space-x-3">
+                           <p className="text-sm text-green-600">
+                             ✓ Selected: {selectedFile.name}
+                           </p>
+                           <button
+                             onClick={removeSelectedFile}
+                             className="text-red-500 hover:text-red-700 text-sm"
+                           >
+                             Remove
+                           </button>
+                         </div>
+                       )}
+                     </div>
+                   </div>
+                   
+                   {/* File Format Example */}
+                   <div>
+                     <h4 className="font-medium text-gray-900 mb-3">File Format Example (CSV/Excel):</h4>
+                     <div className="bg-gray-100 p-3 rounded-lg overflow-x-auto">
+                       <table className="w-full text-xs text-blue-600 border-collapse">
+                         <thead>
+                           <tr className="border-b border-gray-300">
+                             <th className="text-center py-2 px-3 font-semibold border-r border-gray-300">SL No</th>
+                             <th className="text-center py-2 px-3 font-semibold border-r border-gray-300">name</th>
+                             <th className="text-center py-2 px-3 font-semibold border-r border-gray-300">email</th>
+                             <th className="text-center py-2 px-3 font-semibold">company</th>
+                           </tr>
+                         </thead>
+                         <tbody>
+                           <tr>
+                             <td className="py-2 px-3 border-r border-gray-300">1</td>
+                             <td className="py-2 px-3 border-r border-gray-300">John Doe</td>
+                             <td className="py-2 px-3 border-r border-gray-300">john@example.com</td>
+                             <td className="py-2 px-3">Acme Inc</td>
+                           </tr>
+                           <tr>
+                             <td className="py-2 px-3 border-r border-gray-300">2</td>
+                             <td className="py-2 px-3 border-r border-gray-300">Jane Smith</td>
+                             <td className="py-2 px-3 border-r border-gray-300">jane@example.com</td>
+                             <td className="py-2 px-3">Tech Corp</td>
+                           </tr>
+                         </tbody>
+                       </table>
+                     </div>
+                     <div className="mt-3 text-xs text-gray-500">
+                       <p><strong>Requirements:</strong></p>
+                       <ul className="list-disc list-inside space-y-1 mt-1">
+                         <li>Supported formats: CSV (.csv), Excel (.xlsx/.xls)</li>
+                         <li>First row must contain column headers: SL No, name, email, company</li>
+                         <li>SL No column is optional (system will auto-generate if missing)</li>
+                         <li>Each subsequent row represents one client</li>
+                         <li>Company field is optional</li>
+                         <li>Name and email are required for each row</li>
+                         <li>System will create "Shared QuDemo" column with generated links</li>
+                       </ul>
+                     </div>
+                   </div>
+
+                 </div>
+               </div>
+               
+               <div className="flex justify-between">
+                 <button
+                   onClick={handleBulkUploadModalClose}
+                   className="px-4 py-2 text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                 >
+                   Cancel
+                 </button>
+                 <button
+                   onClick={handleBulkUpload}
+                   disabled={!selectedFile}
+                   className={`px-4 py-2 rounded-lg transition-colors ${
+                     selectedFile 
+                       ? 'bg-purple-600 text-white hover:bg-purple-700' 
+                       : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                   }`}
+                 >
+                   Generate Links
+                 </button>
+               </div>
+             </div>
+           </div>
+         </div>
+       )}
+
+       {/* Generate Few Unique Links Modal */}
+       {showFewUniqueLinksModal && qudemoToShare && (
+         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+           <div className="bg-white rounded-lg shadow-xl max-w-lg w-full mx-4">
+             <div className="p-6">
+               <div className="relative mb-4">
+                 <h3 className="text-lg font-semibold text-gray-900 text-center">Generate Few Unique Links</h3>
+                 <button
+                   onClick={() => setShowFewUniqueLinksModal(false)}
+                   className="absolute right-0 top-0 text-gray-400 hover:text-gray-600"
+                 >
+                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                   </svg>
+                 </button>
+               </div>
+               
+               <div className="mb-6">
+                 <p className="text-sm text-gray-600 mb-6 text-center">
+                   Add customer details to generate personalized tracking links.
+                 </p>
+                 
+                 <div className="space-y-4">
+                   {/* Customer Input Fields */}
+                   {customers.map((customer, index) => (
+                     <div key={index} className="border border-gray-200 rounded-lg p-4">
+                       <div className="flex items-center justify-between mb-3">
+                         <h4 className="font-medium text-gray-900">Customer {index + 1}</h4>
+                         {customers.length > 1 && (
+                           <button
+                             onClick={() => removeCustomer(index)}
+                             className="text-red-500 hover:text-red-700 text-sm"
+                           >
+                             Remove
+                           </button>
+                         )}
+                       </div>
+                       
+                       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                         <div>
+                           <label className="block text-sm font-medium text-gray-700 mb-1">
+                             Customer Name *
+                           </label>
+                           <input
+                             type="text"
+                             value={customer.name}
+                             onChange={(e) => handleCustomerChange(index, 'name', e.target.value)}
+                             placeholder="John Doe"
+                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                           />
+                         </div>
+                         
+                         <div>
+                           <label className="block text-sm font-medium text-gray-700 mb-1">
+                             Email *
+                           </label>
+                           <input
+                             type="email"
+                             value={customer.email}
+                             onChange={(e) => handleCustomerChange(index, 'email', e.target.value)}
+                             placeholder="john@example.com"
+                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                           />
+                         </div>
+                         
+                         <div>
+                           <label className="block text-sm font-medium text-gray-700 mb-1">
+                             Company
+                           </label>
+                           <input
+                             type="text"
+                             value={customer.company}
+                             onChange={(e) => handleCustomerChange(index, 'company', e.target.value)}
+                             placeholder="Acme Inc"
+                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                           />
+                         </div>
+                       </div>
+                     </div>
+                   ))}
+                   
+                   {/* Add Another Customer Button */}
+                   <button
+                     onClick={addAnotherCustomer}
+                     className="w-full flex items-center justify-center space-x-2 py-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-colors"
+                   >
+                     <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                     </svg>
+                     <span className="text-blue-600 font-medium">+ Add Another Customer</span>
+                   </button>
+                 </div>
+               </div>
+               
+               <div className="flex justify-between">
+                 <button
+                   onClick={() => setShowFewUniqueLinksModal(false)}
+                   className="px-4 py-2 text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                 >
+                   Back
+                 </button>
+                 <button
+                   onClick={handleGenerateFewLinks}
+                   className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                 >
+                   Generate Links
+                 </button>
+               </div>
+             </div>
+           </div>
+         </div>
+       )}
+
+       {/* Generated Links Results Modal */}
+       {showGeneratedLinksModal && generatedLinks.length > 0 && (
+         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+           <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+             <div className="p-6">
+               <div className="relative mb-4">
+                 <h3 className="text-lg font-semibold text-gray-900 text-center">
+                   Generated Links ({generatedLinks.length})
+                 </h3>
+                 <button
+                   onClick={() => setShowGeneratedLinksModal(false)}
+                   className="absolute right-0 top-0 text-gray-400 hover:text-gray-600"
+                 >
+                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                   </svg>
+                 </button>
+               </div>
+               
+               <div className="mb-6">
+                 <p className="text-sm text-gray-600 mb-6 text-center">
+                   Successfully generated {generatedLinks.length} unique tracking links for "{qudemoToShare?.title}".
+                 </p>
+                 
+                 <div className="space-y-4">
+                   {generatedLinks.map((link, index) => (
+                     <div key={index} className="border border-gray-200 rounded-lg p-4 text-center">
+                       <div className="mb-3">
+                         <h4 className="font-medium text-gray-900">{link.name}</h4>
+                         <p className="text-sm text-gray-600">{link.email}</p>
+                         {link.company && (
+                           <p className="text-sm text-gray-500">{link.company}</p>
+                         )}
+                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 mt-2">
+                           Link #{index + 1}
+                         </span>
+                       </div>
+                       
+                       <div className="flex items-center space-x-2">
+                         <input
+                           type="text"
+                           value={link.shareUrl}
+                           readOnly
+                           className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm bg-gray-50 text-center"
+                         />
+                         <button
+                           onClick={() => copyLinkToClipboard(link.shareUrl)}
+                           className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2 text-sm"
+                         >
+                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                           </svg>
+                           Copy
+                         </button>
+                       </div>
+                     </div>
+                   ))}
+                 </div>
+                 
+                 <div className="mt-6 bg-blue-50 p-4 rounded-lg text-center">
+                   <div className="flex items-start justify-center">
+                     <svg className="w-5 h-5 text-blue-600 mt-0.5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                     </svg>
+                     <div className="text-center">
+                       <h4 className="text-sm font-medium text-blue-800 mb-1">Important Notes:</h4>
+                       <ul className="text-sm text-blue-700 space-y-1">
+                         <li>• Each link is unique and tracks individual customer interactions</li>
+                         <li>• Links can be accessed by anyone without authentication</li>
+                         <li>• Customer details are stored for analytics and tracking</li>
+                         <li>• You can view analytics for each link in the Analytics page</li>
+                       </ul>
+                     </div>
+                   </div>
+                 </div>
+               </div>
+               
+               <div className="flex justify-center">
+                 <button
+                   onClick={() => setShowGeneratedLinksModal(false)}
+                   className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Custom Delete Confirmation Modal */}
       {showDeleteModal && qudemoToDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
@@ -792,14 +1685,74 @@ const Qudemos = () => {
       )}
 
       {/* Upgrade Modal */}
-      <UpgradeModal 
-        isOpen={showUpgradeModal} 
+      <UpgradeModal
+        isOpen={showUpgradeModal}
         onClose={() => {
           setShowUpgradeModal(false);
           setErrorDetails(null);
         }}
         errorDetails={errorDetails}
       />
+
+      {/* Download Generated File Modal */}
+      {showDownloadModal && downloadData && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+            <div className="p-6">
+              <div className="text-center mb-6">
+                <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4">
+                  <svg className="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  Bulk Links Generated Successfully!
+                </h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  Successfully generated <strong>{downloadData.length}</strong> unique share links for "{qudemoToShare?.title}".
+                </p>
+                <p className="text-sm text-gray-600">
+                  Download the Excel file with all generated links and client information.
+                </p>
+              </div>
+
+              <div className="bg-blue-50 p-4 rounded-lg mb-6">
+                <div className="flex items-start">
+                  <svg className="w-5 h-5 text-blue-600 mt-0.5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <div className="text-sm text-blue-800">
+                    <p className="font-medium mb-1">File includes:</p>
+                    <ul className="list-disc list-inside space-y-1">
+                      <li>SL No, Client Name, Email, Company</li>
+                      <li>Generated Share Links</li>
+                      <li>Ready to distribute to your clients</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-center space-x-3">
+                <button
+                  onClick={() => setShowDownloadModal(false)}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={handleDownloadFile}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  Download Excel File
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

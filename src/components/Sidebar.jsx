@@ -23,8 +23,7 @@ import {
 const baseMenuItems = [
   { name: 'Create Qudemo', icon: PlusIcon, path: '/create' },
   { name: 'Qudemos', icon: PlayIcon, path: '/qudemos' },
-  // { name: 'Bulk Share', icon: UserGroupIcon, path: '/bulk-share', requiresEnterprise: true }, // COMMENTED OUT FOR PRODUCTION
-  // { name: 'Analytics', icon: ChartBarIcon, path: '/analytics', requiresEnterprise: true }, // COMMENTED OUT FOR PRODUCTION
+  { name: 'Analytics', icon: ChartBarIcon, path: '/analytics', requiresPro: true },
 ];
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
@@ -89,8 +88,8 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                   const baseClasses = "flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors duration-200";
                   
                   if (isActive) {
-                    if ((isAnalytics || isBulkShare) && isEnterprise) {
-                      return `${baseClasses} bg-purple-50 font-semibold text-purple-700 border-l-4 border-purple-600`;
+                    if ((isAnalytics || isBulkShare) && isPro) {
+                      return `${baseClasses} bg-blue-50 font-semibold text-blue-700 border-l-4 border-blue-600`;
                     } else {
                       return `${baseClasses} bg-blue-50 font-semibold text-blue-700 border-l-4 border-blue-600`;
                     }
