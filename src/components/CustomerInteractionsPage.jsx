@@ -77,8 +77,13 @@ const CustomerInteractionsPage = () => {
   // Format duration
   const formatDuration = (seconds) => {
     if (!seconds) return '0:00';
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
+    
+    // Fix floating point precision issues by rounding to 2 decimal places
+    const roundedSeconds = Math.round(seconds * 100) / 100;
+    
+    const minutes = Math.floor(roundedSeconds / 60);
+    const remainingSeconds = Math.floor(roundedSeconds % 60);
+    
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 

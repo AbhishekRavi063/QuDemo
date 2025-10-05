@@ -426,41 +426,53 @@ const Qudemos = () => {
 
      try {
        const token = localStorage.getItem('accessToken');
-       const generatedLinksData = [];
 
-       // Generate unique links for each customer
-       for (const customer of validCustomers) {
-         const response = await fetch(getNodeApiUrl(`/api/qudemos/${qudemoToShare.id}/share`), {
-           method: 'POST',
-           headers: {
-             'Authorization': `Bearer ${token}`,
-             'Content-Type': 'application/json'
-           },
-           body: JSON.stringify({
-             customer_name: customer.name,
-             customer_email: customer.email,
-             customer_company: customer.company
-           })
-         });
+       // Prepare client data for bulk share endpoint
+       const clientData = validCustomers.map((customer, index) => ({
+         slNo: index + 1,
+         clientName: customer.name,
+         email: customer.email,
+         companyName: customer.company || 'Unknown Company'
+       }));
 
-         if (response.ok) {
-           const data = await response.json();
-           generatedLinksData.push({
-             ...customer,
-             shareUrl: data.shareUrl,
-             shareId: data.shareId
-           });
+       // Use bulk share endpoint instead of individual share endpoint
+       const response = await fetch(getNodeApiUrl('/api/qudemos/bulk-share'), {
+         method: 'POST',
+         headers: {
+           'Authorization': `Bearer ${token}`,
+           'Content-Type': 'application/json'
+         },
+         body: JSON.stringify({
+           qudemoId: qudemoToShare.id,
+           clientData: clientData
+         })
+       });
+
+       if (response.ok) {
+         const data = await response.json();
+         
+         if (data.success && data.data) {
+           // Transform the response data to match the expected format
+           const generatedLinksData = data.data.map((result, index) => ({
+             name: result.clientName,
+             email: result.email,
+             company: result.companyName,
+             shareUrl: result.shareUrl,
+             shareId: result.shareId
+           }));
+
+           // Show results modal
+           setGeneratedLinks(generatedLinksData);
+           setShowFewUniqueLinksModal(false);
+           setShowGeneratedLinksModal(true);
+           showSuccess(`Successfully generated ${generatedLinksData.length} unique links!`);
          } else {
-           showError(`Failed to generate link for ${customer.name}`);
-           return;
+           showError(data.error || 'Failed to generate links');
          }
+       } else {
+         const errorData = await response.json();
+         showError(errorData.error || 'Failed to generate links');
        }
-
-       // Show results modal
-       setGeneratedLinks(generatedLinksData);
-       setShowFewUniqueLinksModal(false);
-       setShowGeneratedLinksModal(true);
-       showSuccess(`Successfully generated ${generatedLinksData.length} unique links!`);
 
      } catch (error) {
        console.error('Error generating links:', error);
