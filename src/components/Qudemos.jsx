@@ -710,9 +710,6 @@ const Qudemos = () => {
     setDropdownOpen(null);
 
     switch (action) {
-      case 'preview':
-        setPreviewingQudemo(qudemo);
-        break;
       case 'edit':
         navigate(`/view-qudemo/${qudemo.id}`);
         break;
@@ -996,7 +993,7 @@ const Qudemos = () => {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleDropdownAction('preview', qudemo);
+                              setPreviewingQudemo(qudemo);
                           }}
                           className="w-16 h-16 bg-black bg-opacity-60 rounded-full flex items-center justify-center hover:bg-opacity-80 hover:scale-110 transition-all duration-300 shadow-lg"
                         >
@@ -1039,19 +1036,20 @@ const Qudemos = () => {
                       <EllipsisVerticalIcon className="w-5 h-5 text-gray-500" />
                     </button>
                     
-                    {dropdownOpen === qudemo.id && (
-                      <div className="absolute right-0 top-8 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-[160px]">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDropdownAction('preview', qudemo);
-                          }}
-                          className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center space-x-2"
-                        >
-                          <EyeIcon className="w-4 h-4" />
-                          <span>Preview</span>
-                        </button>
-                        <button
+                      {dropdownOpen === qudemo.id && (
+                        <div className="absolute right-0 top-8 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-[160px]">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setPreviewingQudemo(qudemo);
+                              setDropdownOpen(null);
+                            }}
+                            className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center space-x-2"
+                          >
+                            <PlayIcon className="w-4 h-4" />
+                            <span>Preview</span>
+                          </button>
+                          <button
                           onClick={(e) => {
                             e.stopPropagation();
                             handleDropdownAction('edit', qudemo);
@@ -1109,16 +1107,16 @@ const Qudemos = () => {
 
                 {/* Action Buttons */}
                 <div className="mb-3 space-y-2">
-                  {/* Preview Button */}
+                    {/* View Interactions Button */}
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleDropdownAction('preview', qudemo);
+                        handleViewDetails(qudemo);
                     }}
                     className="w-full flex items-center justify-center space-x-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 transition-colors duration-200 py-2 px-3 rounded-lg border border-blue-200"
                   >
-                    <PlayIcon className="w-4 h-4" />
-                    <span className="text-sm font-medium">Preview</span>
+                      <EyeIcon className="w-4 h-4" />
+                      <span className="text-sm font-medium">View Interactions</span>
                   </button>
                   
                   {/* Share Button */}
