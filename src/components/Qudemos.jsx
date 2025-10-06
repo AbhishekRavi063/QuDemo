@@ -58,7 +58,9 @@ const Qudemos = () => {
   const [selectedInteraction, setSelectedInteraction] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showPeopleListModal, setShowPeopleListModal] = useState(false);
+  const [showInteractionsListModal, setShowInteractionsListModal] = useState(false);
   const [qudemoPeople, setQudemoPeople] = useState([]);
+  const [qudemoInteractions, setQudemoInteractions] = useState([]);
   const [activeTab, setActiveTab] = useState('overview');
   const navigate = useNavigate();
   const { showSuccess, showError, showInfo } = useNotification();
@@ -81,7 +83,20 @@ const Qudemos = () => {
     setSelectedInteraction(interaction);
     setActiveTab('overview');
     setShowDetailsModal(true);
-    setShowPeopleListModal(false);
+    setShowInteractionsListModal(false);
+  };
+
+  // Handle view interactions for a QuDemo
+  const handleViewQudemoInteractions = async (qudemo) => {
+    try {
+      // Fetch interactions for this specific QuDemo and show interactions list
+      const interactions = await fetchQudemoInteractions(qudemo.id);
+      setQudemoInteractions(interactions);
+      setShowInteractionsListModal(true);
+    } catch (error) {
+      console.error('Error fetching interactions:', error);
+      showError('Failed to fetch interactions');
+    }
   };
 
   const handleTabClick = (tabName) => {
@@ -1036,20 +1051,20 @@ const Qudemos = () => {
                       <EllipsisVerticalIcon className="w-5 h-5 text-gray-500" />
                     </button>
                     
-                      {dropdownOpen === qudemo.id && (
-                        <div className="absolute right-0 top-8 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-[160px]">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
+                    {dropdownOpen === qudemo.id && (
+                      <div className="absolute right-0 top-8 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-[160px]">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
                               setPreviewingQudemo(qudemo);
                               setDropdownOpen(null);
-                            }}
-                            className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center space-x-2"
-                          >
+                          }}
+                          className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center space-x-2"
+                        >
                             <PlayIcon className="w-4 h-4" />
                             <span>Preview</span>
-                          </button>
-                          <button
+                        </button>
+                        <button
                           onClick={(e) => {
                             e.stopPropagation();
                             handleDropdownAction('edit', qudemo);
@@ -1111,7 +1126,7 @@ const Qudemos = () => {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                        handleViewDetails(qudemo);
+                        handleViewQudemoInteractions(qudemo);
                     }}
                     className="w-full flex items-center justify-center space-x-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 transition-colors duration-200 py-2 px-3 rounded-lg border border-blue-200"
                   >
@@ -2001,7 +2016,7 @@ const Qudemos = () => {
               {/* Tab Content */}
               <div className="p-6 overflow-y-auto max-h-96">
                 {activeTab === 'overview' && (
-                  <>
+                  <div className="min-h-96">
                     {/* AI Insight Summary */}
                     <div className="border border-blue-200 rounded-lg p-4 bg-blue-50">
                       <div className="flex items-center space-x-2 mb-2">
@@ -2113,11 +2128,11 @@ const Qudemos = () => {
                         </div>
                       </div>
                     </div>
-                  </>
+                  </div>
                 )}
 
                 {activeTab === 'questions' && (
-                  <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="bg-gray-50 rounded-lg p-4 min-h-96">
                     <h4 className="font-medium text-gray-900 mb-4">Questions & Responses</h4>
                     <div className="space-y-6 max-h-96 overflow-y-auto">
                       {selectedInteraction.questions && selectedInteraction.questions.length > 0 ? (
@@ -2181,7 +2196,7 @@ const Qudemos = () => {
                 )}
 
                 {activeTab === 'past-interactions' && (
-                  <div>
+                  <div className="min-h-96">
                     <h4 className="font-medium text-gray-900 mb-4">Past Interactions History</h4>
                     <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
                       <table className="min-w-full divide-y divide-gray-200">
@@ -2289,6 +2304,191 @@ const Qudemos = () => {
                     </div>
                   </div>
                 )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Interactions List Modal */}
+      {showInteractionsListModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden">
+            <div className="p-6">
+              {/* Header */}
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                    <span className="text-blue-600 font-bold text-lg">P</span>
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold text-gray-900">Product Overview - Customer Interactions</h3>
+                    <p className="text-gray-600 mt-1">View detailed buyer interactions with this QuDemo</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowInteractionsListModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Stats Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div className="bg-white border border-gray-200 rounded-lg p-6">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                        <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                      </div>
+                    </div>
+                    <div className="ml-4">
+                      <p className="text-sm font-medium text-gray-500">Total Interactions</p>
+                      <p className="text-2xl font-semibold text-gray-900">{qudemoInteractions.length}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white border border-gray-200 rounded-lg p-6">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                        <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                        </svg>
+                      </div>
+                    </div>
+                    <div className="ml-4">
+                      <p className="text-sm font-medium text-gray-500">Total Questions</p>
+                      <p className="text-2xl font-semibold text-gray-900">
+                        {qudemoInteractions.reduce((total, interaction) => total + (interaction.questions ? interaction.questions.length : 0), 0)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white border border-gray-200 rounded-lg p-6">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                        <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                    </div>
+                    <div className="ml-4">
+                      <p className="text-sm font-medium text-gray-500">Avg. Time Spent</p>
+                      <p className="text-2xl font-semibold text-gray-900">
+                        {qudemoInteractions.length > 0 
+                          ? formatDuration(Math.floor(qudemoInteractions.reduce((total, interaction) => total + (interaction.total_time || 0), 0) / qudemoInteractions.length))
+                          : '0:00'
+                        }
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Search Bar */}
+              <div className="mb-6">
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Search by name, email, or company..."
+                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+              </div>
+
+              {/* Interactions Table */}
+              <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Customer
+                        </th>
+                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <div className="flex justify-center">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                            </svg>
+                          </div>
+                        </th>
+                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <div className="flex justify-center">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          </div>
+                        </th>
+                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {qudemoInteractions.length > 0 ? (
+                        qudemoInteractions.map((interaction, index) => (
+                          <tr key={index} className="hover:bg-gray-50">
+                            <td className="px-6 py-4 whitespace-nowrap text-left">
+                              <div>
+                                <div className="text-sm font-medium text-gray-900">
+                                  {interaction.customer_name || 'Unknown Customer'}
+                                </div>
+                                <div className="text-sm text-gray-500">
+                                  {interaction.customer_company || 'No company'}
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-center">
+                              <span className="text-sm text-gray-900">
+                                {interaction.questions ? interaction.questions.length : 0}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-center">
+                              <span className="text-sm text-gray-900">
+                                {interaction.total_time ? formatDuration(interaction.total_time) : '0:00'}
+                              </span>
+                            </td>
+                            <td className="pl-6 pr-6 py-4 whitespace-nowrap text-sm font-medium text-right">
+                              <button
+                                onClick={() => handleViewDetails(interaction)}
+                                className="inline-flex items-center px-3 py-1 border border-gray-300 text-sm font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                              >
+                                View Details
+                              </button>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="4" className="px-6 py-12 text-center">
+                            <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>
+                            <h3 className="mt-2 text-sm font-medium text-gray-900">No interactions found</h3>
+                            <p className="mt-1 text-sm text-gray-500">
+                              This QuDemo hasn't been shared with any customers yet.
+                            </p>
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           </div>

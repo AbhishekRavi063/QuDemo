@@ -415,9 +415,9 @@ const CustomerInteractionsPage = () => {
               </div>
 
               {/* Content */}
-              <div className="p-6 space-y-6">
+              <div className="p-6 overflow-y-auto max-h-96">
                 {activeTab === 'overview' && (
-                  <>
+                  <div className="min-h-96">
                     {/* AI Insight Summary */}
                     <div className="border border-blue-200 rounded-lg p-4 bg-blue-50">
                       <div className="flex items-center space-x-2 mb-2">
@@ -529,11 +529,11 @@ const CustomerInteractionsPage = () => {
                         </div>
                       </div>
                     </div>
-                  </>
+                  </div>
                 )}
 
                 {activeTab === 'questions' && (
-                  <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="bg-gray-50 rounded-lg p-4 min-h-96">
                     <h4 className="font-medium text-gray-900 mb-4">Questions & Responses</h4>
                     <div className="space-y-6 max-h-96 overflow-y-auto">
                       {selectedInteraction.questions && selectedInteraction.questions.length > 0 ? (
@@ -603,7 +603,7 @@ const CustomerInteractionsPage = () => {
                 )}
 
                 {activeTab === 'past-interactions' && (
-                  <div>
+                  <div className="min-h-96">
                     <h4 className="font-medium text-gray-900 mb-4">Past Interactions History</h4>
                     <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
                       <table className="min-w-full divide-y divide-gray-200">
