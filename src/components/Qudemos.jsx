@@ -1363,7 +1363,10 @@ const Qudemos = () => {
                
                <div className="flex justify-end">
                  <button
-                   onClick={() => setShowUniqueLinksModal(false)}
+                   onClick={() => {
+                     setShowUniqueLinksModal(false);
+                     setShowShareOptionsModal(true);
+                   }}
                    className="px-4 py-2 text-gray-600 hover:text-gray-800"
                  >
                    Back
@@ -1468,18 +1471,6 @@ const Qudemos = () => {
                          </tbody>
                        </table>
                      </div>
-                     <div className="mt-3 text-xs text-gray-500">
-                       <p><strong>Requirements:</strong></p>
-                       <ul className="list-disc list-inside space-y-1 mt-1">
-                         <li>Supported formats: CSV (.csv), Excel (.xlsx/.xls)</li>
-                         <li>First row must contain column headers: SL No, name, email, company</li>
-                         <li>SL No column is optional (system will auto-generate if missing)</li>
-                         <li>Each subsequent row represents one client</li>
-                         <li>Company field is optional</li>
-                         <li>Name and email are required for each row</li>
-                         <li>System will create "Shared QuDemo" column with generated links</li>
-                       </ul>
-                     </div>
                    </div>
 
                  </div>
@@ -1487,10 +1478,13 @@ const Qudemos = () => {
                
                <div className="flex justify-between">
                  <button
-                   onClick={handleBulkUploadModalClose}
+                   onClick={() => {
+                     setShowBulkUploadModal(false);
+                     setShowShareOptionsModal(true);
+                   }}
                    className="px-4 py-2 text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                  >
-                   Cancel
+                   Back
                  </button>
                  <button
                    onClick={handleBulkUpload}
@@ -1605,7 +1599,10 @@ const Qudemos = () => {
                
                <div className="flex justify-between">
                  <button
-                   onClick={() => setShowFewUniqueLinksModal(false)}
+                   onClick={() => {
+                     setShowFewUniqueLinksModal(false);
+                     setShowShareOptionsModal(true);
+                   }}
                    className="px-4 py-2 text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                  >
                    Back
