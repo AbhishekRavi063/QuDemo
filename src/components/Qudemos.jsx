@@ -62,6 +62,7 @@ const Qudemos = () => {
   const [qudemoPeople, setQudemoPeople] = useState([]);
   const [qudemoInteractions, setQudemoInteractions] = useState([]);
   const [activeTab, setActiveTab] = useState('overview');
+  const [loadingInteractions, setLoadingInteractions] = useState(false);
   const navigate = useNavigate();
   const { showSuccess, showError, showInfo } = useNotification();
 
@@ -89,6 +90,7 @@ const Qudemos = () => {
   // Handle view interactions for a QuDemo
   const handleViewQudemoInteractions = async (qudemo) => {
     try {
+      setLoadingInteractions(true);
       // Fetch interactions for this specific QuDemo and show interactions list
       const interactions = await fetchQudemoInteractions(qudemo.id);
       setQudemoInteractions(interactions);
@@ -96,6 +98,8 @@ const Qudemos = () => {
     } catch (error) {
       console.error('Error fetching interactions:', error);
       showError('Failed to fetch interactions');
+    } finally {
+      setLoadingInteractions(false);
     }
   };
 
@@ -729,13 +733,21 @@ const Qudemos = () => {
         navigate(`/view-qudemo/${qudemo.id}`);
         break;
       case 'interactions':
-        // Fetch interactions for this specific QuDemo and show people list
-        const interactions = await fetchQudemoInteractions(qudemo.id);
-        if (interactions.length > 0) {
-          setQudemoPeople(interactions);
-          setShowPeopleListModal(true);
-        } else {
-          showInfo('No interactions found for this QuDemo');
+        try {
+          setLoadingInteractions(true);
+          // Fetch interactions for this specific QuDemo and show people list
+          const interactions = await fetchQudemoInteractions(qudemo.id);
+          if (interactions.length > 0) {
+            setQudemoPeople(interactions);
+            setShowPeopleListModal(true);
+          } else {
+            showInfo('No interactions found for this QuDemo');
+          }
+        } catch (error) {
+          console.error('Error fetching interactions:', error);
+          showError('Failed to fetch interactions');
+        } finally {
+          setLoadingInteractions(false);
         }
         break;
       case 'delete':
@@ -2489,6 +2501,26 @@ const Qudemos = () => {
                     </tbody>
                   </table>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Loading Interactions Modal */}
+      {loadingInteractions && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-sm w-full mx-4 p-6">
+            <div className="flex flex-col items-center space-y-4">
+              {/* Spinner */}
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+              
+              {/* Loading Text */}
+              <div className="text-center">
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Loading Interactions</h3>
+                <p className="text-sm text-gray-500">
+                  Please wait while we fetch the interaction data...
+                </p>
               </div>
             </div>
           </div>
