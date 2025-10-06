@@ -328,7 +328,8 @@ const Qudemos = () => {
         // Send to backend
         const requestBody = {
           qudemoId: qudemoToShare.id,
-          clientData: clientData
+          clientData: clientData,
+          operationSource: 'bulk_upload'
         };
        
        console.log(`📊 Request body being sent:`, requestBody);
@@ -449,7 +450,8 @@ const Qudemos = () => {
          },
          body: JSON.stringify({
            qudemoId: qudemoToShare.id,
-           clientData: clientData
+           clientData: clientData,
+           operationSource: 'few_links'
          })
        });
 
