@@ -63,8 +63,23 @@ const Qudemos = () => {
   const [qudemoInteractions, setQudemoInteractions] = useState([]);
   const [activeTab, setActiveTab] = useState('overview');
   const [loadingInteractions, setLoadingInteractions] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   const navigate = useNavigate();
   const { showSuccess, showError, showInfo } = useNotification();
+
+  // Filter interactions based on search term
+  const filteredInteractions = qudemoInteractions.filter(interaction => {
+    if (!searchTerm) return true;
+    
+    const searchLower = searchTerm.toLowerCase();
+    const name = (interaction.client_name || '').toLowerCase();
+    const email = (interaction.client_email || '').toLowerCase();
+    const company = (interaction.client_company || '').toLowerCase();
+    
+    return name.includes(searchLower) || 
+           email.includes(searchLower) || 
+           company.includes(searchLower);
+  });
 
   // Format duration helper
   const formatDuration = (seconds) => {
@@ -91,6 +106,7 @@ const Qudemos = () => {
   const handleViewQudemoInteractions = async (qudemo) => {
     try {
       setLoadingInteractions(true);
+      setSearchTerm(''); // Clear search when opening modal
       // Fetch interactions for this specific QuDemo and show interactions list
       const interactions = await fetchQudemoInteractions(qudemo.id);
       setQudemoInteractions(interactions);
@@ -1766,7 +1782,7 @@ const Qudemos = () => {
                     <div className="ml-3 text-left">
                       <h4 className="text-sm font-medium text-red-800">This action will permanently delete:</h4>
                       <ul className="mt-2 text-sm text-red-700 list-disc list-inside space-y-1 text-left">
-                        <li>The qudemo and all its videos</li>
+                        <li>All shared QuDemos and their links</li>
                         <li>All knowledge sources</li>
                         <li>All analytics data</li>
                       </ul>
@@ -2362,7 +2378,7 @@ const Qudemos = () => {
                     </div>
                     <div className="ml-4">
                       <p className="text-sm font-medium text-gray-500">Total Interactions</p>
-                      <p className="text-2xl font-semibold text-gray-900">{qudemoInteractions.length}</p>
+                      <p className="text-2xl font-semibold text-gray-900">{filteredInteractions.length}</p>
                     </div>
                   </div>
                 </div>
@@ -2379,7 +2395,7 @@ const Qudemos = () => {
                     <div className="ml-4">
                       <p className="text-sm font-medium text-gray-500">Total Questions</p>
                       <p className="text-2xl font-semibold text-gray-900">
-                        {qudemoInteractions.reduce((total, interaction) => total + (interaction.questions ? interaction.questions.length : 0), 0)}
+                        {filteredInteractions.reduce((total, interaction) => total + (interaction.questions ? interaction.questions.length : 0), 0)}
                       </p>
                     </div>
                   </div>
@@ -2397,8 +2413,8 @@ const Qudemos = () => {
                     <div className="ml-4">
                       <p className="text-sm font-medium text-gray-500">Avg. Time Spent</p>
                       <p className="text-2xl font-semibold text-gray-900">
-                        {qudemoInteractions.length > 0 
-                          ? formatDuration(Math.floor(qudemoInteractions.reduce((total, interaction) => total + (interaction.total_time || 0), 0) / qudemoInteractions.length))
+                        {filteredInteractions.length > 0 
+                          ? formatDuration(Math.floor(filteredInteractions.reduce((total, interaction) => total + (interaction.total_duration || 0), 0) / filteredInteractions.length))
                           : '0:00'
                         }
                       </p>
@@ -2418,6 +2434,8 @@ const Qudemos = () => {
                   <input
                     type="text"
                     placeholder="Search by name, email, or company..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
                     className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
@@ -2452,16 +2470,16 @@ const Qudemos = () => {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {qudemoInteractions.length > 0 ? (
-                        qudemoInteractions.map((interaction, index) => (
+                      {filteredInteractions.length > 0 ? (
+                        filteredInteractions.map((interaction, index) => (
                           <tr key={index} className="hover:bg-gray-50">
                             <td className="px-6 py-4 whitespace-nowrap text-left">
                               <div>
                                 <div className="text-sm font-medium text-gray-900">
-                                  {interaction.customer_name || 'Unknown Customer'}
+                                  {interaction.client_name || 'Unknown Customer'}
                                 </div>
                                 <div className="text-sm text-gray-500">
-                                  {interaction.customer_company || 'No company'}
+                                  {interaction.client_company || 'No company'}
                                 </div>
                               </div>
                             </td>
@@ -2472,7 +2490,7 @@ const Qudemos = () => {
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-center">
                               <span className="text-sm text-gray-900">
-                                {interaction.total_time ? formatDuration(interaction.total_time) : '0:00'}
+                                {interaction.total_duration ? formatDuration(interaction.total_duration) : '0:00'}
                               </span>
                             </td>
                             <td className="pl-6 pr-6 py-4 whitespace-nowrap text-sm font-medium text-right">
@@ -2491,9 +2509,14 @@ const Qudemos = () => {
                             <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                             </svg>
-                            <h3 className="mt-2 text-sm font-medium text-gray-900">No interactions found</h3>
+                            <h3 className="mt-2 text-sm font-medium text-gray-900">
+                              {searchTerm ? 'No matching interactions found' : 'No interactions found'}
+                            </h3>
                             <p className="mt-1 text-sm text-gray-500">
-                              This QuDemo hasn't been shared with any customers yet.
+                              {searchTerm 
+                                ? `No interactions match "${searchTerm}". Try a different search term.`
+                                : 'This QuDemo hasn\'t been shared with any customers yet.'
+                              }
                             </p>
                           </td>
                         </tr>
