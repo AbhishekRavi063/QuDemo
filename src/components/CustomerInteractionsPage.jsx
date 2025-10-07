@@ -19,6 +19,8 @@ const CustomerInteractionsPage = () => {
   const [selectedInteraction, setSelectedInteraction] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
+  const [aiInsightSummary, setAiInsightSummary] = useState('');
+  const [loadingAiSummary, setLoadingAiSummary] = useState(false);
   const { company } = useCompany();
   const { showError } = useNotification();
 
@@ -87,11 +89,68 @@ const CustomerInteractionsPage = () => {
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
+  // Generate AI insight summary for interaction
+  const generateAiInsightSummary = async (interaction) => {
+    if (!interaction.questions || interaction.questions.length === 0) {
+      setAiInsightSummary(`${interaction.client_name || 'The prospect'} accessed ${interaction.qudemo_title || 'this demo'} but hasn't asked any questions yet. They spent ${formatDuration(interaction.total_duration)} viewing the demo.`);
+      return;
+    }
+
+    try {
+      setLoadingAiSummary(true);
+      console.log('🤖 Requesting AI summary for:', {
+        customerName: interaction.client_name,
+        qudemoTitle: interaction.qudemo_title,
+        questionCount: interaction.questions.length,
+        questions: interaction.questions.map(q => q.question)
+      });
+
+      const token = localStorage.getItem('accessToken');
+      const response = await fetch(getNodeApiUrl('/api/analytics/generate-insight-summary'), {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          questions: interaction.questions,
+          customerName: interaction.client_name,
+          qudemoTitle: interaction.qudemo_title
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('✅ AI summary received:', data.data.summary);
+        setAiInsightSummary(data.data.summary);
+      } else {
+        console.error('❌ AI summary API error:', response.status);
+        // Fallback to generic message
+        setAiInsightSummary(`${interaction.client_name || 'The prospect'} has shown interest in ${interaction.qudemo_title} by asking ${interaction.questions.length} question${interaction.questions.length > 1 ? 's' : ''} about various aspects of the product.`);
+      }
+    } catch (error) {
+      console.error('❌ Error generating AI summary:', error);
+      // Fallback to generic message
+      setAiInsightSummary(`${interaction.client_name || 'The prospect'} has shown interest in ${interaction.qudemo_title} by asking ${interaction.questions.length} question${interaction.questions.length > 1 ? 's' : ''} about various aspects of the product.`);
+    } finally {
+      setLoadingAiSummary(false);
+    }
+  };
+
   // Handle view details
   const handleViewDetails = (interaction) => {
+    console.log('🚀 Opening interaction details...');
+    
+    // Reset AI summary state
+    setAiInsightSummary('');
+    setLoadingAiSummary(false);
+    
     setSelectedInteraction(interaction);
     setActiveTab('overview'); // Reset to overview tab when opening modal
     setShowDetailsModal(true);
+    
+    // Generate AI insight summary
+    generateAiInsightSummary(interaction);
   };
 
   const handleTabClick = (tabName) => {
@@ -426,12 +485,16 @@ const CustomerInteractionsPage = () => {
                         </svg>
                         <span className="font-medium text-blue-900">AI Insight Summary</span>
                       </div>
-                      <p className="text-blue-800">
-                        {selectedInteraction.questions && selectedInteraction.questions.length > 0
-                          ? `The prospect has shown interest in ${selectedInteraction.qudemo_title} with ${selectedInteraction.question_count} questions. They spent ${formatDuration(selectedInteraction.total_duration)} engaging with the demo, indicating active interest in your product.`
-                          : `The prospect accessed ${selectedInteraction.qudemo_title} but hasn't asked any questions yet. They spent ${formatDuration(selectedInteraction.total_duration)} viewing the demo.`
-                        }
-                      </p>
+                      {loadingAiSummary ? (
+                        <div className="flex items-center space-x-2 text-blue-700">
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                          <span className="text-sm">Analyzing customer questions...</span>
+                        </div>
+                      ) : (
+                        <p className="text-blue-800">
+                          {aiInsightSummary || 'Generating AI insight summary...'}
+                        </p>
+                      )}
                     </div>
 
                     {/* Interaction Metrics */}

@@ -64,6 +64,8 @@ const Qudemos = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [loadingInteractions, setLoadingInteractions] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [aiInsightSummary, setAiInsightSummary] = useState('');
+  const [loadingAiSummary, setLoadingAiSummary] = useState(false);
   const navigate = useNavigate();
   const { showSuccess, showError, showInfo } = useNotification();
 
@@ -89,6 +91,54 @@ const Qudemos = () => {
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
+  // Generate AI insight summary for interaction
+  const generateAiInsightSummary = async (interaction) => {
+    if (!interaction.questions || interaction.questions.length === 0) {
+      setAiInsightSummary(`${interaction.client_name || 'The prospect'} accessed ${interaction.qudemo_title || 'this demo'} but hasn't asked any questions yet. They spent ${formatDuration(interaction.total_duration)} viewing the demo.`);
+      return;
+    }
+
+    try {
+      setLoadingAiSummary(true);
+      console.log('🤖 Requesting AI summary for:', {
+        customerName: interaction.client_name,
+        qudemoTitle: interaction.qudemo_title,
+        questionCount: interaction.questions.length,
+        questions: interaction.questions.map(q => q.question)
+      });
+
+      const token = localStorage.getItem('accessToken');
+      const response = await fetch(getNodeApiUrl('/api/analytics/generate-insight-summary'), {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          questions: interaction.questions,
+          customerName: interaction.client_name,
+          qudemoTitle: interaction.qudemo_title
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('✅ AI summary received:', data.data.summary);
+        setAiInsightSummary(data.data.summary);
+      } else {
+        console.error('❌ AI summary API error:', response.status);
+        // Fallback to generic message
+        setAiInsightSummary(`${interaction.client_name || 'The prospect'} has shown interest in ${interaction.qudemo_title} by asking ${interaction.questions.length} question${interaction.questions.length > 1 ? 's' : ''} about various aspects of the product.`);
+      }
+    } catch (error) {
+      console.error('❌ Error generating AI summary:', error);
+      // Fallback to generic message
+      setAiInsightSummary(`${interaction.client_name || 'The prospect'} has shown interest in ${interaction.qudemo_title} by asking ${interaction.questions.length} question${interaction.questions.length > 1 ? 's' : ''} about various aspects of the product.`);
+    } finally {
+      setLoadingAiSummary(false);
+    }
+  };
+
   // Handle view details for interactions
   const handleViewDetails = (interaction) => {
     console.log('🔍 Selected interaction data:', interaction);
@@ -96,10 +146,19 @@ const Qudemos = () => {
     if (interaction.questions && interaction.questions.length > 0) {
       console.log('🔍 First question with timestamp:', interaction.questions[0]);
     }
+    
+    // Reset AI summary state
+    setAiInsightSummary('');
+    setLoadingAiSummary(false);
+    
     setSelectedInteraction(interaction);
     setActiveTab('overview');
     setShowDetailsModal(true);
     setShowInteractionsListModal(false);
+    
+    // Generate AI insight summary
+    console.log('🚀 Starting AI summary generation...');
+    generateAiInsightSummary(interaction);
   };
 
   // Handle view interactions for a QuDemo
@@ -2049,16 +2108,20 @@ const Qudemos = () => {
                     <div className="border border-blue-200 rounded-lg p-4 bg-blue-50">
                       <div className="flex items-center space-x-2 mb-2">
                         <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                         </svg>
                         <span className="font-medium text-blue-900">AI Insight Summary</span>
                       </div>
-                      <p className="text-blue-800">
-                        {selectedInteraction.questions && selectedInteraction.questions.length > 0
-                          ? `The prospect has shown interest in ${selectedInteraction.qudemo_title} with ${selectedInteraction.question_count} questions. They spent ${formatDuration(selectedInteraction.total_duration)} engaging with the demo, indicating active interest in your product.`
-                          : `The prospect accessed ${selectedInteraction.qudemo_title} but hasn't asked any questions yet. They spent ${formatDuration(selectedInteraction.total_duration)} viewing the demo.`
-                        }
-                      </p>
+                      {loadingAiSummary ? (
+                        <div className="flex items-center space-x-2 text-blue-700">
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                          <span className="text-sm">Analyzing customer questions...</span>
+                        </div>
+                      ) : (
+                        <p className="text-blue-800 leading-relaxed">
+                          {aiInsightSummary || 'Generating AI insight summary...'}
+                        </p>
+                      )}
                     </div>
 
                     {/* Interaction Metrics */}
