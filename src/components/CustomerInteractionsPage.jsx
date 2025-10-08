@@ -43,6 +43,7 @@ const CustomerInteractionsPage = () => {
       }
 
       const data = await response.json();
+      console.log('📊 Received interactions data:', data.data);
       setInteractions(data.data || []);
     } catch (error) {
       console.error('Error fetching interactions:', error);
@@ -59,8 +60,28 @@ const CustomerInteractionsPage = () => {
     }
   }, [company?.id]);
 
-  // Filter interactions based on search term
+  // Filter interactions based on search term and exclude users with no engagement
   const filteredInteractions = interactions.filter(interaction => {
+    // First, exclude users who haven't asked questions and don't have last accessed date
+    const hasQuestions = interaction.question_count && interaction.question_count > 0;
+    const hasTimeSpent = interaction.total_duration && interaction.total_duration > 0;
+    
+    // Debug logging for all users to see what data they have
+    console.log('🔍 User data:', {
+      name: interaction.client_name,
+      questions: interaction.question_count,
+      timeSpent: interaction.total_duration,
+      lastAccessed: interaction.last_accessed_at,
+      accessCount: interaction.access_count
+    });
+    
+    // Only show users who have asked questions OR spent time (more strict filtering)
+    if (!hasQuestions && !hasTimeSpent) {
+      console.log('🚫 Filtering out user with no engagement:', interaction.client_name);
+      return false;
+    }
+    
+    // Then apply search filter
     const searchLower = searchTerm.toLowerCase();
     return (
       interaction.client_name?.toLowerCase().includes(searchLower) ||
@@ -234,22 +255,22 @@ const CustomerInteractionsPage = () => {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 tracking-wider">
                   Customer
                 </th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 tracking-wider">
                   Company
                 </th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Demo Watched
+                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 tracking-wider">
+                  Demo watched
                 </th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 tracking-wider">
                   <ChatBubbleLeftEllipsisIcon className="h-4 w-4 mx-auto" />
                 </th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 tracking-wider">
                   <ClockIcon className="h-4 w-4 mx-auto" />
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
                   Actions
                 </th>
               </tr>
@@ -264,27 +285,27 @@ const CustomerInteractionsPage = () => {
               ) : (
                 paginatedInteractions.map((interaction, index) => (
                   <tr key={interaction.share_id || index} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                    <td className="px-6 py-4 whitespace-nowrap text-left">
                       <div className="text-sm font-medium text-gray-900">
                         {interaction.client_name || 'Unknown'}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                    <td className="px-6 py-4 whitespace-nowrap text-left">
                       <div className="text-sm text-gray-900">
                         {interaction.client_company || 'Unknown Company'}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                    <td className="px-6 py-4 whitespace-nowrap text-left">
                       <div className="text-sm text-gray-900">
                         {interaction.qudemo_title || 'Unknown Demo'}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                    <td className="px-6 py-4 whitespace-nowrap text-left">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                         {interaction.question_count || 0}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                    <td className="px-6 py-4 whitespace-nowrap text-left">
                       <div className="text-sm text-gray-900">
                         {formatDuration(interaction.total_duration)}
                       </div>
@@ -292,10 +313,9 @@ const CustomerInteractionsPage = () => {
                     <td className="pl-6 pr-1 py-4 whitespace-nowrap text-left text-sm font-medium">
                       <button
                         onClick={() => handleViewDetails(interaction)}
-                        className="px-3 py-1 bg-white border border-blue-600 text-blue-600 text-xs rounded-md hover:bg-blue-600 hover:text-white transition-colors flex items-center space-x-1"
+                        className="inline-flex items-center px-3 py-1 border border-gray-300 text-sm font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none"
                       >
-                        <EyeIcon className="h-4 w-4" />
-                        <span>View Details</span>
+                        View Details
                       </button>
                     </td>
                   </tr>
@@ -384,9 +404,9 @@ const CustomerInteractionsPage = () => {
 
       {/* Details Modal */}
       {showDetailsModal && selectedInteraction && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="p-0">
+        <div className="fixed inset-0 z-50 flex items-start justify-center bg-black bg-opacity-50 pt-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="flex flex-col h-full">
               {/* Header */}
               <div className="bg-white border-b border-gray-200 p-6 rounded-t-lg">
                 <div className="flex items-center justify-between">
@@ -399,28 +419,46 @@ const CustomerInteractionsPage = () => {
                     </div>
                     
                     {/* Customer Info */}
-                    <div>
-                      <h3 className="text-xl font-semibold text-gray-900">
+                    <div className="text-left">
+                      <h3 className="text-xl font-semibold text-gray-900 text-left">
                         {selectedInteraction.client_name || 'Unknown Customer'} - Customer Interaction Details
                       </h3>
-                      <div className="flex items-center space-x-4 text-sm text-gray-600">
-                        <span>{selectedInteraction.client_email || 'No email'}</span>
-                        <span>•</span>
-                        <span>{selectedInteraction.client_company || 'No company'}</span>
-                        <span>•</span>
-                        <span>
-                          {selectedInteraction.last_accessed_at 
-                            ? new Date(selectedInteraction.last_accessed_at).toLocaleDateString('en-US', {
+                      <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+                        {selectedInteraction.client_email && (
+                          <div className="flex items-center space-x-2">
+                            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                            <span>{selectedInteraction.client_email}</span>
+                          </div>
+                        )}
+                        
+                        {selectedInteraction.client_company && (
+                          <div className="flex items-center space-x-2">
+                            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                            </svg>
+                            <span>{selectedInteraction.client_company}</span>
+                          </div>
+                        )}
+                        
+                        {selectedInteraction.last_accessed_at && (
+                          <div className="flex items-center space-x-2">
+                            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span>
+                              {new Date(selectedInteraction.last_accessed_at).toLocaleDateString('en-US', {
                                 weekday: 'long',
                                 month: 'short',
                                 day: 'numeric',
                                 hour: 'numeric',
                                 minute: '2-digit',
                                 hour12: true
-                              })
-                            : 'Never accessed'
-                          }
-                        </span>
+                              })}
+                            </span>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -438,47 +476,47 @@ const CustomerInteractionsPage = () => {
               </div>
 
               {/* Tabs */}
-              <div className="border-b border-gray-200">
-                <nav className="flex">
+              <div className="bg-gray-100 p-1.5">
+                <nav className="flex gap-1.5">
                   <button 
                     onClick={() => handleTabClick('overview')}
-                    className={`flex-1 px-6 py-4 text-sm font-medium transition-colors ${
+                    className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                       activeTab === 'overview'
-                        ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
-                        : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                        ? 'bg-white text-gray-900 shadow-sm'
+                        : 'bg-transparent text-gray-600 hover:text-gray-900'
                     }`}
                   >
                     Overview
                   </button>
                   <button 
                     onClick={() => handleTabClick('questions')}
-                    className={`flex-1 px-6 py-4 text-sm font-medium transition-colors ${
+                    className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                       activeTab === 'questions'
-                        ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
-                        : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                        ? 'bg-white text-gray-900 shadow-sm'
+                        : 'bg-transparent text-gray-600 hover:text-gray-900'
                     }`}
                   >
                     Questions
                   </button>
                   <button 
                     onClick={() => handleTabClick('past-interactions')}
-                    className={`flex-1 px-6 py-4 text-sm font-medium transition-colors ${
+                    className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                       activeTab === 'past-interactions'
-                        ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
-                        : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                        ? 'bg-white text-gray-900 shadow-sm'
+                        : 'bg-transparent text-gray-600 hover:text-gray-900'
                     }`}
                   >
-                    Past Interactions
+                    Past interactions
                   </button>
                 </nav>
               </div>
 
               {/* Content */}
-              <div className="p-6 overflow-y-auto max-h-96">
+              <div className="p-6 overflow-y-auto flex-1">
                 {activeTab === 'overview' && (
                   <div className="min-h-96">
                     {/* AI Insight Summary */}
-                    <div className="border border-blue-200 rounded-lg p-4 bg-blue-50">
+                    <div className="border border-blue-200 rounded-lg p-4 bg-blue-50 mb-6">
                       <div className="flex items-center space-x-2 mb-2">
                         <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
@@ -498,7 +536,7 @@ const CustomerInteractionsPage = () => {
                     </div>
 
                     {/* Interaction Metrics */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                       {/* Demo Watched */}
                       <div className="bg-white border border-gray-200 rounded-lg p-4">
                         <div className="flex items-center space-x-3">
@@ -554,16 +592,17 @@ const CustomerInteractionsPage = () => {
                         <span className="font-medium text-blue-900">Unique Link Details</span>
                       </div>
                       
-                      <div className="space-y-3">
-                        <div>
+                      <div className="space-y-3 text-left">
+                        <div className="flex items-center justify-between text-left">
+                          <span className="text-sm text-blue-800 font-medium">Link Type:</span>
                           <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
                             Unique Customer Link
                           </span>
                         </div>
                         
-                        <div className="flex items-center space-x-2">
-                          <span className="text-sm text-blue-800 font-medium">URL:</span>
-                          <code className="flex-1 bg-white border border-blue-200 rounded px-2 py-1 text-sm text-blue-900">
+                        <div className="flex items-start space-x-2 text-left">
+                          <span className="text-sm text-blue-800 font-medium whitespace-nowrap">URL:</span>
+                          <code className="flex-1 bg-white border border-blue-200 rounded px-2 py-1 text-sm text-blue-900 text-left break-all">
                             {window.location.origin}/share/{selectedInteraction.share_token}
                           </code>
                           <button
@@ -571,9 +610,12 @@ const CustomerInteractionsPage = () => {
                               navigator.clipboard.writeText(`${window.location.origin}/share/${selectedInteraction.share_token}`);
                               // You could add a toast notification here
                             }}
-                            className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+                            className="flex items-center space-x-2 px-3 py-1 bg-white border border-blue-300 text-blue-600 text-sm rounded hover:bg-blue-50"
                           >
-                            Copy
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                            </svg>
+                            <span>Copy</span>
                           </button>
                         </div>
                         
@@ -672,17 +714,17 @@ const CustomerInteractionsPage = () => {
                       <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                           <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
                               Date
                             </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
                               Demo
                             </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
                               Questions
                             </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              Time Spent
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
+                              Time spent
                             </th>
                           </tr>
                         </thead>
@@ -746,16 +788,16 @@ const CustomerInteractionsPage = () => {
 
                                 return (
                                   <tr key={sessionIndex} className="hover:bg-gray-50">
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-left">
                                       {dateDisplay}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-left">
                                       {selectedInteraction.qudemo_title || 'Product Demo'}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-left">
                                       {session.questions.length}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-left">
                                       {formatDuration(Math.min(totalSessionTime, 1800))}
                                     </td>
                                   </tr>

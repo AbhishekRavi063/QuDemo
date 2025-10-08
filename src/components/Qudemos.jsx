@@ -55,6 +55,7 @@ const Qudemos = () => {
    const [generatedLinks, setGeneratedLinks] = useState([]);
   const [showDownloadModal, setShowDownloadModal] = useState(false);
   const [downloadData, setDownloadData] = useState(null);
+  const [originalFilename, setOriginalFilename] = useState(null);
   const [selectedInteraction, setSelectedInteraction] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showPeopleListModal, setShowPeopleListModal] = useState(false);
@@ -69,8 +70,18 @@ const Qudemos = () => {
   const navigate = useNavigate();
   const { showSuccess, showError, showInfo } = useNotification();
 
-  // Filter interactions based on search term
+  // Filter interactions based on search term and exclude users with no engagement
   const filteredInteractions = qudemoInteractions.filter(interaction => {
+    // First, exclude users who haven't asked questions and don't have time spent
+    const hasQuestions = interaction.question_count && interaction.question_count > 0;
+    const hasTimeSpent = interaction.total_duration && interaction.total_duration > 0;
+    
+    // Only show users who have asked questions OR spent time
+    if (!hasQuestions && !hasTimeSpent) {
+      return false;
+    }
+    
+    // Then apply search filter
     if (!searchTerm) return true;
     
     const searchLower = searchTerm.toLowerCase();
@@ -423,7 +434,8 @@ const Qudemos = () => {
         const requestBody = {
           qudemoId: qudemoToShare.id,
           clientData: clientData,
-          operationSource: 'bulk_upload'
+          operationSource: 'bulk_upload',
+          originalFilename: selectedFile?.name || 'bulk-upload.csv'
         };
        
        console.log(`📊 Request body being sent:`, requestBody);
@@ -446,6 +458,7 @@ const Qudemos = () => {
          
          // Set download data and show download modal
          setDownloadData(data.data || []);
+         setOriginalFilename(selectedFile?.name || null); // Store original filename before clearing
          setSelectedFile(null);
          setShowBulkUploadModal(false);
          setShowDownloadModal(true);
@@ -597,35 +610,43 @@ const Qudemos = () => {
      if (!downloadData) return;
 
      try {
-       const XLSX = await import('xlsx');
-       
-       // Prepare data for download
-       const downloadRows = [
-         ['SL No', 'name', 'email', 'company', 'Shared QuDemo'] // Header row
-       ];
+       // Prepare CSV data
+       const csvHeaders = ['SL No', 'Client Name', 'Company Name', 'Email', 'Shared QuDemo'];
+       const csvRows = downloadData.map((item, index) => [
+         item.slNo || (index + 1),
+         item.clientName || '',
+         item.companyName || '',
+         item.email || '',
+         item.shareUrl || ''
+       ]);
 
-       // Add data rows
-       downloadData.forEach((item, index) => {
-         downloadRows.push([
-           item.slNo || (index + 1),
-           item.clientName || '',
-           item.email || '',
-           item.companyName || '',
-           item.shareUrl || ''
-         ]);
-       });
+       // Create CSV content
+       const csvContent = [csvHeaders, ...csvRows]
+         .map(row => row.map(field => `"${field}"`).join(','))
+         .join('\n');
 
-       // Create workbook and worksheet
-       const ws = XLSX.utils.aoa_to_sheet(downloadRows);
-       const wb = XLSX.utils.book_new();
-       XLSX.utils.book_append_sheet(wb, ws, 'Generated Links');
+       // Add UTF-8 BOM for better Excel compatibility
+       const BOM = '\uFEFF';
+       const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
 
-       // Generate filename with timestamp
-       const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
-       const filename = `bulk_share_links_${timestamp}.xlsx`;
+       // Use original filename if available, otherwise generate one
+       let filename;
+       if (originalFilename) {
+         // Remove existing extension and add .csv
+         const nameWithoutExt = originalFilename.replace(/\.[^/.]+$/, '');
+         filename = `${nameWithoutExt}.csv`;
+       } else {
+         // Fallback to generated filename
+         const timestamp = new Date().toISOString().slice(0, 10);
+         filename = `bulk_share_links_${timestamp}.csv`;
+       }
 
        // Download the file
-       XLSX.writeFile(wb, filename);
+       const link = document.createElement('a');
+       link.href = URL.createObjectURL(blob);
+       link.download = filename;
+       link.click();
+       URL.revokeObjectURL(link.href);
        
        showSuccess('File downloaded successfully!');
        setShowDownloadModal(false);
@@ -1898,7 +1919,7 @@ const Qudemos = () => {
                   Successfully generated <strong>{downloadData.length}</strong> unique share links for "{qudemoToShare?.title}".
                 </p>
                 <p className="text-sm text-gray-600">
-                  Download the Excel file with all generated links and client information.
+                  Download the CSV file with all generated links and client information.
                 </p>
               </div>
 
@@ -2020,7 +2041,7 @@ const Qudemos = () => {
       {/* Interaction Details Modal */}
       {showDetailsModal && selectedInteraction && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[95vh] overflow-hidden">
             {/* Modal Header */}
             <div className="px-6 py-4 border-b border-gray-200">
               <div className="flex items-center justify-between">
@@ -2028,7 +2049,7 @@ const Qudemos = () => {
                   <button
                     onClick={() => {
                       setShowDetailsModal(false);
-                      setShowPeopleListModal(true);
+                      setShowInteractionsListModal(true);
                     }}
                     className="text-gray-400 hover:text-gray-600 transition-colors mr-2"
                   >
@@ -2039,19 +2060,46 @@ const Qudemos = () => {
                   <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white text-lg font-semibold">
                     {selectedInteraction.client_name ? selectedInteraction.client_name.charAt(0).toUpperCase() : 'I'}
                   </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900">
+                  <div className="text-left">
+                    <h3 className="text-lg font-semibold text-gray-900 text-left">
                       {selectedInteraction.client_name || 'Interactions Overview'}
                     </h3>
-                    <p className="text-sm text-gray-500">
-                      {selectedInteraction.client_company || selectedInteraction.qudemo_title}
-                    </p>
+                    
+                    {/* User Details Section */}
+                    <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-gray-600">
+                      {selectedInteraction.client_email && (
+                        <div className="flex items-center space-x-2">
+                          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                          </svg>
+                          <span>{selectedInteraction.client_email}</span>
+                        </div>
+                      )}
+                      
+                      {selectedInteraction.client_company && (
+                        <div className="flex items-center space-x-2">
+                          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                          </svg>
+                          <span>{selectedInteraction.client_company}</span>
+                        </div>
+                      )}
+                      
+                      {selectedInteraction.last_interaction && (
+                        <div className="flex items-center space-x-2">
+                          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <span>Last interaction: {new Date(selectedInteraction.last_interaction).toLocaleDateString()} at {new Date(selectedInteraction.last_interaction).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
                 <button
                   onClick={() => {
                     setShowDetailsModal(false);
-                    setShowPeopleListModal(true);
+                    setShowInteractionsListModal(true);
                   }}
                   className="text-gray-400 hover:text-gray-600 transition-colors"
                 >
@@ -2065,37 +2113,37 @@ const Qudemos = () => {
             {/* Modal Content */}
             <div className="flex-1 overflow-hidden">
               {/* Tabs */}
-              <div className="border-b border-gray-200">
-                <nav className="flex">
+              <div className="bg-gray-100 p-1.5">
+                <nav className="flex gap-1.5">
                   <button 
                     onClick={() => handleTabClick('overview')}
-                    className={`flex-1 px-6 py-4 text-sm font-medium transition-colors ${
+                    className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                       activeTab === 'overview'
-                        ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
-                        : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                        ? 'bg-white text-gray-900 shadow-sm'
+                        : 'bg-transparent text-gray-600 hover:text-gray-900'
                     }`}
                   >
                     Overview
                   </button>
                   <button 
                     onClick={() => handleTabClick('questions')}
-                    className={`flex-1 px-6 py-4 text-sm font-medium transition-colors ${
+                    className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                       activeTab === 'questions'
-                        ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
-                        : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                        ? 'bg-white text-gray-900 shadow-sm'
+                        : 'bg-transparent text-gray-600 hover:text-gray-900'
                     }`}
                   >
                     Questions
                   </button>
                   <button 
                     onClick={() => handleTabClick('past-interactions')}
-                    className={`flex-1 px-6 py-4 text-sm font-medium transition-colors ${
+                    className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                       activeTab === 'past-interactions'
-                        ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
-                        : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                        ? 'bg-white text-gray-900 shadow-sm'
+                        : 'bg-transparent text-gray-600 hover:text-gray-900'
                     }`}
                   >
-                    Past Interactions
+                    Past interactions
                   </button>
                 </nav>
               </div>
@@ -2105,7 +2153,7 @@ const Qudemos = () => {
                 {activeTab === 'overview' && (
                   <div className="min-h-96">
                     {/* AI Insight Summary */}
-                    <div className="border border-blue-200 rounded-lg p-4 bg-blue-50">
+                    <div className="border border-blue-200 rounded-lg p-4 bg-blue-50 mb-6">
                       <div className="flex items-center space-x-2 mb-2">
                         <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
@@ -2125,48 +2173,54 @@ const Qudemos = () => {
                     </div>
 
                     {/* Interaction Metrics */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                       {/* Demo Watched */}
                       <div className="bg-white border border-gray-200 rounded-lg p-4">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                            <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M19 10a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
+                        <div className="flex items-center justify-between">
+                          <div className="text-left">
+                            <p className="text-sm font-medium text-gray-600 text-left">Demo Watched</p>
+                            <p className="text-lg font-semibold text-gray-900 text-left">{selectedInteraction.qudemo_title || 'Unknown Demo'}</p>
                           </div>
-                          <div>
-                            <p className="text-sm font-medium text-gray-600">Demo Watched</p>
-                            <p className="text-lg font-semibold text-gray-900">{selectedInteraction.qudemo_title || 'Unknown Demo'}</p>
+                          <div className="flex-shrink-0">
+                            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                              <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M19 10a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                            </div>
                           </div>
                         </div>
                       </div>
 
                       {/* Time Spent */}
                       <div className="bg-white border border-gray-200 rounded-lg p-4">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                            <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
+                        <div className="flex items-center justify-between">
+                          <div className="text-left">
+                            <p className="text-sm font-medium text-gray-600 text-left">Time Spent</p>
+                            <p className="text-lg font-semibold text-gray-900 text-left">{formatDuration(selectedInteraction.total_duration)}</p>
                           </div>
-                          <div>
-                            <p className="text-sm font-medium text-gray-600">Time Spent</p>
-                            <p className="text-lg font-semibold text-gray-900">{formatDuration(selectedInteraction.total_duration)}</p>
+                          <div className="flex-shrink-0">
+                            <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                              <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                            </div>
                           </div>
                         </div>
                       </div>
 
                       {/* Questions Asked */}
                       <div className="bg-white border border-gray-200 rounded-lg p-4">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                            <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                            </svg>
+                        <div className="flex items-center justify-between">
+                          <div className="text-left">
+                            <p className="text-sm font-medium text-gray-600 text-left">Questions Asked</p>
+                            <p className="text-lg font-semibold text-gray-900 text-left">{selectedInteraction.question_count || 0}</p>
                           </div>
-                          <div>
-                            <p className="text-sm font-medium text-gray-600">Questions Asked</p>
-                            <p className="text-lg font-semibold text-gray-900">{selectedInteraction.question_count || 0}</p>
+                          <div className="flex-shrink-0">
+                            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                              <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                              </svg>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -2181,16 +2235,17 @@ const Qudemos = () => {
                         <span className="font-medium text-blue-900">Unique Link Details</span>
                       </div>
                       
-                      <div className="space-y-3">
-                        <div>
+                      <div className="space-y-3 text-left">
+                        <div className="flex items-center justify-between text-left">
+                          <span className="text-sm text-blue-800 font-medium">Link Type:</span>
                           <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
                             Unique Customer Link
                           </span>
                         </div>
                         
-                        <div className="flex items-center space-x-2">
-                          <span className="text-sm text-blue-800 font-medium">URL:</span>
-                          <code className="flex-1 bg-white border border-blue-200 rounded px-2 py-1 text-sm text-blue-900">
+                        <div className="flex items-start space-x-2 text-left">
+                          <span className="text-sm text-blue-800 font-medium whitespace-nowrap">URL:</span>
+                          <code className="flex-1 bg-white border border-blue-200 rounded px-2 py-1 text-sm text-blue-900 text-left break-all">
                             {window.location.origin}/share/{selectedInteraction.share_token}
                           </code>
                           <button
@@ -2198,9 +2253,12 @@ const Qudemos = () => {
                               navigator.clipboard.writeText(`${window.location.origin}/share/${selectedInteraction.share_token}`);
                               // You could add a toast notification here
                             }}
-                            className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+                            className="flex items-center space-x-2 px-3 py-1 bg-white border border-blue-300 text-blue-600 text-sm rounded hover:bg-blue-50"
                           >
-                            Copy
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                            </svg>
+                            <span>Copy</span>
                           </button>
                         </div>
                         
@@ -2293,17 +2351,17 @@ const Qudemos = () => {
                       <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                           <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
                               Date
                             </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
                               Demo
                             </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
                               Questions
                             </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              Time Spent
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
+                              Time spent
                             </th>
                           </tr>
                         </thead>
@@ -2367,16 +2425,16 @@ const Qudemos = () => {
 
                                 return (
                                   <tr key={sessionIndex} className="hover:bg-gray-50">
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-left">
                                       {dateDisplay}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-left">
                                       {selectedInteraction.qudemo_title || 'Product Demo'}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-left">
                                       {session.questions.length}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-left">
                                       {formatDuration(Math.min(totalSessionTime, 1800))}
                                     </td>
                                   </tr>
@@ -2404,7 +2462,7 @@ const Qudemos = () => {
       {/* Interactions List Modal */}
       {showInteractionsListModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden">
+          <div className="bg-white rounded-lg shadow-xl max-w-5xl w-full mx-4 max-h-[90vh] overflow-hidden">
             <div className="p-6">
               {/* Header */}
               <div className="flex items-center justify-between mb-6">
@@ -2412,9 +2470,9 @@ const Qudemos = () => {
                   <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
                     <span className="text-blue-600 font-bold text-lg">P</span>
                   </div>
-                  <div>
-                    <h3 className="text-2xl font-bold text-gray-900">Product Overview - Customer Interactions</h3>
-                    <p className="text-gray-600 mt-1">View detailed buyer interactions with this QuDemo</p>
+                  <div className="text-left">
+                    <h3 className="text-2xl font-bold text-gray-900 text-left">Product Overview - Customer Interactions</h3>
+                    <p className="text-gray-600 mt-1 text-left">View detailed buyer interactions with this QuDemo</p>
                   </div>
                 </div>
                 <button
@@ -2430,7 +2488,11 @@ const Qudemos = () => {
               {/* Stats Cards */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                 <div className="bg-white border border-gray-200 rounded-lg p-6">
-                  <div className="flex items-center">
+                  <div className="flex items-center justify-between">
+                    <div className="text-left">
+                      <p className="text-sm font-medium text-gray-500 text-left">Total Interactions</p>
+                      <p className="text-2xl font-semibold text-gray-900 text-left">{filteredInteractions.length}</p>
+                    </div>
                     <div className="flex-shrink-0">
                       <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
                         <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2439,15 +2501,17 @@ const Qudemos = () => {
                         </svg>
                       </div>
                     </div>
-                    <div className="ml-4">
-                      <p className="text-sm font-medium text-gray-500">Total Interactions</p>
-                      <p className="text-2xl font-semibold text-gray-900">{filteredInteractions.length}</p>
-                    </div>
                   </div>
                 </div>
 
                 <div className="bg-white border border-gray-200 rounded-lg p-6">
-                  <div className="flex items-center">
+                  <div className="flex items-center justify-between">
+                    <div className="text-left">
+                      <p className="text-sm font-medium text-gray-500 text-left">Total Questions</p>
+                      <p className="text-2xl font-semibold text-gray-900 text-left">
+                        {filteredInteractions.reduce((total, interaction) => total + (interaction.questions ? interaction.questions.length : 0), 0)}
+                      </p>
+                    </div>
                     <div className="flex-shrink-0">
                       <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
                         <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2455,32 +2519,26 @@ const Qudemos = () => {
                         </svg>
                       </div>
                     </div>
-                    <div className="ml-4">
-                      <p className="text-sm font-medium text-gray-500">Total Questions</p>
-                      <p className="text-2xl font-semibold text-gray-900">
-                        {filteredInteractions.reduce((total, interaction) => total + (interaction.questions ? interaction.questions.length : 0), 0)}
-                      </p>
-                    </div>
                   </div>
                 </div>
 
                 <div className="bg-white border border-gray-200 rounded-lg p-6">
-                  <div className="flex items-center">
+                  <div className="flex items-center justify-between">
+                    <div className="text-left">
+                      <p className="text-sm font-medium text-gray-500 text-left">Avg. Time Spent</p>
+                      <p className="text-2xl font-semibold text-gray-900 text-left">
+                        {filteredInteractions.length > 0 
+                          ? formatDuration(Math.floor(filteredInteractions.reduce((total, interaction) => total + (interaction.total_duration || 0), 0) / filteredInteractions.length))
+                          : '0:00'
+                        }
+                      </p>
+                    </div>
                     <div className="flex-shrink-0">
                       <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
                         <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                       </div>
-                    </div>
-                    <div className="ml-4">
-                      <p className="text-sm font-medium text-gray-500">Avg. Time Spent</p>
-                      <p className="text-2xl font-semibold text-gray-900">
-                        {filteredInteractions.length > 0 
-                          ? formatDuration(Math.floor(filteredInteractions.reduce((total, interaction) => total + (interaction.total_duration || 0), 0) / filteredInteractions.length))
-                          : '0:00'
-                        }
-                      </p>
                     </div>
                   </div>
                 </div>
@@ -2510,24 +2568,24 @@ const Qudemos = () => {
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
                           Customer
                         </th>
-                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 tracking-wider">
                           <div className="flex justify-center">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                             </svg>
                           </div>
                         </th>
-                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 tracking-wider">
                           <div className="flex justify-center">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                           </div>
                         </th>
-                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 tracking-wider">
                           Actions
                         </th>
                       </tr>

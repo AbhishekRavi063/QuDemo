@@ -77,7 +77,15 @@ const BulkUploadsPage = () => {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = fileName || 'bulk-links.xlsx';
+        
+        // Always use .csv extension for download
+        let downloadFileName = fileName || 'bulk-links.csv';
+        if (downloadFileName) {
+          // Remove existing extension and add .csv
+          downloadFileName = downloadFileName.replace(/\.[^/.]+$/, '') + '.csv';
+        }
+        
+        a.download = downloadFileName;
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
@@ -167,7 +175,11 @@ const BulkUploadsPage = () => {
                         <div className="flex items-center">
                           <DocumentIcon className="h-5 w-5 text-gray-400 mr-3" />
                           <div className="text-sm font-medium text-gray-900">
-                            {upload.original_filename || upload.file_name || 'bulk-links.csv'}
+                            {(() => {
+                              const filename = upload.original_filename || upload.file_name || 'bulk-links.csv';
+                              // Always show .csv extension
+                              return filename.replace(/\.[^/.]+$/, '') + '.csv';
+                            })()}
                           </div>
                         </div>
                       </td>
