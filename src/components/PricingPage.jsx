@@ -41,7 +41,7 @@ const PricingPage = () => {
     {
       id: 4,
       question: "Is there a free trial?",
-      answer: "The Free plan is available forever with no credit card required. You can upgrade to Pro or Enterprise whenever you're ready to share your QuDemos."
+      answer: "Free trial available for 7 days only."
     }
   ];
 
@@ -219,13 +219,13 @@ const PricingPage = () => {
         </div>
 
         {/* Pricing Cards */}
-        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <div className="flex flex-wrap justify-center gap-8 max-w-6xl mx-auto">
           {Object.entries(plans).map(([key, plan]) => {
             const savings = getSavings(key);
             return (
               <div
                 key={key}
-                className={`bg-white rounded-2xl shadow-xl overflow-hidden transform transition-all hover:scale-105 ${
+                className={`bg-white rounded-2xl shadow-xl overflow-hidden transform transition-all hover:scale-105 w-full md:w-80 ${
                   plan.highlight ? 'ring-4 ring-blue-500' : ''
                 } ${
                   plan.isCurrent && currentBillingCycle === billingCycle ? 'ring-4 ring-green-500' : ''

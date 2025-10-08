@@ -180,7 +180,7 @@ const SubscriptionTab = ({ companyId }) => {
         'Public QuDemo sharing',
         'Advanced analytics',
         'Priority support',
-        'Custom branding'
+        'Unlimited QuDemos'
       ],
       enterprise: [
         'Everything in Pro',
@@ -219,154 +219,156 @@ const SubscriptionTab = ({ companyId }) => {
   const isPaid = ['pro', 'enterprise'].includes(subscription.plan);
   const isActive = ['active', 'trialing', 'on_trial'].includes(subscription.status);
 
+  // Check if currently in trial period
+  const isInTrial = () => {
+    if (!subscription.startDate || !isPaid) return false;
+    
+    const startDate = new Date(subscription.startDate);
+    const trialEndDate = new Date(startDate.getTime() + (7 * 24 * 60 * 60 * 1000)); // Add 7 days
+    const now = new Date();
+    
+    return now < trialEndDate;
+  };
+
+  const getTrialStatus = () => {
+    if (!isPaid || !subscription.startDate) return null;
+    
+    const startDate = new Date(subscription.startDate);
+    const trialEndDate = new Date(startDate.getTime() + (7 * 24 * 60 * 60 * 1000));
+    const now = new Date();
+    
+    if (now < trialEndDate) {
+      return {
+        isTrial: true,
+        endDate: trialEndDate
+      };
+    } else {
+      return {
+        isTrial: false,
+        endDate: trialEndDate
+      };
+    }
+  };
+
+  const trialStatus = getTrialStatus();
+
   return (
     <div className="space-y-6">
-      {/* Current Plan Overview */}
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h3 className="text-xl font-semibold text-gray-900 mb-4">Current Subscription</h3>
-        
-        <div className="grid md:grid-cols-2 gap-6">
-          {/* Plan Info */}
-          <div>
-            <div className="flex items-center space-x-3 mb-4">
-              <span className={`px-3 py-1 rounded-full text-sm font-semibold ${planBadge.color}`}>
-                {planBadge.text}
+      {/* Top Section - Plan Details and Usage Statistics */}
+      <div className="flex justify-between items-start gap-6">
+        {/* Pro Plan Details */}
+        <div className="text-left flex-1">
+          <div className="flex items-center space-x-3 mb-4">
+            <h3 className="text-xl font-semibold text-gray-900 text-left">Pro Plan</h3>
+            {trialStatus && trialStatus.isTrial ? (
+              <span className="px-3 py-1 rounded-full text-sm font-semibold bg-blue-100 text-blue-800">
+                Trial
               </span>
-              <span className={`px-3 py-1 rounded-full text-sm font-semibold flex items-center ${statusBadge.color}`}>
-                <StatusIcon className="h-4 w-4 mr-1" />
+            ) : (
+              <span className={`px-3 py-1 rounded-full text-sm font-semibold ${statusBadge.color}`}>
                 {statusBadge.text}
               </span>
-            </div>
-
-            {isPaid && (
-              <div className="space-y-2 text-sm text-gray-600">
-                <div className="flex items-center">
-                  <CalendarIcon className="h-5 w-5 mr-2 text-gray-400" />
-                  <span>Started: {formatDate(subscription.startDate)}</span>
-                </div>
-                {subscription.nextBillingDate && isActive && (
-                  <div className="flex items-center">
-                    <CreditCardIcon className="h-5 w-5 mr-2 text-gray-400" />
-                    <span>Next billing: {formatDate(subscription.nextBillingDate)}</span>
-                  </div>
-                )}
-                {subscription.endDate && !isActive && (
-                  <div className="flex items-center">
-                    <XCircleIcon className="h-5 w-5 mr-2 text-red-400" />
-                    <span>Ends: {formatDate(subscription.endDate)}</span>
-                  </div>
-                )}
-                {subscription.billingCycle && (
-                  <div className="text-gray-600">
-                    Billing: {subscription.billingCycle.charAt(0).toUpperCase() + subscription.billingCycle.slice(1)}
-                  </div>
-                )}
-              </div>
             )}
           </div>
-
-          {/* Usage Stats */}
-          <div className="bg-gray-50 rounded-lg p-4">
-            <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
-              <ChartBarIcon className="h-5 w-5 mr-2" />
-              Usage Statistics
-            </h4>
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Total QuDemos:</span>
-                <span className="font-semibold">{subscription.usage?.totalQudemos || 0}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Shared QuDemos:</span>
-                <span className="font-semibold">{subscription.usage?.sharedQudemos || 0}</span>
-              </div>
-              {isFree && (
-                <div className="mt-3 text-sm text-yellow-600 bg-yellow-50 p-2 rounded">
-                  ⚠️ Upgrade to Pro to enable sharing
-                </div>
+          
+          {isPaid && (
+            <div className="space-y-2 text-sm text-gray-600 text-left">
+              {trialStatus && trialStatus.isTrial && (
+                <div className="text-left">Trial period ends {formatDate(trialStatus.endDate.toISOString())}</div>
+              )}
+              {trialStatus && !trialStatus.isTrial && (
+                <div className="text-left">Trial ended {formatDate(trialStatus.endDate.toISOString())}</div>
+              )}
+              <div className="text-left">Started: <strong>{formatDate(subscription.startDate)}</strong></div>
+              {subscription.nextBillingDate && isActive && (
+                <div className="text-left">Next billing: <strong>{formatDate(subscription.nextBillingDate)}</strong></div>
+              )}
+              {subscription.billingCycle && (
+                <div className="text-left">Billing: <strong>{subscription.billingCycle.charAt(0).toUpperCase() + subscription.billingCycle.slice(1)}</strong></div>
               )}
             </div>
-          </div>
+          )}
         </div>
 
-        {/* Action Buttons */}
-        <div className="mt-6 flex flex-wrap gap-3">
-          {isFree && (
-            <button
-              onClick={handleUpgrade}
-              className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              <ArrowUpIcon className="h-5 w-5 mr-2" />
-              Upgrade Plan
-            </button>
-          )}
-
-          {isPaid && isActive && (
-            <>
-              <button
-                onClick={handleUpgrade}
-                className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                <ArrowUpIcon className="h-5 w-5 mr-2" />
-                Change Plan
-              </button>
-
-              <button
-                onClick={handleManageBilling}
-                className="flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-              >
-                <CreditCardIcon className="h-5 w-5 mr-2" />
-                Manage Billing
-              </button>
-
-              <button
-                onClick={() => setShowCancelModal(true)}
-                disabled={cancelling}
-                className="flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
-              >
-                <XCircleIcon className="h-5 w-5 mr-2" />
-                {cancelling ? 'Cancelling...' : 'Cancel Subscription'}
-              </button>
-            </>
-          )}
-
-          {isPaid && !isActive && (
-            <button
-              onClick={handleUpgrade}
-              className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-            >
-              Reactivate Subscription
-            </button>
-          )}
+        {/* Usage Statistics Card */}
+        <div className="bg-gray-50 border border-gray-300 rounded-[20px] shadow-sm p-4 w-64 flex-shrink-0">
+          <h4 className="font-semibold text-gray-900 mb-3">Usage Statistics</h4>
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600">Total QuDemos</span>
+              <span className="text-xl font-bold text-gray-900">{subscription.usage?.totalQudemos || 0}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600">Shared QuDemos</span>
+              <span className="text-xl font-bold text-gray-900">{subscription.usage?.sharedQudemos || 0}</span>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Plan Features */}
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h3 className="text-xl font-semibold text-gray-900 mb-4">Your Plan Features</h3>
-        <ul className="space-y-2">
+      <div>
+        <hr className="border-gray-200 my-6" />
+        <h3 className="text-xl font-semibold text-gray-900 mb-4 text-left">Plan Features</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
           {getPlanFeatures(subscription.plan).map((feature, idx) => (
-            <li key={idx} className="flex items-start">
-              <CheckCircleIcon className="h-5 w-5 text-green-500 mr-3 flex-shrink-0 mt-0.5" />
+            <div key={idx} className="flex items-center">
+              <CheckCircleIcon className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
               <span className="text-gray-700">{feature}</span>
-            </li>
+            </div>
           ))}
-        </ul>
+        </div>
+      </div>
 
+      {/* Action Buttons */}
+      <div>
+        <hr className="border-gray-200 my-6" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         {isFree && (
-          <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-            <p className="text-blue-800 font-medium mb-2">🚀 Want to share your QuDemos?</p>
-            <p className="text-blue-700 text-sm mb-3">
-              Upgrade to Pro to unlock public sharing, advanced analytics, and priority support.
-            </p>
+          <button
+            onClick={handleUpgrade}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors w-full"
+          >
+            Change Plan
+          </button>
+        )}
+
+        {isPaid && isActive && (
+          <>
             <button
               onClick={handleUpgrade}
-              className="text-sm px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors w-full"
             >
-              View Plans →
+              Change Plan
             </button>
-          </div>
+
+            <button
+              onClick={handleManageBilling}
+              className="flex items-center justify-center px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors w-full"
+            >
+              <CreditCardIcon className="h-4 w-4 mr-2" />
+              Manage Billing
+            </button>
+
+            <button
+              onClick={() => setShowCancelModal(true)}
+              disabled={cancelling}
+              className="px-4 py-2 bg-white text-red-600 border border-red-300 rounded-md hover:bg-red-50 transition-colors disabled:opacity-50 w-full"
+            >
+              {cancelling ? 'Cancelling...' : 'Cancel Subscription'}
+            </button>
+          </>
         )}
+
+        {isPaid && !isActive && (
+          <button
+            onClick={handleUpgrade}
+            className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors w-full"
+          >
+            Reactivate Subscription
+          </button>
+        )}
+        </div>
       </div>
 
       {/* Subscription Warning */}
