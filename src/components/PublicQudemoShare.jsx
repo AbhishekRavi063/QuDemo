@@ -14,13 +14,11 @@ import {
 } from '@heroicons/react/24/outline';
 import { getNodeApiUrl } from '../config/api';
 import axios from 'axios';
-
 const TypingIndicator = () => (
   <div className="typing-indicator flex space-x-1">
     <span className="dot animate-bounce delay-150"></span>
     <span className="dot animate-bounce delay-300"></span>
     <span className="dot animate-bounce delay-450"></span>
-
     <style>{`
       .typing-indicator {
         align-items: center;
@@ -47,7 +45,6 @@ const TypingIndicator = () => (
       .delay-450 {
         animation-delay: 0.45s;
       }
-
       @keyframes bounce-dot {
         0%,
         80%,
@@ -63,42 +60,33 @@ const TypingIndicator = () => (
     `}</style>
   </div>
 );
-
 const cleanMessageText = (text) => {
-  
   // Remove unwanted patterns
   let cleaned = text
     .replace(/\*\*/g, "")
     .replace(/\(.*?page.*?\)/gi, "")
     .replace(/\s{2,}/g, " ")
     .trim();
-
   // Ensure bullet points and numbers are on new lines
   cleaned = cleaned
     // New line before bullets (•, -, *) if not already at line start
     .replace(/\s*([•\-*])\s+/g, "<br/>$1 ")
     // New line before numbered lists (1., 2., etc.) if not already at line start
     .replace(/\s*(\d+\.)\s+/g, "<br/>$1 ");
-
   // Convert URLs to clickable links
   cleaned = cleaned.replace(
     /(https?:\/\/[^\s]+)/g,
     (url) =>
       `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-blue-600 underline">${url}</a>`
   );
-
   // Split at each '– ' and wrap each in <p> tags, preserving the intro as its own paragraph
   const parts = cleaned.split(/(?=– )/g);
-
   const result = parts.map(part => `<p>${part.trim()}</p>`).join("");
-
   return result;
 };
-
 // Extract video ID from various URL formats
 const extractVideoId = (url) => {
   if (!url) return null;
-  
   try {
     // YouTube URLs
     if (url.includes('youtube.com/watch')) {
@@ -109,28 +97,23 @@ const extractVideoId = (url) => {
     } else if (url.includes('youtube.com/embed/')) {
       return url.split('youtube.com/embed/')[1].split('?')[0];
     }
-    
     // Loom URLs
     if (url.includes('loom.com/share/')) {
       return url.split('loom.com/share/')[1].split('?')[0];
     } else if (url.includes('loom.com/embed/')) {
       return url.split('loom.com/embed/')[1].split('?')[0];
     }
-    
     // Vimeo URLs
     if (url.includes('vimeo.com/')) {
       return url.split('vimeo.com/')[1].split('?')[0];
     } else if (url.includes('player.vimeo.com/video/')) {
       return url.split('player.vimeo.com/video/')[1].split('?')[0];
     }
-    
     return null;
   } catch (error) {
-    console.error('Error extracting video ID:', error);
     return null;
   }
 };
-
 const PublicQudemoShare = () => {
   const { shareToken } = useParams();
   const [qudemo, setQudemo] = useState(null);
@@ -154,43 +137,35 @@ const PublicQudemoShare = () => {
   const messagesEndRef = useRef(null);
   const loomIframeRef = useRef();
   const videoPlayerRef = useRef(null);
-
   // Load shared qudemo data
   useEffect(() => {
     const loadSharedQudemo = async () => {
       try {
         setLoading(true);
         const response = await fetch(getNodeApiUrl(`/api/qudemos/share/${shareToken}`));
-        
         if (response.ok) {
           const data = await response.json();
           setQudemo(data.data);
           setCompany(data.data.company);
-          
           // Update page title and meta tags dynamically
           const qudemoTitle = data.data.title;
           const companyName = data.data.company?.name || data.data.company?.display_name || 'Company';
-          
           // Update document title
           document.title = `${qudemoTitle} - ${companyName} | Qudemo`;
-          
           // Update meta description
           const metaDescription = document.querySelector('meta[name="description"]');
           if (metaDescription) {
             metaDescription.setAttribute('content', `Interactive demo: ${qudemoTitle} by ${companyName}. Ask questions and get instant answers with video timestamps.`);
           }
-          
           // Update Open Graph tags
           const ogTitle = document.querySelector('meta[property="og:title"]');
           if (ogTitle) {
             ogTitle.setAttribute('content', `${qudemoTitle} - ${companyName}`);
           }
-          
           const ogDescription = document.querySelector('meta[property="og:description"]');
           if (ogDescription) {
             ogDescription.setAttribute('content', `Interactive demo: ${qudemoTitle} by ${companyName}. Ask questions and get instant answers with video timestamps.`);
           }
-          
           // Initialize with welcome message
           const welcomeMessage = {
             sender: "AI",
@@ -200,7 +175,6 @@ const PublicQudemoShare = () => {
           setMessages([welcomeMessage]);
         } else {
           const errorData = await response.json();
-          
           // CHECK FOR SUBSCRIPTION EXPIRED
           if (errorData.subscriptionExpired || response.status === 403) {
             setError('subscription_expired');
@@ -209,23 +183,19 @@ const PublicQudemoShare = () => {
           }
         }
       } catch (err) {
-        console.error('Error loading shared qudemo:', err);
         setError('Failed to load shared qudemo');
       } finally {
         setLoading(false);
       }
     };
-
     if (shareToken) {
       loadSharedQudemo();
     }
   }, [shareToken]);
-
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
-
   // Clear suggested questions and fetch new ones when shareToken is available
   useEffect(() => {
     if (shareToken) {
@@ -241,24 +211,20 @@ const PublicQudemoShare = () => {
       setShowAllQuestions(false);
     }
   }, [shareToken]);
-
   const fetchSuggestedQuestions = async () => {
     try {
       // Use the public endpoint for shared QuDemos
       const response = await axios.get(getNodeApiUrl(`/api/qudemos/share/${shareToken}/suggested-questions`));
-
       if (response.data.success) {
         const questions = response.data.suggested_questions || [];
         setSuggestedQuestions(questions);
       }
     } catch (error) {
-      console.error('❌ Error fetching suggested questions:', error);
       // Don't show error to user, just silently fail
     } finally {
       setLoadingSuggestedQuestions(false);
     }
   };
-
   const handleSuggestedQuestionClick = (question) => {
     setInputMessage(question);
     // Auto-send the suggested question
@@ -266,7 +232,6 @@ const PublicQudemoShare = () => {
       handleSendMessage(question);
     }, 100);
   };
-
   // Function to enable audio after user interaction
   const enableAudio = () => {
     setAudioEnabled(true);
@@ -278,7 +243,6 @@ const PublicQudemoShare = () => {
         video.volume = 1.0;
         video.play().catch(e => {});
       });
-      
       // Also handle ReactPlayer instances
       const iframes = document.querySelectorAll('iframe');
       iframes.forEach(iframe => {
@@ -287,17 +251,14 @@ const PublicQudemoShare = () => {
           try {
             iframe.contentWindow.postMessage({ type: 'unmute' }, '*');
           } catch (e) {
-
           }
         }
       });
     }, 100);
   };
-
   const handleSendMessage = async (messageText = null) => {
     const messageToSend = messageText || inputMessage.trim();
     if (!messageToSend || isTyping || !qudemo) return;
-
     const userQuestion = messageToSend;
     setMessages(prev => [...prev, {
       sender: "You",
@@ -306,12 +267,9 @@ const PublicQudemoShare = () => {
     }]);
     setInputMessage('');
     setIsTyping(true);
-
     try {
-
       // Call the public chat endpoint for shared QuDemos
       const askUrl = getNodeApiUrl(`/api/qudemos/share/${shareToken}/chat`);
-
       const response = await axios.post(askUrl, {
         question: userQuestion
       }, {
@@ -320,20 +278,16 @@ const PublicQudemoShare = () => {
         },
         timeout: 30000
       });
-
       // Process the response and handle video switching
       try {
         const aiAnswer = response.data?.answer || 'Sorry, I could not find an answer.';
-
         // Check for video navigation data in the response
         let targetVideoUrl = null;
         let timestamp = 0;
-        
         // First check direct video fields (this is how the Python backend sends video data)
         if (response.data && response.data.video_url) {
           targetVideoUrl = response.data.video_url;
           timestamp = response.data.start || 0;
-
           // Ensure timestamp is a number and convert to seconds if needed
           if (typeof timestamp === 'string') {
             timestamp = parseFloat(timestamp);
@@ -341,13 +295,10 @@ const PublicQudemoShare = () => {
           if (isNaN(timestamp)) {
             timestamp = 0;
           }
-          
           // Additional validation - ensure timestamp is reasonable
           if (timestamp < 0 || timestamp > 36000) { // Max 10 hours
-
             timestamp = 0;
           }
-
         }
         // Fallback: check sources array for video sources
         else if (response.data && response.data.sources && response.data.sources.length > 0) {
@@ -355,27 +306,21 @@ const PublicQudemoShare = () => {
           const videoSource = response.data.sources.find(source => 
             source.source_type === 'video' && source.start_timestamp
           );
-          
           if (videoSource) {
             targetVideoUrl = videoSource.url;
             timestamp = videoSource.start_timestamp;
-
           }
         }
-        
         // Add message with video switching
         setMessages(msgs => [...msgs, {
           sender: "AI",
           text: cleanMessageText(aiAnswer),
           time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
         }]);
-        
         // Switch video if we have a valid video URL
         if (targetVideoUrl) {
-
           // First, pause the current video to ensure clean transition
           setIsPlaying(false);
-          
           // Find if this video is in our qudemo's videos (flexible URL matching)
           const videoIndex = qudemo.videos?.findIndex(v => {
             if (!v.video_url || !targetVideoUrl) return false;
@@ -384,53 +329,38 @@ const PublicQudemoShare = () => {
             const targetId = extractVideoId(targetVideoUrl);
             return vId && targetId && vId === targetId;
           });
-
           if (videoIndex !== -1) {
-
             setCurrentVideoIndex(videoIndex);
             setCurrentTimestamp(timestamp);
-
           } else {
-
             // Try to set timestamp anyway if we have a valid timestamp
             if (timestamp !== undefined) {
-
               setCurrentTimestamp(timestamp);
             }
           }
-          
           // Force video to seek to new timestamp after a brief delay
           // This ensures the video player responds to the new timestamp
           setTimeout(() => {
             if (timestamp !== undefined) {
-
               // Update timestamp and start playing
               setCurrentTimestamp(timestamp);
               setIsPlaying(true);
-              
               // Increment refresh key to force video player re-render
               setVideoRefreshKey(prev => prev + 1);
-              
               // Try to seek directly using the player ref if available
               if (videoPlayerRef.current) {
                 try {
                   if (videoPlayerRef.current.seekTo) {
                     videoPlayerRef.current.seekTo(timestamp);
-
                   }
                 } catch (error) {
-
                 }
               }
             }
           }, 200); // Increased delay to ensure video player is ready
         }
-        
         setIsTyping(false);
-
       } catch (processingError) {
-        console.error('❌ Processing failed:', processingError);
-        
         // Fallback - just add the answer
         setMessages(msgs => [...msgs, {
           sender: "AI",
@@ -439,9 +369,7 @@ const PublicQudemoShare = () => {
         }]);
         setIsTyping(false);
       }
-
     } catch (error) {
-      console.error('Chat error:', error.message || error);
       const errorMessage = {
         sender: "AI",
         text: 'Sorry, I encountered an error while processing your request. Please try again.',
@@ -451,16 +379,13 @@ const PublicQudemoShare = () => {
       setIsTyping(false);
     }
   };
-
   const handleKeyPress = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
     }
   };
-
   const currentVideo = qudemo?.videos?.[currentVideoIndex];
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -471,7 +396,6 @@ const PublicQudemoShare = () => {
       </div>
     );
   }
-
   if (error) {
     // Subscription expired error
     if (error === 'subscription_expired') {
@@ -514,7 +438,6 @@ const PublicQudemoShare = () => {
         </div>
       );
     }
-
     // Generic error
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -527,7 +450,6 @@ const PublicQudemoShare = () => {
       </div>
     );
   }
-
   if (!qudemo) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -539,7 +461,6 @@ const PublicQudemoShare = () => {
       </div>
     );
   }
-
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -563,7 +484,6 @@ const PublicQudemoShare = () => {
           </div>
         </div>
       </div>
-
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
@@ -586,14 +506,11 @@ const PublicQudemoShare = () => {
                     startTime={currentTimestamp}
                     style={{ width: '100%', height: '100%', background: 'black' }}
                     onReady={() => {
-
                     }}
                     onPlay={() => {
-
                     }}
                     iframeRef={loomIframeRef}
                   />
-                  
                   {/* Loom Timestamp Indicator */}
                   {showLoomTimestamp && currentVideo.video_url.includes('loom.com') && currentTimestamp > 0 && (
                     <div className="absolute top-4 right-4 bg-yellow-500 text-black px-4 py-3 rounded-lg text-sm font-medium z-20 shadow-lg max-w-xs">
@@ -612,7 +529,6 @@ const PublicQudemoShare = () => {
                       </div>
                     </div>
                   )}
-                  
                   {/* YouTube Timestamp Indicator */}
                   {currentTimestamp > 0 && currentVideo.video_url.includes('youtube.com') && (
                     <div className="absolute top-4 right-4 bg-blue-500 text-white px-4 py-3 rounded-lg text-sm font-medium z-20 shadow-lg max-w-xs">
@@ -640,7 +556,6 @@ const PublicQudemoShare = () => {
                   </div>
                 </div>
               )}
-
               {/* Video Controls */}
               {qudemo?.videos && qudemo.videos.length > 1 && (
                 <div className="p-4 bg-gray-900">
@@ -670,7 +585,6 @@ const PublicQudemoShare = () => {
                 </div>
               )}
             </div>
-
             {/* Chat Section */}
             <div className="w-full lg:w-1/3 flex flex-col bg-white border-l">
               {/* Header */}
@@ -684,9 +598,7 @@ const PublicQudemoShare = () => {
                   <div className="flex items-center gap-2">
                   </div>
                 </div>
-                
               </div>
-
               {/* Chat Messages */}
               <div className="flex-1 px-3 py-1 overflow-y-auto space-y-3 bg-gray-50 text-sm">
                 {messages.map((msg, idx) => (
@@ -708,7 +620,6 @@ const PublicQudemoShare = () => {
                         />
                       </div>
                     </div>
-                    
                     {/* Show suggested questions after the first AI message (welcome message) or greeting responses */}
                     {msg.sender === "AI" && (idx === 0 || msg.text.includes("Hi! I am an AI assistant for this demo")) && (
                       <div className="flex justify-start px-3 py-2">
@@ -720,9 +631,7 @@ const PublicQudemoShare = () => {
                             if (suggestedQuestions.length === 0) {
                               return null; // Don't show any questions if none are loaded
                             }
-                            
                             const displayQuestions = showAllQuestions ? suggestedQuestions : suggestedQuestions.slice(0, 4);
-                            
                             return displayQuestions.map((question, questionIndex) => (
                               <button
                                 key={questionIndex}
@@ -734,7 +643,6 @@ const PublicQudemoShare = () => {
                               </button>
                             ));
                           })()}
-                          
                           {/* Show "More..." button if there are more than 4 questions and not showing all */}
                           {suggestedQuestions.length > 4 && !showAllQuestions && (
                             <button
@@ -751,7 +659,6 @@ const PublicQudemoShare = () => {
                     )}
                   </div>
                 ))}
-                
                 {/* Typing indicator */}
                 {isTyping && (
                   <div className="flex justify-start">
@@ -760,11 +667,8 @@ const PublicQudemoShare = () => {
                     </div>
                   </div>
                 )}
-                
                 <div ref={messagesEndRef} />
               </div>
-
-
               {/* Input */}
               <div className="px-3 py-1 border-t flex items-center gap-2">
                 <textarea
@@ -788,7 +692,6 @@ const PublicQudemoShare = () => {
                   <PaperAirplaneIcon className="h-7 w-8" />
                 </button>
               </div>
-
               {/* Footer */}
               <div className="px-2 py-2 flex justify-center items-center text-xs bg-white border-t">
                 <span className="text-gray-500">
@@ -807,5 +710,4 @@ const PublicQudemoShare = () => {
     </div>
   );
 };
-
 export default PublicQudemoShare;

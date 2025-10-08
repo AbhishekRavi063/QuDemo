@@ -3,7 +3,6 @@ import { PaperAirplaneIcon, PlayIcon, PauseIcon } from '@heroicons/react/24/outl
 import { useCompany } from '../context/CompanyContext';
 import { getNodeApiUrl } from '../config/api';
 import { authenticatedFetch, clearAuthTokens } from '../utils/tokenRefresh';
-
 const QudemoChat = ({ qudemoId, qudemoTitle }) => {
   const { company } = useCompany();
   const [messages, setMessages] = useState([
@@ -22,27 +21,21 @@ const QudemoChat = ({ qudemoId, qudemoTitle }) => {
   const [currentTimestamp, setCurrentTimestamp] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const messagesEndRef = useRef(null);
-
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
-
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
-
   // Monitor timestamp changes and reset video state when needed
   useEffect(() => {
     if (currentTimestamp > 0) {
       // When timestamp changes, ensure video is ready to play
       setIsPlaying(true);
-
     }
   }, [currentTimestamp]);
-
   const sendMessage = async () => {
     if (!input.trim() || isTyping) return;
-
     const userMessage = {
       sender: "You",
       text: input,
@@ -51,16 +44,12 @@ const QudemoChat = ({ qudemoId, qudemoTitle }) => {
         minute: "2-digit",
       }),
     };
-
     setMessages(prev => [...prev, userMessage]);
     setInput("");
     setIsTyping(true);
-
     try {
       const token = localStorage.getItem('accessToken');
-      
       if (!token) {
-
         setMessages(prev => [...prev, {
           sender: "AI",
           text: "Please log in to ask questions.",
@@ -72,19 +61,15 @@ const QudemoChat = ({ qudemoId, qudemoTitle }) => {
         setIsTyping(false);
         return;
       }
-
       const response = await authenticatedFetch(getNodeApiUrl(`/api/qa/qudemo/${qudemoId}`), {
         method: 'POST',
         body: JSON.stringify({
           question: input
         })
       });
-
       // Handle authentication errors after refresh attempt
       if (response.status === 401 || response.status === 403) {
-
         clearAuthTokens();
-        
         setMessages(prev => [...prev, {
           sender: "AI",
           text: "Your session has expired. Please refresh the page and log in again.",
@@ -96,9 +81,7 @@ const QudemoChat = ({ qudemoId, qudemoTitle }) => {
         setIsTyping(false);
         return;
       }
-
       const data = await response.json();
-
       if (data.success) {
         const aiMessage = {
           sender: "AI",
@@ -119,23 +102,17 @@ const QudemoChat = ({ qudemoId, qudemoTitle }) => {
           difficultyLevel: data.difficulty_level,
           estimatedTime: data.estimated_time
         };
-
         setMessages(prev => [...prev, aiMessage]);
-
         // Enhanced video timestamp handling for hybrid Q&A
         if (data.video_url && data.start !== undefined) {
           setCurrentVideoUrl(data.video_url);
           setCurrentTimestamp(data.start);
           // Force play state when new video timestamp is received
           setIsPlaying(true);
-          
           // Enhanced logging for hybrid Q&A
           if (data.searchMethod === 'hybrid') {
-
           } else {
-
           }
-
         }
       } else {
         const errorMessage = {
@@ -149,7 +126,6 @@ const QudemoChat = ({ qudemoId, qudemoTitle }) => {
         setMessages(prev => [...prev, errorMessage]);
       }
     } catch (error) {
-      console.error('Error sending message:', error.message || error);
       const errorMessage = {
         sender: "AI",
         text: "I'm sorry, there was an error processing your question. Please try again.",
@@ -163,46 +139,36 @@ const QudemoChat = ({ qudemoId, qudemoTitle }) => {
       setIsTyping(false);
     }
   };
-
   const handleKeyPress = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
     }
   };
-
   const formatTimestamp = (seconds) => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
-
   const playVideoAtTimestamp = (videoUrl, timestamp) => {
     setCurrentVideoUrl(videoUrl);
     setCurrentTimestamp(timestamp);
     setIsPlaying(true);
-    
     // Force video to play when jumping to timestamp
     // This ensures the video jumps even if it was manually paused
-
     // If this is a different timestamp than current, force play state
     if (timestamp !== currentTimestamp) {
       setIsPlaying(true);
       // Reset any paused state to ensure video can jump
-
     }
   };
-
   const resetVideoState = () => {
     // Reset video state when needed
     setIsPlaying(false);
     setCurrentTimestamp(0);
-
   };
-
   const renderMessage = (message, index) => {
     const isAI = message.sender === "AI";
-    
     return (
       <div
         key={index}
@@ -216,14 +182,12 @@ const QudemoChat = ({ qudemoId, qudemoTitle }) => {
           }`}
         >
           <div className="text-sm">{message.text}</div>
-          
           {/* Source attribution */}
           {isAI && message.sources && message.sources.length > 0 && (
             <div className="mt-2 pt-2 border-t border-gray-200">
               <div className="text-xs text-gray-600 mb-1">
                 Source: {message.answerSource === 'video' ? 'Video Transcript' : message.answerSource === 'knowledge' ? 'Knowledge Base' : 'Combined'}
               </div>
-              
               {message.sources.map((source, idx) => (
                 <div key={idx} className="text-xs text-gray-500">
                   {((source.type === 'video') || (source.content_type === 'video')) && (source.start_timestamp !== undefined || source.timestamp !== undefined) && (
@@ -244,7 +208,6 @@ const QudemoChat = ({ qudemoId, qudemoTitle }) => {
               ))}
             </div>
           )}
-          
           <div className="text-xs text-gray-500 mt-1">
             {message.time}
           </div>
@@ -252,7 +215,6 @@ const QudemoChat = ({ qudemoId, qudemoTitle }) => {
       </div>
     );
   };
-
   return (
     <div className="flex flex-col h-full bg-white rounded-lg shadow-lg">
       {/* Header */}
@@ -260,11 +222,9 @@ const QudemoChat = ({ qudemoId, qudemoTitle }) => {
         <h3 className="font-semibold">Qudemo Chat - {qudemoTitle}</h3>
         <p className="text-sm opacity-90">Ask questions about this specific qudemo</p>
       </div>
-
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.map(renderMessage)}
-        
         {isTyping && (
           <div className="flex justify-start mb-4">
             <div className="bg-blue-100 text-gray-800 px-4 py-2 rounded-lg">
@@ -279,10 +239,8 @@ const QudemoChat = ({ qudemoId, qudemoTitle }) => {
             </div>
           </div>
         )}
-        
         <div ref={messagesEndRef} />
       </div>
-
       {/* Video Player Section */}
       {currentVideoUrl && (
         <div className="border-t border-gray-200 p-4 bg-gray-50">
@@ -319,7 +277,6 @@ const QudemoChat = ({ qudemoId, qudemoTitle }) => {
           </div>
         </div>
       )}
-
       {/* Input */}
       <div className="border-t border-gray-200 p-4">
         <div className="flex space-x-2">
@@ -344,5 +301,4 @@ const QudemoChat = ({ qudemoId, qudemoTitle }) => {
     </div>
   );
 };
-
 export default QudemoChat;

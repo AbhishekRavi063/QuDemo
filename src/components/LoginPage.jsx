@@ -3,7 +3,6 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { getNodeApiUrl } from '../config/api';
 import { supabase } from '../config/supabase';
 // import { navigateToOverview } from '../utils/navigation'; // Not used anymore
-
 const LoginPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -15,31 +14,25 @@ const LoginPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-
   const validateForm = () => {
     const newErrors = {};
-
     if (!formData.email) {
       newErrors.email = 'Email is required';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'Please enter a valid email address';
     }
-
     if (!formData.password) {
       newErrors.password = 'Password is required';
     }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
       [name]: value
     }));
-    
     // Clear error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({
@@ -48,17 +41,13 @@ const LoginPage = () => {
       }));
     }
   };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoginError('');
-
     if (!validateForm()) {
       return;
     }
-
     setIsLoading(true);
-
     try {
       const response = await fetch(getNodeApiUrl('/api/auth/login'), {
         method: 'POST',
@@ -67,76 +56,59 @@ const LoginPage = () => {
         },
         body: JSON.stringify(formData),
       });
-
       const data = await response.json();
-
       if (data.success) {
         // Store tokens
         localStorage.setItem('accessToken', data.data.tokens.accessToken);
         localStorage.setItem('refreshToken', data.data.tokens.refreshToken);
         localStorage.setItem('user', JSON.stringify(data.data.user));
-        
         // Check if user came from homepage, if so stay there, otherwise redirect to qudemos
         const fromHomepage = location.state?.from === '/' || document.referrer.includes(window.location.origin + '/');
-        
         if (fromHomepage) {
-
           navigate('/', { replace: true });
         } else {
-
           navigate('/qudemos', { replace: true });
         }
       } else {
         setLoginError(data.error || 'Login failed');
       }
     } catch (error) {
-      console.error('Login error:', error);
       setLoginError('Network error. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
-
   const handleGoogleSignIn = async () => {
     // Check if Supabase is properly configured
     const isUsingPlaceholders = !process.env.REACT_APP_SUPABASE_URL || 
                               process.env.REACT_APP_SUPABASE_URL === 'your-supabase-url' ||
                               !process.env.REACT_APP_SUPABASE_ANON_KEY ||
                               process.env.REACT_APP_SUPABASE_ANON_KEY === 'your-supabase-anon-key-here';
-    
     if (isUsingPlaceholders) {
       setLoginError('Google OAuth is not configured. Please set up Supabase credentials in .env file.');
       return;
     }
-    
     setIsGoogleLoading(true);
     setLoginError('');
-
     try {
       // Clear any existing session and tokens before starting new OAuth
-
       const { clearAuthTokens } = await import('../utils/tokenRefresh');
       await clearAuthTokens();
-      
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/auth/callback`
         }
       });
-
       if (error) {
-        console.error('Google sign-in error:', error);
         setLoginError(`Google sign-in failed: ${error.message}`);
       }
     } catch (error) {
-      console.error('Google sign-in error:', error);
       setLoginError(`Google sign-in failed: ${error.message}`);
     } finally {
       setIsGoogleLoading(false);
     }
   };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-start justify-center pt-20 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
@@ -158,7 +130,6 @@ const LoginPage = () => {
             </Link>
           </p>
         </div>
-        
         {/* Email/Password form hidden */}
         <div style={{ display: 'none' }}>
           <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
@@ -167,7 +138,6 @@ const LoginPage = () => {
                 {loginError}
               </div>
             )}
-            
             <div className="space-y-4">
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700">
@@ -190,7 +160,6 @@ const LoginPage = () => {
                   <p className="mt-1 text-sm text-red-600">{errors.email}</p>
                 )}
               </div>
-              
               <div>
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                   Password
@@ -213,7 +182,6 @@ const LoginPage = () => {
                 )}
               </div>
             </div>
-
             <div className="flex items-center">
               <input
                 id="remember-me"
@@ -225,7 +193,6 @@ const LoginPage = () => {
                 Remember me
               </label>
             </div>
-
             <div>
               <button
                 type="submit"
@@ -264,5 +231,4 @@ const LoginPage = () => {
     </div>
   );
 };
-
 export default LoginPage; 

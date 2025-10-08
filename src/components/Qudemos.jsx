@@ -21,13 +21,11 @@ import {
   ChartBarIcon,
   LockClosedIcon
 } from '@heroicons/react/24/outline';
-
 const Qudemos = () => {
   const [qudemos, setQudemos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { company } = useCompany();
-  
   // Check subscription status
   const subscriptionPlan = company?.subscription_plan || 'free';
   const subscriptionStatus = company?.subscription_status || 'active';
@@ -69,31 +67,25 @@ const Qudemos = () => {
   const [loadingAiSummary, setLoadingAiSummary] = useState(false);
   const navigate = useNavigate();
   const { showSuccess, showError, showInfo } = useNotification();
-
   // Filter interactions based on search term and exclude users with no engagement
   const filteredInteractions = qudemoInteractions.filter(interaction => {
     // First, exclude users who haven't asked questions and don't have time spent
     const hasQuestions = interaction.question_count && interaction.question_count > 0;
     const hasTimeSpent = interaction.total_duration && interaction.total_duration > 0;
-    
     // Only show users who have asked questions OR spent time
     if (!hasQuestions && !hasTimeSpent) {
       return false;
     }
-    
     // Then apply search filter
     if (!searchTerm) return true;
-    
     const searchLower = searchTerm.toLowerCase();
     const name = (interaction.client_name || '').toLowerCase();
     const email = (interaction.client_email || '').toLowerCase();
     const company = (interaction.client_company || '').toLowerCase();
-    
     return name.includes(searchLower) || 
            email.includes(searchLower) || 
            company.includes(searchLower);
   });
-
   // Format duration helper
   const formatDuration = (seconds) => {
     if (!seconds) return '0:00';
@@ -103,23 +95,14 @@ const Qudemos = () => {
     const remainingSeconds = roundedSeconds % 60;
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
-
   // Generate AI insight summary for interaction
   const generateAiInsightSummary = async (interaction) => {
     if (!interaction.questions || interaction.questions.length === 0) {
       setAiInsightSummary(`${interaction.client_name || 'The prospect'} accessed ${interaction.qudemo_title || 'this demo'} but hasn't asked any questions yet. They spent ${formatDuration(interaction.total_duration)} viewing the demo.`);
       return;
     }
-
     try {
       setLoadingAiSummary(true);
-      console.log('🤖 Requesting AI summary for:', {
-        customerName: interaction.client_name,
-        qudemoTitle: interaction.qudemo_title,
-        questionCount: interaction.questions.length,
-        questions: interaction.questions.map(q => q.question)
-      });
-
       const token = localStorage.getItem('accessToken');
       const response = await fetch(getNodeApiUrl('/api/analytics/generate-insight-summary'), {
         method: 'POST',
@@ -133,47 +116,34 @@ const Qudemos = () => {
           qudemoTitle: interaction.qudemo_title
         })
       });
-
       if (response.ok) {
         const data = await response.json();
-        console.log('✅ AI summary received:', data.data.summary);
         setAiInsightSummary(data.data.summary);
       } else {
-        console.error('❌ AI summary API error:', response.status);
         // Fallback to generic message
         setAiInsightSummary(`${interaction.client_name || 'The prospect'} has shown interest in ${interaction.qudemo_title} by asking ${interaction.questions.length} question${interaction.questions.length > 1 ? 's' : ''} about various aspects of the product.`);
       }
     } catch (error) {
-      console.error('❌ Error generating AI summary:', error);
       // Fallback to generic message
       setAiInsightSummary(`${interaction.client_name || 'The prospect'} has shown interest in ${interaction.qudemo_title} by asking ${interaction.questions.length} question${interaction.questions.length > 1 ? 's' : ''} about various aspects of the product.`);
     } finally {
       setLoadingAiSummary(false);
     }
   };
-
   // Handle view details for interactions
   const handleViewDetails = (interaction) => {
-    console.log('🔍 Selected interaction data:', interaction);
-    console.log('🔍 Questions data:', interaction.questions);
     if (interaction.questions && interaction.questions.length > 0) {
-      console.log('🔍 First question with timestamp:', interaction.questions[0]);
     }
-    
     // Reset AI summary state
     setAiInsightSummary('');
     setLoadingAiSummary(false);
-    
     setSelectedInteraction(interaction);
     setActiveTab('overview');
     setShowDetailsModal(true);
     setShowInteractionsListModal(false);
-    
     // Generate AI insight summary
-    console.log('🚀 Starting AI summary generation...');
     generateAiInsightSummary(interaction);
   };
-
   // Handle view interactions for a QuDemo
   const handleViewQudemoInteractions = async (qudemo) => {
     // Check if user has Pro/Enterprise plan first
@@ -189,7 +159,6 @@ const Qudemos = () => {
       setShowUpgradeModal(true);
       return;
     }
-    
     try {
       setLoadingInteractions(true);
       setSearchTerm(''); // Clear search when opening modal
@@ -198,17 +167,14 @@ const Qudemos = () => {
       setQudemoInteractions(interactions);
       setShowInteractionsListModal(true);
     } catch (error) {
-      console.error('Error fetching interactions:', error);
       showError('Failed to fetch interactions');
     } finally {
       setLoadingInteractions(false);
     }
   };
-
   const handleTabClick = (tabName) => {
     setActiveTab(tabName);
   };
-
   // Fetch interactions for a specific QuDemo
   const fetchQudemoInteractions = async (qudemoId) => {
     try {
@@ -220,20 +186,16 @@ const Qudemos = () => {
           'Content-Type': 'application/json'
         }
       });
-
       if (response.ok) {
         const data = await response.json();
         return data.data || [];
       } else {
-        console.error('Failed to fetch QuDemo interactions');
         return [];
       }
     } catch (error) {
-      console.error('Error fetching QuDemo interactions:', error);
       return [];
     }
   };
-
   // Share functionality
   const handleShareQudemo = async (qudemo) => {
      // Check if user has Pro/Enterprise plan first
@@ -249,16 +211,13 @@ const Qudemos = () => {
        setShowUpgradeModal(true);
        return;
      }
-     
      // Show share options modal for Pro/Enterprise users (don't generate link yet)
      setQudemoToShare(qudemo);
      setShowShareOptionsModal(true);
    };
-
    // Handle share option selection
    const handleShareOption = async (option) => {
      setShowShareOptionsModal(false);
-     
      if (option === 'single') {
        await generateSingleShareLink(qudemoToShare);
      } else if (option === 'unique') {
@@ -266,11 +225,9 @@ const Qudemos = () => {
        setShowUniqueLinksModal(true);
      }
    };
-
    // Handle unique links option selection
    const handleUniqueLinksOption = async (option) => {
      setShowUniqueLinksModal(false);
-     
      if (option === 'few') {
        // Initialize with one empty customer for manual entry
        setCustomers([{ name: '', email: '', company: '' }]);
@@ -281,14 +238,11 @@ const Qudemos = () => {
        setShowBulkUploadModal(true);
      }
    };
-
   // Handle file selection
   const handleFileSelect = (event) => {
     const file = event.target.files[0];
     setSelectedFile(file);
   };
-
-
   // Remove selected file
   const removeSelectedFile = () => {
     setSelectedFile(null);
@@ -298,39 +252,32 @@ const Qudemos = () => {
       fileInput.value = '';
     }
   };
-
    // Clear selected file when modal is closed
    const handleBulkUploadModalClose = () => {
      setShowBulkUploadModal(false);
      removeSelectedFile();
    };
-
    // Handle bulk upload
    const handleBulkUpload = async () => {
      if (!selectedFile) {
        showError('Please select a file first');
        return;
      }
-
      try {
        let clientData = [];
        const fileExtension = selectedFile.name.toLowerCase().split('.').pop();
-       
        if (fileExtension === 'csv') {
          // Parse CSV file
          const text = await selectedFile.text();
          const lines = text.trim().split('\n');
-         
          if (lines.length < 2) {
            showError('CSV file must have at least a header row and one data row');
            return;
          }
-
          const parseCSVLine = (line) => {
            const result = [];
            let current = '';
            let inQuotes = false;
-           
            for (let i = 0; i < line.length; i++) {
              const char = line[i];
              if (char === '"') {
@@ -345,31 +292,25 @@ const Qudemos = () => {
            result.push(current.trim());
            return result;
          };
-         
          const headers = parseCSVLine(lines[0]).map(h => h.replace(/"/g, '').trim().toLowerCase());
-         
          const requiredHeaders = ['name', 'email', 'company'];
          const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
-         
          if (missingHeaders.length > 0) {
            showError(`CSV file is missing required columns: ${missingHeaders.join(', ')}`);
            return;
          }
-
          for (let i = 1; i < lines.length; i++) {
            const values = parseCSVLine(lines[i]).map(v => v.replace(/"/g, '').trim());
            const requiredColumnCount = 3;
            if (values.length >= requiredColumnCount) {
              const slNoIndex = headers.indexOf('sl no') !== -1 ? headers.indexOf('sl no') : headers.indexOf('slno');
              const slNo = slNoIndex !== -1 ? (values[slNoIndex] || String(i)) : String(i);
-             
              const client = {
                slNo: slNo,
                clientName: values[headers.indexOf('name')] || '',
                email: values[headers.indexOf('email')] || '',
                companyName: values[headers.indexOf('company')] || ''
              };
-             
              if (client.clientName && client.email) {
                clientData.push(client);
              }
@@ -381,52 +322,41 @@ const Qudemos = () => {
            const XLSX = await import('xlsx');
            const data = await selectedFile.arrayBuffer();
            const workbook = XLSX.read(data);
-           
            const worksheetName = workbook.SheetNames[0];
            const worksheet = workbook.Sheets[worksheetName];
            const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-            
             if (jsonData.length < 2) {
               showError('Excel file must have at least a header row and one data row');
               return;
             }
-            
             const headers = jsonData[0].map(h => String(h).trim().toLowerCase());
             const requiredHeaders = ['name', 'email', 'company'];
             const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
-            
             if (missingHeaders.length > 0) {
               showError(`Excel file is missing required columns: ${missingHeaders.join(', ')}`);
               return;
             }
-            
             for (let i = 1; i < jsonData.length; i++) {
               const row = jsonData[i];
-              
               if (!row || row.length === 0) continue;
-              
               const hasData = row.some(cell => cell !== null && cell !== undefined && String(cell).trim() !== '');
               if (!hasData) continue;
-              
               const requiredColumnCount = 3;
               if (row && row.length >= requiredColumnCount) {
                 const slNoIndex = headers.indexOf('sl no') !== -1 ? headers.indexOf('sl no') : headers.indexOf('slno');
                 const slNo = slNoIndex !== -1 ? (String(row[slNoIndex] || '').trim() || String(i)) : String(i);
-                
                 const client = {
                   slNo: slNo,
                   clientName: String(row[headers.indexOf('name')] || '').trim(),
                   email: String(row[headers.indexOf('email')] || '').trim(),
                   companyName: String(row[headers.indexOf('company')] || '').trim()
                 };
-                
                 if (client.clientName && client.email) {
                   clientData.push(client);
                 }
               }
             }
           } catch (xlsxError) {
-            console.error('❌ Error parsing Excel file:', xlsxError);
             showError('Error parsing Excel file. Please ensure the file is not corrupted.');
             return;
           }
@@ -434,18 +364,10 @@ const Qudemos = () => {
          showError('Unsupported file format. Please upload a CSV or Excel (.xlsx/.xls) file.');
          return;
        }
-
        if (clientData.length === 0) {
          showError('No valid client data found in file. Please ensure each row has name and email.');
          return;
        }
-
-       console.log(`📊 ===== PARSING SUMMARY =====`);
-       console.log(`📊 File type: ${fileExtension.toUpperCase()}`);
-       console.log(`📊 Total clients parsed: ${clientData.length}`);
-       console.log(`📊 Client data being sent to backend:`, clientData);
-       console.log(`📊 ===== END PARSING SUMMARY =====`);
-
         // Send to backend
         const requestBody = {
           qudemoId: qudemoToShare.id,
@@ -453,9 +375,6 @@ const Qudemos = () => {
           operationSource: 'bulk_upload',
           originalFilename: selectedFile?.name || 'bulk-upload.csv'
         };
-       
-       console.log(`📊 Request body being sent:`, requestBody);
-       
        const token = localStorage.getItem('accessToken');
        const response = await fetch(getNodeApiUrl('/api/qudemos/bulk-share'), {
          method: 'POST',
@@ -465,13 +384,8 @@ const Qudemos = () => {
          },
          body: JSON.stringify(requestBody)
        });
-
        if (response.ok) {
          const data = await response.json();
-         
-         console.log(`📊 Backend response:`, data);
-         console.log(`📊 Generated links data:`, data.data);
-         
          // Set download data and show download modal
          setDownloadData(data.data || []);
          setOriginalFilename(selectedFile?.name || null); // Store original filename before clearing
@@ -479,7 +393,6 @@ const Qudemos = () => {
          setShowBulkUploadModal(false);
          setShowDownloadModal(true);
          showSuccess(`Successfully generated ${data.data?.length || 0} bulk links!`);
-         
          // Reset file input
          const fileInput = document.getElementById('file-input');
          if (fileInput) {
@@ -487,7 +400,6 @@ const Qudemos = () => {
          }
        } else {
          const errorData = await response.json();
-         
          // Check if it's a subscription error
          if (errorData.requiresUpgrade) {
            if (errorData.isCancelled) {
@@ -510,23 +422,19 @@ const Qudemos = () => {
              });
            }
          } else {
-           console.error('❌ Failed to generate bulk links:', errorData.error);
            showError('Failed to generate bulk links. Please try again.');
          }
        }
      } catch (error) {
-       console.error('❌ Error generating bulk links:', error);
        showError('Network error. Please try again.');
      }
    };
-
    // Handle customer input changes
    const handleCustomerChange = (index, field, value) => {
      const updatedCustomers = [...customers];
      updatedCustomers[index][field] = value;
      setCustomers(updatedCustomers);
    };
-
    // Add another customer (max 5)
    const addAnotherCustomer = () => {
      if (customers.length < 5) {
@@ -535,7 +443,6 @@ const Qudemos = () => {
        showError('Maximum 5 customers allowed');
      }
    };
-
    // Remove customer
    const removeCustomer = (index) => {
      if (customers.length > 1) {
@@ -543,7 +450,6 @@ const Qudemos = () => {
        setCustomers(updatedCustomers);
      }
    };
-
    // Handle generate few links
    const handleGenerateFewLinks = async () => {
      // Validate required fields
@@ -552,10 +458,8 @@ const Qudemos = () => {
        showError('Please fill in at least one customer with name and email');
        return;
      }
-
      try {
        const token = localStorage.getItem('accessToken');
-
        // Prepare client data for bulk share endpoint
        const clientData = validCustomers.map((customer, index) => ({
          slNo: index + 1,
@@ -563,7 +467,6 @@ const Qudemos = () => {
          email: customer.email,
          companyName: customer.company || 'Unknown Company'
        }));
-
        // Use bulk share endpoint instead of individual share endpoint
        const response = await fetch(getNodeApiUrl('/api/qudemos/bulk-share'), {
          method: 'POST',
@@ -577,10 +480,8 @@ const Qudemos = () => {
            operationSource: 'few_links'
          })
        });
-
        if (response.ok) {
          const data = await response.json();
-         
          if (data.success && data.data) {
            // Transform the response data to match the expected format
            const generatedLinksData = data.data.map((result, index) => ({
@@ -590,7 +491,6 @@ const Qudemos = () => {
              shareUrl: result.shareUrl,
              shareId: result.shareId
            }));
-
            // Show results modal
            setGeneratedLinks(generatedLinksData);
            setShowFewUniqueLinksModal(false);
@@ -603,28 +503,22 @@ const Qudemos = () => {
          const errorData = await response.json();
          showError(errorData.error || 'Failed to generate links');
        }
-
      } catch (error) {
-       console.error('Error generating links:', error);
        showError('Failed to generate links. Please try again.');
      }
    };
-
    // Copy link to clipboard
    const copyLinkToClipboard = async (link) => {
      try {
        await navigator.clipboard.writeText(link);
        showSuccess('Link copied to clipboard!');
      } catch (err) {
-       console.error('Failed to copy link:', err);
        showError('Failed to copy link. Please copy manually.');
      }
    };
-
    // Handle download of generated file
    const handleDownloadFile = async () => {
      if (!downloadData) return;
-
      try {
        // Prepare CSV data
        const csvHeaders = ['SL No', 'Client Name', 'Company Name', 'Email', 'Shared QuDemo'];
@@ -635,16 +529,13 @@ const Qudemos = () => {
          item.email || '',
          item.shareUrl || ''
        ]);
-
        // Create CSV content
        const csvContent = [csvHeaders, ...csvRows]
          .map(row => row.map(field => `"${field}"`).join(','))
          .join('\n');
-
        // Add UTF-8 BOM for better Excel compatibility
        const BOM = '\uFEFF';
        const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
-
        // Use original filename if available, otherwise generate one
        let filename;
        if (originalFilename) {
@@ -656,33 +547,27 @@ const Qudemos = () => {
          const timestamp = new Date().toISOString().slice(0, 10);
          filename = `bulk_share_links_${timestamp}.csv`;
        }
-
        // Download the file
        const link = document.createElement('a');
        link.href = URL.createObjectURL(blob);
        link.download = filename;
        link.click();
        URL.revokeObjectURL(link.href);
-       
        showSuccess('File downloaded successfully!');
        setShowDownloadModal(false);
      } catch (error) {
-       console.error('❌ Error downloading file:', error);
        showError('Failed to download file. Please try again.');
      }
    };
-
   // Generate single share link
   const generateSingleShareLink = async (qudemo) => {
     // Prevent multiple simultaneous requests for the same qudemo
     if (sharingQudemo && sharingQudemo.id === qudemo.id) {
       return;
     }
-    
     setSharingQudemo(qudemo);
     try {
       const token = localStorage.getItem('accessToken');
-      
       const response = await fetch(getNodeApiUrl(`/api/qudemos/${qudemo.id}/share`), {
         method: 'POST',
         headers: {
@@ -690,12 +575,10 @@ const Qudemos = () => {
           'Content-Type': 'application/json'
         }
       });
-
       if (response.ok) {
         const data = await response.json();
         setShareLink(data.shareUrl);
         setShowShareModal(true);
-        
         // Show different message based on whether it's a new or existing link
         if (data.isNewLink) {
           showSuccess('Share link generated successfully!');
@@ -704,7 +587,6 @@ const Qudemos = () => {
         }
       } else {
         const errorData = await response.json();
-        
         // Check if it's a subscription error
         if (errorData.requiresUpgrade) {
           if (errorData.isCancelled) {
@@ -734,28 +616,23 @@ const Qudemos = () => {
             });
           }
         } else {
-          console.error('❌ Failed to generate share link:', errorData.error);
           showError('Failed to generate share link. Please try again.');
         }
       }
     } catch (err) {
-      console.error('❌ Error generating share link:', err);
       showError('Network error. Please try again.');
     } finally {
       setSharingQudemo(null);
     }
   };
-
   const copyShareLink = async () => {
     try {
       await navigator.clipboard.writeText(shareLink);
       showSuccess('Share link copied to clipboard!');
     } catch (err) {
-      console.error('❌ Failed to copy to clipboard:', err);
       showError('Failed to copy link. Please copy manually.');
     }
   };
-
   const handleConfirmDelete = async () => {
     if (qudemoToDelete) {
       setDeletingQudemoId(qudemoToDelete.id);
@@ -765,18 +642,15 @@ const Qudemos = () => {
       setQudemoToDelete(null);
     }
   };
-
   const handleCancelDelete = () => {
     setShowDeleteModal(false);
     setQudemoToDelete(null);
   };
-
   // Helper function to get relative time
   const getRelativeTime = (dateString) => {
     const now = new Date();
     const date = new Date(dateString);
     const diffInSeconds = Math.floor((now - date) / 1000);
-
     if (diffInSeconds < 60) return 'Just now';
     if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
     if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
@@ -784,7 +658,6 @@ const Qudemos = () => {
     if (diffInSeconds < 31536000) return `${Math.floor(diffInSeconds / 2592000)}mo ago`;
     return `${Math.floor(diffInSeconds / 31536000)}y ago`;
   };
-
   const fetchQudemos = async () => {
     if (!company?.id) {
       setLoading(false);
@@ -792,54 +665,43 @@ const Qudemos = () => {
       setQudemos([]);
       return;
     }
-
     try {
       setLoading(true);
       setError(null);
-
       const token = localStorage.getItem('accessToken');
       const response = await fetch(getNodeApiUrl(`/api/qudemos?companyId=${company.id}`), {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
-
       const data = await response.json();
-
       if (response.ok && data.success) {
         setQudemos(data.data || []);
       } else {
-        console.error('❌ Failed to fetch qudemos:', data.error);
         setError(data.error || 'Failed to fetch qudemos');
         setQudemos([]);
       }
     } catch (err) {
-      console.error('❌ Error fetching qudemos:', err);
       setError('Network error. Please try again.');
       setQudemos([]);
     } finally {
       setLoading(false);
     }
   };
-
   useEffect(() => {
     fetchQudemos();
   }, [company]);
-
   // Refresh data when component comes into focus (e.g., when navigating back)
   // Removed aggressive refresh to prevent UI refresh issues
   // useEffect(() => {
   //   const handleFocus = () => {
   //     fetchQudemos();
   //   };
-
   //   window.addEventListener('focus', handleFocus);
   //   return () => window.removeEventListener('focus', handleFocus);
   // }, [company]);
-
   const handleDropdownAction = async (action, qudemo) => {
     setDropdownOpen(null);
-
     switch (action) {
       case 'edit':
         navigate(`/view-qudemo/${qudemo.id}`);
@@ -869,7 +731,6 @@ const Qudemos = () => {
             showInfo('No interactions found for this QuDemo');
           }
         } catch (error) {
-          console.error('Error fetching interactions:', error);
           showError('Failed to fetch interactions');
         } finally {
           setLoadingInteractions(false);
@@ -886,11 +747,9 @@ const Qudemos = () => {
         break;
     }
   };
-
   const deleteQudemo = async (qudemoId) => {
     try {
       // Don't set global loading, just track the specific qudemo being deleted
-      
       const token = localStorage.getItem('accessToken');
       const response = await fetch(getNodeApiUrl(`/api/qudemos/${qudemoId}`), {
         method: 'DELETE',
@@ -898,37 +757,27 @@ const Qudemos = () => {
           'Authorization': `Bearer ${token}`
         }
       });
-
       const data = await response.json();
-
       if (response.ok && data.success) {
         // Remove the qudemo from the local state immediately for better UX
         setQudemos(prevQudemos => prevQudemos.filter(q => q.id !== qudemoId));
-        
         // Close preview modal if the deleted qudemo is being previewed
         if (previewingQudemo && previewingQudemo.id === qudemoId) {
           setPreviewingQudemo(null);
         }
-        
         // Clean up localStorage data for the deleted qudemo
         const chatKey = `qudemo_chat_${qudemoId}`;
         localStorage.removeItem(chatKey);
-        
         // Show success message
-        
         // Show success notification
         showSuccess('Qudemo deleted successfully!');
-        
       } else {
-        console.error('❌ Failed to delete qudemo:', data.error);
         showError('Failed to delete qudemo: ' + (data.error || 'Unknown error'));
       }
     } catch (error) {
-      console.error('❌ Error deleting qudemo:', error);
       showError('Failed to delete qudemo. Please try again.');
     }
   };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -936,11 +785,9 @@ const Qudemos = () => {
       </div>
     );
   }
-
   if (error) {
     // Check if it's a "no company" error
     const isNoCompanyError = error.includes('No company found') || error.includes('create a company first');
-    
     return (
       <div className="text-center py-8">
         <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -975,7 +822,6 @@ const Qudemos = () => {
       </div>
     );
   }
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -1000,7 +846,6 @@ const Qudemos = () => {
           </button>
         </div>
       </div>
-
       {/* Qudemos Grid */}
       {qudemos.length === 0 ? (
         <div className="text-center py-12">
@@ -1047,12 +892,10 @@ const Qudemos = () => {
                             const isLoomVideo = videoUrl && videoUrl.includes('loom.com');
                             const isYouTubeVideo = videoUrl && (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be'));
                             const isVimeoVideo = videoUrl && videoUrl.includes('vimeo.com');
-                            
                             // For Loom videos, use custom iframe since ReactPlayer doesn't support them well
                             if (isLoomVideo) {
                               const loomVideoId = videoUrl.split('loom.com/share/')[1]?.split('?')[0];
                               const loomEmbedUrl = `https://www.loom.com/embed/${loomVideoId}?autoplay=0&muted=1&hide_share=1&hide_title=1&hide_owner=1&hide_embed_top_bar=1`;
-                              
                               return (
                                 <iframe
                                   src={loomEmbedUrl}
@@ -1064,12 +907,10 @@ const Qudemos = () => {
                                   className="rounded-t-lg"
                                   style={{ borderRadius: '0.5rem 0.5rem 0 0' }}
                                   onError={() => {
-                                    console.warn('Loom video preview failed to load');
                                   }}
                                 />
                               );
                             }
-                            
                             // For YouTube, Vimeo, and other videos, use ReactPlayer
                             return (
                               <ReactPlayer
@@ -1082,7 +923,6 @@ const Qudemos = () => {
                                 loop={true}
                                 className="rounded-t-lg"
                                 onError={(error) => {
-                                  console.warn('Video preview error:', error);
                                 }}
                                 onReady={() => {
                                 }}
@@ -1139,7 +979,6 @@ const Qudemos = () => {
                           })()}
                         </div>
                       </div>
-                      
                       {/* Play Button Overlay */}
                       <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300">
                         <button
@@ -1152,7 +991,6 @@ const Qudemos = () => {
                           <PlayIcon className="w-8 h-8 text-white ml-1" />
                         </button>
                       </div>
-                      
                       {/* Video Duration Badge */}
                       {qudemo.videos[0].duration && (
                         <div className="absolute bottom-2 right-2 bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded">
@@ -1170,7 +1008,6 @@ const Qudemos = () => {
                   </div>
                 )}
               </div>
-
               {/* Card Content */}
               <div className="p-4">
                 <div className="flex justify-between items-start mb-2">
@@ -1187,7 +1024,6 @@ const Qudemos = () => {
                     >
                       <EllipsisVerticalIcon className="w-5 h-5 text-gray-500" />
                     </button>
-                    
                     {dropdownOpen === qudemo.id && (
                       <div className="absolute right-0 top-8 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-[160px]">
                         <button
@@ -1258,7 +1094,6 @@ const Qudemos = () => {
                     )}
                   </div>
                 </div>
-
                 {/* Action Buttons */}
                 <div className="mb-3 space-y-2">
                     {/* View Interactions Button */}
@@ -1276,7 +1111,6 @@ const Qudemos = () => {
                       {!isPro ? <LockClosedIcon className="w-4 h-4" /> : <EyeIcon className="w-4 h-4" />}
                       <span className="text-sm font-medium">View Interactions</span>
                   </button>
-                  
                   {/* Share Button */}
                   <button
                     onClick={(e) => {
@@ -1293,7 +1127,6 @@ const Qudemos = () => {
                     <span className="text-sm font-medium">Share Qudemo</span>
                   </button>
                 </div>
-
                  {/* Stats */}
                  <div className="flex items-center justify-between text-sm text-gray-500">
                    <div className="flex items-center space-x-4">
@@ -1302,14 +1135,12 @@ const Qudemos = () => {
                        <VideoCameraIcon className="w-4 h-4" />
                        <span>{qudemo.video_count || 0}</span>
                      </div>
-                     
                      {/* Document icon - only show if documents were processed */}
                      {qudemo.document_count > 0 && (
                        <div className="flex items-center">
                          <DocumentTextIcon className="w-4 h-4" />
                        </div>
                      )}
-                     
                      {/* Website icon - only show if websites were processed */}
                      {qudemo.website_count > 0 && (
                        <div className="flex items-center">
@@ -1329,7 +1160,6 @@ const Qudemos = () => {
           ))}
         </div>
       )}
-
       {/* Qudemo Preview Modal */}
       {previewingQudemo && (
         <QudemoPreview 
@@ -1337,7 +1167,6 @@ const Qudemos = () => {
           onClose={() => setPreviewingQudemo(null)} 
         />
       )}
-
       {/* Share Modal */}
       {showShareModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
@@ -1354,7 +1183,6 @@ const Qudemos = () => {
                   </svg>
                 </button>
               </div>
-              
               <div className="mb-4">
                 <p className="text-sm text-gray-600 mb-2">
                   Share this Qudemo with anyone using the link below:
@@ -1377,14 +1205,12 @@ const Qudemos = () => {
                   </button>
                 </div>
               </div>
-              
               <div className="bg-blue-50 p-3 rounded-lg">
                 <p className="text-sm text-blue-800">
                   <strong>Note:</strong> This link is public and can be accessed by anyone without authentication. 
                   The shared page will show your company name and the Qudemo content.
                 </p>
               </div>
-              
               <div className="mt-4 flex justify-end">
                 <button
                   onClick={() => setShowShareModal(false)}
@@ -1397,7 +1223,6 @@ const Qudemos = () => {
           </div>
         </div>
       )}
-
        {/* Share Options Modal */}
        {showShareOptionsModal && qudemoToShare && (
          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
@@ -1414,12 +1239,10 @@ const Qudemos = () => {
                    </svg>
                  </button>
                </div>
-              
               <div className="mb-6">
                 <p className="text-sm text-gray-600 mb-6 text-center">
                   Choose how you'd like to share <strong>"{qudemoToShare.title}"</strong>
                 </p>
-                
                 <div className="space-y-4">
                   {/* Single Link Option */}
                   <button
@@ -1436,7 +1259,6 @@ const Qudemos = () => {
                       <p className="text-sm text-gray-600">Generate one shareable link that can be used by anyone</p>
                     </div>
                   </button>
-                  
                   {/* Unique Links Option */}
                   <button
                     onClick={() => handleShareOption('unique')}
@@ -1458,7 +1280,6 @@ const Qudemos = () => {
           </div>
         </div>
        )}
-
        {/* Generate Unique Links Modal */}
        {showUniqueLinksModal && qudemoToShare && (
          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
@@ -1475,12 +1296,10 @@ const Qudemos = () => {
                    </svg>
                  </button>
                </div>
-               
                <div className="mb-6">
                  <p className="text-sm text-gray-600 mb-6 text-center">
                    Choose how you'd like to create unique customer links
                  </p>
-                 
                  <div className="space-y-4">
                    {/* Few Unique Links Option */}
                    <button
@@ -1497,7 +1316,6 @@ const Qudemos = () => {
                        <p className="text-sm text-gray-600">Manually add customer details for a few personalized links</p>
                      </div>
                    </button>
-                   
                    {/* Bulk Unique Links Option */}
                    <button
                      onClick={() => handleUniqueLinksOption('bulk')}
@@ -1515,7 +1333,6 @@ const Qudemos = () => {
                    </button>
                  </div>
                </div>
-               
                <div className="flex justify-end">
                  <button
                    onClick={() => {
@@ -1531,7 +1348,6 @@ const Qudemos = () => {
            </div>
          </div>
        )}
-
        {/* Bulk Upload Modal */}
        {showBulkUploadModal && qudemoToShare && (
          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
@@ -1548,12 +1364,10 @@ const Qudemos = () => {
                    </svg>
                  </button>
                </div>
-               
                <div className="mb-6">
                  <p className="text-sm text-gray-600 mb-6 text-center">
                    Upload customer data in CSV or Excel format to generate multiple personalized links. The system will create a "Shared QuDemo" column with the generated links.
                  </p>
-                 
                  <div className="space-y-4">
                    {/* Upload CSV File Section */}
                    <div>
@@ -1596,7 +1410,6 @@ const Qudemos = () => {
                        )}
                      </div>
                    </div>
-                   
                    {/* File Format Example */}
                    <div>
                      <h4 className="font-medium text-gray-900 mb-3">File Format Example (CSV/Excel):</h4>
@@ -1627,10 +1440,8 @@ const Qudemos = () => {
                        </table>
                      </div>
                    </div>
-
                  </div>
                </div>
-               
                <div className="flex justify-between">
                  <button
                    onClick={() => {
@@ -1657,7 +1468,6 @@ const Qudemos = () => {
            </div>
          </div>
        )}
-
        {/* Generate Few Unique Links Modal */}
        {showFewUniqueLinksModal && qudemoToShare && (
          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
@@ -1674,12 +1484,10 @@ const Qudemos = () => {
                    </svg>
                  </button>
                </div>
-               
                <div className="mb-6">
                  <p className="text-sm text-gray-600 mb-6 text-center">
                    Add customer details to generate personalized tracking links.
                  </p>
-                 
                  <div className="space-y-4">
                    {/* Customer Input Fields */}
                    {customers.map((customer, index) => (
@@ -1695,7 +1503,6 @@ const Qudemos = () => {
                            </button>
                          )}
                        </div>
-                       
                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                          <div>
                            <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -1709,7 +1516,6 @@ const Qudemos = () => {
                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                            />
                          </div>
-                         
                          <div>
                            <label className="block text-sm font-medium text-gray-700 mb-1">
                              Email *
@@ -1722,7 +1528,6 @@ const Qudemos = () => {
                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                            />
                          </div>
-                         
                          <div>
                            <label className="block text-sm font-medium text-gray-700 mb-1">
                              Company
@@ -1738,7 +1543,6 @@ const Qudemos = () => {
                        </div>
                      </div>
                    ))}
-                   
                    {/* Add Another Customer Button */}
                    <button
                      onClick={addAnotherCustomer}
@@ -1751,7 +1555,6 @@ const Qudemos = () => {
                    </button>
                  </div>
                </div>
-               
                <div className="flex justify-between">
                  <button
                    onClick={() => {
@@ -1773,7 +1576,6 @@ const Qudemos = () => {
            </div>
          </div>
        )}
-
        {/* Generated Links Results Modal */}
        {showGeneratedLinksModal && generatedLinks.length > 0 && (
          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
@@ -1792,12 +1594,10 @@ const Qudemos = () => {
                    </svg>
                  </button>
                </div>
-               
                <div className="mb-6">
                  <p className="text-sm text-gray-600 mb-6 text-center">
                    Successfully generated {generatedLinks.length} unique tracking links for "{qudemoToShare?.title}".
                  </p>
-                 
                  <div className="space-y-4">
                    {generatedLinks.map((link, index) => (
                      <div key={index} className="border border-gray-200 rounded-lg p-4 text-center">
@@ -1811,7 +1611,6 @@ const Qudemos = () => {
                            Link #{index + 1}
                          </span>
                        </div>
-                       
                        <div className="flex items-center space-x-2">
                          <input
                            type="text"
@@ -1832,7 +1631,6 @@ const Qudemos = () => {
                      </div>
                    ))}
                  </div>
-                 
                  <div className="mt-6 bg-blue-50 p-4 rounded-lg text-center">
                    <div className="flex items-start justify-center">
                      <svg className="w-5 h-5 text-blue-600 mt-0.5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1850,7 +1648,6 @@ const Qudemos = () => {
                    </div>
                  </div>
                </div>
-               
                <div className="flex justify-center">
                  <button
                    onClick={() => setShowGeneratedLinksModal(false)}
@@ -1863,7 +1660,6 @@ const Qudemos = () => {
           </div>
         </div>
       )}
-
       {/* Custom Delete Confirmation Modal */}
       {showDeleteModal && qudemoToDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
@@ -1880,12 +1676,10 @@ const Qudemos = () => {
                   </svg>
                 </button>
               </div>
-              
               <div className="mb-6">
                 <p className="text-sm text-gray-600 mb-4 text-left">
                   Are you sure you want to delete <strong>"{qudemoToDelete.title}"</strong>?
                 </p>
-                
                 <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                   <div className="flex items-start">
                     <div className="flex-shrink-0">
@@ -1905,7 +1699,6 @@ const Qudemos = () => {
                   </div>
                 </div>
               </div>
-              
               <div className="flex justify-end space-x-3">
                 <button
                   onClick={handleCancelDelete}
@@ -1924,7 +1717,6 @@ const Qudemos = () => {
           </div>
         </div>
       )}
-
       {/* Upgrade Modal */}
       <UpgradeModal
         isOpen={showUpgradeModal}
@@ -1934,7 +1726,6 @@ const Qudemos = () => {
         }}
         errorDetails={errorDetails}
       />
-
       {/* Download Generated File Modal */}
       {showDownloadModal && downloadData && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
@@ -1956,7 +1747,6 @@ const Qudemos = () => {
                   Download the CSV file with all generated links and client information.
                 </p>
               </div>
-
               <div className="bg-blue-50 p-4 rounded-lg mb-6">
                 <div className="flex items-start">
                   <svg className="w-5 h-5 text-blue-600 mt-0.5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1972,7 +1762,6 @@ const Qudemos = () => {
                   </div>
                 </div>
               </div>
-
               <div className="flex justify-center space-x-3">
                 <button
                   onClick={() => setShowDownloadModal(false)}
@@ -1994,7 +1783,6 @@ const Qudemos = () => {
           </div>
         </div>
       )}
-
       {/* People List Modal */}
       {showPeopleListModal && qudemoPeople.length > 0 && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
@@ -2018,7 +1806,6 @@ const Qudemos = () => {
                 </button>
               </div>
             </div>
-
             {/* People List */}
             <div className="p-6 overflow-y-auto max-h-96">
               <div className="space-y-3">
@@ -2071,7 +1858,6 @@ const Qudemos = () => {
           </div>
         </div>
       )}
-
       {/* Interaction Details Modal */}
       {showDetailsModal && selectedInteraction && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
@@ -2098,7 +1884,6 @@ const Qudemos = () => {
                     <h3 className="text-lg font-semibold text-gray-900 text-left">
                       {selectedInteraction.client_name || 'Interactions Overview'}
                     </h3>
-                    
                     {/* User Details Section */}
                     <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-gray-600">
                       {selectedInteraction.client_email && (
@@ -2109,7 +1894,6 @@ const Qudemos = () => {
                           <span>{selectedInteraction.client_email}</span>
                         </div>
                       )}
-                      
                       {selectedInteraction.client_company && (
                         <div className="flex items-center space-x-2">
                           <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2118,7 +1902,6 @@ const Qudemos = () => {
                           <span>{selectedInteraction.client_company}</span>
                         </div>
                       )}
-                      
                       {selectedInteraction.last_interaction && (
                         <div className="flex items-center space-x-2">
                           <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2143,7 +1926,6 @@ const Qudemos = () => {
                 </button>
               </div>
             </div>
-
             {/* Modal Content */}
             <div className="flex-1 overflow-hidden">
               {/* Tabs */}
@@ -2181,7 +1963,6 @@ const Qudemos = () => {
                   </button>
                 </nav>
               </div>
-
               {/* Tab Content */}
               <div className="p-6 overflow-y-auto max-h-96">
                 {activeTab === 'overview' && (
@@ -2205,7 +1986,6 @@ const Qudemos = () => {
                         </p>
                       )}
                     </div> */}
-
                     {/* Interaction Metrics */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                       {/* Demo Watched */}
@@ -2224,7 +2004,6 @@ const Qudemos = () => {
                           </div>
                         </div>
                       </div>
-
                       {/* Time Spent */}
                       <div className="bg-white border border-gray-200 rounded-lg p-4">
                         <div className="flex items-center justify-between">
@@ -2241,7 +2020,6 @@ const Qudemos = () => {
                           </div>
                         </div>
                       </div>
-
                       {/* Questions Asked */}
                       <div className="bg-white border border-gray-200 rounded-lg p-4">
                         <div className="flex items-center justify-between">
@@ -2259,7 +2037,6 @@ const Qudemos = () => {
                         </div>
                       </div>
                     </div>
-
                     {/* Unique Link Details */}
                     <div className="border border-blue-200 rounded-lg p-4 bg-blue-50">
                       <div className="flex items-center space-x-2 mb-3">
@@ -2268,7 +2045,6 @@ const Qudemos = () => {
                         </svg>
                         <span className="font-medium text-blue-900">Unique Link Details</span>
                       </div>
-                      
                       <div className="space-y-3 text-left">
                         <div className="flex items-center justify-between text-left">
                           <span className="text-sm text-blue-800 font-medium">Link Type:</span>
@@ -2276,7 +2052,6 @@ const Qudemos = () => {
                             Unique Customer Link
                           </span>
                         </div>
-                        
                         <div className="flex items-start space-x-2 text-left">
                           <span className="text-sm text-blue-800 font-medium whitespace-nowrap">URL:</span>
                           <code className="flex-1 bg-white border border-blue-200 rounded px-2 py-1 text-sm text-blue-900 text-left break-all">
@@ -2295,7 +2070,6 @@ const Qudemos = () => {
                             <span>Copy</span>
                           </button>
                         </div>
-                        
                         <div>
                           <span className="text-sm text-blue-800">
                             <span className="font-medium">Generated on:</span> {
@@ -2313,14 +2087,12 @@ const Qudemos = () => {
                     </div>
                   </div>
                 )}
-
                 {activeTab === 'questions' && (
                   <div className="bg-gray-50 rounded-lg p-4 min-h-96">
                     <h4 className="font-medium text-gray-900 mb-4">Questions & Responses</h4>
                     <div className="space-y-6 max-h-96 overflow-y-auto">
                       {selectedInteraction.questions && selectedInteraction.questions.length > 0 ? (
                         selectedInteraction.questions.map((qa, index) => {
-                          console.log(`🔍 Question ${index} data:`, qa);
                           return (
                           <div key={index} className="space-y-3">
                             {/* Question */}
@@ -2335,7 +2107,6 @@ const Qudemos = () => {
                                 <p className="text-xs text-gray-500 mt-1 text-left">Asked during session</p>
                               </div>
                             </div>
-                            
                             {/* Answer */}
                             <div className="flex items-start space-x-3 bg-white rounded-lg p-3">
                               <div className="flex-shrink-0">
@@ -2377,7 +2148,6 @@ const Qudemos = () => {
                     </div>
                   </div>
                 )}
-
                 {activeTab === 'past-interactions' && (
                   <div className="min-h-96">
                     <h4 className="font-medium text-gray-900 mb-4">Past Interactions History</h4>
@@ -2405,20 +2175,16 @@ const Qudemos = () => {
                               // Group questions into sessions (same logic as backend)
                               const questions = selectedInteraction.questions || [];
                               if (questions.length === 0) return null;
-
                               const SESSION_GAP_HOURS = 2;
                               const SESSION_GAP_MS = SESSION_GAP_HOURS * 60 * 60 * 1000;
-                              
                               const sessions = [];
                               let currentSession = {
                                 questions: [questions[0]],
                                 startTime: questions[0].created_at,
                                 endTime: questions[0].created_at
                               };
-
                               for (let i = 1; i < questions.length; i++) {
                                 const timeDiff = new Date(questions[i].created_at) - new Date(questions[i-1].created_at);
-                                
                                 if (timeDiff > SESSION_GAP_MS) {
                                   sessions.push(currentSession);
                                   currentSession = {
@@ -2432,14 +2198,12 @@ const Qudemos = () => {
                                 }
                               }
                               sessions.push(currentSession);
-
                               // Display each session as a row
                               return sessions.map((session, sessionIndex) => {
                                 const sessionDate = new Date(session.startTime);
                                 const now = new Date();
                                 const diffTime = Math.abs(now - sessionDate);
                                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                                
                                 let dateDisplay;
                                 if (diffDays === 1) {
                                   dateDisplay = "Today";
@@ -2450,13 +2214,11 @@ const Qudemos = () => {
                                 } else {
                                   dateDisplay = sessionDate.toLocaleDateString();
                                 }
-
                                 // Calculate session duration
                                 const sessionDuration = Math.floor((new Date(session.endTime) - new Date(session.startTime)) / 1000);
                                 const questionTime = session.questions.length * 45;
                                 const demoTime = sessionIndex === 0 ? Math.min(sessionDuration * 0.3, 300) : 0;
                                 const totalSessionTime = Math.max(sessionDuration + questionTime + demoTime, session.questions.length * 30);
-
                                 return (
                                   <tr key={sessionIndex} className="hover:bg-gray-50">
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-left">
@@ -2492,7 +2254,6 @@ const Qudemos = () => {
           </div>
         </div>
       )}
-
       {/* Interactions List Modal */}
       {showInteractionsListModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
@@ -2518,7 +2279,6 @@ const Qudemos = () => {
                   </svg>
                 </button>
               </div>
-
               {/* Stats Cards */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                 <div className="bg-white border border-gray-200 rounded-lg p-6">
@@ -2537,7 +2297,6 @@ const Qudemos = () => {
                     </div>
                   </div>
                 </div>
-
                 <div className="bg-white border border-gray-200 rounded-lg p-6">
                   <div className="flex items-center justify-between">
                     <div className="text-left">
@@ -2555,7 +2314,6 @@ const Qudemos = () => {
                     </div>
                   </div>
                 </div>
-
                 <div className="bg-white border border-gray-200 rounded-lg p-6">
                   <div className="flex items-center justify-between">
                     <div className="text-left">
@@ -2577,7 +2335,6 @@ const Qudemos = () => {
                   </div>
                 </div>
               </div>
-
               {/* Search Bar */}
               <div className="mb-6">
                 <div className="relative">
@@ -2595,7 +2352,6 @@ const Qudemos = () => {
                   />
                 </div>
               </div>
-
               {/* Interactions Table */}
               <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
                 <div className="overflow-x-auto">
@@ -2684,7 +2440,6 @@ const Qudemos = () => {
           </div>
         </div>
       )}
-
       {/* Loading Interactions Modal */}
       {loadingInteractions && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
@@ -2692,7 +2447,6 @@ const Qudemos = () => {
             <div className="flex flex-col items-center space-y-4">
               {/* Spinner */}
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-              
               {/* Loading Text */}
               <div className="text-center">
                 <h3 className="text-lg font-medium text-gray-900 mb-2">Loading Interactions</h3>
@@ -2707,5 +2461,4 @@ const Qudemos = () => {
     </div>
   );
 };
-
 export default Qudemos;

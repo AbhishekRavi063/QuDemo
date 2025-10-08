@@ -6,7 +6,6 @@ import { useCompany } from "../context/CompanyContext";
 import { getNodeApiUrl } from "../config/api";
 import { useNavigate } from "react-router-dom";
 import DocumentUpload from "./DocumentUpload";
-
 const CreateQuDemo = () => {
   const { company, isLoading } = useCompany();
   const navigate = useNavigate();
@@ -22,18 +21,14 @@ const CreateQuDemo = () => {
   const [documents, setDocuments] = useState([]);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [createdQudemoId, setCreatedQudemoId] = useState(null);
-  
   // Error popup state
   const [showErrorPopup, setShowErrorPopup] = useState(false);
   const [errorPopupData, setErrorPopupData] = useState(null);
-  
   // Video processing notification state
-
   // Handle error popup close and redirect
   const handleErrorPopupClose = () => {
     setShowErrorPopup(false);
     setErrorPopupData(null);
-    
     // Reset form
     setTitle("");
     setVideoUrls([""]);
@@ -42,34 +37,27 @@ const CreateQuDemo = () => {
     setDocuments([]);
     setSelectedFiles([]);
     setCreatedQudemoId(null);
-    
     // Navigate to qudemos page after closing popup
     setTimeout(() => {
       navigate('/qudemos');
     }, 100);
   };
-
-
   // const handleSourceChange = (index, value) => { // Not used
   //   const updated = [...sources];
   //   updated[index] = value;
   //   setSources(updated);
   // };
-
   // const addSourceField = () => { // Not used
   //   setSources([...sources, ""]);
   // };
-
   // const removeSourceField = (index) => { // Not used
   //   const updated = sources.filter((_, i) => i !== index);
   //   setSources(updated);
   // };
-
   const handleVideoUrlChange = (index, value) => {
     const updated = [...videoUrls];
     updated[index] = value;
     setVideoUrls(updated);
-
     // Real-time validation
     if (value.trim()) {
       const validation = validateVideoUrl(value);
@@ -84,12 +72,10 @@ const CreateQuDemo = () => {
       }));
     }
   };
-
   const handleWebsiteUrlChange = (index, value) => {
     const updated = [...websiteUrls];
     updated[index] = value;
     setWebsiteUrls(updated);
-
     // Real-time validation
     if (value.trim()) {
       const validation = validateWebsiteUrl(value);
@@ -104,104 +90,83 @@ const CreateQuDemo = () => {
       }));
     }
   };
-
   // Link validation function
   const validateVideoUrl = (url) => {
     if (!url || !url.trim()) {
       return { isValid: false, error: "Video URL is required" };
     }
-
     const trimmedUrl = url.trim();
-    
     // Check if it's a valid URL format
     try {
       new URL(trimmedUrl);
     } catch {
       return { isValid: false, error: "Please enter a valid URL" };
     }
-
     // Check if it's YouTube
     if (trimmedUrl.includes('youtube.com') || trimmedUrl.includes('youtu.be')) {
       return { isValid: true, type: 'youtube' };
     }
-
     // Check if it's Loom
     if (trimmedUrl.includes('loom.com')) {
       return { isValid: true, type: 'loom' };
     }
-
     // If it's neither YouTube nor Loom
     return { 
       isValid: false, 
       error: "Only YouTube and Loom video links are supported. Please provide a valid YouTube or Loom URL." 
     };
   };
-
   // Website URL validation function
   const validateWebsiteUrl = (url) => {
     if (!url || !url.trim()) {
       return { isValid: false, error: "Website URL is required" };
     }
-
     const trimmedUrl = url.trim();
-    
     // Check if it's a valid URL format
     try {
       new URL(trimmedUrl);
     } catch {
       return { isValid: false, error: "Please enter a valid URL" };
     }
-
     // Check if it's HTTP or HTTPS
     if (!trimmedUrl.startsWith('http://') && !trimmedUrl.startsWith('https://')) {
       return { isValid: false, error: "URL must start with http:// or https://" };
     }
-
     return { isValid: true, type: 'website' };
   };
-
   // Check if all URLs are valid or if we have documents
   const areAllUrlsValid = () => {
-    
     // If we have documents (uploaded) or selected files, we don't need videos or websites
     if (documents.length > 0 || selectedFiles.length > 0) {
       return true;
     }
-    
     // Check if we have any valid content (videos or websites)
     const hasValidVideos = videoUrls.some(url => url.trim() && validateVideoUrl(url.trim()).isValid);
     const hasValidWebsites = websiteUrls.some(url => url.trim() && validateWebsiteUrl(url.trim()).isValid);
-    
     if (!hasValidVideos && !hasValidWebsites) {
       return false;
     }
-    
     // Check video URLs (only if they have content)
     const videoUrlsValid = videoUrls.every((url, index) => {
       if (!url.trim()) return true; // Empty URLs are valid (optional)
       const validation = validateVideoUrl(url);
       return validation.isValid;
     });
-    
     // Check website URLs (only if they have content)
     const websiteUrlsValid = websiteUrls.every((url, index) => {
       if (!url.trim()) return true; // Empty URLs are valid (optional)
       const validation = validateWebsiteUrl(url);
       return validation.isValid;
     });
-    
     const isValid = videoUrlsValid && websiteUrlsValid;
     return isValid;
   };
-
   const addVideoUrlField = () => {
     setVideoUrls([...videoUrls, ""]);
   };
-
   const removeVideoUrlField = (index) => {
     const updated = videoUrls.filter((_, i) => i !== index);
     setVideoUrls(updated);
-    
     // Clean up validation errors for removed field
     setUrlValidationErrors(prev => {
       const newErrors = { ...prev };
@@ -219,15 +184,12 @@ const CreateQuDemo = () => {
       return shiftedErrors;
     });
   };
-
   const addWebsiteUrlField = () => {
     setWebsiteUrls([...websiteUrls, ""]);
   };
-
   const removeWebsiteUrlField = (index) => {
     const updated = websiteUrls.filter((_, i) => i !== index);
     setWebsiteUrls(updated);
-    
     // Clean up validation errors for removed field
     setUrlValidationErrors(prev => {
       const newErrors = { ...prev };
@@ -249,7 +211,6 @@ const CreateQuDemo = () => {
       return shiftedErrors;
     });
   };
-
   // Progress tracking functions - COMMENTED OUT (not used)
   // const startProgressTracking = (taskId) => {
   //   setCurrentTaskId(taskId);
@@ -258,7 +219,6 @@ const CreateQuDemo = () => {
   //     progress: { current: 0, total: 0, percentage: 0 },
   //     stats: { urls_scraped: 0, urls_skipped: 0 }
   //   });
-    
   //   // Poll for progress updates every 5 seconds
   //   const interval = setInterval(async () => {
   //     try {
@@ -267,7 +227,6 @@ const CreateQuDemo = () => {
   //         const data = await response.json();
   //         if (data.success) {
   //           setScrapingProgress(data.data);
-            
   //           // Stop tracking if completed or failed
   //           if (data.data.status === 'completed' || data.data.status === 'failed') {
   //             stopProgressTracking();
@@ -275,13 +234,11 @@ const CreateQuDemo = () => {
   //         }
   //       }
   //     } catch (err) {
-  //       console.error("Failed to fetch progress:", err);
+  //       
   //     }
   //   }, 5000);
-    
   //   setProgressInterval(interval);
   // };
-
   // const stopProgressTracking = () => {
   //   if (progressInterval) {
   //     clearInterval(progressInterval);
@@ -290,8 +247,6 @@ const CreateQuDemo = () => {
   //   setCurrentTaskId(null);
   //   setScrapingProgress(null);
   // };
-
-
   // const fetchKnowledgeSources = async () => { // Not used
   //   try {
   //     const token = localStorage.getItem('accessToken');
@@ -300,11 +255,9 @@ const CreateQuDemo = () => {
   //         'Authorization': `Bearer ${token}`
   //       }
   //     });
-
   //     if (response.ok) {
   //       const data = await response.json();
   //       setKnowledgeSources(data.data || []);
-        
   //       // Check if any sources are still processing
   //       const processingSources = data.data?.filter(source => source.status === 'processing') || [];
   //       if (processingSources.length > 0) {
@@ -312,17 +265,15 @@ const CreateQuDemo = () => {
   //       }
   //     }
   //   } catch (err) {
-  //     console.error("Failed to fetch knowledge sources:", err);
+  //     
   //   }
   // };
-
   // Load knowledge sources on component mount - COMMENTED OUT (not used)
   // React.useEffect(() => {
   //   if (company) {
   //     fetchKnowledgeSources();
   //   }
   // }, [company]);
-
   // Add video URL validation (Loom, Vimeo, and YouTube) - COMMENTED OUT (not used)
   // const validateVideoUrl = (url) => {
   //   if (!url || !url.trim()) {
@@ -334,18 +285,14 @@ const CreateQuDemo = () => {
   //   const isLoomVideo = url.includes('loom.com');
   //   const isVimeoVideo = url.includes('vimeo.com');
   //   const isYouTubeVideo = url.includes('youtube.com') || url.includes('youtu.be');
-    
   //   if (!isLoomVideo && !isVimeoVideo && !isYouTubeVideo) {
   //     return { isValid: false, error: "Only Loom, Vimeo, and YouTube video URLs are supported" };
   //   }
   //   return { isValid: true, error: null };
   // };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
     if (isSubmitting) return;
-    
     // Prevent rapid submissions
     const now = Date.now();
     if (now - lastSubmissionTime < 2000) {
@@ -353,32 +300,25 @@ const CreateQuDemo = () => {
       return;
     }
     setLastSubmissionTime(now);
-    
     setIsSubmitting(true);
     setError("");
     setSuccess("");
-
     try {
       // Validate required fields
       if (!company || !company.id) {
         setError("Company information is required. Please refresh the page and try again.");
         return;
       }
-
       // Validate video URLs and website URLs
       const validVideoUrls = videoUrls.filter(url => url.trim());
       const validWebsiteUrls = websiteUrls.filter(url => url.trim());
-      
       // Check if we have either videos, websites, or documents/files
       const hasDocuments = documents.length > 0;
       const hasSelectedFiles = selectedFiles.length > 0;
-      
-      
       if (validVideoUrls.length === 0 && validWebsiteUrls.length === 0 && !hasDocuments && !hasSelectedFiles) {
         setError("Please provide at least one video URL, website URL, or upload documents to create a QuDemo.");
         return;
       }
-
       // Validate each video URL
       for (let i = 0; i < validVideoUrls.length; i++) {
         const validation = validateVideoUrl(validVideoUrls[i]);
@@ -387,7 +327,6 @@ const CreateQuDemo = () => {
           return;
         }
       }
-
       // Validate each website URL
       for (let i = 0; i < validWebsiteUrls.length; i++) {
         const validation = validateWebsiteUrl(validWebsiteUrls[i]);
@@ -396,7 +335,6 @@ const CreateQuDemo = () => {
           return;
         }
       }
-
       // Create qudemo first
       const qudemoData = {
         title: title || "Untitled Qudemo",
@@ -425,7 +363,6 @@ const CreateQuDemo = () => {
           type: 'website'
         }))
       };
-
       const token = localStorage.getItem('accessToken');
       const createResponse = await fetch(getNodeApiUrl('/api/qudemos'), {
         method: 'POST',
@@ -435,24 +372,18 @@ const CreateQuDemo = () => {
         },
         body: JSON.stringify(qudemoData)
       });
-
       const createResult = await createResponse.json();
-      
       if (!createResult.success) {
         throw new Error(createResult.error || 'Failed to create qudemo');
       }
-
       const qudemoId = createResult.data.id;
       setCreatedQudemoId(qudemoId); // Set the created QuDemo ID
-
       if (validVideoUrls.length > 0 || validWebsiteUrls.length > 0) {
         setSuccess("Please wait, your content is now processing. This may take a few minutes. Once it's ready, you'll be redirected to your Qudemos page.");
       } else {
         setSuccess("QuDemo created successfully! Documents will be processed automatically.");
       }
-
       // Process all content automatically using the new endpoint
-      
       if (validVideoUrls.length > 0 || validWebsiteUrls.length > 0) {
         try {
           const contentResponse = await fetch(getNodeApiUrl(`/api/qudemos/process-content/${company.name}/${qudemoId}`), {
@@ -466,59 +397,45 @@ const CreateQuDemo = () => {
               website_urls: validWebsiteUrls
             })
           });
-
           const contentResult = await contentResponse.json();
-          
           // Check for processing errors first, regardless of success status
           if (contentResult.processing_errors && contentResult.processing_errors.length > 0) {
             // Handle processing errors with popup
             const { processing_errors, has_anti_bot_protection } = contentResult;
-            
             let errorMessage = "❌ Some content failed to process!\n\n";
-            
             // Show specific failed content with detailed reasons
               errorMessage += "📋 Failed Content Details:\n\n";
-              
               processing_errors.forEach((error, index) => {
                 if (error.type === 'website') {
                   errorMessage += `🌐 WEBSITE FAILED:\n`;
                   errorMessage += `   URL: ${error.url}\n`;
                   errorMessage += `   Reason: ${error.error}\n`;
-                  
                 if (error.error_type === 'crm_bot_detection') {
                   errorMessage += `   🏢 CRM Site with Bot Protection\n`;
                   errorMessage += `   💡 Suggestion: Upload documents instead of scraping\n`;
                 } else if (error.error_type) {
                     errorMessage += `   Error Type: ${error.error_type.toUpperCase()}\n`;
                   }
-                  
                   if (error.protection_detected) {
                     errorMessage += `   🛡️ Anti-Bot Protection: YES\n`;
                   }
-                  
                   errorMessage += `\n`;
-                  
                 } else if (error.type === 'video') {
                   errorMessage += `📹 VIDEO FAILED:\n`;
                   errorMessage += `   URL: ${error.url}\n`;
                   errorMessage += `   Reason: ${error.error}\n`;
-                  
                   if (error.error_type) {
                     errorMessage += `   Error Type: ${error.error_type.toUpperCase()}\n`;
                   }
-                  
                   errorMessage += `\n`;
                 }
               });
-            
             // Add suggestions based on error types
             const hasWebsiteErrors = processing_errors?.some(e => e.type === 'website');
             const hasVideoErrors = processing_errors?.some(e => e.type === 'video');
-            
             errorMessage += "💡 What you can do:\n";
             if (hasWebsiteErrors && !hasVideoErrors) {
               const hasCrmErrors = processing_errors?.some(e => e.type === 'website' && e.error_type === 'crm_bot_detection');
-              
               if (hasCrmErrors) {
                 errorMessage += "• Upload documents instead of scraping CRM sites\n";
                 errorMessage += "• CRM sites (Salesforce, SurveySparrow, Zendesk) often block scraping\n";
@@ -541,9 +458,7 @@ const CreateQuDemo = () => {
               errorMessage += "• Check that all URLs are valid and accessible\n";
               errorMessage += "• Contact support if you need assistance\n";
             }
-            
             errorMessage += "\n⚠️ QuDemo was created but some content failed to process.";
-            
             // Show error popup instead of inline error
             setErrorPopupData({
               title: "Content Processing Issues",
@@ -552,15 +467,12 @@ const CreateQuDemo = () => {
               hasAntiBotProtection: has_anti_bot_protection
             });
             setShowErrorPopup(true);
-            
             // Exit early to prevent success flow from executing
             return;
           }
-          
           // If no processing errors, proceed with success flow
           if (contentResult.success) {
             const { videos_processed, website_processed, total_chunks, processing_order } = contentResult;
-            
             let successMessage = "🎉 All content processed successfully!";
             if (videos_processed > 0) {
               successMessage += `\n📹 ${videos_processed} video(s) processed`;
@@ -571,20 +483,16 @@ const CreateQuDemo = () => {
             if (processing_order.length > 0) {
               successMessage += `\n⏱️ Processing order: ${processing_order.join(' → ')}`;
             }
-            
             // Hide the processing message and show completion
             setSuccess("");
           }
         } catch (contentError) {
-          console.error('❌ Content processing error:', contentError);
           setError(`Content processing failed: ${contentError.message}. The qudemo was created but content processing needs to be retried.`);
           return; // Exit early to prevent success flow from executing
         }
       }
-
       // Hide the processing message
       setSuccess("");
-      
       // Reset form
       setTitle("");
       setVideoUrls([""]);
@@ -593,20 +501,16 @@ const CreateQuDemo = () => {
       setDocuments([]);
       setSelectedFiles([]);
       setCreatedQudemoId(null);
-      
       // Navigate to qudemos page after a short delay to show success message
       setTimeout(() => {
         navigate('/qudemos');
       }, 2000);
-      
     } catch (error) {
-      console.error('❌ Create qudemo error:', error);
       setError(error.message || "Failed to create qudemo. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
   };
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -614,7 +518,6 @@ const CreateQuDemo = () => {
       </div>
     );
   }
-
   if (!company) {
     return (
       <div className="text-center py-12 px-4 sm:px-6 lg:px-8 bg-white rounded-lg shadow-lg">
@@ -627,7 +530,6 @@ const CreateQuDemo = () => {
       </div>
     );
   }
-
   return (
     <div className="min-h-screen bg-gray-50 flex items-start justify-center pt-8">
       <div className="w-full max-w-2xl mx-auto px-4">
@@ -640,7 +542,6 @@ const CreateQuDemo = () => {
             Create an interactive demo that allows prospects to learn about your product at their own pace.
           </p>
         </div>
-
         <form onSubmit={handleSubmit} className="space-y-6 mt-16">
           {/* Qudemo Title */}
           <div>
@@ -656,7 +557,6 @@ const CreateQuDemo = () => {
               className="w-full border border-gray-300 px-4 py-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
         </div>
-
           {/* Video URL */}
           <div>
             <label className="block text-sm font-bold text-gray-900 mb-2 text-left">
@@ -713,7 +613,6 @@ const CreateQuDemo = () => {
             </button>
           </div>
         </div>
-
         {/* Website URL - COMMENTED OUT */}
         {/* 
         <div className="mt-6">
@@ -792,7 +691,6 @@ const CreateQuDemo = () => {
             </div>
         </div>
         */}
-
         {/* Document Upload Section */}
         <div className="mt-6">
           <label className="block text-sm font-bold text-gray-900 mb-2 text-left">
@@ -822,7 +720,6 @@ const CreateQuDemo = () => {
             />
           </div>
         </div>
-
           {/* Submit Button */}
           <button
             type="submit"
@@ -835,9 +732,7 @@ const CreateQuDemo = () => {
           >
             {isSubmitting ? 'Processing Content...' : 'Create Qudemo'}
           </button>
-
         </form>
-
         {/* Error Message */}
         {error && (
           <div className="mt-6 bg-red-50 border border-red-200 rounded-lg p-4">
@@ -863,7 +758,6 @@ const CreateQuDemo = () => {
             </div>
           </div>
         )}
-
         {/* Processing Message Popup */}
         {success && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -878,7 +772,6 @@ const CreateQuDemo = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
-              
               <div className="flex items-start pr-8">
               <div className="flex-shrink-0">
                   <svg className="h-6 w-6 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
@@ -897,7 +790,6 @@ const CreateQuDemo = () => {
           </div>
         )}
       </div>
-      
       {/* Error Popup Modal */}
       {showErrorPopup && errorPopupData && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
@@ -917,7 +809,6 @@ const CreateQuDemo = () => {
                 <XMarkIcon className="w-6 h-6" />
               </button>
           </div>
-          
             {/* Content */}
             <div className="mb-6">
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
@@ -937,7 +828,6 @@ const CreateQuDemo = () => {
             </div>
                 </div>
               </div>
-              
               {/* Error Details */}
               <div className="bg-gray-50 rounded-lg p-4">
                 <h4 className="text-sm font-medium text-gray-900 mb-3">Failed Content Details:</h4>
@@ -994,7 +884,6 @@ const CreateQuDemo = () => {
                 </div>
               </div>
             </div>
-            
             {/* Footer */}
             <div className="flex justify-end">
             <button
@@ -1010,5 +899,4 @@ const CreateQuDemo = () => {
     </div>
   );
 };
-
 export default CreateQuDemo;

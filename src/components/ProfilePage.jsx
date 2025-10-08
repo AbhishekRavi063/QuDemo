@@ -5,27 +5,22 @@ import { getNodeApiUrl } from "../config/api";
 import { useCompany } from "../context/CompanyContext";
 import { useNotification } from "../context/NotificationContext";
 import SubscriptionTab from "./SubscriptionTab";
-
 export default function ProfilePage() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("personal");
   const { company, refreshCompany, setCompany } = useCompany();
   const { showSuccess, showError } = useNotification();
-  
   // User profile state
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-
   // Form fields state
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
-
   // Delete company modal state
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
-
   const [timezone, setTimezone] = useState("UTC-5");
   const [language, setLanguage] = useState("English");
   const [notifications, setNotifications] = useState({
@@ -38,16 +33,13 @@ export default function ProfilePage() {
     dataSharing: true,
     analytics: true
   });
-
   const [profilePicture, setProfilePicture] = useState("");
-  
   // Company editing state
   const [isEditingCompany, setIsEditingCompany] = useState(false);
   const [companyName, setCompanyName] = useState("");
   const [companyWebsite, setCompanyWebsite] = useState("");
   const [companyLogo, setCompanyLogo] = useState(null);
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
-
   useEffect(() => {
     const userData = localStorage.getItem('user');
     if (userData) {
@@ -60,7 +52,6 @@ export default function ProfilePage() {
     }
     setIsLoading(false);
   }, []);
-
   // Populate company editing fields when company data is loaded
   useEffect(() => {
     if (company) {
@@ -68,13 +59,11 @@ export default function ProfilePage() {
       setCompanyWebsite(company.website || "");
     }
   }, [company]);
-
   const tabs = [
     { name: "Personal Info", key: "personal" },
     { name: "Organization", key: "company" },
     { name: "Subscription & Billing", key: "subscription" },
   ];
-
   // Custom Switch component for better UX
   const Switch = ({ checked, onChange }) => (
     <button
@@ -91,7 +80,6 @@ export default function ProfilePage() {
       />
     </button>
   );
-
   // Company update functions
   const handleCompanyLogoChange = (e) => {
     const file = e.target.files[0];
@@ -99,16 +87,13 @@ export default function ProfilePage() {
       setCompanyLogo(file);
     }
   };
-
   const handleUploadCompanyLogo = async () => {
     if (!companyLogo) return;
-    
     setIsUploadingLogo(true);
     try {
       const formData = new FormData();
       formData.append('logo', companyLogo);
       formData.append('companyId', company.id);
-      
       const token = localStorage.getItem('accessToken');
       const response = await axios.post(
         getNodeApiUrl('/api/companies/upload-logo'),
@@ -120,7 +105,6 @@ export default function ProfilePage() {
           },
         }
       );
-
       if (response.data.success) {
         // Refresh company data
         window.location.reload();
@@ -128,13 +112,11 @@ export default function ProfilePage() {
         alert('Failed to upload company logo.');
       }
     } catch (error) {
-      console.error('Logo upload error:', error);
       alert('Failed to upload company logo.');
     } finally {
       setIsUploadingLogo(false);
     }
   };
-
   const handleUpdateCompany = async () => {
     try {
       const token = localStorage.getItem('accessToken');
@@ -151,7 +133,6 @@ export default function ProfilePage() {
           },
         }
       );
-
       if (response.data.success) {
         // Refresh company data
         window.location.reload();
@@ -159,22 +140,18 @@ export default function ProfilePage() {
         alert('Failed to update company details.');
       }
     } catch (error) {
-      console.error('Company update error:', error);
       alert('Failed to update company details.');
     }
   };
-
   // Delete company function
   const handleDeleteCompany = async () => {
     if (deleteConfirmText !== "DELETE") {
       showError("Please type 'DELETE' to confirm organization deletion.");
       return;
     }
-
     setIsDeleting(true);
     try {
       const token = localStorage.getItem('accessToken');
-
       const response = await fetch(getNodeApiUrl('/api/companies'), {
         method: 'DELETE',
         headers: {
@@ -182,17 +159,13 @@ export default function ProfilePage() {
           'Content-Type': 'application/json'
         }
       });
-
       const data = await response.json();
-
       if (data.success) {
-
         showSuccess('Company deleted successfully! You will be redirected to create a new company.');
         // Force clear company context immediately
         setCompany(null);
         // Refresh company context to ensure it's cleared
         await refreshCompany();
-
         // Navigate to home page (which will show CompanySetup due to no company)
         setTimeout(() => {
           navigate('/');
@@ -201,7 +174,6 @@ export default function ProfilePage() {
         showError(data.error || 'Failed to delete organization. Please try again.');
       }
     } catch (error) {
-      console.error('Delete company error:', error);
       showError('Network error. Please try again.');
     } finally {
       setIsDeleting(false);
@@ -209,7 +181,6 @@ export default function ProfilePage() {
       setDeleteConfirmText("");
     }
   };
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -217,10 +188,8 @@ export default function ProfilePage() {
       </div>
     );
   }
-
   return (
     <div className="w-full min-h-screen bg-gray-50 flex flex-col py-4">
-
       {/* Tabs */}
       <div className="flex justify-center mb-8">
         <div className="bg-gray-100 p-1.5 rounded-lg max-w-4xl w-full">
@@ -241,7 +210,6 @@ export default function ProfilePage() {
           </nav>
         </div>
       </div>
-
       <div className="flex justify-center">
         <div className="w-full max-w-4xl bg-white rounded-lg shadow-sm p-6">
         {/* Content */}
@@ -268,7 +236,6 @@ export default function ProfilePage() {
                 />
               </div>
             </div>
-
             {/* Email */}
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-2 text-left">Email Address</label>
@@ -279,7 +246,6 @@ export default function ProfilePage() {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
-
             {/* Action Buttons */}
             <div className="flex space-x-3">
               <button
@@ -297,7 +263,6 @@ export default function ProfilePage() {
             </div>
           </form>
         )}
-
         {activeTab === "company" && (
           <div>
             <div className="flex justify-end items-center mb-6">
@@ -308,7 +273,6 @@ export default function ProfilePage() {
                 {isEditingCompany ? 'Cancel' : 'Edit Organization'}
               </button>
             </div>
-            
             {company ? (
               <div className="space-y-6">
                  {/* Company Logo and Details - Side by Side Layout */}
@@ -360,7 +324,6 @@ export default function ProfilePage() {
                        )}
                      </div>
                    </div>
-
                    {/* Company Details - Right Side */}
                    <div className="space-y-6 w-[600px]">
                      <div className="text-left">
@@ -378,7 +341,6 @@ export default function ProfilePage() {
                          </div>
                        )}
                      </div>
-
                      <div className="text-left">
                        <label className="block text-sm font-medium text-gray-700 mb-2 text-left">Website</label>
                        {isEditingCompany ? (
@@ -408,7 +370,6 @@ export default function ProfilePage() {
                      </div>
                    </div>
                  </div>
-
                  {/* Save Company Changes */}
                  {isEditingCompany && (
                    <div className="flex space-x-3 pt-4 border-t border-gray-200">
@@ -426,7 +387,6 @@ export default function ProfilePage() {
                      </button>
                    </div>
                  )}
-
                 {/* Delete Company Button */}
                 <div className="pt-6 border-t border-gray-200">
                   <div className="flex justify-center">
@@ -483,13 +443,11 @@ export default function ProfilePage() {
             )}
           </div>
         )}
-
         {activeTab === "subscription" && company && (
           <SubscriptionTab companyId={company.id} />
         )}
         </div>
       </div>
-
       {/* Delete Company Confirmation Modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -506,7 +464,6 @@ export default function ProfilePage() {
                 </h3>
               </div>
             </div>
-            
             <div className="mb-4 text-left">
               <p className="text-sm text-gray-500 mb-4 text-left">
                 This action will permanently delete your organization and all associated data:
@@ -531,7 +488,6 @@ export default function ProfilePage() {
                 className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-red-500 focus:border-red-500"
               />
             </div>
-            
             <div className="flex justify-end space-x-3">
               <button
                 type="button"

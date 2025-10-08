@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useCompany } from '../context/CompanyContext';
 import { getNodeApiUrl } from '../config/api';
-
 const CompanyManagement = () => {
   const { refreshCompany } = useCompany();
   const [companies, setCompanies] = useState([]);
@@ -19,11 +18,9 @@ const CompanyManagement = () => {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [successMessage, setSuccessMessage] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
-
   useEffect(() => {
     fetchCompanies();
   }, []);
-
   const fetchCompanies = async () => {
     try {
       const token = localStorage.getItem('accessToken');
@@ -32,7 +29,6 @@ const CompanyManagement = () => {
           'Authorization': `Bearer ${token}`
         }
       });
-
       const data = await response.json();
       if (data.success) {
         setCompanies(data.data);
@@ -40,16 +36,13 @@ const CompanyManagement = () => {
         setError(data.error || 'Failed to fetch companies');
       }
     } catch (error) {
-      console.error('Fetch companies error:', error);
       setError('Network error. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
-
   const validateForm = () => {
     const newErrors = {};
-
     if (!formData.name.trim()) {
       newErrors.name = 'Company name is required';
     } else if (formData.name.trim().length < 2) {
@@ -57,26 +50,21 @@ const CompanyManagement = () => {
     } else if (formData.name.trim().length > 100) {
       newErrors.name = 'Company name must be less than 100 characters';
     }
-
     if (formData.website && !/^https?:\/\/.+/.test(formData.website)) {
       newErrors.website = 'Website must be a valid URL';
     }
-
     if (formData.logo && !/^https?:\/\/.+/.test(formData.logo)) {
       newErrors.logo = 'Logo must be a valid URL';
     }
-
     setFormErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
       [name]: value
     }));
-    
     // Clear error when user starts typing
     if (formErrors[name]) {
       setFormErrors(prev => ({
@@ -85,17 +73,13 @@ const CompanyManagement = () => {
       }));
     }
   };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-
     if (!validateForm()) {
       return;
     }
-
     setIsSubmitting(true);
-
     try {
       const token = localStorage.getItem('accessToken');
       const response = await fetch(getNodeApiUrl('/api/companies'), {
@@ -106,9 +90,7 @@ const CompanyManagement = () => {
         },
         body: JSON.stringify(formData),
       });
-
       const data = await response.json();
-
       if (data.success) {
         // Reset form and close modal
         setFormData({
@@ -118,7 +100,6 @@ const CompanyManagement = () => {
           logo: ''
         });
         setShowCreateForm(false);
-        
         // Refresh companies list
         fetchCompanies();
         // Refresh company context
@@ -127,18 +108,15 @@ const CompanyManagement = () => {
         setError(data.error || 'Failed to create company');
       }
     } catch (error) {
-      console.error('Create company error:', error);
       setError('Network error. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
   };
-
   const handleDeleteCompany = async (companyId) => {
     setError("");
     setDeleteTarget(null); // Close modal immediately
     setIsDeleting(true);
-    
     try {
       const token = localStorage.getItem('accessToken');
       const response = await fetch(getNodeApiUrl(`/api/companies/${companyId}`), {
@@ -148,35 +126,27 @@ const CompanyManagement = () => {
           'Content-Type': 'application/json'
         }
       });
-      
       const data = await response.json();
-      
       if (data.success) {
         // Show success message
         setError(""); // Clear any existing errors
         setSuccessMessage(data.message || 'Company deleted successfully');
-        
         // Refresh the companies list
         await fetchCompanies();
-        
         // Clear success message after 5 seconds
         setTimeout(() => {
           setSuccessMessage('');
         }, 5000);
-        
         // Show success notification (you can implement a toast notification here)
       } else {
         setError(data.error || 'Failed to delete company');
-        console.error('❌ Delete company failed:', data.error);
       }
     } catch (error) {
-      console.error('❌ Delete company error:', error);
       setError('Network error. Please try again.');
     } finally {
       setIsDeleting(false);
     }
   };
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -184,7 +154,6 @@ const CompanyManagement = () => {
       </div>
     );
   }
-
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -196,19 +165,16 @@ const CompanyManagement = () => {
           Create Company
         </button>
       </div>
-
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
           {error}
         </div>
       )}
-
       {successMessage && (
         <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-md">
           {successMessage}
         </div>
       )}
-
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {companies.map((company) => (
           <div key={company.id} className="bg-white rounded-xl shadow-lg p-6 flex flex-col items-center border border-gray-100 hover:shadow-2xl transition-shadow duration-200">
@@ -281,7 +247,6 @@ const CompanyManagement = () => {
           </div>
         ))}
       </div>
-
       {companies.length === 0 && !isLoading && (
         <div className="text-center py-12">
           <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -291,14 +256,12 @@ const CompanyManagement = () => {
           <p className="mt-1 text-sm text-gray-500">Get started by creating a new company.</p>
         </div>
       )}
-
       {/* Create Company Modal */}
       {showCreateForm && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
           <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
             <div className="mt-3">
               <h3 className="text-lg font-medium text-gray-900 mb-4">Create New Company</h3>
-              
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Company Name</label>
@@ -319,7 +282,6 @@ const CompanyManagement = () => {
                     Enter your organization name. Spaces, dots, and special characters are allowed.
                   </p>
                 </div>
-
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Description</label>
                   <textarea
@@ -331,7 +293,6 @@ const CompanyManagement = () => {
                     placeholder="Company description..."
                   />
                 </div>
-
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Website (optional)</label>
                   <input
@@ -348,7 +309,6 @@ const CompanyManagement = () => {
                     <p className="mt-1 text-sm text-red-600">{formErrors.website}</p>
                   )}
                 </div>
-
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Logo URL (optional)</label>
                   <input
@@ -365,7 +325,6 @@ const CompanyManagement = () => {
                     <p className="mt-1 text-sm text-red-600">{formErrors.logo}</p>
                   )}
                 </div>
-
                 <div className="flex justify-end space-x-3 pt-4">
                   <button
                     type="button"
@@ -387,7 +346,6 @@ const CompanyManagement = () => {
           </div>
         </div>
       )}
-
       {/* Custom Delete Confirmation Modal */}
       {deleteTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-40">
@@ -436,5 +394,4 @@ const CompanyManagement = () => {
     </div>
   );
 };
-
 export default CompanyManagement; 

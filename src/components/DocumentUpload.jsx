@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { getNodeApiUrl } from '../config/api';
-
 const DocumentUpload = ({ qudemoId, companyName, onDocumentsChange, onSelectedFilesChange }) => {
   const [files, setFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
@@ -8,14 +7,12 @@ const DocumentUpload = ({ qudemoId, companyName, onDocumentsChange, onSelectedFi
   const [documents, setDocuments] = useState([]);
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef(null);
-
   // Update parent component when documents change
   useEffect(() => {
     if (onDocumentsChange) {
       onDocumentsChange(documents);
     }
   }, [documents, onDocumentsChange]);
-
   // Auto-upload files when qudemoId becomes available
   useEffect(() => {
     if (qudemoId && files.length > 0 && !uploading) {
@@ -31,7 +28,6 @@ const DocumentUpload = ({ qudemoId, companyName, onDocumentsChange, onSelectedFi
             }
           }
         } catch (error) {
-          console.error('Auto-upload error:', error);
         } finally {
           setUploading(false);
         }
@@ -39,7 +35,6 @@ const DocumentUpload = ({ qudemoId, companyName, onDocumentsChange, onSelectedFi
       autoUpload();
     }
   }, [qudemoId]); // Only depend on qudemoId to avoid infinite loops
-
   const handleFiles = (fileList) => {
     const selectedFiles = Array.from(fileList);
     const newFiles = selectedFiles.map(file => ({
@@ -50,7 +45,6 @@ const DocumentUpload = ({ qudemoId, companyName, onDocumentsChange, onSelectedFi
       type: file.type,
       status: 'ready'
     }));
-    
     setFiles(prev => [...prev, ...newFiles]);
     setUploadStatus(prev => {
       const newStatus = { ...prev };
@@ -59,18 +53,15 @@ const DocumentUpload = ({ qudemoId, companyName, onDocumentsChange, onSelectedFi
       });
       return newStatus;
     });
-    
     // Notify parent about selected files
     if (onSelectedFilesChange) {
       const allFiles = [...files, ...newFiles];
       onSelectedFilesChange(allFiles);
     }
   };
-
   const handleFileChange = (e) => {
     handleFiles(e.target.files);
   };
-
   const handleDrag = (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -80,25 +71,20 @@ const DocumentUpload = ({ qudemoId, companyName, onDocumentsChange, onSelectedFi
       setDragActive(false);
     }
   };
-
   const handleDrop = (e) => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-    
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       handleFiles(e.dataTransfer.files);
     }
   };
-
   const handleClick = () => {
     if (fileInputRef.current) {
       fileInputRef.current.click();
     } else {
-      console.error('📁 fileInputRef.current is null!');
     }
   };
-
   const removeFile = (fileId) => {
     setFiles(prev => {
       const newFiles = prev.filter(f => f.id !== fileId);
@@ -114,21 +100,16 @@ const DocumentUpload = ({ qudemoId, companyName, onDocumentsChange, onSelectedFi
       return newStatus;
     });
   };
-
   const uploadFile = async (fileObj) => {
     if (!qudemoId || !companyName) {
-      console.error('Missing qudemoId or companyName for document upload');
       return;
     }
-
     const formData = new FormData();
     formData.append('file', fileObj.file);
     formData.append('qudemo_id', qudemoId);
     formData.append('company_name', companyName);
-
     try {
       setUploadStatus(prev => ({ ...prev, [fileObj.id]: 'uploading' }));
-
       const token = localStorage.getItem('accessToken');
       const response = await fetch(getNodeApiUrl(`/api/documents/${qudemoId}/upload`), {
         method: 'POST',
@@ -137,12 +118,9 @@ const DocumentUpload = ({ qudemoId, companyName, onDocumentsChange, onSelectedFi
         },
         body: formData
       });
-
       const data = await response.json();
-
       if (response.ok && data.success) {
         setUploadStatus(prev => ({ ...prev, [fileObj.id]: 'completed' }));
-        
         // Add to documents list
         const newDocument = {
           id: data.document_id,
@@ -152,9 +130,7 @@ const DocumentUpload = ({ qudemoId, companyName, onDocumentsChange, onSelectedFi
           upload_status: 'processing',
           created_at: new Date().toISOString()
         };
-        
         setDocuments(prev => [...prev, newDocument]);
-        
         // Remove from files list after successful upload
         setTimeout(() => {
           setFiles(prev => prev.filter(f => f.id !== fileObj.id));
@@ -166,19 +142,14 @@ const DocumentUpload = ({ qudemoId, companyName, onDocumentsChange, onSelectedFi
         }, 2000);
       } else {
         setUploadStatus(prev => ({ ...prev, [fileObj.id]: 'error' }));
-        console.error('Upload failed:', data.error);
       }
     } catch (error) {
       setUploadStatus(prev => ({ ...prev, [fileObj.id]: 'error' }));
-      console.error('Upload error:', error);
     }
   };
-
   const uploadAllFiles = async () => {
     if (files.length === 0) return;
-    
     setUploading(true);
-    
     try {
       // Upload files sequentially to avoid overwhelming the server
       for (const fileObj of files) {
@@ -189,12 +160,10 @@ const DocumentUpload = ({ qudemoId, companyName, onDocumentsChange, onSelectedFi
         }
       }
     } catch (error) {
-      console.error('Batch upload error:', error);
     } finally {
       setUploading(false);
     }
   };
-
   const getStatusIcon = (status) => {
     switch (status) {
       case 'ready':
@@ -209,7 +178,6 @@ const DocumentUpload = ({ qudemoId, companyName, onDocumentsChange, onSelectedFi
         return '📄';
     }
   };
-
   const getStatusColor = (status) => {
     switch (status) {
       case 'ready':
@@ -224,7 +192,6 @@ const DocumentUpload = ({ qudemoId, companyName, onDocumentsChange, onSelectedFi
         return 'text-gray-600';
     }
   };
-
   const formatFileSize = (bytes) => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -232,10 +199,8 @@ const DocumentUpload = ({ qudemoId, companyName, onDocumentsChange, onSelectedFi
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
-
   return (
     <div className="space-y-4">
-
       {/* Drag and Drop Upload Area */}
       <div 
         className={`relative border-2 border-dashed rounded-lg p-4 text-center transition-colors cursor-pointer ${
@@ -257,14 +222,12 @@ const DocumentUpload = ({ qudemoId, companyName, onDocumentsChange, onSelectedFi
           multiple
           className="hidden"
         />
-        
         <div className="space-y-2">
           <div className="mx-auto w-10 h-10 text-blue-500">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className="w-full h-full">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
             </svg>
           </div>
-          
           <div>
             <p className="text-lg font-semibold text-gray-800 mb-1">
               {dragActive ? 'Drop files here' : 'Click to upload files'}
@@ -284,7 +247,6 @@ const DocumentUpload = ({ qudemoId, companyName, onDocumentsChange, onSelectedFi
           </div>
         </div>
       </div>
-      
       {/* Upload Button */}
       {files.length > 0 && qudemoId && (
         <div className="flex justify-center">
@@ -308,7 +270,6 @@ const DocumentUpload = ({ qudemoId, companyName, onDocumentsChange, onSelectedFi
           </button>
         </div>
       )}
-
       {/* Files List */}
       {files.length > 0 && (
         <div className="space-y-3">
@@ -323,7 +284,6 @@ const DocumentUpload = ({ qudemoId, companyName, onDocumentsChange, onSelectedFi
                     <p className="text-xs text-gray-500">{formatFileSize(fileObj.size)}</p>
                   </div>
                 </div>
-                
                 <div className="flex items-center space-x-2">
                   {uploadStatus[fileObj.id] === 'ready' && (
                     <button
@@ -334,7 +294,6 @@ const DocumentUpload = ({ qudemoId, companyName, onDocumentsChange, onSelectedFi
                       Remove
                     </button>
                   )}
-                  
                   {uploadStatus[fileObj.id] === 'uploading' && (
                     <div className="flex items-center space-x-2">
                       <svg className="animate-spin h-4 w-4 text-blue-600" viewBox="0 0 24 24">
@@ -344,11 +303,9 @@ const DocumentUpload = ({ qudemoId, companyName, onDocumentsChange, onSelectedFi
                       <span className="text-xs text-blue-600">Uploading...</span>
                     </div>
                   )}
-                  
                   {uploadStatus[fileObj.id] === 'completed' && (
                     <span className="text-xs text-green-600 font-medium">✓ Uploaded</span>
                   )}
-                  
                   {uploadStatus[fileObj.id] === 'error' && (
                     <button
                       type="button"
@@ -364,7 +321,6 @@ const DocumentUpload = ({ qudemoId, companyName, onDocumentsChange, onSelectedFi
           </div>
         </div>
       )}
-
       {/* Documents List */}
       {documents.length > 0 && (
         <div className="space-y-3">
@@ -396,5 +352,4 @@ const DocumentUpload = ({ qudemoId, companyName, onDocumentsChange, onSelectedFi
     </div>
   );
 };
-
 export default DocumentUpload;

@@ -8,7 +8,6 @@ import {
   ChatBubbleLeftEllipsisIcon,
   ClockIcon,
 } from '@heroicons/react/24/outline';
-
 const CustomerInteractionsPage = () => {
   const [interactions, setInteractions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -23,16 +22,12 @@ const CustomerInteractionsPage = () => {
   const [loadingAiSummary, setLoadingAiSummary] = useState(false);
   const { company } = useCompany();
   const { showError } = useNotification();
-
   // Fetch lightweight customer list (without detailed Q&A data)
   const fetchCustomerList = async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('accessToken');
-      
-      console.log('🚀 Fetching lightweight customer list (no detailed Q&A data)...');
       const startTime = Date.now();
-      
       const response = await fetch(getNodeApiUrl('/api/analytics/customer-list'), {
         method: 'GET',
         headers: {
@@ -40,32 +35,23 @@ const CustomerInteractionsPage = () => {
           'Content-Type': 'application/json'
         }
       });
-
       const endTime = Date.now();
-      console.log(`⚡ Customer list fetch completed in ${endTime - startTime}ms`);
-
       if (!response.ok) {
         throw new Error('Failed to fetch customer list');
       }
-
       const data = await response.json();
-      console.log('📊 Received customer list data (lightweight):', data.data);
-      console.log('📊 Customer list contains basic info only - no detailed Q&A data');
       setInteractions(data.data || []);
     } catch (error) {
-      console.error('Error fetching customer list:', error);
       setError('Failed to load customer interactions');
       showError('Failed to load customer interactions');
     } finally {
       setLoading(false);
     }
   };
-
   // Fetch detailed interaction data for a specific customer
   const fetchCustomerInteractionDetails = async (shareToken) => {
     try {
       const token = localStorage.getItem('accessToken');
-      
       const response = await fetch(getNodeApiUrl(`/api/analytics/customer-interaction-details/${shareToken}`), {
         method: 'GET',
         headers: {
@@ -73,48 +59,31 @@ const CustomerInteractionsPage = () => {
           'Content-Type': 'application/json'
         }
       });
-
       if (!response.ok) {
         throw new Error('Failed to fetch interaction details');
       }
-
       const data = await response.json();
-      console.log('📊 Received interaction details:', data.data);
       return data.data;
     } catch (error) {
-      console.error('Error fetching interaction details:', error);
       showError('Failed to load interaction details');
       return null;
     }
   };
-
   useEffect(() => {
     if (company?.id) {
       fetchCustomerList();
     }
   }, [company?.id]);
-
   // Filter interactions based on search term and exclude users with no engagement
   const filteredInteractions = interactions.filter(interaction => {
     // First, exclude users who haven't asked questions and don't have last accessed date
     const hasQuestions = interaction.question_count && interaction.question_count > 0;
     const hasTimeSpent = interaction.total_duration && interaction.total_duration > 0;
-    
     // Debug logging for all users to see what data they have
-    console.log('🔍 User data:', {
-      name: interaction.client_name,
-      questions: interaction.question_count,
-      timeSpent: interaction.total_duration,
-      lastAccessed: interaction.last_accessed_at,
-      accessCount: interaction.access_count
-    });
-    
     // Only show users who have asked questions OR spent time (more strict filtering)
     if (!hasQuestions && !hasTimeSpent) {
-      console.log('🚫 Filtering out user with no engagement:', interaction.client_name);
       return false;
     }
-    
     // Then apply search filter
     const searchLower = searchTerm.toLowerCase();
     return (
@@ -124,42 +93,28 @@ const CustomerInteractionsPage = () => {
       interaction.qudemo_title?.toLowerCase().includes(searchLower)
     );
   });
-
   // Pagination
   const totalPages = Math.ceil(filteredInteractions.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const paginatedInteractions = filteredInteractions.slice(startIndex, endIndex);
-
   // Format duration
   const formatDuration = (seconds) => {
     if (!seconds) return '0:00';
-    
     // Fix floating point precision issues by rounding to 2 decimal places
     const roundedSeconds = Math.round(seconds * 100) / 100;
-    
     const minutes = Math.floor(roundedSeconds / 60);
     const remainingSeconds = Math.floor(roundedSeconds % 60);
-    
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
-
   // Generate AI insight summary for interaction
   const generateAiInsightSummary = async (interaction) => {
     if (!interaction.questions || interaction.questions.length === 0) {
       setAiInsightSummary(`${interaction.client_name || 'The prospect'} accessed ${interaction.qudemo_title || 'this demo'} but hasn't asked any questions yet. They spent ${formatDuration(interaction.total_duration)} viewing the demo.`);
       return;
     }
-
     try {
       setLoadingAiSummary(true);
-      console.log('🤖 Requesting AI summary for:', {
-        customerName: interaction.client_name,
-        qudemoTitle: interaction.qudemo_title,
-        questionCount: interaction.questions.length,
-        questions: interaction.questions.map(q => q.question)
-      });
-
       const token = localStorage.getItem('accessToken');
       const response = await fetch(getNodeApiUrl('/api/analytics/generate-insight-summary'), {
         method: 'POST',
@@ -173,38 +128,29 @@ const CustomerInteractionsPage = () => {
           qudemoTitle: interaction.qudemo_title
         })
       });
-
       if (response.ok) {
         const data = await response.json();
-        console.log('✅ AI summary received:', data.data.summary);
         setAiInsightSummary(data.data.summary);
       } else {
-        console.error('❌ AI summary API error:', response.status);
         // Fallback to generic message
         setAiInsightSummary(`${interaction.client_name || 'The prospect'} has shown interest in ${interaction.qudemo_title} by asking ${interaction.questions.length} question${interaction.questions.length > 1 ? 's' : ''} about various aspects of the product.`);
       }
     } catch (error) {
-      console.error('❌ Error generating AI summary:', error);
       // Fallback to generic message
       setAiInsightSummary(`${interaction.client_name || 'The prospect'} has shown interest in ${interaction.qudemo_title} by asking ${interaction.questions.length} question${interaction.questions.length > 1 ? 's' : ''} about various aspects of the product.`);
     } finally {
       setLoadingAiSummary(false);
     }
   };
-
   // Handle view details
   const handleViewDetails = async (interaction) => {
-    console.log('🚀 Opening interaction details...');
-    
     // Reset AI summary state
     setAiInsightSummary('');
     setLoadingAiSummary(false);
-    
     // Set the selected interaction (with basic data)
     setSelectedInteraction(interaction);
     setActiveTab('overview'); // Reset to overview tab when opening modal
     setShowDetailsModal(true);
-    
     // Load detailed interaction data
     const detailedData = await fetchCustomerInteractionDetails(interaction.share_token);
     if (detailedData) {
@@ -213,23 +159,19 @@ const CustomerInteractionsPage = () => {
       generateAiInsightSummary(detailedData);
     }
   };
-
   const handleTabClick = (tabName) => {
     setActiveTab(tabName);
   };
-
   // Handle search
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
     setCurrentPage(1); // Reset to first page when searching
   };
-
   // Handle items per page change
   const handleItemsPerPageChange = (e) => {
     setItemsPerPage(parseInt(e.target.value));
     setCurrentPage(1); // Reset to first page when changing items per page
   };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -237,7 +179,6 @@ const CustomerInteractionsPage = () => {
       </div>
     );
   }
-
   if (error) {
     return (
       <div className="text-center py-8">
@@ -251,13 +192,11 @@ const CustomerInteractionsPage = () => {
       </div>
     );
   }
-
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-bold text-gray-900">All Interactions</h1>
-        
         {/* Pagination Control */}
         <div className="mt-4 sm:mt-0 flex items-center space-x-2">
           <span className="text-sm text-gray-700">Show</span>
@@ -274,7 +213,6 @@ const CustomerInteractionsPage = () => {
           <span className="text-sm text-gray-700">per page</span>
         </div>
       </div>
-
       {/* Search Bar */}
       <div className="relative">
         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -288,7 +226,6 @@ const CustomerInteractionsPage = () => {
           className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
         />
       </div>
-
       {/* Interactions Table */}
       <div className="bg-white shadow overflow-hidden sm:rounded-md">
         <div className="overflow-x-auto">
@@ -365,7 +302,6 @@ const CustomerInteractionsPage = () => {
           </table>
         </div>
       </div>
-
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6">
@@ -405,12 +341,10 @@ const CustomerInteractionsPage = () => {
                     <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" />
                   </svg>
                 </button>
-                
                 {/* Page numbers */}
                 {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                   const pageNum = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
                   if (pageNum > totalPages) return null;
-                  
                   return (
                     <button
                       key={pageNum}
@@ -425,7 +359,6 @@ const CustomerInteractionsPage = () => {
                     </button>
                   );
                 })}
-                
                 <button
                   onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                   disabled={currentPage === totalPages}
@@ -441,7 +374,6 @@ const CustomerInteractionsPage = () => {
           </div>
         </div>
       )}
-
       {/* Details Modal */}
       {showDetailsModal && selectedInteraction && (
         <div className="fixed inset-0 z-50 flex items-start justify-center bg-black bg-opacity-50 pt-4">
@@ -457,7 +389,6 @@ const CustomerInteractionsPage = () => {
                         {selectedInteraction.client_name?.charAt(0)?.toUpperCase() || 'U'}
                       </span>
                     </div>
-                    
                     {/* Customer Info */}
                     <div className="text-left">
                       <h3 className="text-xl font-semibold text-gray-900 text-left">
@@ -472,7 +403,6 @@ const CustomerInteractionsPage = () => {
                             <span>{selectedInteraction.client_email}</span>
                           </div>
                         )}
-                        
                         {selectedInteraction.client_company && (
                           <div className="flex items-center space-x-2">
                             <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -481,7 +411,6 @@ const CustomerInteractionsPage = () => {
                             <span>{selectedInteraction.client_company}</span>
                           </div>
                         )}
-                        
                         {selectedInteraction.last_accessed_at && (
                           <div className="flex items-center space-x-2">
                             <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -502,7 +431,6 @@ const CustomerInteractionsPage = () => {
                       </div>
                     </div>
                   </div>
-                  
                   {/* Close Button */}
                   <button
                     onClick={() => setShowDetailsModal(false)}
@@ -514,7 +442,6 @@ const CustomerInteractionsPage = () => {
                   </button>
                 </div>
               </div>
-
               {/* Tabs */}
               <div className="bg-gray-100 p-1.5">
                 <nav className="flex gap-1.5">
@@ -550,7 +477,6 @@ const CustomerInteractionsPage = () => {
                   </button>
                 </nav>
               </div>
-
               {/* Content */}
               <div className="p-6 overflow-y-auto flex-1">
                 {activeTab === 'overview' && (
@@ -574,7 +500,6 @@ const CustomerInteractionsPage = () => {
                         </p>
                       )}
                     </div> */}
-
                     {/* Interaction Metrics */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                       {/* Demo Watched */}
@@ -591,7 +516,6 @@ const CustomerInteractionsPage = () => {
                           </div>
                         </div>
                       </div>
-
                       {/* Time Spent */}
                       <div className="bg-white border border-gray-200 rounded-lg p-4">
                         <div className="flex items-center space-x-3">
@@ -606,7 +530,6 @@ const CustomerInteractionsPage = () => {
                           </div>
                         </div>
                       </div>
-
                       {/* Questions Asked */}
                       <div className="bg-white border border-gray-200 rounded-lg p-4">
                         <div className="flex items-center space-x-3">
@@ -622,7 +545,6 @@ const CustomerInteractionsPage = () => {
                         </div>
                       </div>
                     </div>
-
                     {/* Unique Link Details */}
                     <div className="border border-blue-200 rounded-lg p-4 bg-blue-50">
                       <div className="flex items-center space-x-2 mb-3">
@@ -631,7 +553,6 @@ const CustomerInteractionsPage = () => {
                         </svg>
                         <span className="font-medium text-blue-900">Unique Link Details</span>
                       </div>
-                      
                       <div className="space-y-3 text-left">
                         <div className="flex items-center justify-between text-left">
                           <span className="text-sm text-blue-800 font-medium">Link Type:</span>
@@ -639,7 +560,6 @@ const CustomerInteractionsPage = () => {
                             Unique Customer Link
                           </span>
                         </div>
-                        
                         <div className="flex items-start space-x-2 text-left">
                           <span className="text-sm text-blue-800 font-medium whitespace-nowrap">URL:</span>
                           <code className="flex-1 bg-white border border-blue-200 rounded px-2 py-1 text-sm text-blue-900 text-left break-all">
@@ -658,7 +578,6 @@ const CustomerInteractionsPage = () => {
                             <span>Copy</span>
                           </button>
                         </div>
-                        
                         <div>
                           <span className="text-sm text-blue-800">
                             <span className="font-medium">Generated on:</span> {
@@ -676,7 +595,6 @@ const CustomerInteractionsPage = () => {
                     </div>
                   </div>
                 )}
-
                 {activeTab === 'questions' && (
                   <div className="bg-gray-50 rounded-lg p-4 min-h-96">
                     <h4 className="font-medium text-gray-900 mb-4">Questions & Responses</h4>
@@ -705,7 +623,6 @@ const CustomerInteractionsPage = () => {
                                 </p>
                               </div>
                             </div>
-                            
                             {/* Answer */}
                             <div className="flex items-start space-x-3 bg-white rounded-lg p-3">
                               <div className="flex-shrink-0">
@@ -746,7 +663,6 @@ const CustomerInteractionsPage = () => {
                     </div>
                   </div>
                 )}
-
                 {activeTab === 'past-interactions' && (
                   <div className="min-h-96">
                     <h4 className="font-medium text-gray-900 mb-4">Past Interactions History</h4>
@@ -774,20 +690,16 @@ const CustomerInteractionsPage = () => {
                               // Group questions into sessions (same logic as backend)
                               const questions = selectedInteraction.questions || [];
                               if (questions.length === 0) return null;
-
                               const SESSION_GAP_HOURS = 2;
                               const SESSION_GAP_MS = SESSION_GAP_HOURS * 60 * 60 * 1000;
-                              
                               const sessions = [];
                               let currentSession = {
                                 questions: [questions[0]],
                                 startTime: questions[0].created_at,
                                 endTime: questions[0].created_at
                               };
-
                               for (let i = 1; i < questions.length; i++) {
                                 const timeDiff = new Date(questions[i].created_at) - new Date(questions[i-1].created_at);
-                                
                                 if (timeDiff > SESSION_GAP_MS) {
                                   sessions.push(currentSession);
                                   currentSession = {
@@ -801,14 +713,12 @@ const CustomerInteractionsPage = () => {
                                 }
                               }
                               sessions.push(currentSession);
-
                               // Display each session as a row
                               return sessions.map((session, sessionIndex) => {
                                 const sessionDate = new Date(session.startTime);
                                 const now = new Date();
                                 const diffTime = Math.abs(now - sessionDate);
                                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                                
                                 let dateDisplay;
                                 if (diffDays === 1) {
                                   dateDisplay = "Today";
@@ -819,13 +729,11 @@ const CustomerInteractionsPage = () => {
                                 } else {
                                   dateDisplay = sessionDate.toLocaleDateString();
                                 }
-
                                 // Calculate session duration
                                 const sessionDuration = Math.floor((new Date(session.endTime) - new Date(session.startTime)) / 1000);
                                 const questionTime = session.questions.length * 45;
                                 const demoTime = sessionIndex === 0 ? Math.min(sessionDuration * 0.3, 300) : 0;
                                 const totalSessionTime = Math.max(sessionDuration + questionTime + demoTime, session.questions.length * 30);
-
                                 return (
                                   <tr key={sessionIndex} className="hover:bg-gray-50">
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-left">
@@ -857,7 +765,6 @@ const CustomerInteractionsPage = () => {
                   </div>
                 )}
               </div>
-
             </div>
           </div>
         </div>
@@ -865,5 +772,4 @@ const CustomerInteractionsPage = () => {
     </div>
   );
 };
-
 export default CustomerInteractionsPage;

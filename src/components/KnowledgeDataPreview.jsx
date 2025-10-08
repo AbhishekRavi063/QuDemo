@@ -18,7 +18,6 @@ import {
   ArrowLeftIcon
 } from '@heroicons/react/24/outline';
 import { getNodeApiUrl } from '../config/api';
-
 const KnowledgeDataPreview = ({ companyName, qudemoId, onDataUpdate }) => {
   const [knowledgeSources, setKnowledgeSources] = useState([]);
   const [selectedSource, setSelectedSource] = useState(null);
@@ -26,7 +25,6 @@ const KnowledgeDataPreview = ({ companyName, qudemoId, onDataUpdate }) => {
   const [loading, setLoading] = useState(true);
   const [deletingSource, setDeletingSource] = useState(null);
   const [previewLoading, setPreviewLoading] = useState(false);
-
   useEffect(() => {
     // Fetch real knowledge sources from backend
     const fetchKnowledgeSources = async () => {
@@ -35,22 +33,18 @@ const KnowledgeDataPreview = ({ companyName, qudemoId, onDataUpdate }) => {
         setLoading(false);
         return;
       }
-
       setLoading(true);
       try {
         const token = localStorage.getItem('accessToken');
-        
         // Use QuDemo-specific endpoint if qudemoId is provided, otherwise use company-level endpoint
         const endpoint = qudemoId 
           ? `/api/knowledge/sources/${encodeURIComponent(companyName)}/${qudemoId}`
           : `/api/knowledge/sources/${encodeURIComponent(companyName)}`;
-
         const response = await fetch(getNodeApiUrl(endpoint), {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
-
         if (response.ok) {
           const data = await response.json();
           if (data.success && data.data) {
@@ -70,25 +64,20 @@ const KnowledgeDataPreview = ({ companyName, qudemoId, onDataUpdate }) => {
             setKnowledgeSources([]);
           }
         } else {
-          console.error('Failed to fetch knowledge sources:', response.status);
           setKnowledgeSources([]);
         }
       } catch (error) {
-        console.error('Error fetching knowledge sources:', error);
         setKnowledgeSources([]);
       } finally {
         setLoading(false);
       }
     };
-
     fetchKnowledgeSources();
   }, [companyName, qudemoId]);
-
   const handlePreviewKnowledgeSource = async (source) => {
     setSelectedSource(source);
     setShowPreview(true);
     setPreviewLoading(true);
-    
     // Fetch the actual extracted data for this source
     try {
       const token = localStorage.getItem('accessToken');
@@ -97,16 +86,13 @@ const KnowledgeDataPreview = ({ companyName, qudemoId, onDataUpdate }) => {
           'Authorization': `Bearer ${token}`
         }
       });
-
       if (response.ok) {
         const data = await response.json();
         if (data.success && data.data) {
-
           // Extract content chunks from the response (handle both new and old formats)
           const content_chunks = data.data.chunks || [];
           const qa_pairs = data.data.qa_pairs || []; // Handle old format
           const stats = data.data.stats || {};
-          
           // Convert old Q&A pairs to new format if they exist
           if (qa_pairs && qa_pairs.length > 0) {
             qa_pairs.forEach(qa => {
@@ -128,16 +114,13 @@ const KnowledgeDataPreview = ({ companyName, qudemoId, onDataUpdate }) => {
               });
             });
           }
-
             // Process content chunks into knowledge items
             let knowledge_items = [];
-            
             if (content_chunks && content_chunks.length > 0) {
               // Process actual content chunks
               content_chunks.forEach(chunk => {
                 // Handle both new and old data formats
                 let title, content, content_type, difficulty_level, tags, url, last_updated;
-                
                 if (chunk.title && chunk.content) {
                   // New format
                   title = chunk.title;
@@ -166,7 +149,6 @@ const KnowledgeDataPreview = ({ companyName, qudemoId, onDataUpdate }) => {
                   url = '';
                   last_updated = new Date().toISOString();
                 }
-                
                 knowledge_items.push({
                   title: title,
                   content: content,
@@ -189,7 +171,6 @@ const KnowledgeDataPreview = ({ companyName, qudemoId, onDataUpdate }) => {
               });
             } else {
               // Fallback: Create preview content from metadata
-
                              const metadata = data.data.metadata; // Get metadata from data.data
               if (metadata) {
                 // Create a meaningful preview from the metadata
@@ -199,12 +180,9 @@ const KnowledgeDataPreview = ({ companyName, qudemoId, onDataUpdate }) => {
 • **Type:** ${metadata.source_type || 'website'}
 • **Status:** ${metadata.status || 'processed'}
 • **Processed:** ${metadata.processed_at ? new Date(metadata.processed_at).toLocaleString() : 'N/A'}
-
 **Description:**
 ${metadata.description || 'Website content has been processed and is available for knowledge retrieval.'}
-
 **Note:** This is a preview of the processed content. The actual scraped data is stored in the vector database and can be retrieved through the Q&A system.`;
-
                 knowledge_items.push({
                   title: metadata.title || 'Website Content Preview',
                   content: fallbackContent,
@@ -226,7 +204,6 @@ ${metadata.description || 'Website content has been processed and is available f
                 });
               }
             }
-
                       // Update the source with real extracted data
             const updatedSource = {
               ...source,
@@ -249,30 +226,24 @@ ${metadata.description || 'Website content has been processed and is available f
                 knowledge_items: knowledge_items
               }
             };
-
           setSelectedSource(updatedSource);
         }
       } else {
-        console.error('Failed to fetch source content:', response.status);
       }
     } catch (error) {
-      console.error('Error fetching source content:', error);
     } finally {
       setPreviewLoading(false);
     }
   };
-
   const handleDeleteSource = async (sourceId) => {
     if (window.confirm('Are you sure you want to delete this knowledge source? This action cannot be undone. This will permanently remove the data from the database and vector store.')) {
       setDeletingSource(sourceId);
-      
       try {
         // Find the source to get its details for deletion
         const sourceToDelete = knowledgeSources.find(source => source.id === sourceId);
         if (!sourceToDelete) {
           throw new Error('Source not found');
         }
-
         // Call backend API to delete from database and GCS
         const token = localStorage.getItem('accessToken');
         const response = await fetch(getNodeApiUrl(`/api/knowledge/source/${sourceId}`), {
@@ -288,29 +259,22 @@ ${metadata.description || 'Website content has been processed and is available f
             title: sourceToDelete.title
           })
         });
-
         if (!response.ok) {
           const errorData = await response.json();
           throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
         }
-
         // If backend deletion successful, update frontend state
         setKnowledgeSources(prev => prev.filter(source => source.id !== sourceId));
-        
         // Close preview if the deleted source was being viewed
         if (selectedSource && selectedSource.id === sourceId) {
           setSelectedSource(null);
           setShowPreview(false);
         }
-        
         // Notify parent component about the data update
         if (onDataUpdate) {
           onDataUpdate(knowledgeSources.filter(source => source.id !== sourceId));
         }
-
       } catch (error) {
-        console.error('Error deleting knowledge source:', error);
-        
         // Show user-friendly error message
         alert(`Failed to delete knowledge source: ${error.message}. Please try again or contact support if the problem persists.`);
       } finally {
@@ -318,12 +282,10 @@ ${metadata.description || 'Website content has been processed and is available f
       }
     }
   };
-
   const closePreview = () => {
     setShowPreview(false);
     setSelectedSource(null);
   };
-
   // Show no company state
   if (!companyName) {
     return (
@@ -338,7 +300,6 @@ ${metadata.description || 'Website content has been processed and is available f
       </div>
     );
   }
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -346,7 +307,6 @@ ${metadata.description || 'Website content has been processed and is available f
       </div>
     );
   }
-
   if (showPreview && selectedSource) {
     return (
       <div className="space-y-6">
@@ -375,7 +335,6 @@ ${metadata.description || 'Website content has been processed and is available f
              </button>
            </div>
          </div>
-
         {/* Knowledge Data Display */}
         <div className="space-y-6">
           {previewLoading ? (
@@ -399,7 +358,6 @@ ${metadata.description || 'Website content has been processed and is available f
                     <div className="text-sm text-gray-500">Total Items</div>
                   </div>
                 </div>
-
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="text-center">
                     <div className="text-lg font-semibold text-green-600">{selectedSource.extracted_data.enhanced_items}</div>
@@ -419,7 +377,6 @@ ${metadata.description || 'Website content has been processed and is available f
                   </div>
                 </div>
               </div>
-
               {/* Knowledge Items */}
               <div className="space-y-4">
                 {selectedSource.extracted_data.knowledge_items && selectedSource.extracted_data.knowledge_items.length > 0 ? (
@@ -452,7 +409,6 @@ ${metadata.description || 'Website content has been processed and is available f
                                 <CheckCircleIcon className="w-5 h-5 text-green-600" title="AI Enhanced" />
                               )}
                             </div>
-                            
                             <div className="flex items-center gap-2 mb-2">
                               <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                                 item.difficulty_level === 'beginner' ? 'bg-green-100 text-green-800' :
@@ -465,7 +421,6 @@ ${metadata.description || 'Website content has been processed and is available f
                                 {item.content_type.replace('_', ' ')}
                               </span>
                             </div>
-
                             {item.tags && item.tags.length > 0 && (
                               <div className="flex items-center gap-1 mb-2">
                                 <TagIcon className="w-4 h-4 text-gray-400" />
@@ -481,11 +436,9 @@ ${metadata.description || 'Website content has been processed and is available f
                                 </div>
                               </div>
                             )}
-
                             <div className="text-sm text-gray-700 leading-relaxed">
                               {item.content}
                             </div>
-
                             {item.url && (
                               <div className="mt-2">
                                 <a
@@ -530,7 +483,6 @@ ${metadata.description || 'Website content has been processed and is available f
       </div>
     );
   }
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -549,7 +501,6 @@ ${metadata.description || 'Website content has been processed and is available f
           </div>
         </div>
       </div>
-
       {/* Knowledge Sources Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {knowledgeSources.map((source) => (
@@ -570,17 +521,14 @@ ${metadata.description || 'Website content has been processed and is available f
                   {source.status}
                 </span>
               </div>
-              
               <div className="mb-3">
                 <h3 className="font-semibold text-gray-900 mb-1">{source.title}</h3>
                 <p className="text-sm text-gray-600 line-clamp-2">{source.description}</p>
               </div>
-              
               <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
                 <span className="capitalize">{source.source_type}</span>
                 <span>Created: {new Date(source.created_at).toLocaleDateString()}</span>
               </div>
-              
               {source.source_url && (
                 <div className="mb-3">
                   <a
@@ -593,7 +541,6 @@ ${metadata.description || 'Website content has been processed and is available f
                   </a>
                 </div>
               )}
-              
               <div className="flex justify-between items-center">
                 <div className="text-xs text-gray-500 space-y-1">
                   <div>Created: {new Date(source.created_at).toLocaleString()}</div>
@@ -633,7 +580,6 @@ ${metadata.description || 'Website content has been processed and is available f
           </div>
         ))}
       </div>
-
       {knowledgeSources.length === 0 && (
         <div className="text-center text-gray-500 py-12">
           <div className="mb-4">
@@ -650,5 +596,4 @@ ${metadata.description || 'Website content has been processed and is available f
     </div>
   );
 };
-
 export default KnowledgeDataPreview;

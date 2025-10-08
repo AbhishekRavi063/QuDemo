@@ -1,51 +1,41 @@
 import React, { useState, useEffect } from 'react';
 import { getNodeApiUrl, authenticatedFetch } from '../utils/api';
-
 const AuthenticatedQAAnalytics = ({ companyId }) => {
   const [stats, setStats] = useState(null);
   const [recentInteractions, setRecentInteractions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
   useEffect(() => {
     if (companyId) {
       fetchAnalytics();
     }
   }, [companyId]);
-
   const fetchAnalytics = async () => {
     try {
       setLoading(true);
       setError(null);
-
       // Fetch stats
       const statsResponse = await authenticatedFetch(
         getNodeApiUrl(`/api/qa/authenticated-stats/${companyId}`)
       );
-
       if (statsResponse.ok) {
         const statsData = await statsResponse.json();
         setStats(statsData.data);
       }
-
       // Fetch recent interactions (last 10)
       const interactionsResponse = await authenticatedFetch(
         getNodeApiUrl(`/api/qa/authenticated/${localStorage.getItem('userId')}?limit=10`)
       );
-
       if (interactionsResponse.ok) {
         const interactionsData = await interactionsResponse.json();
         setRecentInteractions(interactionsData.data);
       }
-
     } catch (err) {
-      console.error('Error fetching authenticated Q&A analytics:', err);
       setError('Failed to load analytics data.');
     } finally {
       setLoading(false);
     }
   };
-
   if (loading) {
     return (
       <div className="bg-white rounded-lg shadow-md p-6">
@@ -58,7 +48,6 @@ const AuthenticatedQAAnalytics = ({ companyId }) => {
       </div>
     );
   }
-
   if (error) {
     return (
       <div className="bg-white rounded-lg shadow-md p-6">
@@ -67,11 +56,9 @@ const AuthenticatedQAAnalytics = ({ companyId }) => {
       </div>
     );
   }
-
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">Q&A Analytics</h3>
-      
       {/* Stats Overview */}
       {stats && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -89,7 +76,6 @@ const AuthenticatedQAAnalytics = ({ companyId }) => {
           </div>
         </div>
       )}
-
       {/* Recent Interactions */}
       <div>
         <h4 className="text-md font-semibold text-gray-800 mb-3">Recent Q&A Interactions</h4>
@@ -123,7 +109,6 @@ const AuthenticatedQAAnalytics = ({ companyId }) => {
           <div className="text-gray-500 text-sm">No Q&A interactions yet</div>
         )}
       </div>
-
       {/* Most Common Questions */}
       {stats && stats.mostCommonQuestions && stats.mostCommonQuestions.length > 0 && (
         <div className="mt-6">
@@ -141,5 +126,4 @@ const AuthenticatedQAAnalytics = ({ companyId }) => {
     </div>
   );
 };
-
 export default AuthenticatedQAAnalytics;

@@ -4,7 +4,6 @@ import './App.css';
 import { getNodeApiUrl } from './config/api';
 import { clearAuthTokens } from './utils/tokenRefresh';
 import { checkDomainOnLoad } from './utils/domainEnforcer';
-
 // Import components
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
@@ -33,35 +32,28 @@ import BulkUploadsPage from './components/BulkUploadsPage';
 import { CompanyProvider, useCompany } from './context/CompanyContext';
 import { BackendProvider } from './context/BackendContext';
 import { NotificationProvider } from './context/NotificationContext';
-
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-
   useEffect(() => {
     const checkAuth = async () => {
       const token = localStorage.getItem('accessToken');
-      
       if (!token) {
         setIsAuthenticated(false);
         setIsLoading(false);
         return;
       }
-
       try {
-        
         // First try a simple profile check without automatic refresh
         const response = await fetch(getNodeApiUrl('/api/auth/profile'), {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
-
         if (response.ok) {
           setIsAuthenticated(true);
         } else if (response.status === 401 || response.status === 403) {
-          
           // Try to refresh the token
           const refreshToken = localStorage.getItem('refreshToken');
           if (refreshToken) {
@@ -73,7 +65,6 @@ const ProtectedRoute = ({ children }) => {
                 },
                 body: JSON.stringify({ refreshToken })
               });
-
               if (refreshResponse.ok) {
                 const refreshData = await refreshResponse.json();
                 if (refreshData.success && refreshData.data.accessToken) {
@@ -83,10 +74,8 @@ const ProtectedRoute = ({ children }) => {
                 }
               }
             } catch (refreshError) {
-              console.error('Token refresh failed:', refreshError);
             }
           }
-          
           clearAuthTokens();
           setIsAuthenticated(false);
         } else {
@@ -94,17 +83,14 @@ const ProtectedRoute = ({ children }) => {
           setIsAuthenticated(false);
         }
       } catch (error) {
-        console.error('Auth check error:', error.message || error);
         clearAuthTokens();
         setIsAuthenticated(false);
       } finally {
         setIsLoading(false);
       }
     };
-
     checkAuth();
   }, []);
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -112,18 +98,14 @@ const ProtectedRoute = ({ children }) => {
       </div>
     );
   }
-
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
-
   return children;
 };
-
 // Company Check Component
 const CompanyCheck = ({ children }) => {
   const { company, isLoading } = useCompany();
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -131,20 +113,16 @@ const CompanyCheck = ({ children }) => {
       </div>
     );
   }
-
   // If no company exists, show company setup
   if (!company) {
     return <CompanySetup />;
   }
-
   // If company exists, show the dashboard
   return children;
 };
-
 // Dashboard Layout Component
 const DashboardLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-
   return (
     <div className="flex h-screen bg-gray-100">
       <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
@@ -159,10 +137,8 @@ const DashboardLayout = ({ children }) => {
     </div>
   );
 };
-
 function App() {
   // Removed aggressive refresh prevention to fix UI refresh issues
-  
   // Check domain on app load to prevent Vercel redirects
   useEffect(() => {
     const wasRedirected = checkDomainOnLoad();
@@ -170,41 +146,32 @@ function App() {
       return;
     }
   }, []);
-
   // Clean up hash from URL if present
   useEffect(() => {
     if (window.location.hash === '#') {
       window.history.replaceState(null, null, window.location.pathname + window.location.search);
     }
   }, []);
-
   // Debug: Monitor token changes globally
   useEffect(() => {
-    
     const checkGlobalTokens = () => {
       const accessToken = localStorage.getItem('accessToken');
       const refreshToken = localStorage.getItem('refreshToken');
       const user = localStorage.getItem('user');
-      
     };
-    
     // Check tokens on app load
     checkGlobalTokens();
-    
     // Listen for storage changes
     const handleStorageChange = (e) => {
       if (e.key === 'accessToken' || e.key === 'refreshToken' || e.key === 'user') {
         checkGlobalTokens();
       }
     };
-    
     window.addEventListener('storage', handleStorageChange);
-    
     return () => {
       window.removeEventListener('storage', handleStorageChange);
     };
   }, []);
-
   return (
     <Router>
       <BackendProvider>
@@ -218,7 +185,6 @@ function App() {
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/auth/callback" element={<AuthCallback />} />
               <Route path="/share/:shareToken" element={<PublicQudemoShare />} />
-              
               {/* Protected Routes - Wrapped with CompanyProvider */}
               <Route 
                 path="/overview" 
@@ -400,7 +366,6 @@ function App() {
                 </CompanyProvider>
               } 
             />
-            
             {/* Catch all route */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
@@ -410,5 +375,4 @@ function App() {
     </Router>
   );
 }
-
 export default App;

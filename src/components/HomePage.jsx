@@ -4,57 +4,44 @@ import { StarBorder } from "./ui/star-border";
 import FadeInSection from "./FadeInSection";
 import { navigateToCreate } from '../utils/navigation';
 import { getNodeApiUrl } from '../config/api';
-
 const HomePage = () => {
   const [openFAQ, setOpenFAQ] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [productHuntBadgeUrl, setProductHuntBadgeUrl] = useState('');
   const [userEmail, setUserEmail] = useState('');
   const navigate = useNavigate();
-
   // Check authentication state on home page load
   useEffect(() => {
-
     const checkAuthState = async () => {
       const accessToken = localStorage.getItem('accessToken');
       const refreshToken = localStorage.getItem('refreshToken');
       const user = localStorage.getItem('user');
-
       if (accessToken && refreshToken && user) {
         setIsLoggedIn(true);
         try {
           const userData = JSON.parse(user);
           setUserEmail(userData.email || '');
-
           // Note: Removed automatic redirect to allow users to see the homepage
           // Users can manually navigate to /qudemos or /create via the buttons
         } catch (error) {
-          console.error('🏠 HomePage: Error parsing user data:', error);
         }
       } else {
         setIsLoggedIn(false);
         setUserEmail('');
-
       }
     };
-    
     // Check auth state immediately and on storage changes
     checkAuthState();
-    
     const handleStorageChange = (e) => {
       if (e.key === 'accessToken' || e.key === 'refreshToken' || e.key === 'user') {
-
         checkAuthState();
       }
     };
-    
     window.addEventListener('storage', handleStorageChange);
-    
     return () => {
       window.removeEventListener('storage', handleStorageChange);
     };
   }, []);
-
   // Generate fresh Product Hunt badge URL
   useEffect(() => {
     const generateBadgeUrl = () => {
@@ -67,20 +54,15 @@ const HomePage = () => {
       });
       setProductHuntBadgeUrl(`${baseUrl}?${params.toString()}`);
     };
-
     // Generate initial URL
     generateBadgeUrl();
-
     // Refresh the badge every 5 minutes to get updated numbers
     const refreshInterval = setInterval(generateBadgeUrl, 5 * 60 * 1000);
-
     return () => clearInterval(refreshInterval);
   }, []);
-
   const toggleFAQ = (index) => {
     setOpenFAQ(openFAQ === index ? null : index);
   };
-
   return (
     <div style={{ 
       background: 'black', 
@@ -103,7 +85,6 @@ const HomePage = () => {
       >
         <source src="/bg.mp4" type="video/mp4" />
       </video>
-      
       <div className="relative z-10 bg-black/50 flex flex-col min-h-screen overflow-x-hidden max-w-full">
         {/* Navigation Bar */}
         <div className="flex justify-between items-center p-4 md:p-6 max-w-full">
@@ -144,7 +125,6 @@ const HomePage = () => {
             )}
           </div>
         </div>
-
         {/* Hero Section */}
         <div className="flex justify-center items-center min-h-[60vh] px-6">
           <div className="max-w-4xl text-center">
@@ -162,7 +142,6 @@ const HomePage = () => {
               >
                 Get Started Now
               </button>
-              
               {/* Product Hunt Badge */}
               <a href="https://www.producthunt.com/products/qudemo?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-qudemo" target="_blank" rel="noopener noreferrer" className="w-auto sm:w-auto">
                 <img 
@@ -178,7 +157,6 @@ const HomePage = () => {
             </div>
           </div>
         </div>
-
         {/* AI-Driven Efficiency Section */}
         <FadeInSection delay={0.1}>
           <div className="flex justify-center items-center min-h-[80vh] px-6 mt-32">
@@ -192,17 +170,14 @@ const HomePage = () => {
                 AI-DRIVEN EFFICIENCY
               </StarBorder>
             </div>
-
             {/* Main Heading */}
             <h2 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight">
               Create Qudemo in Minutes.
             </h2>
-
             {/* Subtitle */}
             <p className="text-xl md:text-2xl text-gray-300 mb-16 max-w-4xl mx-auto">
               Transform your regular videos into engaging, interactive experiences with just a few clicks.
             </p>
-
             {/* Feature Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-7xl mx-auto">
               {/* Upload Card */}
@@ -219,7 +194,6 @@ const HomePage = () => {
                   </p>
                 </div>
               </div>
-
               {/* Create Card */}
               <div className="bg-gray-900 border border-blue-500/30 rounded-2xl p-6 hover:border-blue-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/20 h-56">
                 <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4" style={{ backgroundColor: '#2934ff' }}>
@@ -234,7 +208,6 @@ const HomePage = () => {
                   </p>
                 </div>
               </div>
-
               {/* Share Card */}
               <div className="bg-gray-900 border border-blue-500/30 rounded-2xl p-6 hover:border-blue-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/20 h-56">
                 <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4" style={{ backgroundColor: '#2934ff' }}>
@@ -253,7 +226,6 @@ const HomePage = () => {
           </div>
           </div>
         </FadeInSection>
-
         {/* Why Choose Us Section */}
         <FadeInSection delay={0.2}>
           <div className="py-20 px-6">
@@ -267,17 +239,14 @@ const HomePage = () => {
                 BENEFITS
               </StarBorder>
             </div>
-            
             {/* Main Heading */}
             <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
               Why Choose Us?
             </h2>
-            
             {/* Subtitle */}
             <p className="text-xl text-gray-300 mb-16 max-w-4xl mx-auto">
               Transform passive video watching into active engagement. Let your viewers question and interact with your video.
             </p>
-            
             {/* Benefit Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-7xl mx-auto">
               {/* Save Time Card */}
@@ -294,7 +263,6 @@ const HomePage = () => {
                   </p>
                 </div>
               </div>
-
               {/* Increase Engagement Card */}
               <div className="bg-gray-900 border border-gray-700 rounded-2xl p-6 hover:border-blue-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/20">
                 <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center mb-4">
@@ -309,7 +277,6 @@ const HomePage = () => {
                   </p>
                 </div>
               </div>
-
               {/* Better Conversions Card */}
               <div className="bg-gray-900 border border-gray-700 rounded-2xl p-6 hover:border-blue-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/20">
                 <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center mb-4">
@@ -328,7 +295,6 @@ const HomePage = () => {
           </div>
           </div>
         </FadeInSection>
-
         {/* Founders Note Section */}
         <FadeInSection delay={0.3}>
           <div className="py-20 px-6">
@@ -342,7 +308,6 @@ const HomePage = () => {
                 FOUNDERS NOTE
               </StarBorder>
             </div>
-            
             {/* Quote */}
             <blockquote className="text-4xl md:text-4xl font-bold text-white leading-relaxed">
               We believe a <span className="text-blue-400">Demo</span> should feel like real
@@ -356,7 +321,6 @@ const HomePage = () => {
           </div>
           </div>
         </FadeInSection>
-
         {/* FAQ Section */}
         <FadeInSection delay={0.4}>
           <div className="py-16 px-6">
@@ -370,17 +334,14 @@ const HomePage = () => {
                 FAQ'S SECTION
               </StarBorder>
             </div>
-            
             {/* FAQ Heading */}
             <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
               Some Common FAQ's
             </h2>
-            
             {/* FAQ Subtitle */}
             <p className="text-xl text-gray-300 mb-16">
               Get answers to your questions and learn about our platform
             </p>
-            
             {/* FAQ Items */}
             <div className="max-w-4xl mx-auto space-y-4">
               {/* FAQ Item 1 */}
@@ -405,7 +366,6 @@ const HomePage = () => {
                   </div>
                 )}
               </div>
-
               {/* FAQ Item 2 */}
               <div className="bg-gray-800 border border-gray-700 rounded-lg hover:border-blue-500/50 transition-all duration-300">
                 <div 
@@ -428,7 +388,6 @@ const HomePage = () => {
                   </div>
                 )}
               </div>
-
               {/* FAQ Item 3 */}
               <div className="bg-gray-800 border border-gray-700 rounded-lg hover:border-blue-500/50 transition-all duration-300">
                 <div 
@@ -452,7 +411,6 @@ const HomePage = () => {
                   </div>
                 )}
               </div>
-
               {/* FAQ Item 4 */}
               <div className="bg-gray-800 border border-gray-700 rounded-lg hover:border-blue-500/50 transition-all duration-300">
                 <div 
@@ -475,7 +433,6 @@ const HomePage = () => {
                   </div>
                 )}
               </div>
-
               {/* FAQ Item 5 */}
               <div className="bg-gray-800 border border-gray-700 rounded-lg hover:border-blue-500/50 transition-all duration-300">
                 <div 
@@ -502,14 +459,12 @@ const HomePage = () => {
           </div>
           </div>
         </FadeInSection>
-
         {/* Final Call-to-Action Section */}
         <FadeInSection delay={0.5}>
           <div className="py-20 px-6 relative">
           <div className="max-w-4xl mx-auto text-center relative">
             {/* Blue Glow Effect */}
             <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 via-blue-500/20 to-blue-500/20 rounded-3xl blur-3xl"></div>
-            
             {/* Content */}
             <div className="relative z-10">
               {/* Badge */}
@@ -521,22 +476,18 @@ const HomePage = () => {
                   WHAT YOU STILL WAITING FOR
                 </StarBorder>
               </div>
-              
               {/* Main Heading */}
               <h2 className="text-4xl md:text-6xl font-bold text-white mb-8 leading-tight">
                 Ready to transform your product videos?
               </h2>
-              
               {/* Description */}
               <p className="text-xl text-gray-300 mb-16 max-w-3xl mx-auto">
                 Join Qudemo to create more engaging, interactive video experiences that save time for everyone.
               </p>
-              
               {/* Contact Section */}
               <div className="mb-8">
                 {/* Horizontal Line */}
                 <div className="border-t border-blue-500 mb-8"></div>
-                
                 <p className="text-lg text-gray-300 mb-4">
                   Any queries or support?
                 </p>
@@ -547,7 +498,6 @@ const HomePage = () => {
                   mail@qudemo.com
                 </a>
               </div>
-              
               {/* Privacy Policy Link */}
               <div className="mb-8">
                 <p 
@@ -557,7 +507,6 @@ const HomePage = () => {
                   Privacy Policy
                 </p>
               </div>
-              
               {/* Copyright */}
               <p className="text-sm text-gray-400">
                 © 2025 Qudemo Softwares Inc. All Rights Reserved.
@@ -566,10 +515,8 @@ const HomePage = () => {
           </div>
           </div>
         </FadeInSection>
-       
       </div>
     </div>
   );
 };
-
 export default HomePage;

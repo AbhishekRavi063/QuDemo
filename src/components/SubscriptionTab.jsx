@@ -11,7 +11,6 @@ import {
 } from '@heroicons/react/24/outline';
 import { getApiUrl } from '../config/api';
 import { useNotification } from '../context/NotificationContext';
-
 const SubscriptionTab = ({ companyId }) => {
   const navigate = useNavigate();
   const { showSuccess, showError } = useNotification();
@@ -19,32 +18,26 @@ const SubscriptionTab = ({ companyId }) => {
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
-
   useEffect(() => {
     fetchSubscription();
   }, [companyId]);
-
   const fetchSubscription = async () => {
     try {
       const token = localStorage.getItem('token') || localStorage.getItem('accessToken');
       if (!token) {
-        console.error('No authentication token found');
         setLoading(false);
         return;
       }
-
       const baseUrl = getApiUrl('node');
       const response = await fetch(`${baseUrl}/api/subscription/${companyId}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
-
       const data = await response.json();
       if (data.success) {
         setSubscription(data.subscription);
       } else {
-        console.error('Failed to fetch subscription:', data.error);
         // Set default free subscription if API fails
         setSubscription({
           plan: 'free',
@@ -56,7 +49,6 @@ const SubscriptionTab = ({ companyId }) => {
         });
       }
     } catch (error) {
-      console.error('Error fetching subscription:', error);
       // Set default free subscription on error
       setSubscription({
         plan: 'free',
@@ -70,43 +62,28 @@ const SubscriptionTab = ({ companyId }) => {
       setLoading(false);
     }
   };
-
   const handleUpgrade = () => {
     navigate('/pricing');
   };
-
-
   const handleManageBilling = async () => {
     try {
-      console.log('🔍 Manage Billing clicked for company:', companyId);
       const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
       const baseUrl = getApiUrl('node');
-      console.log('🔍 API URL:', `${baseUrl}/api/subscription/${companyId}/billing-portal`);
-      console.log('🔍 Token available:', token ? 'Yes' : 'No');
-      
       const response = await fetch(`${baseUrl}/api/subscription/${companyId}/billing-portal`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
-
-      console.log('🔍 Response status:', response.status);
       const data = await response.json();
-      console.log('🔍 Response data:', data);
-      
       if (data.success && data.portalUrl) {
-        console.log('🔍 Opening portal URL:', data.portalUrl);
         window.open(data.portalUrl, '_blank');
       } else {
-        console.error('❌ No portal URL received:', data);
         showError(data.error || 'Failed to get billing portal');
       }
     } catch (error) {
-      console.error('❌ Error opening billing portal:', error);
       showError('Failed to open billing portal');
     }
   };
-
   const handleCancelSubscription = async () => {
     setCancelling(true);
     try {
@@ -118,7 +95,6 @@ const SubscriptionTab = ({ companyId }) => {
           'Authorization': `Bearer ${token}`
         }
       });
-
       const data = await response.json();
       if (data.success) {
         showSuccess('Subscription cancelled successfully');
@@ -131,13 +107,11 @@ const SubscriptionTab = ({ companyId }) => {
         showError('Failed to cancel subscription');
       }
     } catch (error) {
-      console.error('Error cancelling subscription:', error);
       showError('Failed to cancel subscription');
     } finally {
       setCancelling(false);
     }
   };
-
   const getPlanBadge = (plan) => {
     const badges = {
       free: { color: 'bg-gray-100 text-gray-800', text: 'Free' },
@@ -146,7 +120,6 @@ const SubscriptionTab = ({ companyId }) => {
     };
     return badges[plan] || badges.free;
   };
-
   const getStatusBadge = (status) => {
     const badges = {
       active: { color: 'bg-green-100 text-green-800', icon: CheckCircleIcon, text: 'Active' },
@@ -158,7 +131,6 @@ const SubscriptionTab = ({ companyId }) => {
     };
     return badges[status] || badges.active;
   };
-
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -167,7 +139,6 @@ const SubscriptionTab = ({ companyId }) => {
       day: 'numeric'
     });
   };
-
   const getPlanFeatures = (plan) => {
     const features = {
       free: [
@@ -195,7 +166,6 @@ const SubscriptionTab = ({ companyId }) => {
     };
     return features[plan] || features.free;
   };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -203,7 +173,6 @@ const SubscriptionTab = ({ companyId }) => {
       </div>
     );
   }
-
   if (!subscription) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -213,32 +182,25 @@ const SubscriptionTab = ({ companyId }) => {
       </div>
     );
   }
-
   const planBadge = getPlanBadge(subscription.plan);
   const statusBadge = getStatusBadge(subscription.status);
   const StatusIcon = statusBadge.icon;
   const isFree = subscription.plan === 'free';
   const isPaid = ['pro', 'enterprise'].includes(subscription.plan);
   const isActive = ['active', 'trialing', 'on_trial'].includes(subscription.status);
-
   // Check if currently in trial period
   const isInTrial = () => {
     if (!subscription.startDate || !isPaid) return false;
-    
     const startDate = new Date(subscription.startDate);
     const trialEndDate = new Date(startDate.getTime() + (7 * 24 * 60 * 60 * 1000)); // Add 7 days
     const now = new Date();
-    
     return now < trialEndDate;
   };
-
   const getTrialStatus = () => {
     if (!isPaid || !subscription.startDate) return null;
-    
     const startDate = new Date(subscription.startDate);
     const trialEndDate = new Date(startDate.getTime() + (7 * 24 * 60 * 60 * 1000));
     const now = new Date();
-    
     if (now < trialEndDate) {
       return {
         isTrial: true,
@@ -251,9 +213,7 @@ const SubscriptionTab = ({ companyId }) => {
       };
     }
   };
-
   const trialStatus = getTrialStatus();
-
   return (
     <div className="space-y-6">
       {/* Top Section - Plan Details and Usage Statistics */}
@@ -275,7 +235,6 @@ const SubscriptionTab = ({ companyId }) => {
               </span>
             )}
           </div>
-          
           {isPaid && (
             <div className="space-y-2 text-sm text-gray-600 text-left">
               {trialStatus && trialStatus.isTrial && (
@@ -294,7 +253,6 @@ const SubscriptionTab = ({ companyId }) => {
             </div>
           )}
         </div>
-
         {/* Usage Statistics Card */}
         <div className="bg-gray-50 border border-gray-300 rounded-[20px] shadow-sm p-4 w-64 flex-shrink-0">
           <h4 className="font-semibold text-gray-900 mb-3">Usage Statistics</h4>
@@ -310,7 +268,6 @@ const SubscriptionTab = ({ companyId }) => {
           </div>
         </div>
       </div>
-
       {/* Plan Features */}
       <div>
         <hr className="border-gray-200 my-6" />
@@ -324,8 +281,6 @@ const SubscriptionTab = ({ companyId }) => {
           ))}
         </div>
       </div>
-
-
       {/* Action Buttons */}
       <div>
         <hr className="border-gray-200 my-6" />
@@ -338,7 +293,6 @@ const SubscriptionTab = ({ companyId }) => {
             Change Plan
           </button>
         )}
-
         {isPaid && isActive && (
           <>
             <button
@@ -347,7 +301,6 @@ const SubscriptionTab = ({ companyId }) => {
             >
               Change Plan
             </button>
-
             <button
               onClick={handleManageBilling}
               className="flex items-center justify-center px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors w-full"
@@ -355,7 +308,6 @@ const SubscriptionTab = ({ companyId }) => {
               <CreditCardIcon className="h-4 w-4 mr-2" />
               Manage Billing
             </button>
-
             <button
               onClick={() => setShowCancelModal(true)}
               disabled={cancelling}
@@ -365,7 +317,6 @@ const SubscriptionTab = ({ companyId }) => {
             </button>
           </>
         )}
-
         {isPaid && !isActive && (
           <button
             onClick={handleUpgrade}
@@ -376,7 +327,6 @@ const SubscriptionTab = ({ companyId }) => {
         )}
         </div>
       </div>
-
       {/* Subscription Warning */}
       {!isActive && isPaid && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
@@ -392,7 +342,6 @@ const SubscriptionTab = ({ companyId }) => {
           </div>
         </div>
       )}
-
       {/* Custom Cancel Confirmation Modal */}
       {showCancelModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -401,11 +350,9 @@ const SubscriptionTab = ({ companyId }) => {
               <XCircleIcon className="h-8 w-8 text-red-600 mr-3" />
               <h3 className="text-lg font-semibold text-gray-900">Cancel Subscription</h3>
             </div>
-            
             <p className="text-gray-600 mb-6">
               Are you sure you want to cancel your subscription? All your shared QuDemos will stop working and you'll lose access to premium features.
             </p>
-            
             <div className="flex justify-end space-x-3">
               <button
                 onClick={() => setShowCancelModal(false)}
@@ -427,11 +374,7 @@ const SubscriptionTab = ({ companyId }) => {
           </div>
         </div>
       )}
-
-
     </div>
   );
 };
-
 export default SubscriptionTab;
-

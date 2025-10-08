@@ -7,29 +7,19 @@ import {
   CalendarIcon, 
   UserIcon 
 } from '@heroicons/react/24/outline';
-
 const BulkUploadsPage = () => {
   const { company } = useCompany();
   const [bulkUploads, setBulkUploads] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
   useEffect(() => {
     fetchBulkUploads();
   }, []);
-
   const fetchBulkUploads = async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('accessToken');
-      
-      console.log('📊 ===== FRONTEND BULK UPLOADS REQUEST =====');
-      console.log('📊 Token exists:', !!token);
-      console.log('📊 Token preview:', token ? token.substring(0, 20) + '...' : 'No token');
-      
       const apiUrl = getNodeApiUrl('/api/qudemos/bulk-uploads');
-      console.log('📊 API URL:', apiUrl);
-      
       const response = await fetch(apiUrl, {
         method: 'GET',
         headers: {
@@ -37,31 +27,19 @@ const BulkUploadsPage = () => {
           'Content-Type': 'application/json'
         }
       });
-
-      console.log('📊 Response status:', response.status);
-      console.log('📊 Response headers:', Object.fromEntries(response.headers.entries()));
-
       if (response.ok) {
         const data = await response.json();
-        console.log('📊 Response data:', data);
         setBulkUploads(data.data || []);
       } else {
         const errorText = await response.text();
-        console.error('📊 Error response:', {
-          status: response.status,
-          statusText: response.statusText,
-          body: errorText
-        });
         setError(`Failed to fetch bulk uploads (${response.status}): ${errorText}`);
       }
     } catch (error) {
-      console.error('📊 Network error fetching bulk uploads:', error);
       setError(`Network error occurred: ${error.message}`);
     } finally {
       setLoading(false);
     }
   };
-
   const handleDownload = async (uploadId, fileName) => {
     try {
       const token = localStorage.getItem('accessToken');
@@ -71,34 +49,27 @@ const BulkUploadsPage = () => {
           'Authorization': `Bearer ${token}`,
         }
       });
-
       if (response.ok) {
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        
         // Always use .csv extension for download
         let downloadFileName = fileName || 'bulk-links.csv';
         if (downloadFileName) {
           // Remove existing extension and add .csv
           downloadFileName = downloadFileName.replace(/\.[^/.]+$/, '') + '.csv';
         }
-        
         a.download = downloadFileName;
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
       } else {
-        console.error('Failed to download file');
       }
     } catch (error) {
-      console.error('Error downloading file:', error);
     }
   };
-
-
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       month: 'short',
@@ -106,9 +77,7 @@ const BulkUploadsPage = () => {
       year: 'numeric'
     });
   };
-
   const totalCustomers = bulkUploads.reduce((sum, upload) => sum + (upload.customer_count || 0), 0);
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -116,7 +85,6 @@ const BulkUploadsPage = () => {
       </div>
     );
   }
-
   if (error) {
     return (
       <div className="text-center py-8">
@@ -130,17 +98,13 @@ const BulkUploadsPage = () => {
       </div>
     );
   }
-
   return (
     <div className="p-6">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2 text-left">Bulk Uploads</h1>
         <p className="text-gray-600 text-left">View all your customer bulk uploads and their details.</p>
-        
       </div>
-
       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-
         <div className="overflow-x-auto">
           {bulkUploads.length > 0 ? (
             <>
@@ -219,7 +183,6 @@ const BulkUploadsPage = () => {
                   ))}
                 </tbody>
               </table>
-              
               <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
                 <p className="text-sm text-gray-600">
                   Total uploads: {bulkUploads.length} batches • Total customers: {totalCustomers}
@@ -237,9 +200,7 @@ const BulkUploadsPage = () => {
           )}
         </div>
       </div>
-
     </div>
   );
 };
-
 export default BulkUploadsPage;

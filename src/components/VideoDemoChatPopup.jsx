@@ -3,13 +3,11 @@ import ReactPlayer from "react-player/youtube";
 import { PaperAirplaneIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-
 const TypingIndicator = () => (
   <div className="typing-indicator flex space-x-1">
     <span className="dot animate-bounce delay-150"></span>
     <span className="dot animate-bounce delay-300"></span>
     <span className="dot animate-bounce delay-450"></span>
-
     <style jsx>{`
       .typing-indicator {
         align-items: center;
@@ -36,7 +34,6 @@ const TypingIndicator = () => (
       .delay-450 {
         animation-delay: 0.45s;
       }
-
       @keyframes bounce-dot {
         0%,
         80%,
@@ -52,7 +49,6 @@ const TypingIndicator = () => (
     `}</style>
   </div>
 );
-
 const cleanMessageText = (text) => {
   // Remove unwanted patterns
   let cleaned = text
@@ -61,19 +57,16 @@ const cleanMessageText = (text) => {
     .replace(/help\.puzzle\.io.*?\.pdf/gi, "")
     .replace(/\s{2,}/g, " ")
     .trim();
-
   // Convert URLs to clickable links
   cleaned = cleaned.replace(
     /(https?:\/\/[^\s]+)/g,
     (url) =>
       `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-blue-600 underline">${url}</a>`
   );
-
   // Split at each '– ' and wrap each in <p> tags, preserving the intro as its own paragraph
   const parts = cleaned.split(/(?=– )/g);
   return parts.map(part => `<p>${part.trim()}</p>`).join("");
 };
-
 const VideoDemoChatPopup = ({ onClose }) => {
     const [source, setSource] = useState("puzzle");
     const [messages, setMessages] = useState([
@@ -86,17 +79,14 @@ const VideoDemoChatPopup = ({ onClose }) => {
         }),
       },
     ]);
-    
   const [input, setInput] = useState("");
   const [videoUrl, setVideoUrl] = useState(
     "https://youtu.be/_zRaJOF-trE?si=-49QCSw2FbrTxpvi&t=0"
   );
   const [playing, setPlaying] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
-
   const playerRef = useRef();
   const navigate = useNavigate();
-
   const getTimestampFromUrl = (url) => {
     try {
       const urlObj = new URL(url);
@@ -106,7 +96,6 @@ const VideoDemoChatPopup = ({ onClose }) => {
       return 0;
     }
   };
-
   useEffect(() => {
     if (videoUrl && playerRef.current) {
       const seconds = getTimestampFromUrl(videoUrl);
@@ -117,10 +106,8 @@ const VideoDemoChatPopup = ({ onClose }) => {
       return () => clearTimeout(timer);
     }
   }, [videoUrl]);
-
   const sendMessage = async () => {
     if (!input.trim()) return;
-
     const now = new Date().toLocaleTimeString([], {
       hour: "2-digit",
       minute: "2-digit",
@@ -130,7 +117,6 @@ const VideoDemoChatPopup = ({ onClose }) => {
     setInput("");
     setPlaying(false);
     setIsTyping(true);
-
     try {
       // Choose endpoint based on source
       let endpoint = "https://qudemo-backend.onrender.com/ask/puzzle";
@@ -153,12 +139,10 @@ const VideoDemoChatPopup = ({ onClose }) => {
       };
       setMessages((prev) => [...prev, aiMsg]);
     } catch (err) {
-      console.error("API error", err);
     } finally {
       setIsTyping(false);
     }
   };
-
   const handleClose = () => {
     if (onClose) {
       onClose();
@@ -166,7 +150,6 @@ const VideoDemoChatPopup = ({ onClose }) => {
       navigate("/");
     }
   };
-
   const handleSourceChange = async (e) => {
     const selectedSource = e.target.value;
     setSource(selectedSource);
@@ -190,10 +173,8 @@ const VideoDemoChatPopup = ({ onClose }) => {
     try {
       await axios.post("https://qudemo-backend.onrender.com/bucket", { source: selectedSource });
     } catch (err) {
-      console.error("Error posting to /bucket:", err);
     }
   };
-
   const getInitialMessage = (source) => {
     if (source === "mixpanel") {
       return cleanMessageText(`
@@ -205,7 +186,6 @@ const VideoDemoChatPopup = ({ onClose }) => {
       `);
     }
   };
-
   // List of suggested questions for puzzle
   const puzzleQuestions = [
     "How to integrate with Stripe?",
@@ -219,7 +199,6 @@ const VideoDemoChatPopup = ({ onClose }) => {
     "How can I add manual journals?",
     "How does Puzzle handle charts of accounts?"
   ];
-
   // Handle clicking a question bubble
   const handleQuestionClick = async (question) => {
     setInput(question);
@@ -228,7 +207,6 @@ const VideoDemoChatPopup = ({ onClose }) => {
       sendMessage(question);
     }, 0);
   };
-
   return (
     <div
       className=" inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center p-4"
@@ -276,7 +254,6 @@ const VideoDemoChatPopup = ({ onClose }) => {
             }}
           />
         </div>
-
         {/* Chat Section */}
         <div className="w-full md:w-2/4 flex flex-col bg-white border-l">
           {/* Header */}
@@ -285,7 +262,6 @@ const VideoDemoChatPopup = ({ onClose }) => {
               <div className="font-semibold text-sm sm:text-base">
                 Ask questions about this demo
               </div>
-              
               {/* Dropdown 
               <select
                 className="ml-2 px-2 py-1 rounded text-blue-700 text-xs sm:text-sm focus:outline-none cursor-pointer"
@@ -301,7 +277,6 @@ const VideoDemoChatPopup = ({ onClose }) => {
               onClick={handleClose}
             />
           </div>
-
           {/* Chat Messages */}
           <div className="flex-1 p-3 overflow-y-auto space-y-3 bg-gray-50 text-sm">
             {messages.map((msg, idx) => (
@@ -337,7 +312,6 @@ const VideoDemoChatPopup = ({ onClose }) => {
               </div>
             )}
           </div>
-
           {/* Typing indicator */}
           {isTyping && (
             <div className="flex justify-start">
@@ -346,7 +320,6 @@ const VideoDemoChatPopup = ({ onClose }) => {
               </div>
             </div>
           )}
-
           {/* Input */}
           <div className="p-3 border-t flex items-center gap-2">
             <input
@@ -364,7 +337,6 @@ const VideoDemoChatPopup = ({ onClose }) => {
               <PaperAirplaneIcon className="h-7 w-8" />
             </button>
           </div>
-
           {/* Footer */}
           <div className="p-4 flex flex-col sm:flex-row sm:justify-between items-center text-xs gap-2 bg-white border-t">
             <span className="text-gray-500">Powered by Qudemo AI</span>
@@ -382,5 +354,4 @@ const VideoDemoChatPopup = ({ onClose }) => {
     </div>
   );
 };
-
 export default VideoDemoChatPopup;

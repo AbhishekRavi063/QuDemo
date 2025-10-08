@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useCompany } from '../context/CompanyContext';
 import { getNodeApiUrl } from '../config/api';
 import { useNavigate } from 'react-router-dom';
-
 const CompanySetup = () => {
   const { refreshCompany } = useCompany();
   const navigate = useNavigate();
@@ -14,26 +13,21 @@ const CompanySetup = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-
   const validateForm = () => {
     const errors = {};
-    
     // Name is required
     if (!formData.name.trim()) {
       errors.name = 'Organization name is required';
     } else if (formData.name.trim().length < 2) {
       errors.name = 'Organization name must be at least 2 characters';
     }
-    
     // Website is optional, but if provided, must be valid URL
     if (formData.website && !isValidUrl(formData.website)) {
       errors.website = 'Please enter a valid website URL';
     }
-    
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
-
   const isValidUrl = (string) => {
     try {
       new URL(string);
@@ -42,14 +36,12 @@ const CompanySetup = () => {
       return false;
     }
   };
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
       [name]: value
     }));
-    
     // Clear error when user starts typing
     if (formErrors[name]) {
       setFormErrors(prev => ({
@@ -58,23 +50,18 @@ const CompanySetup = () => {
       }));
     }
   };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
     if (!validateForm()) {
       return;
     }
-    
     // Prevent duplicate submissions
     if (isSubmitting) {
       return;
     }
-    
     setIsSubmitting(true);
     setError('');
     setSuccess('');
-    
     try {
       const token = localStorage.getItem('accessToken');
       // Validate authentication before proceeding
@@ -82,7 +69,6 @@ const CompanySetup = () => {
         setError('Authentication required. Please log in again.');
         return;
       }
-      
       const response = await fetch(getNodeApiUrl('/api/companies'), {
         method: 'POST',
         headers: {
@@ -99,7 +85,6 @@ const CompanySetup = () => {
       const data = await response.json();
       if (data.success) {
         setSuccess('🎉 Organization created successfully! Setting up your workspace...');
-        
         // Refresh company context
         await refreshCompany();
         // Redirect to create page after a short delay
@@ -117,13 +102,11 @@ const CompanySetup = () => {
         }
       }
     } catch (error) {
-      console.error('Create company error:', error);
       setError('Network error. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
   };
-
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
@@ -136,7 +119,6 @@ const CompanySetup = () => {
           </p>
         </div>
       </div>
-
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
           <form className="space-y-6" onSubmit={handleSubmit}>
@@ -163,7 +145,6 @@ const CompanySetup = () => {
                 )}
               </div>
             </div>
-
             {/* Website */}
             <div>
               <label htmlFor="website" className="block text-sm font-medium text-gray-700">
@@ -186,21 +167,18 @@ const CompanySetup = () => {
                 )}
               </div>
             </div>
-
             {/* Error Message */}
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm">
                 {error}
               </div>
             )}
-
             {/* Success Message */}
             {success && (
               <div className="bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded-md text-sm">
                 {success}
               </div>
             )}
-
             {/* Submit Button */}
             <div>
               <button
@@ -217,5 +195,4 @@ const CompanySetup = () => {
     </div>
   );
 };
-
 export default CompanySetup;

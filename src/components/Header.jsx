@@ -9,20 +9,18 @@ import { Bars3Icon, UserIcon, DocumentArrowUpIcon, ArrowRightOnRectangleIcon } f
 // } from '@heroicons/react/24/outline';
 // import { useBackend } from '../context/BackendContext';
 // import { useState, useEffect, useRef } from 'react';
-
 export default function Header({ onMenuClick }) {
   const { company } = useCompany();
   const navigate = useNavigate();
   const [userProfileImage, setUserProfileImage] = useState(null);
   const [userInitials, setUserInitials] = useState('A');
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const dropdownRef = useRef(null);
-  
   // Backend switcher state and functions - COMMENTED OUT
   // const { selectedBackend, currentBackend, switchBackend, getAvailableBackends } = useBackend();
   // const [isBackendDropdownOpen, setIsBackendDropdownOpen] = useState(false);
   // const dropdownRef = useRef(null);
-
   // Fetch user profile image on component mount
   useEffect(() => {
     const fetchUserProfile = () => {
@@ -30,7 +28,6 @@ export default function Header({ onMenuClick }) {
         const userData = localStorage.getItem('user');
         if (userData) {
           const user = JSON.parse(userData);
-          
           // Priority: Company logo first, then Google profile picture
           if (company?.logo_url) {
             setUserProfileImage(company.logo_url);
@@ -39,7 +36,6 @@ export default function Header({ onMenuClick }) {
           } else {
             setUserProfileImage(null);
           }
-          
           // Set initials from user data
           if (user.firstName && user.lastName) {
             setUserInitials(`${user.firstName[0]}${user.lastName[0]}`.toUpperCase());
@@ -48,13 +44,10 @@ export default function Header({ onMenuClick }) {
           }
         }
       } catch (error) {
-        console.error('Error fetching user profile:', error);
       }
     };
-
     fetchUserProfile();
   }, [company?.logo_url]); // Re-run when company logo changes
-
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -62,26 +55,32 @@ export default function Header({ onMenuClick }) {
         setIsProfileDropdownOpen(false);
       }
     };
-
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
-
   // Handle logout
   const handleLogout = () => {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('user');
     navigate('/');
     setIsProfileDropdownOpen(false);
+    setShowLogoutModal(false);
   };
 
+  const confirmLogout = () => {
+    setShowLogoutModal(true);
+    setIsProfileDropdownOpen(false);
+  };
+
+  const cancelLogout = () => {
+    setShowLogoutModal(false);
+  };
   // const handleBackendChange = (backendId) => {
   //   switchBackend(backendId);
   //   setIsBackendDropdownOpen(false);
   // };
-
   // // Close dropdown when clicking outside
   // useEffect(() => {
   //   const handleClickOutside = (event) => {
@@ -89,13 +88,11 @@ export default function Header({ onMenuClick }) {
   //       setIsBackendDropdownOpen(false);
   //     }
   //   };
-
   //   document.addEventListener('mousedown', handleClickOutside);
   //   return () => {
   //     document.removeEventListener('mousedown', handleClickOutside);
   //   };
   // }, []);
-
   return (
     <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-3 md:px-5 py-1 bg-white border-b shadow-sm h-20">
       {/* Left - Menu Button (Mobile) + Logo */}
@@ -107,7 +104,6 @@ export default function Header({ onMenuClick }) {
         >
           <Bars3Icon className="h-6 w-6" />
         </button>
-        
         {/* Logo */}
         <Link to="/" className="cursor-pointer">
           <img 
@@ -117,7 +113,6 @@ export default function Header({ onMenuClick }) {
           />
         </Link>
       </div>
-
       {/* Center - Backend Switcher - COMMENTED OUT */}
       {/* <div className="flex items-center">
         <div className="relative" ref={dropdownRef}>
@@ -130,7 +125,6 @@ export default function Header({ onMenuClick }) {
             <span className="sm:hidden">B1</span>
             <ChevronDownIcon className="w-4 h-4" />
           </button>
-          
           {isBackendDropdownOpen && (
             <div className="absolute top-full left-0 mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
               {getAvailableBackends().map((backend) => (
@@ -154,7 +148,6 @@ export default function Header({ onMenuClick }) {
           )}
         </div>
       </div> */}
-
       {/* Right - Icons */}
       <div className="flex items-center gap-2 md:gap-3">
         {/* Profile Dropdown */}
@@ -181,7 +174,6 @@ export default function Header({ onMenuClick }) {
               {userInitials}
             </div>
           </button>
-
           {/* Dropdown Menu */}
           {isProfileDropdownOpen && (
             <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-50">
@@ -196,7 +188,6 @@ export default function Header({ onMenuClick }) {
                   <UserIcon className="w-4 h-4" />
                   <span>Profile</span>
                 </button>
-                
                 <button
                   onClick={() => {
                     navigate('/bulk-uploads');
@@ -207,11 +198,9 @@ export default function Header({ onMenuClick }) {
                   <DocumentArrowUpIcon className="w-4 h-4" />
                   <span>Bulk Upload</span>
                 </button>
-                
                 <hr className="my-1" />
-                
                 <button
-                  onClick={handleLogout}
+                  onClick={confirmLogout}
                   className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center space-x-2"
                 >
                   <ArrowRightOnRectangleIcon className="w-4 h-4" />
@@ -222,6 +211,39 @@ export default function Header({ onMenuClick }) {
           )}
         </div>
       </div>
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="flex items-center mb-4">
+              <svg className="h-8 w-8 text-orange-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 15.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+              <h3 className="text-lg font-semibold text-gray-900">Confirm Logout</h3>
+            </div>
+            
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to logout? You will need to sign in again to access your account.
+            </p>
+            
+            <div className="flex space-x-3">
+              <button
+                onClick={cancelLogout}
+                className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleLogout}
+                className="flex-1 px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

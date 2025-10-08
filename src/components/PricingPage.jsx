@@ -3,23 +3,19 @@ import { useNavigate } from 'react-router-dom';
 import { CheckIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { getApiUrl } from '../config/api';
 import { useCompany } from '../context/CompanyContext';
-
 const PricingPage = () => {
   const navigate = useNavigate();
   const { company } = useCompany();
   const [billingCycle, setBillingCycle] = useState('monthly');
   const [loading, setLoading] = useState(null);
-
   // Get current subscription info (with fallback for non-authenticated users)
   const currentPlan = company?.subscription_plan || 'free';
   const currentStatus = company?.subscription_status || 'active';
   const currentBillingCycle = company?.billing_cycle || 'monthly';
   const isActive = ['active', 'trialing', 'on_trial'].includes(currentStatus);
   const isCancelled = ['cancelled', 'expired', 'past_due'].includes(currentStatus);
-  
   // Check if user is authenticated (has company data)
   const isAuthenticated = !!company;
-
   const plans = {
     free: {
       name: 'Free',
@@ -81,29 +77,19 @@ const PricingPage = () => {
     //   isCancelled: currentPlan === 'enterprise' && isCancelled && isAuthenticated
     // }
   };
-
   const handleSelectPlan = async (planName) => {
     if (planName === 'free') {
       return; // Free plan is always active
     }
-
     setLoading(planName);
-
     try {
       const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
-      console.log('🔍 Token found:', token ? 'Yes' : 'No');
-      
       if (!token) {
-        console.log('❌ No token found, redirecting to login');
         navigate('/login');
         return;
       }
-
-      console.log('🛒 Creating checkout for:', planName, billingCycle);
       const baseUrl = getApiUrl('node');
       const checkoutUrl = `${baseUrl}/api/subscription/checkout`;
-      console.log('🔗 Base URL:', baseUrl);
-      console.log('🔗 Checkout URL:', checkoutUrl);
       const response = await fetch(checkoutUrl, {
         method: 'POST',
         headers: {
@@ -115,27 +101,19 @@ const PricingPage = () => {
           billingCycle: billingCycle
         })
       });
-
-      console.log('📡 Response status:', response.status);
       const data = await response.json();
-      console.log('📦 Response data:', data);
-
       if (data.success && data.checkoutUrl) {
-        console.log('✅ Redirecting to checkout:', data.checkoutUrl);
         // Redirect to Lemon Squeezy checkout
         window.location.href = data.checkoutUrl;
       } else {
-        console.error('❌ Failed to create checkout session:', data.error);
         alert(`Failed to start checkout: ${data.error || 'Unknown error'}`);
       }
     } catch (error) {
-      console.error('❌ Error creating checkout:', error);
       alert(`Failed to start checkout: ${error.message}`);
     } finally {
       setLoading(null);
     }
   };
-
   const getSavings = (plan) => {
     if (billingCycle === 'yearly' && plan !== 'free') {
       const monthly = plans[plan].price.monthly * 12;
@@ -147,7 +125,6 @@ const PricingPage = () => {
     }
     return null;
   };
-
   return (
     <div className="bg-gradient-to-br from-blue-50 to-indigo-100 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto py-8">
@@ -179,7 +156,6 @@ const PricingPage = () => {
             </button>
           </div>
         </div>
-
         {/* Pricing Cards */}
         <div className="flex flex-wrap justify-center gap-8 max-w-6xl mx-auto">
           {Object.entries(plans).map(([key, plan]) => {
@@ -210,14 +186,12 @@ const PricingPage = () => {
                     MOST POPULAR
                   </div>
                 )}
-
                 <div className="p-8">
                   {/* Plan Name */}
                   <h3 className="text-2xl font-bold text-gray-900 mb-2">
                     {plan.name}
                   </h3>
                   <p className="text-gray-600 mb-6">{plan.description}</p>
-
                   {/* Price */}
                   <div className="mb-6">
                     <div className="flex items-baseline">
@@ -236,7 +210,6 @@ const PricingPage = () => {
                       </p>
                     )}
                   </div>
-
                   {/* CTA Button */}
                   <button
                     onClick={() => handleSelectPlan(key)}
@@ -255,7 +228,6 @@ const PricingPage = () => {
                   >
                     {loading === key ? 'Processing...' : plan.cta}
                   </button>
-
                   {/* Features */}
                   <div className="space-y-3 mb-6">
                     {plan.features.map((feature, idx) => (
@@ -265,7 +237,6 @@ const PricingPage = () => {
                       </div>
                     ))}
                   </div>
-
                   {/* Limitations */}
                   {plan.limitations.length > 0 && (
                     <div className="border-t pt-4 space-y-3">
@@ -282,11 +253,8 @@ const PricingPage = () => {
             );
           })}
         </div>
-
       </div>
     </div>
   );
 };
-
 export default PricingPage;
-

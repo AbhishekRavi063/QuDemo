@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { getNodeApiUrl } from '../config/api';
 import { supabase } from '../config/supabase';
 // import { navigateToOverview } from '../utils/navigation'; // Not used anymore
-
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
     email: '',
@@ -16,7 +15,6 @@ const RegisterPage = () => {
   const [registerError, setRegisterError] = useState('');
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   // const navigate = useNavigate(); // Not used anymore
-
   const validateForm = () => {
     const newErrors = {};
     if (!formData.email) newErrors.email = 'Email is required';
@@ -26,7 +24,6 @@ const RegisterPage = () => {
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -40,13 +37,11 @@ const RegisterPage = () => {
       }));
     }
   };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setRegisterError('');
     if (!validateForm()) return;
     setIsLoading(true);
-
     try {
       const response = await fetch(getNodeApiUrl('/api/auth/register'), {
         method: 'POST',
@@ -60,15 +55,12 @@ const RegisterPage = () => {
           setRegisterError('Registration successful but incomplete data received. Please try logging in.');
           return;
         }
-        
         // Store tokens (same as login flow)
         localStorage.setItem('accessToken', data.data.tokens.accessToken);
         localStorage.setItem('refreshToken', data.data.tokens.refreshToken);
         localStorage.setItem('user', JSON.stringify(data.data.user));
-        
             // Redirect to create page (not login) - will trigger company check
             const currentOrigin = window.location.origin;
-
             window.location.href = `${currentOrigin}/create`;
       } else {
         if (data.details && Array.isArray(data.details)) {
@@ -83,47 +75,37 @@ const RegisterPage = () => {
       setIsLoading(false);
     }
   };
-
   const handleGoogleSignUp = async () => {
     // Check if Supabase is properly configured
     const isUsingPlaceholders = !process.env.REACT_APP_SUPABASE_URL || 
                               process.env.REACT_APP_SUPABASE_URL === 'your-supabase-url' ||
                               !process.env.REACT_APP_SUPABASE_ANON_KEY ||
                               process.env.REACT_APP_SUPABASE_ANON_KEY === 'your-supabase-anon-key-here';
-    
     if (isUsingPlaceholders) {
       setRegisterError('Google OAuth is not configured. Please set up Supabase credentials in .env file.');
       return;
     }
-    
     setIsGoogleLoading(true);
     setRegisterError('');
-
     try {
       // Clear any existing session and tokens before starting new OAuth
-
       const { clearAuthTokens } = await import('../utils/tokenRefresh');
       await clearAuthTokens();
-      
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/auth/callback`
         }
       });
-
       if (error) {
-        console.error('Google sign-up error:', error);
         setRegisterError(`Google sign-up failed: ${error.message}`);
       }
     } catch (error) {
-      console.error('Google sign-up error:', error);
       setRegisterError(`Google sign-up failed: ${error.message}`);
     } finally {
       setIsGoogleLoading(false);
     }
   };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-start justify-center pt-20 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
@@ -223,5 +205,4 @@ const RegisterPage = () => {
     </div>
   );
 };
-
 export default RegisterPage; 

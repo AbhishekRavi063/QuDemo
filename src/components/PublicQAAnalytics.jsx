@@ -1,45 +1,36 @@
 import React, { useState, useEffect } from 'react';
 import { authenticatedFetch, getNodeApiUrl } from '../utils/api';
-
 const PublicQAAnalytics = ({ qudemoId, companyId }) => {
   const [interactions, setInteractions] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('interactions');
-
   useEffect(() => {
     fetchData();
   }, [qudemoId, companyId]);
-
   const fetchData = async () => {
     try {
       setLoading(true);
-      
       // Fetch interactions and stats in parallel
       const [interactionsResponse, statsResponse] = await Promise.all([
         authenticatedFetch(getNodeApiUrl(`/api/qudemos/public-qa/${qudemoId}?limit=100`)),
         authenticatedFetch(getNodeApiUrl(`/api/qudemos/public-qa-stats/${companyId}`))
       ]);
-
       if (interactionsResponse.ok) {
         const interactionsData = await interactionsResponse.json();
         setInteractions(interactionsData.data || []);
       }
-
       if (statsResponse.ok) {
         const statsData = await statsResponse.json();
         setStats(statsData.data);
       }
-
     } catch (err) {
-      console.error('Error fetching public Q&A data:', err);
       setError('Failed to load public Q&A analytics');
     } finally {
       setLoading(false);
     }
   };
-
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -49,11 +40,9 @@ const PublicQAAnalytics = ({ qudemoId, companyId }) => {
       minute: '2-digit'
     });
   };
-
   const formatConfidence = (score) => {
     return `${(score * 100).toFixed(1)}%`;
   };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -62,7 +51,6 @@ const PublicQAAnalytics = ({ qudemoId, companyId }) => {
       </div>
     );
   }
-
   if (error) {
     return (
       <div className="bg-red-50 border border-red-200 rounded-lg p-4">
@@ -80,7 +68,6 @@ const PublicQAAnalytics = ({ qudemoId, companyId }) => {
       </div>
     );
   }
-
   return (
     <div className="bg-white rounded-lg shadow">
       {/* Header */}
@@ -88,7 +75,6 @@ const PublicQAAnalytics = ({ qudemoId, companyId }) => {
         <h3 className="text-lg font-medium text-gray-900">Public Q&A Analytics</h3>
         <p className="text-sm text-gray-500">Questions and answers from public QuDemo interactions</p>
       </div>
-
       {/* Tabs */}
       <div className="border-b border-gray-200">
         <nav className="-mb-px flex space-x-8 px-6">
@@ -114,7 +100,6 @@ const PublicQAAnalytics = ({ qudemoId, companyId }) => {
           </button>
         </nav>
       </div>
-
       {/* Content */}
       <div className="p-6">
         {activeTab === 'interactions' && (
@@ -160,7 +145,6 @@ const PublicQAAnalytics = ({ qudemoId, companyId }) => {
             )}
           </div>
         )}
-
         {activeTab === 'stats' && stats && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="bg-blue-50 rounded-lg p-4">
@@ -189,5 +173,4 @@ const PublicQAAnalytics = ({ qudemoId, companyId }) => {
     </div>
   );
 };
-
 export default PublicQAAnalytics;
