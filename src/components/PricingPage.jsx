@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CheckIcon, XMarkIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
+import { CheckIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { getApiUrl } from '../config/api';
 import { useCompany } from '../context/CompanyContext';
 
@@ -9,7 +9,6 @@ const PricingPage = () => {
   const { company } = useCompany();
   const [billingCycle, setBillingCycle] = useState('monthly');
   const [loading, setLoading] = useState(null);
-  const [openFAQ, setOpenFAQ] = useState(null);
 
   // Get current subscription info (with fallback for non-authenticated users)
   const currentPlan = company?.subscription_plan || 'free';
@@ -20,35 +19,6 @@ const PricingPage = () => {
   
   // Check if user is authenticated (has company data)
   const isAuthenticated = !!company;
-
-  // FAQ data
-  const faqData = [
-    {
-      id: 1,
-      question: "Can I change plans later?",
-      answer: "Yes! You can upgrade or downgrade your plan at any time. Changes take effect immediately."
-    },
-    {
-      id: 2,
-      question: "What happens to my shared QuDemos if I downgrade?",
-      answer: "If you downgrade to Free, all your shared QuDemo links will stop working immediately. Visitors will see a message that the QuDemo is no longer available."
-    },
-    {
-      id: 3,
-      question: "Can I cancel anytime?",
-      answer: "Absolutely! You can cancel your subscription at any time. You'll continue to have access until the end of your billing period."
-    },
-    {
-      id: 4,
-      question: "Is there a free trial?",
-      answer: "Free trial available for 7 days only."
-    }
-  ];
-
-  // Handle FAQ toggle
-  const toggleFAQ = (faqId) => {
-    setOpenFAQ(openFAQ === faqId ? null : faqId);
-  };
 
   const plans = {
     free: {
@@ -179,18 +149,10 @@ const PricingPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Choose Your Plan
-          </h1>
-          <p className="text-xl text-gray-600 mb-8">
-            Start sharing your QuDemos with the world
-          </p>
-
-          {/* Billing Toggle */}
+    <div className="bg-gradient-to-br from-blue-50 to-indigo-100 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto py-8">
+        {/* Billing Toggle */}
+        <div className="flex justify-center mb-8">
           <div className="inline-flex items-center bg-white rounded-lg p-1 shadow-md">
             <button
               onClick={() => setBillingCycle('monthly')}
@@ -321,56 +283,6 @@ const PricingPage = () => {
           })}
         </div>
 
-        {/* Back Button */}
-        <div className="text-center mt-12">
-          <button
-            onClick={() => navigate(-1)}
-            className="text-blue-600 hover:text-blue-700 font-medium"
-          >
-            ← Back to Dashboard
-          </button>
-        </div>
-
-        {/* FAQ Section */}
-        <div className="mt-16 max-w-3xl mx-auto">
-          <h2 className="text-3xl font-bold text-center text-gray-900 mb-8">
-            Frequently Asked Questions
-          </h2>
-          <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-            {faqData.map((faq, index) => (
-              <div key={faq.id} className={`border-b border-gray-200 last:border-b-0`}>
-                <button
-                  onClick={() => toggleFAQ(faq.id)}
-                  className="w-full px-8 py-6 text-left hover:bg-gray-50 transition-colors duration-200 focus:outline-none"
-                >
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-semibold text-lg text-gray-900 pr-4">
-                      {faq.question}
-                    </h3>
-                    <div className="flex-shrink-0">
-                      {openFAQ === faq.id ? (
-                        <ChevronUpIcon className="h-5 w-5 text-gray-500" />
-                      ) : (
-                        <ChevronDownIcon className="h-5 w-5 text-gray-500" />
-                      )}
-                    </div>
-                  </div>
-                </button>
-                <div
-                  className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                    openFAQ === faq.id ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
-                  }`}
-                >
-                  <div className="px-8 pb-6 text-left">
-                    <p className="text-gray-600 leading-relaxed">
-                      {faq.answer}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
     </div>
   );

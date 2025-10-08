@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   CheckCircleIcon, 
-  XCircleIcon, 
+  XCircleIcon,
+  XMarkIcon,
   ArrowUpIcon,
   CreditCardIcon,
   CalendarIcon,
@@ -73,6 +74,7 @@ const SubscriptionTab = ({ companyId }) => {
   const handleUpgrade = () => {
     navigate('/pricing');
   };
+
 
   const handleManageBilling = async () => {
     try {
@@ -256,12 +258,15 @@ const SubscriptionTab = ({ companyId }) => {
     <div className="space-y-6">
       {/* Top Section - Plan Details and Usage Statistics */}
       <div className="flex justify-between items-start gap-6">
-        {/* Pro Plan Details */}
+        {/* Plan Details */}
         <div className="text-left flex-1">
           <div className="flex items-center space-x-3 mb-4">
-            <h3 className="text-xl font-semibold text-gray-900 text-left">Pro Plan</h3>
+            <h3 className="text-xl font-semibold text-gray-900 text-left">
+              {subscription.plan === 'pro' ? 'Pro Plan' : subscription.plan === 'enterprise' ? 'Enterprise Plan' : 'Free Plan'}
+            </h3>
             {trialStatus && trialStatus.isTrial ? (
-              <span className="px-3 py-1 rounded-full text-sm font-semibold bg-blue-100 text-blue-800">
+              <span className="flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-blue-100 text-blue-800">
+                <span className="w-2 h-2 bg-blue-600 rounded-full mr-2"></span>
                 Trial
               </span>
             ) : (
@@ -319,6 +324,7 @@ const SubscriptionTab = ({ companyId }) => {
           ))}
         </div>
       </div>
+
 
       {/* Action Buttons */}
       <div>
@@ -421,6 +427,8 @@ const SubscriptionTab = ({ companyId }) => {
           </div>
         </div>
       )}
+
+
     </div>
   );
 };

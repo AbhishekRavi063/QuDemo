@@ -17,6 +17,7 @@ import {
   LockClosedIcon,
   UserGroupIcon,
   DocumentArrowUpIcon,
+  CreditCardIcon,
 } from '@heroicons/react/24/outline';
 
 // Base menu items (available to all users)
@@ -72,7 +73,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         </div>
 
         {/* Menu Links */}
-        <nav className="flex flex-col mt-20 md:mt-32 space-y-6 px-4 text-gray-600">
+        <nav className="flex flex-col mt-16 md:mt-24 space-y-6 px-4 text-gray-600">
           {/* Base menu items (available to all users) */}
           {baseMenuItems.map(({ name, icon: Icon, path, requiresEnterprise, requiresPro }) => {
             const showLock = (requiresEnterprise && !isEnterprise) || (requiresPro && !isPro);
@@ -112,6 +113,31 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
 
         {/* Bottom section with profile and settings */}
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200 bg-white">
+          {/* Current Plan Container */}
+          <div className="mb-4">
+            <Link 
+              to="/pricing"
+              className="block bg-gray-50 rounded-lg p-4 border border-gray-200 hover:bg-gray-100 transition-colors duration-200 cursor-pointer"
+              onClick={() => setIsOpen(false)}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex flex-col space-y-1 text-left">
+                  <p className="text-sm font-medium text-gray-900 text-left">
+                    {subscriptionPlan === 'pro' ? 'Pro Plan' : 'Free Plan'}
+                  </p>
+                  <p className="text-xs text-blue-600 font-medium text-left">
+                    {subscriptionPlan === 'pro' ? 'Manage Plan' : 'Upgrade →'}
+                  </p>
+                </div>
+                <div className="flex-shrink-0">
+                  <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </div>
+              </div>
+            </Link>
+          </div>
+          
           <div className="space-y-2">
             <Link
               to="/profile"

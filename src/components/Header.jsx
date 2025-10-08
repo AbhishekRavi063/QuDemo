@@ -109,11 +109,13 @@ export default function Header({ onMenuClick }) {
         </button>
         
         {/* Logo */}
-        <img 
-          src="/Qudemo.svg" 
-          alt="Qudemo Logo" 
-          className="w-44 h-28"
-        />
+        <Link to="/" className="cursor-pointer">
+          <img 
+            src="/Qudemo.svg" 
+            alt="Qudemo Logo" 
+            className="w-44 h-28 hover:opacity-80 transition-opacity"
+          />
+        </Link>
       </div>
 
       {/* Center - Backend Switcher - COMMENTED OUT */}

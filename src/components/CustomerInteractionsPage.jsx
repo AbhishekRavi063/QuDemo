@@ -24,13 +24,49 @@ const CustomerInteractionsPage = () => {
   const { company } = useCompany();
   const { showError } = useNotification();
 
-  // Fetch customer interactions data
-  const fetchInteractions = async () => {
+  // Fetch lightweight customer list (without detailed Q&A data)
+  const fetchCustomerList = async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('accessToken');
       
-      const response = await fetch(getNodeApiUrl('/api/analytics/customer-interactions'), {
+      console.log('🚀 Fetching lightweight customer list (no detailed Q&A data)...');
+      const startTime = Date.now();
+      
+      const response = await fetch(getNodeApiUrl('/api/analytics/customer-list'), {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const endTime = Date.now();
+      console.log(`⚡ Customer list fetch completed in ${endTime - startTime}ms`);
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch customer list');
+      }
+
+      const data = await response.json();
+      console.log('📊 Received customer list data (lightweight):', data.data);
+      console.log('📊 Customer list contains basic info only - no detailed Q&A data');
+      setInteractions(data.data || []);
+    } catch (error) {
+      console.error('Error fetching customer list:', error);
+      setError('Failed to load customer interactions');
+      showError('Failed to load customer interactions');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch detailed interaction data for a specific customer
+  const fetchCustomerInteractionDetails = async (shareToken) => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      
+      const response = await fetch(getNodeApiUrl(`/api/analytics/customer-interaction-details/${shareToken}`), {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -39,24 +75,22 @@ const CustomerInteractionsPage = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to fetch interactions');
+        throw new Error('Failed to fetch interaction details');
       }
 
       const data = await response.json();
-      console.log('📊 Received interactions data:', data.data);
-      setInteractions(data.data || []);
+      console.log('📊 Received interaction details:', data.data);
+      return data.data;
     } catch (error) {
-      console.error('Error fetching interactions:', error);
-      setError('Failed to load customer interactions');
-      showError('Failed to load customer interactions');
-    } finally {
-      setLoading(false);
+      console.error('Error fetching interaction details:', error);
+      showError('Failed to load interaction details');
+      return null;
     }
   };
 
   useEffect(() => {
     if (company?.id) {
-      fetchInteractions();
+      fetchCustomerList();
     }
   }, [company?.id]);
 
@@ -159,19 +193,25 @@ const CustomerInteractionsPage = () => {
   };
 
   // Handle view details
-  const handleViewDetails = (interaction) => {
+  const handleViewDetails = async (interaction) => {
     console.log('🚀 Opening interaction details...');
     
     // Reset AI summary state
     setAiInsightSummary('');
     setLoadingAiSummary(false);
     
+    // Set the selected interaction (with basic data)
     setSelectedInteraction(interaction);
     setActiveTab('overview'); // Reset to overview tab when opening modal
     setShowDetailsModal(true);
     
-    // Generate AI insight summary
-    generateAiInsightSummary(interaction);
+    // Load detailed interaction data
+    const detailedData = await fetchCustomerInteractionDetails(interaction.share_token);
+    if (detailedData) {
+      setSelectedInteraction(detailedData);
+      // Generate AI insight summary with detailed data
+      generateAiInsightSummary(detailedData);
+    }
   };
 
   const handleTabClick = (tabName) => {
@@ -203,7 +243,7 @@ const CustomerInteractionsPage = () => {
       <div className="text-center py-8">
         <p className="text-red-600">{error}</p>
         <button 
-          onClick={fetchInteractions}
+          onClick={fetchCustomerList}
           className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
         >
           Try Again
@@ -255,20 +295,20 @@ const CustomerInteractionsPage = () => {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
                   Customer
                 </th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
                   Company
                 </th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
                   Demo watched
                 </th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 tracking-wider">
-                  <ChatBubbleLeftEllipsisIcon className="h-4 w-4 mx-auto" />
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
+                  <ChatBubbleLeftEllipsisIcon className="h-4 w-4" />
                 </th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 tracking-wider">
-                  <ClockIcon className="h-4 w-4 mx-auto" />
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
+                  <ClockIcon className="h-4 w-4" />
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
                   Actions
@@ -515,8 +555,8 @@ const CustomerInteractionsPage = () => {
               <div className="p-6 overflow-y-auto flex-1">
                 {activeTab === 'overview' && (
                   <div className="min-h-96">
-                    {/* AI Insight Summary */}
-                    <div className="border border-blue-200 rounded-lg p-4 bg-blue-50 mb-6">
+                    {/* AI Insight Summary - HIDDEN */}
+                    {/* <div className="border border-blue-200 rounded-lg p-4 bg-blue-50 mb-6">
                       <div className="flex items-center space-x-2 mb-2">
                         <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
@@ -533,7 +573,7 @@ const CustomerInteractionsPage = () => {
                           {aiInsightSummary || 'Generating AI insight summary...'}
                         </p>
                       )}
-                    </div>
+                    </div> */}
 
                     {/* Interaction Metrics */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -651,9 +691,9 @@ const CustomerInteractionsPage = () => {
                                   {selectedInteraction.client_name ? selectedInteraction.client_name.charAt(0).toUpperCase() : 'C'}
                                 </div>
                               </div>
-                              <div className="flex-1">
-                                <p className="text-sm font-semibold text-gray-900">{qa.question}</p>
-                                <p className="text-xs text-gray-500 mt-1">
+                              <div className="flex-1 text-left">
+                                <p className="text-sm font-semibold text-gray-900 text-left">{qa.question}</p>
+                                <p className="text-xs text-gray-500 mt-1 text-left">
                                   Asked on {qa.created_at ? new Date(qa.created_at).toLocaleString('en-US', {
                                     month: 'short',
                                     day: 'numeric',
@@ -673,8 +713,8 @@ const CustomerInteractionsPage = () => {
                                   AI
                                 </div>
                               </div>
-                              <div className="flex-1">
-                                <div className="text-sm text-gray-700 whitespace-pre-wrap">{qa.answer.replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1').replace(/`(.*?)`/g, '$1')}</div>
+                              <div className="flex-1 text-left">
+                                <div className="text-sm text-gray-700 whitespace-pre-wrap text-left">{qa.answer.replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1').replace(/`(.*?)`/g, '$1')}</div>
                                 {qa.formatted_timestamp && (
                                   <div className="mt-2 flex items-center space-x-2">
                                     <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">

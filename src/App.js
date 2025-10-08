@@ -214,11 +214,6 @@ function App() {
               {/* Public Routes */}
               <Route path="/" element={<HomePage />} />
               <Route path="/privacypolicy" element={<PrivacyPolicy />} />
-              <Route path="/pricing" element={
-                <CompanyProvider>
-                  <PricingPage />
-                </CompanyProvider>
-              } />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/auth/callback" element={<AuthCallback />} />
@@ -357,6 +352,20 @@ function App() {
                     <CompanyCheck>
                       <DashboardLayout>
                         <SettingsPage />
+                      </DashboardLayout>
+                    </CompanyCheck>
+                  </ProtectedRoute>
+                </CompanyProvider>
+              } 
+            />
+            <Route 
+              path="/pricing" 
+              element={
+                <CompanyProvider>
+                  <ProtectedRoute>
+                    <CompanyCheck>
+                      <DashboardLayout>
+                        <PricingPage />
                       </DashboardLayout>
                     </CompanyCheck>
                   </ProtectedRoute>

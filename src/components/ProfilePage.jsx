@@ -232,7 +232,7 @@ export default function ProfilePage() {
                 className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                   activeTab === tab.key
                     ? 'bg-white text-gray-900 shadow-sm'
-                    : 'bg-transparent text-gray-600 hover:text-gray-900'
+                    : 'bg-gray-200 text-gray-600 hover:text-gray-900 hover:bg-gray-300'
                 }`}
               >
                 {tab.name}
@@ -250,7 +250,7 @@ export default function ProfilePage() {
             {/* Name Fields */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">First Name</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2 text-left">First Name</label>
                 <input
                   type="text"
                   value={firstName}
@@ -259,7 +259,7 @@ export default function ProfilePage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2 text-left">Last Name</label>
                 <input
                   type="text"
                   value={lastName}
@@ -271,7 +271,7 @@ export default function ProfilePage() {
 
             {/* Email */}
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2 text-left">Email Address</label>
               <input
                 type="email"
                 value={email}
@@ -311,86 +311,102 @@ export default function ProfilePage() {
             
             {company ? (
               <div className="space-y-6">
-                 {/* Company Logo */}
-                 <div className="text-center">
-                   <label className="block text-sm font-medium text-gray-700 mb-2">Organization Logo</label>
-                   <div className="flex flex-col items-center space-y-4">
-                     {company.logo_url ? (
-                       <img
-                         src={company.logo_url}
-                         alt="Organization Logo"
-                         className="w-20 h-20 bg-gray-300 rounded-lg object-cover border"
-                       />
-                     ) : (
-                       <div className="w-20 h-20 bg-gray-300 rounded-lg flex items-center justify-center text-gray-500 font-semibold text-lg">
-                         {company.name?.charAt(0) || 'C'}
-                       </div>
-                     )}
-                     {isEditingCompany && (
-                       <div className="flex flex-col items-center space-y-2">
-                         <input
-                           type="file"
-                           accept="image/*"
-                           onChange={handleCompanyLogoChange}
-                           className="text-sm text-gray-500"
+                 {/* Company Logo and Details - Side by Side Layout */}
+                 <div className="flex gap-6 justify-between">
+                   {/* Company Logo - Left Side */}
+                   <div className="flex-shrink-0">
+                     <label className="block text-sm font-medium text-gray-700 mb-2 text-left">Organization Logo</label>
+                     <div className="flex flex-col space-y-4">
+                       {company.logo_url ? (
+                         <img
+                           src={company.logo_url}
+                           alt="Organization Logo"
+                           className="w-32 h-32 rounded-full object-cover border border-gray-300"
                          />
-                         {companyLogo && (
-                           <button
-                             onClick={handleUploadCompanyLogo}
-                             disabled={isUploadingLogo}
-                             className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700 disabled:bg-gray-400"
-                           >
-                             {isUploadingLogo ? 'Uploading...' : 'Upload Logo'}
-                           </button>
-                         )}
-                       </div>
-                     )}
-                   </div>
-                 </div>
-
-                 {/* Company Details */}
-                 <div className="text-left">
-                   <label className="block text-sm font-medium text-gray-700 mb-2 text-left">Organization Name</label>
-                   {isEditingCompany ? (
-                     <input
-                       type="text"
-                       value={companyName}
-                       onChange={(e) => setCompanyName(e.target.value)}
-                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-left"
-                     />
-                   ) : (
-                     <div className="w-full px-3 py-2 border border-gray-200 rounded-md bg-gray-50 text-gray-900 text-left">
-                       {company.name || 'Not provided'}
-                     </div>
-                   )}
-                 </div>
-
-                 <div className="text-left">
-                   <label className="block text-sm font-medium text-gray-700 mb-2 text-left">Website</label>
-                   {isEditingCompany ? (
-                     <input
-                       type="url"
-                       value={companyWebsite}
-                       onChange={(e) => setCompanyWebsite(e.target.value)}
-                       placeholder="https://example.com"
-                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-left"
-                     />
-                   ) : (
-                     <div className="w-full px-3 py-2 border border-gray-200 rounded-md bg-gray-50 text-gray-900 text-left">
-                       {company.website ? (
-                         <a 
-                           href={company.website} 
-                           target="_blank" 
-                           rel="noopener noreferrer"
-                           className="text-blue-600 hover:text-blue-800 underline text-left"
-                         >
-                           {company.website}
-                         </a>
                        ) : (
-                         'Not provided'
+                         <div className="w-32 h-32 rounded-full flex items-center justify-center text-gray-400 font-semibold text-2xl border-2 border-dashed border-gray-300">
+                           {company.name?.charAt(0) || 'C'}
+                         </div>
+                       )}
+                       {isEditingCompany && (
+                         <div className="flex flex-col space-y-3">
+                           <label className="cursor-pointer">
+                             <input
+                               type="file"
+                               accept="image/*"
+                               onChange={handleCompanyLogoChange}
+                               className="hidden"
+                             />
+                             <div className="flex items-center justify-center px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors">
+                               <svg className="w-5 h-5 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                               </svg>
+                               <span className="text-sm text-gray-600 font-medium">Choose Image</span>
+                             </div>
+                           </label>
+                           {companyLogo && (
+                             <div className="space-y-2">
+                               <p className="text-xs text-gray-600 truncate">{companyLogo.name}</p>
+                               <button
+                                 onClick={handleUploadCompanyLogo}
+                                 disabled={isUploadingLogo}
+                                 className="w-full px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors shadow-sm"
+                               >
+                                 {isUploadingLogo ? 'Uploading...' : 'Upload Logo'}
+                               </button>
+                             </div>
+                           )}
+                         </div>
                        )}
                      </div>
-                   )}
+                   </div>
+
+                   {/* Company Details - Right Side */}
+                   <div className="space-y-6 w-[600px]">
+                     <div className="text-left">
+                       <label className="block text-sm font-medium text-gray-700 mb-2 text-left">Organization Name</label>
+                       {isEditingCompany ? (
+                         <input
+                           type="text"
+                           value={companyName}
+                           onChange={(e) => setCompanyName(e.target.value)}
+                           className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-left"
+                         />
+                       ) : (
+                         <div className="w-full px-3 py-2 border border-gray-200 rounded-md bg-gray-50 text-gray-900 text-left">
+                           {company.name || 'Not provided'}
+                         </div>
+                       )}
+                     </div>
+
+                     <div className="text-left">
+                       <label className="block text-sm font-medium text-gray-700 mb-2 text-left">Website</label>
+                       {isEditingCompany ? (
+                         <input
+                           type="url"
+                           value={companyWebsite}
+                           onChange={(e) => setCompanyWebsite(e.target.value)}
+                           placeholder="https://example.com"
+                           className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-left"
+                         />
+                       ) : (
+                         <div className="w-full px-3 py-2 border border-gray-200 rounded-md bg-gray-50 text-gray-900 text-left">
+                           {company.website ? (
+                             <a 
+                               href={company.website} 
+                               target="_blank" 
+                               rel="noopener noreferrer"
+                               className="text-blue-600 hover:text-blue-800 underline text-left"
+                             >
+                               {company.website}
+                             </a>
+                           ) : (
+                             'Not provided'
+                           )}
+                         </div>
+                       )}
+                     </div>
+                   </div>
                  </div>
 
                  {/* Save Company Changes */}
@@ -430,7 +446,7 @@ export default function ProfilePage() {
                               Deleting your organization will permanently remove all data including:
                             </p>
                             <ul className="list-disc list-inside mt-2 space-y-1 text-left">
-                              <li>All QuDemos and their videos</li>
+                              <li>All Qudemos and their videos</li>
                               <li>All transcript files and knowledge sources</li>
                               <li>All analytics and interaction data</li>
                               <li>Organization settings and configuration</li>

@@ -134,16 +134,12 @@ const BulkUploadsPage = () => {
   return (
     <div className="p-6">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Bulk Uploads</h1>
-        <p className="text-gray-600">View all your customer bulk uploads and their details.</p>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2 text-left">Bulk Uploads</h1>
+        <p className="text-gray-600 text-left">View all your customer bulk uploads and their details.</p>
         
       </div>
 
       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div className="p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Upload History</h2>
-          <p className="text-gray-600">Track all CSV uploads and manage customer batches.</p>
-        </div>
 
         <div className="overflow-x-auto">
           {bulkUploads.length > 0 ? (
@@ -151,19 +147,19 @@ const BulkUploadsPage = () => {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Upload Name
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
+                      Upload name
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
                       Type
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Upload Date
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
+                      Upload date
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
                       Customers
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
                       Actions
                     </th>
                   </tr>
@@ -183,7 +179,7 @@ const BulkUploadsPage = () => {
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-6 py-4 whitespace-nowrap text-left">
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                           upload.operation_type === 'few_links' 
                             ? 'bg-purple-100 text-purple-800' 
