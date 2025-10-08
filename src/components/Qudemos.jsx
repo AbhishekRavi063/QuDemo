@@ -97,8 +97,10 @@ const Qudemos = () => {
   // Format duration helper
   const formatDuration = (seconds) => {
     if (!seconds) return '0:00';
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
+    // Round to nearest whole number to avoid floating point precision issues
+    const roundedSeconds = Math.round(seconds);
+    const minutes = Math.floor(roundedSeconds / 60);
+    const remainingSeconds = roundedSeconds % 60;
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
