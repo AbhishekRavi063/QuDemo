@@ -1,15 +1,43 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { XMarkIcon, SparklesIcon, ShareIcon, ChartBarIcon } from '@heroicons/react/24/outline';
+import { getApiUrl } from '../config/api';
 
 const UpgradeModal = ({ isOpen, onClose, errorDetails }) => {
   const navigate = useNavigate();
 
   if (!isOpen) return null;
 
-  const handleUpgrade = () => {
+  const handleUpgrade = async () => {
     onClose();
-    navigate('/pricing');
+    try {
+      const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
+      if (!token) {
+        navigate('/login');
+        return;
+      }
+      const baseUrl = getApiUrl('node');
+      const checkoutUrl = `${baseUrl}/api/subscription/checkout`;
+      const response = await fetch(checkoutUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          plan: 'pro',
+          billingCycle: 'monthly'
+        })
+      });
+      const data = await response.json();
+      if (data.success && data.checkoutUrl) {
+        window.location.href = data.checkoutUrl;
+      } else {
+        alert(`Failed to start checkout: ${data.error || 'Unknown error'}`);
+      }
+    } catch (error) {
+      alert(`Failed to start checkout: ${error.message}`);
+    }
   };
 
   // Determine if this is a cancelled subscription
@@ -28,7 +56,7 @@ const UpgradeModal = ({ isOpen, onClose, errorDetails }) => {
 
       {/* Modal */}
       <div className="flex min-h-full items-center justify-center p-4">
-        <div className="relative bg-white rounded-2xl shadow-2xl max-w-2xl w-full min-h-[500px] p-10 transform transition-all">
+        <div className="relative bg-white rounded-2xl shadow-2xl max-w-lg w-full min-h-[500px] p-10 transform transition-all">
           {/* Close Button */}
           <button
             onClick={onClose}
@@ -47,7 +75,7 @@ const UpgradeModal = ({ isOpen, onClose, errorDetails }) => {
 
           {/* Features - Only show for non-cancelled subscriptions */}
           {!isCancelled && (
-            <div className="flex justify-center mb-8">
+            <div className="mb-8">
               <div className="space-y-4">
                 <div className="flex items-start">
                   <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3">

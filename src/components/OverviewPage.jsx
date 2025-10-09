@@ -112,7 +112,7 @@ const OverviewPage = () => {
                <p className="text-4xl font-bold text-gray-900 text-left">{stats.totalViews.toLocaleString()}</p>
              </div>
             <div className="p-2 bg-blue-100 rounded-lg ml-4">
-              <EyeIcon className="w-5 h-5 text-blue-600" />
+              <EyeIcon className="w-6 h-6 text-blue-600" />
             </div>
           </div>
         </div>
@@ -125,7 +125,7 @@ const OverviewPage = () => {
                <p className="text-4xl font-bold text-gray-900 text-left">{stats.questionsAsked.toLocaleString()}</p>
              </div>
             <div className="p-2 bg-blue-100 rounded-lg ml-4">
-              <ChatBubbleLeftRightIcon className="w-5 h-5 text-blue-600" />
+              <ChatBubbleLeftRightIcon className="w-6 h-6 text-blue-600" />
             </div>
           </div>
         </div>
@@ -138,7 +138,7 @@ const OverviewPage = () => {
                <p className="text-4xl font-bold text-gray-900 text-left">{stats.avgEngagement}%</p>
              </div>
             <div className="p-2 bg-blue-100 rounded-lg ml-4">
-              <ChartBarIcon className="w-5 h-5 text-blue-600" />
+              <ChartBarIcon className="w-6 h-6 text-blue-600" />
             </div>
           </div>
         </div>

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useCompany } from '../context/CompanyContext';
 import { useNotification } from '../context/NotificationContext';
-import { getNodeApiUrl } from '../config/api';
+import { getNodeApiUrl, getApiUrl } from '../config/api';
 import {
   MagnifyingGlassIcon,
   EyeIcon,
@@ -9,6 +10,7 @@ import {
   ClockIcon,
 } from '@heroicons/react/24/outline';
 const CustomerInteractionsPage = () => {
+  const navigate = useNavigate();
   const [interactions, setInteractions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -807,9 +809,36 @@ const CustomerInteractionsPage = () => {
                 Cancel
               </button>
               <button
-                onClick={() => {
+                onClick={async () => {
                   setShowUpgradeModal(false);
-                  window.location.href = '/pricing';
+                  try {
+                    const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
+                    if (!token) {
+                      navigate('/login');
+                      return;
+                    }
+                    const baseUrl = getApiUrl('node');
+                    const checkoutUrl = `${baseUrl}/api/subscription/checkout`;
+                    const response = await fetch(checkoutUrl, {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                      },
+                      body: JSON.stringify({
+                        plan: 'pro',
+                        billingCycle: 'monthly'
+                      })
+                    });
+                    const data = await response.json();
+                    if (data.success && data.checkoutUrl) {
+                      window.location.href = data.checkoutUrl;
+                    } else {
+                      alert(`Failed to start checkout: ${data.error || 'Unknown error'}`);
+                    }
+                  } catch (error) {
+                    alert(`Failed to start checkout: ${error.message}`);
+                  }
                 }}
                 className="flex-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors"
               >

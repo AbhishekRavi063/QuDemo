@@ -62,8 +62,36 @@ const SubscriptionTab = ({ companyId }) => {
       setLoading(false);
     }
   };
-  const handleUpgrade = () => {
-    navigate('/pricing');
+  const handleUpgrade = async () => {
+    try {
+      const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
+      if (!token) {
+        navigate('/login');
+        return;
+      }
+      const baseUrl = getApiUrl('node');
+      const checkoutUrl = `${baseUrl}/api/subscription/checkout`;
+      const response = await fetch(checkoutUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          plan: 'pro',
+          billingCycle: 'monthly' // Default to monthly, user can change on pricing page if needed
+        })
+      });
+      const data = await response.json();
+      if (data.success && data.checkoutUrl) {
+        // Redirect to Lemon Squeezy checkout
+        window.location.href = data.checkoutUrl;
+      } else {
+        alert(`Failed to start checkout: ${data.error || 'Unknown error'}`);
+      }
+    } catch (error) {
+      alert(`Failed to start checkout: ${error.message}`);
+    }
   };
   const handleManageBilling = async () => {
     try {
@@ -230,16 +258,16 @@ const SubscriptionTab = ({ companyId }) => {
               </div>
             </div>
             {/* Usage Statistics Card */}
-            <div className="bg-gray-50 border border-gray-300 rounded-[20px] shadow-sm p-4 w-64 flex-shrink-0">
-              <h4 className="font-semibold text-gray-900 mb-3">Usage Statistics</h4>
+            <div className="bg-white border border-gray-300 rounded-lg shadow-sm p-4 w-64 flex-shrink-0">
+              <h4 className="font-semibold text-gray-900 mb-3 text-left">Usage Statistics</h4>
               <div className="space-y-3">
-                <div>
-                  <div className="text-2xl font-bold text-gray-900">{subscription.usage?.totalQudemos || 0}</div>
-                  <div className="text-sm text-gray-600">Limit: 3 QuDemos</div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600 text-left">Total QuDemos</span>
+                  <span className="text-xl font-bold text-gray-900">{subscription.usage?.totalQudemos || 0}</span>
                 </div>
-                <div>
-                  <div className="text-2xl font-bold text-gray-900">0</div>
-                  <div className="text-sm text-gray-600">Not available on Free</div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600 text-left">Shared QuDemos</span>
+                  <span className="text-xl font-bold text-gray-900">0</span>
                 </div>
               </div>
             </div>
@@ -265,9 +293,9 @@ const SubscriptionTab = ({ companyId }) => {
                 <XCircleIcon className="h-5 w-5 text-gray-400 mr-3 flex-shrink-0" />
                 <span className="text-gray-500">No Unique Link Generation</span>
               </div>
-              <div className="flex items-center">
+              <div className="flex items-start">
                 <XCircleIcon className="h-5 w-5 text-gray-400 mr-3 flex-shrink-0" />
-                <span className="text-gray-500">No viewer tracking & engagement</span>
+                <span className="text-gray-500 text-left">No viewer tracking & engagement</span>
               </div>
               <div className="flex items-center">
                 <XCircleIcon className="h-5 w-5 text-gray-400 mr-3 flex-shrink-0" />
@@ -335,15 +363,15 @@ const SubscriptionTab = ({ companyId }) => {
           )}
         </div>
         {/* Usage Statistics Card */}
-        <div className="bg-gray-50 border border-gray-300 rounded-[20px] shadow-sm p-4 w-64 flex-shrink-0">
-          <h4 className="font-semibold text-gray-900 mb-3">Usage Statistics</h4>
-          <div className="space-y-2">
+        <div className="bg-white border border-gray-300 rounded-lg shadow-sm p-4 w-64 flex-shrink-0">
+          <h4 className="font-semibold text-gray-900 mb-3 text-left">Usage Statistics</h4>
+          <div className="space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-gray-600">Total QuDemos</span>
+              <span className="text-gray-600 text-left">Total QuDemos</span>
               <span className="text-xl font-bold text-gray-900">{subscription.usage?.totalQudemos || 0}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-gray-600">Shared QuDemos</span>
+              <span className="text-gray-600 text-left">Shared QuDemos</span>
               <span className="text-xl font-bold text-gray-900">{subscription.usage?.sharedQudemos || 0}</span>
             </div>
           </div>

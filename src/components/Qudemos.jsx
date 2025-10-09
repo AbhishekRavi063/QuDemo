@@ -1667,31 +1667,19 @@ const Qudemos = () => {
          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
            <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
              <div className="p-6">
-               <div className="flex items-center justify-between mb-4">
-                 <button
-                   onClick={() => {
-                     setShowGeneratedLinksModal(false);
-                     setShowFewUniqueLinksModal(true);
-                   }}
-                   className="text-gray-400 hover:text-gray-600"
-                   title="Back"
-                 >
-                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                   </svg>
-                 </button>
-                 <h3 className="text-lg font-semibold text-gray-900 text-left flex-1 ml-3">
-                   Generated Links
-                 </h3>
-                 <button
-                   onClick={() => setShowGeneratedLinksModal(false)}
-                   className="text-gray-400 hover:text-gray-600"
-                 >
-                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                   </svg>
-                 </button>
-               </div>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 text-left flex-1">
+                  Generated Links
+                </h3>
+                <button
+                  onClick={() => setShowGeneratedLinksModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
                <div className="mb-6">
                  <p className="text-sm text-gray-600 mb-6 text-left">
                    Successfully generated {generatedLinks.length} unique tracking links for "{qudemoToShare?.title}".
@@ -1778,6 +1766,17 @@ const Qudemos = () => {
                      </div>
                    </div>
                  </div>
+                <div className="mt-6 flex justify-end">
+                  <button
+                    onClick={() => {
+                      setShowGeneratedLinksModal(false);
+                      setShowFewUniqueLinksModal(true);
+                    }}
+                    className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:text-gray-900 hover:border-gray-400 transition-colors"
+                  >
+                    Back
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -1854,19 +1853,19 @@ const Qudemos = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
             <div className="p-6">
-              <div className="text-center mb-6">
-                <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4">
-                  <svg className="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="text-left mb-6">
+                <div className="flex items-center justify-start h-12 w-12 rounded-full bg-green-100 mb-4">
+                  <svg className="h-6 w-6 text-green-600 ml-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2 text-left">
                   Bulk Links Generated Successfully!
                 </h3>
-                <p className="text-sm text-gray-600 mb-4">
+                <p className="text-sm text-gray-600 mb-4 text-left">
                   Successfully generated <strong>{downloadData.length}</strong> unique share links for "{qudemoToShare?.title}".
                 </p>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-gray-600 text-left">
                   Download the CSV file with all generated links and client information.
                 </p>
               </div>
@@ -1875,7 +1874,7 @@ const Qudemos = () => {
                   <svg className="w-5 h-5 text-blue-600 mt-0.5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  <div className="text-sm text-blue-800">
+                  <div className="text-sm text-blue-800 text-left">
                     <p className="font-medium mb-1">File includes:</p>
                     <ul className="list-disc list-inside space-y-1">
                       <li>SL No, Client Name, Email, Company</li>
@@ -1885,7 +1884,7 @@ const Qudemos = () => {
                   </div>
                 </div>
               </div>
-              <div className="flex justify-center space-x-3">
+              <div className="flex justify-start space-x-3">
                 <button
                   onClick={() => setShowDownloadModal(false)}
                   className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"

@@ -85,8 +85,35 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         navigate('/profile');
       }
     } else {
-      // For Free users, navigate to pricing page
-      navigate('/pricing');
+      // For Free users, redirect to checkout
+      try {
+        const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
+        if (!token) {
+          navigate('/login');
+          return;
+        }
+        const baseUrl = getApiUrl('node');
+        const checkoutUrl = `${baseUrl}/api/subscription/checkout`;
+        const response = await fetch(checkoutUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            plan: 'pro',
+            billingCycle: 'monthly'
+          })
+        });
+        const data = await response.json();
+        if (data.success && data.checkoutUrl) {
+          window.location.href = data.checkoutUrl;
+        } else {
+          alert(`Failed to start checkout: ${data.error || 'Unknown error'}`);
+        }
+      } catch (error) {
+        alert(`Failed to start checkout: ${error.message}`);
+      }
     }
   };
 
@@ -211,13 +238,21 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
               className={`group flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors duration-200 ${
                 location.pathname === '/bulk-uploads'
                   ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600'
-                  : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                  : !isPro 
+                    ? 'text-gray-400'
+                    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
               }`}
               onClick={() => setIsOpen(false)}
             >
-              <DocumentArrowUpIcon className={`mr-3 h-5 w-5 flex-shrink-0 ${
-                location.pathname === '/bulk-uploads' ? 'text-indigo-700' : 'text-gray-400 group-hover:text-gray-500'
-              }`} />
+              {!isPro ? (
+                <LockClosedIcon className={`mr-3 h-5 w-5 flex-shrink-0 ${
+                  location.pathname === '/bulk-uploads' ? 'text-indigo-700' : 'text-gray-400'
+                }`} />
+              ) : (
+                <DocumentArrowUpIcon className={`mr-3 h-5 w-5 flex-shrink-0 ${
+                  location.pathname === '/bulk-uploads' ? 'text-indigo-700' : 'text-gray-400 group-hover:text-gray-500'
+                }`} />
+              )}
               Bulk Upload
             </Link>
             

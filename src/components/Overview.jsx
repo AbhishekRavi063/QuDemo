@@ -66,7 +66,7 @@ const Overview = () => {
           title="Total Demo Views"
           value="2,438"
           change="+12.5%"
-          icon={<EyeIcon className="h-5 w-5 text-blue-600" />}
+          icon={<EyeIcon className="h-8 w-8 text-blue-600" />}
           bg="bg-blue-100"
         />
         <Card
@@ -74,7 +74,7 @@ const Overview = () => {
           value="831"
           change="+18.2%"
           icon={
-            <ChatBubbleLeftEllipsisIcon className="h-5 w-5 text-green-600" />
+            <ChatBubbleLeftEllipsisIcon className="h-8 w-8 text-green-600" />
           }
           bg="bg-green-100"
         />
@@ -82,14 +82,14 @@ const Overview = () => {
           title="Meetings Booked"
           value="149"
           change="+6.8%"
-          icon={<UsersIcon className="h-5 w-5 text-purple-600" />}
+          icon={<UsersIcon className="h-8 w-8 text-purple-600" />}
           bg="bg-purple-100"
         />
         <Card
           title="Avg. Engagement"
           value="73%"
           change="+4.3%"
-          icon={<ChartBarIcon className="h-5 w-5 text-yellow-600" />}
+          icon={<ChartBarIcon className="h-8 w-8 text-yellow-600" />}
           bg="bg-yellow-100"
         />
       </div>
