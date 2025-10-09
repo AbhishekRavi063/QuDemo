@@ -108,7 +108,7 @@ const HomePage = () => {
                 </div>
                 {/* Dashboard button - Responsive text and padding */}
                 <div 
-                  onClick={() => navigate('/create')}
+                  onClick={() => navigate('/overview')}
                   className="text-white font-medium px-4 md:px-8 py-2 bg-blue-600/90 rounded-[20px] border border-blue-500/40 hover:bg-blue-700/90 transition-all duration-200 cursor-pointer text-sm md:text-base"
                 >
                   <span className="hidden sm:inline">Dashboard</span>
