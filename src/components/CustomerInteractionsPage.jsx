@@ -246,22 +246,22 @@ const CustomerInteractionsPage = () => {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
+                <th className="px-6 py-3 text-left text-sm font-bold text-gray-700 tracking-wider">
                   Customer
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
+                <th className="px-6 py-3 text-left text-sm font-bold text-gray-700 tracking-wider">
                   Company
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
+                <th className="px-6 py-3 text-left text-sm font-bold text-gray-700 tracking-wider">
                   Demo watched
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
+                <th className="px-6 py-3 text-left text-sm font-bold text-gray-700 tracking-wider">
                   <ChatBubbleLeftEllipsisIcon className="h-4 w-4" />
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
+                <th className="px-6 py-3 text-left text-sm font-bold text-gray-700 tracking-wider">
                   <ClockIcon className="h-4 w-4" />
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
+                <th className="px-6 py-3 text-left text-sm font-bold text-gray-700 tracking-wider">
                   Actions
                 </th>
               </tr>
@@ -684,16 +684,16 @@ const CustomerInteractionsPage = () => {
                       <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                           <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
+                            <th className="px-6 py-3 text-left text-sm font-bold text-gray-700 tracking-wider">
                               Date
                             </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
+                            <th className="px-6 py-3 text-left text-sm font-bold text-gray-700 tracking-wider">
                               Demo
                             </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
+                            <th className="px-6 py-3 text-left text-sm font-bold text-gray-700 tracking-wider">
                               Questions
                             </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
+                            <th className="px-6 py-3 text-left text-sm font-bold text-gray-700 tracking-wider">
                               Time spent
                             </th>
                           </tr>

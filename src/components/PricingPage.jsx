@@ -22,13 +22,14 @@ const PricingPage = () => {
       price: { monthly: 0, yearly: 0 },
       description: 'Perfect for getting started',
       features: [
-        'Create unlimited QuDemos',
-        'Preview QuDemos'
+        'Limited Qudemos',
+        'Qudemo Preview only'
       ],
       limitations: [
-        'No public sharing',
-        'Cannot generate share links',
-        'Limited analytics'
+        'No Public Sharing',
+        'No Unique Link Generation',
+        'No viewer tracking & engagement',
+        'No Advanced Analytics'
       ],
       cta: currentPlan === 'free' ? 'Current Plan' : 'Downgrade to Free',
       highlight: false,
@@ -39,9 +40,12 @@ const PricingPage = () => {
       price: { monthly: 29.9, yearly: 299 },
       description: 'For professionals and growing teams',
       features: [
-        'Everything in Free',
-        '✨ Generate share links',
-        '✨ Public QuDemo sharing'
+        'Unlimited Qudemo',
+        'Share Qudemo anywhere',
+        'Create unique links for each prospects',
+        'Track Engagements',
+        'Advanced analytics and insights',
+        'Priority Support'
       ],
       limitations: [],
       cta: currentPlan === 'pro' && currentBillingCycle === billingCycle
@@ -78,9 +82,45 @@ const PricingPage = () => {
     // }
   };
   const handleSelectPlan = async (planName) => {
+    // Handle downgrade to free by canceling subscription
     if (planName === 'free') {
-      return; // Free plan is always active
+      if (currentPlan !== 'free') {
+        const confirmed = window.confirm(
+          'Are you sure you want to downgrade to Free plan? Your Pro subscription will be cancelled and you will lose access to premium features at the end of your billing period.'
+        );
+        if (!confirmed) return;
+        
+        setLoading(planName);
+        try {
+          const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
+          if (!token) {
+            navigate('/login');
+            return;
+          }
+          const baseUrl = getApiUrl('node');
+          const cancelUrl = `${baseUrl}/api/subscription/${company.id}/cancel`;
+          const response = await fetch(cancelUrl, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          const data = await response.json();
+          if (data.success) {
+            alert('Your subscription has been cancelled. You will have access to Pro features until the end of your billing period.');
+            window.location.reload(); // Reload to update subscription status
+          } else {
+            alert(`Failed to cancel subscription: ${data.error || 'Unknown error'}`);
+          }
+        } catch (error) {
+          alert(`Failed to cancel subscription: ${error.message}`);
+        } finally {
+          setLoading(null);
+        }
+      }
+      return;
     }
+    
     setLoading(planName);
     try {
       const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
@@ -163,17 +203,22 @@ const PricingPage = () => {
             return (
               <div
                 key={key}
-                className={`bg-white rounded-2xl shadow-xl overflow-hidden transform transition-all hover:scale-105 w-full md:w-80 ${
-                  plan.highlight ? 'ring-4 ring-blue-500' : ''
+                className={`bg-white rounded-2xl shadow-xl overflow-hidden transform transition-all hover:scale-105 w-full ${
+                  key === 'free' ? 'md:w-80 scale-95' : 'md:w-96'
                 } ${
-                  plan.isCurrent && currentBillingCycle === billingCycle ? 'ring-4 ring-blue-500' : ''
-                } ${
-                  plan.isCancelled ? 'ring-4 ring-red-500' : ''
+                  plan.isCancelled ? 'ring-4 ring-red-500' : 
+                  plan.isCurrent && currentBillingCycle === billingCycle ? 'ring-4 ring-green-500' : 
+                  currentPlan === 'free' && key === 'pro' ? 'ring-4 ring-blue-500' : ''
                 }`}
               >
                 {plan.isCurrent && currentBillingCycle === billingCycle && (
-                  <div className="bg-blue-600 text-white text-center py-2 text-sm font-semibold">
+                  <div className="bg-green-600 text-white text-center py-2 text-sm font-semibold">
                     ✓ CURRENT PLAN
+                  </div>
+                )}
+                {currentPlan === 'free' && key === 'pro' && (
+                  <div className="bg-blue-600 text-white text-center py-2 text-sm font-semibold">
+                    ⭐ MOST POPULAR
                   </div>
                 )}
                 {plan.isCancelled && (
@@ -208,16 +253,20 @@ const PricingPage = () => {
                   {/* CTA Button */}
                   <button
                     onClick={() => handleSelectPlan(key)}
-                    disabled={key === 'free' || loading === key || (plan.isCurrent && currentBillingCycle === billingCycle)}
+                    disabled={loading === key || (plan.isCurrent && currentBillingCycle === billingCycle) || (key === 'free' && currentPlan === 'free')}
                     className={`w-full py-3 px-6 rounded-lg font-semibold transition-all mb-6 ${
                       plan.isCurrent && currentBillingCycle === billingCycle
-                        ? 'bg-blue-100 text-blue-700 cursor-not-allowed'
+                        ? 'bg-green-600 text-white opacity-60 cursor-not-allowed'
                         : plan.isCancelled
                         ? 'bg-red-600 text-white hover:bg-red-700'
+                        : currentPlan === 'free' && key === 'pro'
+                        ? 'bg-blue-600 text-white hover:bg-blue-700'
                         : plan.highlight
                         ? 'bg-blue-600 text-white hover:bg-blue-700'
-                        : key === 'free'
+                        : key === 'free' && currentPlan === 'free'
                         ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
+                        : key === 'free' && currentPlan !== 'free'
+                        ? 'bg-blue-600 text-white hover:bg-blue-700'
                         : 'bg-gray-900 text-white hover:bg-gray-800'
                     } ${loading === key ? 'opacity-50 cursor-wait' : ''}`}
                   >

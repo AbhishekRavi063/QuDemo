@@ -1050,11 +1050,23 @@ const Qudemos = () => {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleDropdownAction('interactions', qudemo);
+                            if (!isPro) {
+                              setErrorDetails({
+                                title: 'View Interactions requires Pro plan',
+                                message: 'Upgrade to Pro to view detailed interaction analytics for your QuDemos.',
+                                features: [
+                                  { title: 'Advanced Analytics', description: 'Track views and engagement', icon: '📊' },
+                                  { title: 'Public Sharing', description: 'Generate shareable links for your QuDemos', icon: '🔗' }
+                                ],
+                                pricing: 'Starting at $29.9/month',
+                                action: 'Upgrade to Pro'
+                              });
+                              setShowUpgradeModal(true);
+                            } else {
+                              handleDropdownAction('interactions', qudemo);
+                            }
                           }}
-                          className={`w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center space-x-2 ${
-                            !isPro ? 'text-gray-400' : ''
-                          }`}
+                          className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center space-x-2 text-gray-700"
                         >
                           {!isPro ? <LockClosedIcon className="w-4 h-4" /> : <ChartBarIcon className="w-4 h-4" />}
                           <span>View Interactions</span>
@@ -1062,11 +1074,23 @@ const Qudemos = () => {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleDropdownAction('share', qudemo);
+                            if (!isPro) {
+                              setErrorDetails({
+                                title: 'Share functionality requires Pro plan',
+                                message: 'Upgrade to Pro to generate shareable links for your QuDemos.',
+                                features: [
+                                  { title: 'Public Sharing', description: 'Generate shareable links for your QuDemos', icon: '🔗' },
+                                  { title: 'Advanced Analytics', description: 'Track views and engagement', icon: '📊' }
+                                ],
+                                pricing: 'Starting at $29.9/month',
+                                action: 'Upgrade to Pro'
+                              });
+                              setShowUpgradeModal(true);
+                            } else {
+                              handleDropdownAction('share', qudemo);
+                            }
                           }}
-                          className={`w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center space-x-2 ${
-                            !isPro ? 'text-gray-400' : ''
-                          }`}
+                          className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center space-x-2 text-gray-700"
                         >
                           <ShareIcon className="w-4 h-4" />
                           {!isPro && <LockClosedIcon className="w-3 h-3" />}
@@ -1100,11 +1124,25 @@ const Qudemos = () => {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
+                      if (!isPro) {
+                        setErrorDetails({
+                          title: 'View Interactions requires Pro plan',
+                          message: 'Upgrade to Pro to view detailed interaction analytics for your QuDemos.',
+                          features: [
+                            { title: 'Advanced Analytics', description: 'Track views and engagement', icon: '📊' },
+                            { title: 'Public Sharing', description: 'Generate shareable links for your QuDemos', icon: '🔗' }
+                          ],
+                          pricing: 'Starting at $29.9/month',
+                          action: 'Upgrade to Pro'
+                        });
+                        setShowUpgradeModal(true);
+                      } else {
                         handleViewQudemoInteractions(qudemo);
+                      }
                     }}
                     className={`w-full flex items-center justify-center space-x-2 transition-colors duration-200 py-2 px-3 rounded-lg border ${
                       !isPro
-                        ? 'text-gray-400 border-gray-200 hover:bg-gray-50'
+                        ? 'text-gray-600 border-gray-300 hover:bg-gray-50 cursor-pointer'
                         : 'text-blue-600 hover:text-blue-800 hover:bg-blue-50 border-blue-200'
                     }`}
                   >
@@ -1115,11 +1153,25 @@ const Qudemos = () => {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleDropdownAction('share', qudemo);
+                      if (!isPro) {
+                        setErrorDetails({
+                          title: 'Share functionality requires Pro plan',
+                          message: 'Upgrade to Pro to generate shareable links for your QuDemos.',
+                          features: [
+                            { title: 'Public Sharing', description: 'Generate shareable links for your QuDemos', icon: '🔗' },
+                            { title: 'Advanced Analytics', description: 'Track views and engagement', icon: '📊' }
+                          ],
+                          pricing: 'Starting at $29.9/month',
+                          action: 'Upgrade to Pro'
+                        });
+                        setShowUpgradeModal(true);
+                      } else {
+                        handleDropdownAction('share', qudemo);
+                      }
                     }}
                     className={`w-full flex items-center justify-center space-x-2 transition-colors duration-200 py-2 px-3 rounded-lg border ${
                       !isPro 
-                        ? 'text-gray-400 border-gray-200 hover:bg-gray-50' 
+                        ? 'text-gray-600 border-gray-300 hover:bg-gray-50 cursor-pointer' 
                         : 'text-green-600 hover:text-green-800 hover:bg-green-50 border-green-200'
                     }`}
                   >
@@ -1170,9 +1222,9 @@ const Qudemos = () => {
       {/* Share Modal */}
       {showShareModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4">
+            <div className="p-8">
+              <div className="flex items-center justify-between mb-6">
                 <button
                   onClick={() => {
                     setShowShareModal(false);
@@ -1195,7 +1247,7 @@ const Qudemos = () => {
                   </svg>
                 </button>
               </div>
-              <div className="mb-4">
+              <div className="mb-6">
                 <p className="text-sm text-gray-600 mb-2 text-left">
                   Share this Qudemo with anyone using the link below:
                 </p>
@@ -1217,11 +1269,22 @@ const Qudemos = () => {
                   </button>
                 </div>
               </div>
-              <div className="bg-blue-50 p-3 rounded-lg">
+              <div className="bg-blue-50 p-4 rounded-lg mb-6">
                 <p className="text-sm text-blue-800">
                   <strong>Note:</strong> This link is public and can be accessed by anyone without authentication. 
                   The shared page will show your company name and the Qudemo content.
                 </p>
+              </div>
+              <div className="flex justify-end">
+                <button
+                  onClick={() => {
+                    setShowShareModal(false);
+                    setShowShareOptionsModal(true);
+                  }}
+                  className="px-6 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 font-medium"
+                >
+                  Back
+                </button>
               </div>
             </div>
           </div>
@@ -1421,10 +1484,10 @@ const Qudemos = () => {
                        <table className="w-full text-xs text-blue-600 border-collapse">
                          <thead>
                            <tr className="border-b border-gray-300">
-                             <th className="text-center py-2 px-3 font-semibold border-r border-gray-300">SL No</th>
-                             <th className="text-center py-2 px-3 font-semibold border-r border-gray-300">name</th>
-                             <th className="text-center py-2 px-3 font-semibold border-r border-gray-300">email</th>
-                             <th className="text-center py-2 px-3 font-semibold">company</th>
+                             <th className="text-center py-2 px-3 text-sm font-bold border-r border-gray-300">SL No</th>
+                             <th className="text-center py-2 px-3 text-sm font-bold border-r border-gray-300">name</th>
+                             <th className="text-center py-2 px-3 text-sm font-bold border-r border-gray-300">email</th>
+                             <th className="text-center py-2 px-3 text-sm font-bold">company</th>
                            </tr>
                          </thead>
                          <tbody>
@@ -2215,16 +2278,16 @@ const Qudemos = () => {
                       <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                           <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
+                            <th className="px-6 py-3 text-left text-sm font-bold text-gray-700 tracking-wider">
                               Date
                             </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
+                            <th className="px-6 py-3 text-left text-sm font-bold text-gray-700 tracking-wider">
                               Demo
                             </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
+                            <th className="px-6 py-3 text-left text-sm font-bold text-gray-700 tracking-wider">
                               Questions
                             </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
+                            <th className="px-6 py-3 text-left text-sm font-bold text-gray-700 tracking-wider">
                               Time spent
                             </th>
                           </tr>
@@ -2418,24 +2481,24 @@ const Qudemos = () => {
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 tracking-wider">
+                        <th className="px-6 py-3 text-left text-sm font-bold text-gray-700 tracking-wider">
                           Customer
                         </th>
-                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 tracking-wider">
+                        <th className="px-6 py-3 text-center text-sm font-bold text-gray-700 tracking-wider">
                           <div className="flex justify-center">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                             </svg>
                           </div>
                         </th>
-                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 tracking-wider">
+                        <th className="px-6 py-3 text-center text-sm font-bold text-gray-700 tracking-wider">
                           <div className="flex justify-center">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                           </div>
                         </th>
-                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 tracking-wider">
+                        <th className="px-6 py-3 text-right text-sm font-bold text-gray-700 tracking-wider">
                           Actions
                         </th>
                       </tr>

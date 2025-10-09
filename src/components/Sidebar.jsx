@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { NavLink, Link, useLocation } from 'react-router-dom';
+import { NavLink, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useCompany } from '../context/CompanyContext';
+import { getApiUrl } from '../config/api';
 import {
   ClockIcon,
   Cog6ToothIcon,
@@ -31,6 +32,7 @@ const baseMenuItems = [
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { company } = useCompany();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   
@@ -53,6 +55,39 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
 
   const cancelLogout = () => {
     setShowLogoutModal(false);
+  };
+
+  const handlePlanClick = async (e) => {
+    e.preventDefault();
+    setIsOpen(false);
+
+    // For Pro users, open billing portal
+    if (subscriptionPlan === 'pro' || subscriptionPlan === 'enterprise') {
+      try {
+        const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
+        const baseUrl = getApiUrl('node');
+        const response = await fetch(`${baseUrl}/api/subscription/${company.id}/billing-portal`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        const data = await response.json();
+        if (data.success && data.portalUrl) {
+          window.open(data.portalUrl, '_blank');
+        } else {
+          console.error('Failed to get billing portal:', data.error);
+          // Fallback to profile page
+          navigate('/profile');
+        }
+      } catch (error) {
+        console.error('Failed to open billing portal:', error);
+        // Fallback to profile page
+        navigate('/profile');
+      }
+    } else {
+      // For Free users, navigate to pricing page
+      navigate('/pricing');
+    }
   };
 
   return (
@@ -126,10 +161,9 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200 bg-white">
           {/* Current Plan Container */}
           <div className="mb-4">
-            <Link 
-              to="/pricing"
+            <div 
               className="block bg-gray-50 rounded-lg p-4 border border-gray-200 hover:bg-gray-100 transition-colors duration-200 cursor-pointer"
-              onClick={() => setIsOpen(false)}
+              onClick={handlePlanClick}
             >
               <div className="flex items-center justify-between">
                 <div className="flex flex-col space-y-1 text-left">
@@ -146,7 +180,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                   </svg>
                 </div>
               </div>
-            </Link>
+            </div>
           </div>
           
           <div className="space-y-2">

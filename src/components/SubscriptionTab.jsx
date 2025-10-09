@@ -142,18 +142,16 @@ const SubscriptionTab = ({ companyId }) => {
   const getPlanFeatures = (plan) => {
     const features = {
       free: [
-        'Create unlimited QuDemos',
-        'Preview QuDemos',
-        'Basic analytics',
-        'Email support'
+        'Limited Qudemos',
+        'Qudemo Preview only'
       ],
       pro: [
-        'Everything in Free',
-        'Generate share links',
-        'Public QuDemo sharing',
-        'Advanced analytics',
-        'Priority support',
-        'Unlimited QuDemos'
+        'Unlimited Qudemo',
+        'Share Qudemo anywhere',
+        'Create unique links for each prospects',
+        'Track Engagements',
+        'Advanced analytics and insights',
+        'Priority Support'
       ],
       enterprise: [
         'Everything in Pro',
@@ -216,6 +214,89 @@ const SubscriptionTab = ({ companyId }) => {
   const trialStatus = getTrialStatus();
   return (
     <div className="space-y-6">
+      {isFree ? (
+        // Free Plan UI
+        <>
+          {/* Top Section - Plan Details and Usage Statistics */}
+          <div className="flex justify-between items-start gap-6">
+            {/* Plan Details */}
+            <div className="text-left flex-1">
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">Free Plan</h3>
+              <p className="text-gray-600 mb-4">You're currently on the free plan</p>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p className="text-sm text-blue-800">
+                  <strong className="text-blue-900">Upgrade to Pro</strong> to unlock advanced features like share links, analytics, and unlimited QuDemos.
+                </p>
+              </div>
+            </div>
+            {/* Usage Statistics Card */}
+            <div className="bg-gray-50 border border-gray-300 rounded-[20px] shadow-sm p-4 w-64 flex-shrink-0">
+              <h4 className="font-semibold text-gray-900 mb-3">Usage Statistics</h4>
+              <div className="space-y-3">
+                <div>
+                  <div className="text-2xl font-bold text-gray-900">{subscription.usage?.totalQudemos || 0}</div>
+                  <div className="text-sm text-gray-600">Limit: 3 QuDemos</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-gray-900">0</div>
+                  <div className="text-sm text-gray-600">Not available on Free</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          {/* Plan Features */}
+          <div>
+            <hr className="border-gray-200 my-6" />
+            <h3 className="text-xl font-semibold text-gray-900 mb-4 text-left">Plan Features</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="flex items-center">
+                <CheckCircleIcon className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
+                <span className="text-gray-700">Limited Qudemos</span>
+              </div>
+              <div className="flex items-center">
+                <CheckCircleIcon className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
+                <span className="text-gray-700">Qudemo Preview only</span>
+              </div>
+              <div className="flex items-center">
+                <XCircleIcon className="h-5 w-5 text-gray-400 mr-3 flex-shrink-0" />
+                <span className="text-gray-500">No Public Sharing</span>
+              </div>
+              <div className="flex items-center">
+                <XCircleIcon className="h-5 w-5 text-gray-400 mr-3 flex-shrink-0" />
+                <span className="text-gray-500">No Unique Link Generation</span>
+              </div>
+              <div className="flex items-center">
+                <XCircleIcon className="h-5 w-5 text-gray-400 mr-3 flex-shrink-0" />
+                <span className="text-gray-500">No viewer tracking & engagement</span>
+              </div>
+              <div className="flex items-center">
+                <XCircleIcon className="h-5 w-5 text-gray-400 mr-3 flex-shrink-0" />
+                <span className="text-gray-500">No Advanced Analytics</span>
+              </div>
+            </div>
+          </div>
+          {/* Action Buttons */}
+          <div>
+            <hr className="border-gray-200 my-6" />
+            <div className="flex gap-3">
+              <button
+                onClick={handleUpgrade}
+                className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+              >
+                Upgrade to Pro
+              </button>
+              <button
+                onClick={handleUpgrade}
+                className="px-6 py-2 bg-white text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+              >
+                Compare Plans
+              </button>
+            </div>
+          </div>
+        </>
+      ) : (
+        // Paid Plan UI (existing code)
+        <>
       {/* Top Section - Plan Details and Usage Statistics */}
       <div className="flex justify-between items-start gap-6">
         {/* Plan Details */}
@@ -274,9 +355,9 @@ const SubscriptionTab = ({ companyId }) => {
         <h3 className="text-xl font-semibold text-gray-900 mb-4 text-left">Plan Features</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
           {getPlanFeatures(subscription.plan).map((feature, idx) => (
-            <div key={idx} className="flex items-center">
-              <CheckCircleIcon className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
-              <span className="text-gray-700">{feature}</span>
+            <div key={idx} className="flex items-start text-left">
+              <CheckCircleIcon className="h-5 w-5 text-green-500 mr-3 flex-shrink-0 mt-0.5" />
+              <span className="text-gray-700 text-left">{feature}</span>
             </div>
           ))}
         </div>
@@ -373,6 +454,8 @@ const SubscriptionTab = ({ companyId }) => {
             </div>
           </div>
         </div>
+      )}
+        </>
       )}
     </div>
   );
