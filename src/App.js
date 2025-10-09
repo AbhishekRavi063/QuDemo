@@ -33,6 +33,7 @@ import { CompanyProvider, useCompany } from './context/CompanyContext';
 import { BackendProvider } from './context/BackendContext';
 import { NotificationProvider } from './context/NotificationContext';
 // Protected Route Component
+//test
 const ProtectedRoute = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
