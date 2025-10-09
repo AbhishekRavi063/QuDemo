@@ -2,11 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCompany } from '../context/CompanyContext';
 import { useNotification } from '../context/NotificationContext';
-import { getNodeApiUrl } from '../config/api';
+import { getNodeApiUrl, getApiUrl } from '../config/api';
 import ReactPlayer from "react-player";
 import HybridVideoPlayer from "./HybridVideoPlayer";
 import QudemoPreview from "./QudemoPreview";
-import UpgradeModal from "./UpgradeModal";
 import {
   EyeIcon,
   PencilIcon,
@@ -1768,13 +1767,10 @@ const Qudemos = () => {
                  </div>
                 <div className="mt-6 flex justify-end">
                   <button
-                    onClick={() => {
-                      setShowGeneratedLinksModal(false);
-                      setShowFewUniqueLinksModal(true);
-                    }}
+                    onClick={() => setShowGeneratedLinksModal(false)}
                     className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:text-gray-900 hover:border-gray-400 transition-colors"
                   >
-                    Back
+                    Close
                   </button>
                 </div>
               </div>
@@ -1840,14 +1836,71 @@ const Qudemos = () => {
         </div>
       )}
       {/* Upgrade Modal */}
-      <UpgradeModal
-        isOpen={showUpgradeModal}
-        onClose={() => {
-          setShowUpgradeModal(false);
-          setErrorDetails(null);
-        }}
-        errorDetails={errorDetails}
-      />
+      {showUpgradeModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="flex items-center mb-4">
+              <svg className="h-8 w-8 text-orange-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 15.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+              <h3 className="text-lg font-semibold text-gray-900 text-left">{errorDetails?.title || 'Upgrade Required'}</h3>
+            </div>
+            
+            <p className="text-gray-600 mb-6 text-left">
+              {errorDetails?.message || 'Upgrade to Pro to access premium features including share functionality and advanced analytics.'}
+            </p>
+            
+            <div className="flex space-x-3">
+              <button
+                onClick={() => {
+                  setShowUpgradeModal(false);
+                  setErrorDetails(null);
+                }}
+                className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  setShowUpgradeModal(false);
+                  setErrorDetails(null);
+                  try {
+                    const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
+                    if (!token) {
+                      navigate('/login');
+                      return;
+                    }
+                    const baseUrl = getApiUrl('node');
+                    const checkoutUrl = `${baseUrl}/api/subscription/checkout`;
+                    const response = await fetch(checkoutUrl, {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                      },
+                      body: JSON.stringify({
+                        plan: 'pro',
+                        billingCycle: 'monthly'
+                      })
+                    });
+                    const data = await response.json();
+                    if (data.success && data.checkoutUrl) {
+                      window.location.href = data.checkoutUrl;
+                    } else {
+                      showError(`Failed to start checkout: ${data.error || 'Unknown error'}`);
+                    }
+                  } catch (error) {
+                    showError(`Failed to start checkout: ${error.message}`);
+                  }
+                }}
+                className="flex-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors"
+              >
+                Upgrade to Pro
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Download Generated File Modal */}
       {showDownloadModal && downloadData && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
@@ -1879,7 +1932,6 @@ const Qudemos = () => {
                     <ul className="list-disc list-inside space-y-1">
                       <li>SL No, Client Name, Email, Company</li>
                       <li>Generated Share Links</li>
-                      <li>Ready to distribute to your clients</li>
                     </ul>
                   </div>
                 </div>

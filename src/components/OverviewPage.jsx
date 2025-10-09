@@ -109,10 +109,10 @@ const OverviewPage = () => {
           <div className="flex items-center justify-between h-full">
              <div className="flex-1 text-left">
                <h3 className="text-base font-bold text-gray-600 mb-1 text-left">Total Demo Views</h3>
-               <p className="text-4xl font-bold text-gray-900 text-left">{stats.totalViews.toLocaleString()}</p>
+               <p className="text-3xl font-bold text-gray-900 text-left">{stats.totalViews.toLocaleString()}</p>
              </div>
-            <div className="p-2 bg-blue-100 rounded-lg ml-4">
-              <EyeIcon className="w-6 h-6 text-blue-600" />
+            <div className="p-3 bg-blue-100 rounded-lg ml-4">
+              <EyeIcon className="w-8 h-8 text-blue-600" />
             </div>
           </div>
         </div>
@@ -122,10 +122,10 @@ const OverviewPage = () => {
           <div className="flex items-center justify-between h-full">
              <div className="flex-1 text-left">
                <h3 className="text-base font-bold text-gray-600 mb-1 text-left">Questions Asked</h3>
-               <p className="text-4xl font-bold text-gray-900 text-left">{stats.questionsAsked.toLocaleString()}</p>
+               <p className="text-3xl font-bold text-gray-900 text-left">{stats.questionsAsked.toLocaleString()}</p>
              </div>
-            <div className="p-2 bg-blue-100 rounded-lg ml-4">
-              <ChatBubbleLeftRightIcon className="w-6 h-6 text-blue-600" />
+            <div className="p-3 bg-blue-100 rounded-lg ml-4">
+              <ChatBubbleLeftRightIcon className="w-8 h-8 text-blue-600" />
             </div>
           </div>
         </div>
@@ -135,10 +135,10 @@ const OverviewPage = () => {
           <div className="flex items-center justify-between h-full">
              <div className="flex-1 text-left">
                <h3 className="text-base font-bold text-gray-600 mb-1 text-left">Avg. Engagement</h3>
-               <p className="text-4xl font-bold text-gray-900 text-left">{stats.avgEngagement}%</p>
+               <p className="text-3xl font-bold text-gray-900 text-left">{stats.avgEngagement}%</p>
              </div>
-            <div className="p-2 bg-blue-100 rounded-lg ml-4">
-              <ChartBarIcon className="w-6 h-6 text-blue-600" />
+            <div className="p-3 bg-blue-100 rounded-lg ml-4">
+              <ChartBarIcon className="w-8 h-8 text-blue-600" />
             </div>
           </div>
         </div>

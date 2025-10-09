@@ -123,7 +123,7 @@ const UpgradeModal = ({ isOpen, onClose, errorDetails }) => {
                   : 'bg-blue-600 hover:bg-blue-700'
               }`}
             >
-              {isCancelled ? 'Renew Subscription' : 'View All Plans'}
+              {isCancelled ? 'Renew Subscription' : 'Upgrade now'}
             </button>
             <button
               onClick={onClose}
