@@ -36,7 +36,7 @@ const PricingPage = () => {
     },
     pro: {
       name: 'Pro',
-      price: { monthly: 25, yearly: 250 },
+      price: { monthly: 29.9, yearly: 299 },
       description: 'For professionals and growing teams',
       features: [
         'Everything in Free',
@@ -121,7 +121,7 @@ const PricingPage = () => {
       const savings = monthly - yearly;
       const percentage = Math.round((savings / monthly) * 100);
       const monthsFree = Math.round(savings / plans[plan].price.monthly);
-      return { amount: savings, percentage, monthsFree };
+      return { amount: Math.round(savings * 100) / 100, percentage, monthsFree };
     }
     return null;
   };
@@ -150,7 +150,7 @@ const PricingPage = () => {
               }`}
             >
               Yearly
-              <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+              <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
                 2 Months Free
               </span>
             </button>
@@ -166,24 +166,19 @@ const PricingPage = () => {
                 className={`bg-white rounded-2xl shadow-xl overflow-hidden transform transition-all hover:scale-105 w-full md:w-80 ${
                   plan.highlight ? 'ring-4 ring-blue-500' : ''
                 } ${
-                  plan.isCurrent && currentBillingCycle === billingCycle ? 'ring-4 ring-green-500' : ''
+                  plan.isCurrent && currentBillingCycle === billingCycle ? 'ring-4 ring-blue-500' : ''
                 } ${
                   plan.isCancelled ? 'ring-4 ring-red-500' : ''
                 }`}
               >
                 {plan.isCurrent && currentBillingCycle === billingCycle && (
-                  <div className="bg-green-600 text-white text-center py-2 text-sm font-semibold">
+                  <div className="bg-blue-600 text-white text-center py-2 text-sm font-semibold">
                     ✓ CURRENT PLAN
                   </div>
                 )}
                 {plan.isCancelled && (
                   <div className="bg-red-600 text-white text-center py-2 text-sm font-semibold">
                     ⚠ CANCELLED
-                  </div>
-                )}
-                {plan.highlight && !plan.isCurrent && !plan.isCancelled && (
-                  <div className="bg-blue-600 text-white text-center py-2 text-sm font-semibold">
-                    MOST POPULAR
                   </div>
                 )}
                 <div className="p-8">
@@ -205,7 +200,7 @@ const PricingPage = () => {
                       )}
                     </div>
                     {savings && (
-                      <p className="text-sm text-green-600 mt-2">
+                      <p className="text-sm text-blue-600 mt-2">
                         Save ${savings.amount}/year ({savings.monthsFree} months free)
                       </p>
                     )}
@@ -216,7 +211,7 @@ const PricingPage = () => {
                     disabled={key === 'free' || loading === key || (plan.isCurrent && currentBillingCycle === billingCycle)}
                     className={`w-full py-3 px-6 rounded-lg font-semibold transition-all mb-6 ${
                       plan.isCurrent && currentBillingCycle === billingCycle
-                        ? 'bg-green-100 text-green-700 cursor-not-allowed'
+                        ? 'bg-blue-100 text-blue-700 cursor-not-allowed'
                         : plan.isCancelled
                         ? 'bg-red-600 text-white hover:bg-red-700'
                         : plan.highlight
@@ -232,7 +227,7 @@ const PricingPage = () => {
                   <div className="space-y-3 mb-6">
                     {plan.features.map((feature, idx) => (
                       <div key={idx} className="flex items-start">
-                        <CheckIcon className="h-5 w-5 text-green-500 mr-3 flex-shrink-0 mt-0.5" />
+                        <CheckIcon className="h-5 w-5 text-blue-500 mr-3 flex-shrink-0 mt-0.5" />
                         <span className="text-gray-700">{feature}</span>
                       </div>
                     ))}

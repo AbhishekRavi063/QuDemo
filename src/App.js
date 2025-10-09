@@ -21,7 +21,7 @@ import RegisterPage from './components/RegisterPage';
 import CompanyManagement from './components/CompanyManagement';
 import CompanySetup from './components/CompanySetup';
 import AuthCallback from './components/AuthCallback';
-import Overview from './components/Overview';
+import OverviewPage from './components/OverviewPage';
 import HomePage from './components/HomePage';
 import TestRunner from './components/TestRunner';
 import PublicQudemoShare from './components/PublicQudemoShare';
@@ -193,7 +193,7 @@ function App() {
                     <ProtectedRoute>
                       <CompanyCheck>
                         <DashboardLayout>
-                          <Overview />
+                          <OverviewPage />
                         </DashboardLayout>
                       </CompanyCheck>
                     </ProtectedRoute>

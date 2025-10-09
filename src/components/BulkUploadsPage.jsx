@@ -12,6 +12,8 @@ const BulkUploadsPage = () => {
   const [bulkUploads, setBulkUploads] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
   useEffect(() => {
     fetchBulkUploads();
   }, []);
@@ -78,6 +80,14 @@ const BulkUploadsPage = () => {
     });
   };
   const totalCustomers = bulkUploads.reduce((sum, upload) => sum + (upload.customer_count || 0), 0);
+  
+  // Pagination logic
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentUploads = bulkUploads.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(bulkUploads.length / itemsPerPage);
+  
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -129,7 +139,7 @@ const BulkUploadsPage = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {bulkUploads.map((upload) => (
+                  {currentUploads.map((upload) => (
                     <tr key={upload.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
@@ -183,10 +193,71 @@ const BulkUploadsPage = () => {
                   ))}
                 </tbody>
               </table>
-              <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
-                <p className="text-sm text-gray-600">
+              <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
+                <p className="text-sm text-gray-600 text-left">
                   Total uploads: {bulkUploads.length} batches • Total customers: {totalCustomers}
                 </p>
+                
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => paginate(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      className={`px-3 py-1 rounded-md text-sm font-medium ${
+                        currentPage === 1
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
+                      }`}
+                    >
+                      Previous
+                    </button>
+                    
+                    <div className="flex items-center space-x-1">
+                      {[...Array(totalPages)].map((_, index) => {
+                        const pageNumber = index + 1;
+                        // Show first page, last page, current page, and pages around current
+                        if (
+                          pageNumber === 1 ||
+                          pageNumber === totalPages ||
+                          (pageNumber >= currentPage - 1 && pageNumber <= currentPage + 1)
+                        ) {
+                          return (
+                            <button
+                              key={pageNumber}
+                              onClick={() => paginate(pageNumber)}
+                              className={`px-3 py-1 rounded-md text-sm font-medium ${
+                                currentPage === pageNumber
+                                  ? 'bg-blue-600 text-white'
+                                  : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
+                              }`}
+                            >
+                              {pageNumber}
+                            </button>
+                          );
+                        } else if (
+                          pageNumber === currentPage - 2 ||
+                          pageNumber === currentPage + 2
+                        ) {
+                          return <span key={pageNumber} className="text-gray-400">...</span>;
+                        }
+                        return null;
+                      })}
+                    </div>
+                    
+                    <button
+                      onClick={() => paginate(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                      className={`px-3 py-1 rounded-md text-sm font-medium ${
+                        currentPage === totalPages
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
+                      }`}
+                    >
+                      Next
+                    </button>
+                  </div>
+                )}
               </div>
             </>
           ) : (

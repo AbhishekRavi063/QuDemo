@@ -20,8 +20,15 @@ const CustomerInteractionsPage = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [aiInsightSummary, setAiInsightSummary] = useState('');
   const [loadingAiSummary, setLoadingAiSummary] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const { company } = useCompany();
   const { showError } = useNotification();
+
+  // Check subscription status
+  const subscriptionPlan = company?.subscription_plan || 'free';
+  const subscriptionStatus = company?.subscription_status || 'active';
+  const isActive = ['active', 'trialing', 'on_trial'].includes(subscriptionStatus);
+  const isPro = ['pro', 'enterprise'].includes(subscriptionPlan) && isActive;
   // Fetch lightweight customer list (without detailed Q&A data)
   const fetchCustomerList = async () => {
     try {
@@ -144,6 +151,13 @@ const CustomerInteractionsPage = () => {
   };
   // Handle view details
   const handleViewDetails = async (interaction) => {
+    // Check if user has active Pro plan
+    if (!isPro) {
+      // Show upgrade modal for inactive Pro users
+      setShowUpgradeModal(true);
+      return;
+    }
+    
     // Reset AI summary state
     setAiInsightSummary('');
     setLoadingAiSummary(false);
@@ -416,7 +430,7 @@ const CustomerInteractionsPage = () => {
                             <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
-                            <span>
+                        <span>
                               {new Date(selectedInteraction.last_accessed_at).toLocaleDateString('en-US', {
                                 weekday: 'long',
                                 month: 'short',
@@ -425,7 +439,7 @@ const CustomerInteractionsPage = () => {
                                 minute: '2-digit',
                                 hour12: true
                               })}
-                            </span>
+                        </span>
                           </div>
                         )}
                       </div>
@@ -495,9 +509,9 @@ const CustomerInteractionsPage = () => {
                           <span className="text-sm">Analyzing customer questions...</span>
                         </div>
                       ) : (
-                        <p className="text-blue-800">
+                      <p className="text-blue-800">
                           {aiInsightSummary || 'Generating AI insight summary...'}
-                        </p>
+                      </p>
                       )}
                     </div> */}
                     {/* Interaction Metrics */}
@@ -765,6 +779,42 @@ const CustomerInteractionsPage = () => {
                   </div>
                 )}
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Upgrade Modal for Inactive Pro Users */}
+      {showUpgradeModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="flex items-center mb-4">
+              <svg className="h-8 w-8 text-orange-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 15.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+              <h3 className="text-lg font-semibold text-gray-900">Upgrade Required</h3>
+            </div>
+            
+            <p className="text-gray-600 mb-6">
+              Your Pro plan is currently inactive. To view detailed interaction analytics and insights, please upgrade to Pro or reactivate your subscription.
+            </p>
+            
+            <div className="flex space-x-3">
+              <button
+                onClick={() => setShowUpgradeModal(false)}
+                className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  setShowUpgradeModal(false);
+                  window.location.href = '/pricing';
+                }}
+                className="flex-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors"
+              >
+                Upgrade to Pro
+              </button>
             </div>
           </div>
         </div>

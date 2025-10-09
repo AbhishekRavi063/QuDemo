@@ -18,10 +18,12 @@ import {
   UserGroupIcon,
   DocumentArrowUpIcon,
   CreditCardIcon,
+  HomeIcon,
 } from '@heroicons/react/24/outline';
 
 // Base menu items (available to all users)
 const baseMenuItems = [
+    { name: 'Overview', icon: Squares2X2Icon, path: '/overview' },
     { name: 'Create Qudemo', icon: PlusIcon, path: '/create' },
     { name: 'Qudemos', icon: PlayIcon, path: '/qudemos' },
     { name: 'Interactions', icon: UserGroupIcon, path: '/customer-interactions', requiresPro: true },
@@ -135,7 +137,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                     {subscriptionPlan === 'pro' ? 'Pro Plan' : 'Free Plan'}
                   </p>
                   <p className="text-xs text-blue-600 font-medium text-left">
-                    {subscriptionPlan === 'pro' ? 'Manage Plan' : 'Upgrade →'}
+                    {subscriptionPlan === 'pro' ? 'Manage Plan' : 'Upgrade'}
                   </p>
                 </div>
                 <div className="flex-shrink-0">

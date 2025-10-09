@@ -105,7 +105,7 @@ export default function Header({ onMenuClick }) {
           <Bars3Icon className="h-6 w-6" />
         </button>
         {/* Logo */}
-        <Link to="/" className="cursor-pointer">
+        <Link to="/qudemos" className="cursor-pointer">
           <img 
             src="/Qudemo.svg" 
             alt="Qudemo Logo" 

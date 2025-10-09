@@ -28,7 +28,7 @@ const UpgradeModal = ({ isOpen, onClose, errorDetails }) => {
 
       {/* Modal */}
       <div className="flex min-h-full items-center justify-center p-4">
-        <div className="relative bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 transform transition-all">
+        <div className="relative bg-white rounded-2xl shadow-2xl max-w-2xl w-full min-h-[500px] p-10 transform transition-all">
           {/* Close Button */}
           <button
             onClick={onClose}
@@ -37,45 +37,36 @@ const UpgradeModal = ({ isOpen, onClose, errorDetails }) => {
             <XMarkIcon className="h-6 w-6" />
           </button>
 
-          {/* Icon */}
-          <div className="flex justify-center mb-4">
-            <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-              isCancelled 
-                ? 'bg-gradient-to-br from-red-500 to-orange-500' 
-                : 'bg-gradient-to-br from-blue-500 to-purple-600'
-            }`}>
-              <SparklesIcon className="h-6 w-6 text-white" />
-            </div>
-          </div>
-
           {/* Content */}
-          <h2 className="text-xl font-bold text-gray-900 text-center mb-2">
+          <h2 className="text-xl font-bold text-gray-900 text-left mb-4 mt-2">
             {title}
           </h2>
-          <p className="text-gray-600 text-center mb-4 text-sm">
+          <p className="text-gray-600 text-left mb-6 text-sm leading-relaxed">
             {message}
           </p>
 
           {/* Features - Only show for non-cancelled subscriptions */}
           {!isCancelled && (
-            <div className="space-y-3 mb-6">
-              <div className="flex items-start">
-                <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
-                  <ShareIcon className="h-4 w-4 text-blue-600" />
+            <div className="flex justify-center mb-8">
+              <div className="space-y-4">
+                <div className="flex items-start">
+                  <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                    <ShareIcon className="h-4 w-4 text-blue-600" />
+                  </div>
+                  <div className="text-left">
+                    <h3 className="font-semibold text-gray-900 text-sm text-left mb-1">Public Sharing</h3>
+                    <p className="text-xs text-gray-600 text-left leading-relaxed">Generate shareable links for your QuDemos</p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900 text-sm">Public Sharing</h3>
-                  <p className="text-xs text-gray-600">Generate shareable links for your QuDemos</p>
-                </div>
-              </div>
 
-              <div className="flex items-start">
-                <div className="flex-shrink-0 w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
-                  <ChartBarIcon className="h-4 w-4 text-purple-600" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900 text-sm">Advanced Analytics</h3>
-                  <p className="text-xs text-gray-600">Track views and engagement</p>
+                <div className="flex items-start">
+                  <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                    <ChartBarIcon className="h-4 w-4 text-blue-600" />
+                  </div>
+                  <div className="text-left">
+                    <h3 className="font-semibold text-gray-900 text-sm text-left mb-1">Advanced Analytics</h3>
+                    <p className="text-xs text-gray-600 text-left leading-relaxed">Track views and engagement</p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -83,25 +74,25 @@ const UpgradeModal = ({ isOpen, onClose, errorDetails }) => {
 
           {/* Pricing - Only show for non-cancelled subscriptions */}
           {!isCancelled && (
-            <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-3 mb-4">
+            <div className="bg-blue-50 rounded-xl p-4 mb-6">
               <div className="flex items-baseline justify-center">
-                <span className="text-2xl font-bold text-gray-900">$29</span>
+                <span className="text-2xl font-bold text-gray-900">$29.9</span>
                 <span className="text-gray-600 ml-2 text-sm">/month</span>
               </div>
-              <p className="text-center text-xs text-gray-600 mt-1">
-                or $290/year (save 20%)
+              <p className="text-center text-xs text-gray-600 mt-2">
+                or $299/year (save 17%)
               </p>
             </div>
           )}
 
           {/* Buttons */}
-          <div className="space-y-2">
+          <div className="space-y-3">
             <button
               onClick={handleUpgrade}
               className={`w-full py-2.5 px-6 text-white rounded-lg font-semibold transition-all transform hover:scale-105 ${
                 isCancelled 
                   ? 'bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700'
-                  : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700'
+                  : 'bg-blue-600 hover:bg-blue-700'
               }`}
             >
               {isCancelled ? 'Renew Subscription' : 'View All Plans'}
