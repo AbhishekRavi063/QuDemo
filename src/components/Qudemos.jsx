@@ -1375,7 +1375,7 @@ const Qudemos = () => {
                  <div className="space-y-4">
                    {/* Upload CSV File Section */}
                    <div>
-                     <h4 className="font-medium text-gray-900 mb-3">Upload File (CSV/XLSX)</h4>
+                     <h4 className="font-medium text-gray-900 mb-3 text-left">Upload File (CSV/XLSX)</h4>
                      <div className="space-y-3">
                        <input
                          type="file"
@@ -1396,7 +1396,7 @@ const Qudemos = () => {
                            {selectedFile ? 'Change File' : 'Choose File (CSV/XLSX)'}
                          </span>
                        </label>
-                       <p className="text-xs text-gray-500 text-center">
+                       <p className="text-xs text-gray-500 text-left">
                          Upload a CSV or Excel file with customer data (SL No, name, email, company)
                        </p>
                        {selectedFile && (
@@ -1416,7 +1416,7 @@ const Qudemos = () => {
                    </div>
                    {/* File Format Example */}
                    <div>
-                     <h4 className="font-medium text-gray-900 mb-3">File Format Example (CSV/Excel):</h4>
+                     <h4 className="font-medium text-gray-900 mb-3 text-left">File Format Example (CSV/Excel):</h4>
                      <div className="bg-gray-100 p-3 rounded-lg overflow-x-auto">
                        <table className="w-full text-xs text-blue-600 border-collapse">
                          <thead>

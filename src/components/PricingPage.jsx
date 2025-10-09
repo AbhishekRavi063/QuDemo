@@ -126,7 +126,7 @@ const PricingPage = () => {
     return null;
   };
   return (
-    <div className="bg-gradient-to-br from-blue-50 to-indigo-100 px-4 sm:px-6 lg:px-8">
+    <div className="bg-gray-100 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto py-8">
         {/* Billing Toggle */}
         <div className="flex justify-center mb-8">
