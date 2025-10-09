@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { NavLink, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useCompany } from '../context/CompanyContext';
 import { getApiUrl } from '../config/api';
@@ -20,6 +20,7 @@ import {
   DocumentArrowUpIcon,
   CreditCardIcon,
   HomeIcon,
+  QuestionMarkCircleIcon,
 } from '@heroicons/react/24/outline';
 
 // Base menu items (available to all users)
@@ -34,7 +35,6 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { company } = useCompany();
-  const [showLogoutModal, setShowLogoutModal] = useState(false);
   
   // Check subscription status
   const subscriptionPlan = company?.subscription_plan || 'free';
@@ -42,20 +42,6 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   const isActive = ['active', 'trialing', 'on_trial'].includes(subscriptionStatus);
   const isPro = ['pro', 'enterprise'].includes(subscriptionPlan) && isActive;
   const isEnterprise = subscriptionPlan === 'enterprise' && isActive;
-
-  const handleLogout = async () => {
-    const { clearAuthTokens } = await import('../utils/tokenRefresh');
-    await clearAuthTokens();
-    window.location.href = '/login';
-  };
-
-  const confirmLogout = () => {
-    setShowLogoutModal(true);
-  };
-
-  const cancelLogout = () => {
-    setShowLogoutModal(false);
-  };
 
   const handlePlanClick = async (e) => {
     e.preventDefault();
@@ -280,56 +266,17 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
               Settings
             </Link> */}
             
-            <button
-              onClick={confirmLogout}
+            <a
+              href="mailto:mail@qudemo.com?subject=Help%20Request&body=Hi%20Qudemo%20Support%20Team,%0A%0AI%20need%20help%20with:%0A%0A"
               className="group flex items-center w-full px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 rounded-lg transition-colors duration-200"
+              onClick={() => setIsOpen(false)}
             >
-              <svg
-                className="mr-3 h-5 w-5 flex-shrink-0 text-gray-400 group-hover:text-gray-500"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
-              Logout
-            </button>
+              <QuestionMarkCircleIcon className="mr-3 h-5 w-5 flex-shrink-0 text-gray-400 group-hover:text-gray-500" />
+              Help and Support
+            </a>
           </div>
         </div>
       </div>
-
-      {/* Logout Confirmation Modal */}
-      {showLogoutModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <div className="flex items-center mb-4">
-              <svg className="h-8 w-8 text-orange-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 15.5c-.77.833.192 2.5 1.732 2.5z" />
-              </svg>
-              <h3 className="text-lg font-semibold text-gray-900">Confirm Logout</h3>
-            </div>
-            
-            <p className="text-gray-600 mb-6">
-              Are you sure you want to logout? You will need to sign in again to access your account.
-            </p>
-            
-            <div className="flex space-x-3">
-              <button
-                onClick={cancelLogout}
-                className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleLogout}
-                className="flex-1 px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors"
-              >
-                Logout
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 };
