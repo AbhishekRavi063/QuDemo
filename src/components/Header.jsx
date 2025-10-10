@@ -64,7 +64,7 @@ export default function Header({ onMenuClick }) {
   const handleLogout = () => {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('user');
-    navigate('/');
+    navigate('/login');
     setIsProfileDropdownOpen(false);
     setShowLogoutModal(false);
   };

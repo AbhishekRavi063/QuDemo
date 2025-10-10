@@ -314,7 +314,7 @@ const SubscriptionTab = ({ companyId }) => {
                 Upgrade to Pro
               </button>
               <button
-                onClick={handleUpgrade}
+                onClick={() => navigate('/pricing')}
                 className="px-6 py-2 bg-white text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
               >
                 Compare Plans
@@ -405,7 +405,7 @@ const SubscriptionTab = ({ companyId }) => {
         {isPaid && isActive && (
           <>
             <button
-              onClick={handleUpgrade}
+              onClick={() => navigate('/pricing')}
               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors w-full"
             >
               Change Plan

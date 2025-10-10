@@ -150,8 +150,8 @@ const AuthCallback = () => {
             setTimeout(() => {
               const currentOrigin = window.location.origin;
               if (companyData.success && companyData.data && companyData.data.length > 0) {
-                // User has a company - redirect to qudemos page
-                window.location.href = `${currentOrigin}/qudemos`;
+                // User has a company - redirect to overview page
+                window.location.href = `${currentOrigin}/overview`;
               } else {
                 // User has no company - redirect to create page
                 window.location.href = `${currentOrigin}/create`;

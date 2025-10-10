@@ -62,12 +62,12 @@ const LoginPage = () => {
         localStorage.setItem('accessToken', data.data.tokens.accessToken);
         localStorage.setItem('refreshToken', data.data.tokens.refreshToken);
         localStorage.setItem('user', JSON.stringify(data.data.user));
-        // Check if user came from homepage, if so stay there, otherwise redirect to qudemos
+        // Check if user came from homepage, if so stay there, otherwise redirect to overview
         const fromHomepage = location.state?.from === '/' || document.referrer.includes(window.location.origin + '/');
         if (fromHomepage) {
           navigate('/', { replace: true });
         } else {
-          navigate('/qudemos', { replace: true });
+          navigate('/overview', { replace: true });
         }
       } else {
         setLoginError(data.error || 'Login failed');
