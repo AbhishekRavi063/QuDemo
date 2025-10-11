@@ -13,6 +13,7 @@ const CreateQuDemo = () => {
   const [videoUrls, setVideoUrls] = useState([""]);
   const [websiteUrls, setWebsiteUrls] = useState([""]);
   const [sources, setSources] = useState([""]);
+  const [calendlyLink, setCalendlyLink] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -34,6 +35,7 @@ const CreateQuDemo = () => {
     setVideoUrls([""]);
     setWebsiteUrls([""]);
     setSources([""]);
+    setCalendlyLink("");
     setDocuments([]);
     setSelectedFiles([]);
     setCreatedQudemoId(null);
@@ -134,6 +136,30 @@ const CreateQuDemo = () => {
     }
     return { isValid: true, type: 'website' };
   };
+
+  // Calendly URL validation function
+  const validateCalendlyUrl = (url) => {
+    if (!url || !url.trim()) {
+      return { isValid: true }; // Empty is valid since it's optional
+    }
+
+    const trimmedUrl = url.trim();
+    
+    // Check if it's a valid URL format
+    try {
+      new URL(trimmedUrl);
+    } catch {
+      return { isValid: false, error: "Please enter a valid Calendly URL" };
+    }
+
+    // Check if it's a Calendly URL
+    if (!trimmedUrl.includes('calendly.com')) {
+      return { isValid: false, error: "Please enter a valid Calendly URL (should contain calendly.com)" };
+    }
+
+    return { isValid: true };
+  };
+
   // Check if all URLs are valid or if we have documents
   const areAllUrlsValid = () => {
     // If we have documents (uploaded) or selected files, we don't need videos or websites
@@ -158,7 +184,11 @@ const CreateQuDemo = () => {
       const validation = validateWebsiteUrl(url);
       return validation.isValid;
     });
-    const isValid = videoUrlsValid && websiteUrlsValid;
+    
+    // Check Calendly URL (optional but must be valid if provided)
+    const calendlyUrlValid = validateCalendlyUrl(calendlyLink).isValid;
+    
+    const isValid = videoUrlsValid && websiteUrlsValid && calendlyUrlValid;
     return isValid;
   };
   const addVideoUrlField = () => {
@@ -340,6 +370,7 @@ const CreateQuDemo = () => {
         title: title || "Untitled Qudemo",
         description: "No description provided",
         companyId: company.id,
+        calendlyLink: calendlyLink.trim() || null,
         videos: validVideoUrls.map((url, index) => {
           const validation = validateVideoUrl(url);
           return {
@@ -498,6 +529,7 @@ const CreateQuDemo = () => {
       setVideoUrls([""]);
       setWebsiteUrls([""]);
       setSources([""]);
+      setCalendlyLink("");
       setDocuments([]);
       setSelectedFiles([]);
       setCreatedQudemoId(null);
@@ -720,6 +752,40 @@ const CreateQuDemo = () => {
             />
           </div>
         </div>
+
+        {/* Calendly Link Section */}
+        <div className="mt-6">
+          <label className="block text-sm font-bold text-gray-900 mb-2 text-left">
+            Add Calendly Link <span className="text-gray-400 text-xs font-normal">(Optional)</span>
+          </label>
+          <p className="text-xs text-gray-500 mb-3 text-left">
+            Add a Calendly link to let prospects book meetings directly from your Qudemo
+          </p>
+          <input
+            type="text"
+            value={calendlyLink}
+            onChange={(e) => setCalendlyLink(e.target.value)}
+            placeholder="https://calendly.com/your-username/meeting"
+            className={`w-full border px-4 py-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+              calendlyLink.trim() && !validateCalendlyUrl(calendlyLink).isValid
+                ? 'border-red-500 bg-red-50'
+                : calendlyLink.trim() && validateCalendlyUrl(calendlyLink).isValid
+                  ? 'border-green-500 bg-green-50'
+                  : 'border-gray-300'
+            }`}
+          />
+          {calendlyLink.trim() && !validateCalendlyUrl(calendlyLink).isValid && (
+            <p className="text-red-500 text-sm mt-1 ml-1">
+              {validateCalendlyUrl(calendlyLink).error}
+            </p>
+          )}
+          {calendlyLink.trim() && validateCalendlyUrl(calendlyLink).isValid && (
+            <p className="text-green-600 text-sm mt-1 ml-1">
+              ✓ Valid Calendly URL
+            </p>
+          )}
+        </div>
+
           {/* Submit Button */}
           <button
             type="submit"

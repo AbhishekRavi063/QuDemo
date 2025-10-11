@@ -20,6 +20,8 @@ const QudemoChat = ({ qudemoId, qudemoTitle }) => {
   const [currentVideoUrl, setCurrentVideoUrl] = useState(null);
   const [currentTimestamp, setCurrentTimestamp] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [calendlyLink, setCalendlyLink] = useState(null);
+  const [showCalendlyError, setShowCalendlyError] = useState(false);
   const messagesEndRef = useRef(null);
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -27,6 +29,34 @@ const QudemoChat = ({ qudemoId, qudemoTitle }) => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Fetch qudemo data to get calendly link
+  useEffect(() => {
+    const fetchQudemoData = async () => {
+      try {
+        const token = localStorage.getItem('accessToken');
+        if (!token) return;
+
+        const response = await authenticatedFetch(getNodeApiUrl(`/api/qudemos/${qudemoId}`), {
+          method: 'GET'
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.data.calendly_link) {
+            setCalendlyLink(data.data.calendly_link);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch qudemo data:', error);
+      }
+    };
+
+    if (qudemoId) {
+      fetchQudemoData();
+    }
+  }, [qudemoId]);
+
   // Monitor timestamp changes and reset video state when needed
   useEffect(() => {
     if (currentTimestamp > 0) {
@@ -167,6 +197,20 @@ const QudemoChat = ({ qudemoId, qudemoTitle }) => {
     setIsPlaying(false);
     setCurrentTimestamp(0);
   };
+
+  const handleScheduleMeeting = () => {
+    if (calendlyLink && calendlyLink.trim()) {
+      // Open Calendly link in new tab
+      window.open(calendlyLink, '_blank', 'noopener,noreferrer');
+    } else {
+      // Show error message
+      setShowCalendlyError(true);
+      // Auto-hide error after 5 seconds
+      setTimeout(() => {
+        setShowCalendlyError(false);
+      }, 5000);
+    }
+  };
   const renderMessage = (message, index) => {
     const isAI = message.sender === "AI";
     return (
@@ -295,6 +339,53 @@ const QudemoChat = ({ qudemoId, qudemoTitle }) => {
             className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <PaperAirplaneIcon className="w-5 h-5" />
+          </button>
+        </div>
+        
+        {/* Calendly Error Message */}
+        {showCalendlyError && (
+          <div className="mt-2 mb-2">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start">
+              <svg className="w-5 h-5 text-red-500 mt-0.5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div>
+                <p className="text-sm font-medium text-red-800">Calendly Link Not Available</p>
+                <p className="text-xs text-red-600 mt-1">The owner hasn't added a Calendly link to this Qudemo yet. Please contact them directly to schedule a meeting.</p>
+              </div>
+              <button
+                onClick={() => setShowCalendlyError(false)}
+                className="ml-auto text-red-400 hover:text-red-600"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Schedule Meeting Button - Always Visible */}
+        <div className="mt-3 flex justify-end">
+          <button
+            onClick={handleScheduleMeeting}
+            className="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors duration-200 shadow-sm hover:shadow-md"
+          >
+            <svg
+              className="w-4 h-4 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+              />
+            </svg>
+            Schedule Meeting
           </button>
         </div>
       </div>

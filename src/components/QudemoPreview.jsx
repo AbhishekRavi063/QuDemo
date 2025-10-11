@@ -136,6 +136,8 @@ const QudemoPreview = ({ qudemo, onClose }) => {
   const [showAllQuestions, setShowAllQuestions] = useState(false);
   const [pythonData, setPythonData] = useState(null);
   const [loadingPythonData, setLoadingPythonData] = useState(false);
+  const [calendlyLink, setCalendlyLink] = useState(null);
+  const [showCalendlyError, setShowCalendlyError] = useState(false);
   const messagesEndRef = useRef(null);
   const loomIframeRef = useRef();
   const videoPlayerRef = useRef(null);
@@ -192,6 +194,33 @@ const QudemoPreview = ({ qudemo, onClose }) => {
       fetchPythonData();
     }
   }, [qudemo?.id]);
+
+  // Fetch qudemo data to get calendly link
+  useEffect(() => {
+    const fetchQudemoData = async () => {
+      try {
+        const token = localStorage.getItem('accessToken');
+        if (!token) return;
+
+        const response = await axios.get(getNodeApiUrl(`/api/qudemos/${qudemo.id}`), {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (response.data.success && response.data.data.calendly_link) {
+          setCalendlyLink(response.data.data.calendly_link);
+        }
+      } catch (error) {
+        console.error('Failed to fetch qudemo data:', error);
+      }
+    };
+
+    if (qudemo?.id) {
+      fetchQudemoData();
+    }
+  }, [qudemo?.id]);
+
   const fetchPythonData = async () => {
     try {
       setLoadingPythonData(true);
@@ -448,6 +477,18 @@ const QudemoPreview = ({ qudemo, onClose }) => {
       handleSendMessage();
     }
   };
+
+  const handleScheduleMeeting = () => {
+    if (calendlyLink && calendlyLink.trim()) {
+      window.open(calendlyLink, '_blank', 'noopener,noreferrer');
+    } else {
+      setShowCalendlyError(true);
+      setTimeout(() => {
+        setShowCalendlyError(false);
+      }, 5000);
+    }
+  };
+
   const currentVideo = qudemo?.videos?.[currentVideoIndex];
   return (
     <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center p-4">
@@ -695,6 +736,54 @@ const QudemoPreview = ({ qudemo, onClose }) => {
               <PaperAirplaneIcon className="h-7 w-8" />
             </button>
           </div>
+          
+          {/* Calendly Error Message */}
+          {showCalendlyError && (
+            <div className="px-3 py-2 border-t">
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start">
+                <svg className="w-5 h-5 text-red-500 mt-0.5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div>
+                  <p className="text-sm font-medium text-red-800">Calendly Link Not Available</p>
+                  <p className="text-xs text-red-600 mt-1">The owner hasn't added a Calendly link to this Qudemo yet. Please contact them directly to schedule a meeting.</p>
+                </div>
+                <button
+                  onClick={() => setShowCalendlyError(false)}
+                  className="ml-auto text-red-400 hover:text-red-600"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Schedule Meeting Button */}
+          <div className="px-3 py-2 border-t flex justify-end bg-gray-50">
+            <button
+              onClick={handleScheduleMeeting}
+              className="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors duration-200 shadow-sm hover:shadow-md"
+            >
+              <svg
+                className="w-4 h-4 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+              Schedule Meeting
+            </button>
+          </div>
+
           {/* Footer */}
           <div className="px-2 py-2 flex justify-center items-center text-xs bg-white border-t">
             <span className="text-gray-500">
