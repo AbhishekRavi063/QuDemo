@@ -265,14 +265,6 @@ export default function ProfilePage() {
         )}
         {activeTab === "company" && (
           <div>
-            <div className="flex justify-end items-center mb-6">
-              <button
-                onClick={() => setIsEditingCompany(!isEditingCompany)}
-                className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                {isEditingCompany ? 'Cancel' : 'Edit Organization'}
-              </button>
-            </div>
             {company ? (
               <div className="space-y-6">
                  {/* Company Logo and Details - Side by Side Layout */}
@@ -292,101 +284,35 @@ export default function ProfilePage() {
                            {company.name?.charAt(0) || 'C'}
                          </div>
                        )}
-                       {isEditingCompany && (
-                         <div className="flex flex-col space-y-3">
-                           <label className="cursor-pointer">
-                             <input
-                               type="file"
-                               accept="image/*"
-                               onChange={handleCompanyLogoChange}
-                               className="hidden"
-                             />
-                             <div className="flex items-center justify-center px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors">
-                               <svg className="w-5 h-5 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                               </svg>
-                               <span className="text-sm text-gray-600 font-medium">Choose Image</span>
-                             </div>
-                           </label>
-                           {companyLogo && (
-                             <div className="space-y-2">
-                               <p className="text-xs text-gray-600 truncate">{companyLogo.name}</p>
-                               <button
-                                 onClick={handleUploadCompanyLogo}
-                                 disabled={isUploadingLogo}
-                                 className="w-full px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors shadow-sm"
-                               >
-                                 {isUploadingLogo ? 'Uploading...' : 'Upload Logo'}
-                               </button>
-                             </div>
-                           )}
-                         </div>
-                       )}
                      </div>
                    </div>
                    {/* Company Details - Right Side */}
                    <div className="space-y-6 w-[600px]">
                      <div className="text-left">
                        <label className="block text-sm font-medium text-gray-700 mb-2 text-left">Organization Name</label>
-                       {isEditingCompany ? (
-                         <input
-                           type="text"
-                           value={companyName}
-                           onChange={(e) => setCompanyName(e.target.value)}
-                           className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-left"
-                         />
-                       ) : (
-                         <div className="w-full px-3 py-2 border border-gray-200 rounded-md bg-gray-50 text-gray-900 text-left">
-                           {company.name || 'Not provided'}
-                         </div>
-                       )}
+                       <div className="w-full px-3 py-2 border border-gray-200 rounded-md bg-gray-50 text-gray-900 text-left">
+                         {company.name || 'Not provided'}
+                       </div>
                      </div>
                      <div className="text-left">
                        <label className="block text-sm font-medium text-gray-700 mb-2 text-left">Website</label>
-                       {isEditingCompany ? (
-                         <input
-                           type="url"
-                           value={companyWebsite}
-                           onChange={(e) => setCompanyWebsite(e.target.value)}
-                           placeholder="https://example.com"
-                           className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-left"
-                         />
-                       ) : (
-                         <div className="w-full px-3 py-2 border border-gray-200 rounded-md bg-gray-50 text-gray-900 text-left">
-                           {company.website ? (
-                             <a 
-                               href={company.website} 
-                               target="_blank" 
-                               rel="noopener noreferrer"
-                               className="text-blue-600 hover:text-blue-800 underline text-left"
-                             >
-                               {company.website}
-                             </a>
-                           ) : (
-                             'Not provided'
-                           )}
-                         </div>
-                       )}
+                       <div className="w-full px-3 py-2 border border-gray-200 rounded-md bg-gray-50 text-gray-900 text-left">
+                         {company.website ? (
+                           <a 
+                             href={company.website} 
+                             target="_blank" 
+                             rel="noopener noreferrer"
+                             className="text-blue-600 hover:text-blue-800 underline text-left"
+                           >
+                             {company.website}
+                           </a>
+                         ) : (
+                           'Not provided'
+                         )}
+                       </div>
                      </div>
                    </div>
                  </div>
-                 {/* Save Company Changes */}
-                 {isEditingCompany && (
-                   <div className="flex space-x-3 pt-4 border-t border-gray-200">
-                     <button
-                       onClick={() => setIsEditingCompany(false)}
-                       className="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                     >
-                       Cancel
-                     </button>
-                     <button
-                       onClick={handleUpdateCompany}
-                       className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                     >
-                       Save Changes
-                     </button>
-                   </div>
-                 )}
                 {/* Delete Company Button */}
                 <div className="pt-6 border-t border-gray-200">
                   <div className="flex justify-center">
