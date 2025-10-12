@@ -835,7 +835,7 @@ const QudemoPreview = ({ qudemo, onClose }) => {
                       />
                     </svg>
                   )}
-                  Schedule Meeting
+                  Book Meeting
                 </>
               )}
             </button>
