@@ -215,27 +215,22 @@ const QudemoPreview = ({ qudemo, onClose }) => {
     try {
       const token = localStorage.getItem('accessToken');
       const apiUrl = getNodeApiUrl(`/api/qudemos/${qudemo.id}/suggested-questions`);
-      console.log('🔍 Fetching suggested questions for qudemo:', qudemo.id);
-      console.log('🔍 API URL:', apiUrl);
-      
+      console.log('🔍 [Pro] Fetching suggested questions from:', apiUrl);
       const response = await axios.get(apiUrl, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
-      
-      console.log('✅ Suggested questions response:', response.data);
-      
+      console.log('🔍 [Pro] Suggested questions response:', response.data);
       if (response.data.success) {
         const questions = response.data.suggested_questions || [];
-        console.log('📝 Suggested questions:', questions);
+        console.log('🔍 [Pro] Setting suggested questions:', questions);
         setSuggestedQuestions(questions);
       } else {
-        console.warn('⚠️ Suggested questions request unsuccessful:', response.data);
+        console.warn('🔍 [Pro] Suggested questions fetch failed:', response.data);
       }
     } catch (error) {
-      console.error('❌ Error fetching suggested questions:', error);
-      console.error('❌ Error response:', error.response?.data);
+      console.error('🔍 [Pro] Error fetching suggested questions:', error);
       // Don't show error to user, just silently fail
     } finally {
       setLoadingSuggestedQuestions(false);
@@ -341,9 +336,11 @@ const QudemoPreview = ({ qudemo, onClose }) => {
           throw error; // Re-throw non-auth errors
         }
       }
-      // Process the response and handle video switching
+      // Process the response and handle video switching (same logic as PublicQudemoShare)
       try {
+        console.log('🔍 [Pro] Q&A Response data:', response.data);
         const aiAnswer = response.data?.answer || 'Sorry, I could not find an answer.';
+        console.log('🔍 [Pro] AI Answer:', aiAnswer);
         // Check for video navigation data in the response
         let targetVideoUrl = null;
         let timestamp = 0;
@@ -351,6 +348,7 @@ const QudemoPreview = ({ qudemo, onClose }) => {
         if (response.data && response.data.video_url) {
           targetVideoUrl = response.data.video_url;
           timestamp = response.data.start || 0;
+          console.log('🔍 [Pro] Found video URL:', targetVideoUrl, 'timestamp:', timestamp);
           // Ensure timestamp is a number and convert to seconds if needed
           if (typeof timestamp === 'string') {
             timestamp = parseFloat(timestamp);
@@ -365,6 +363,7 @@ const QudemoPreview = ({ qudemo, onClose }) => {
         }
         // Fallback: check sources array for video sources
         else if (response.data && response.data.sources && response.data.sources.length > 0) {
+          console.log('🔍 [Pro] Checking sources for video:', response.data.sources);
           // Find the first video source with a timestamp
           const videoSource = response.data.sources.find(source => 
             source.source_type === 'video' && source.start_timestamp
@@ -372,8 +371,10 @@ const QudemoPreview = ({ qudemo, onClose }) => {
           if (videoSource) {
             targetVideoUrl = videoSource.url;
             timestamp = videoSource.start_timestamp;
+            console.log('🔍 [Pro] Found video in sources:', targetVideoUrl, 'timestamp:', timestamp);
           }
         }
+        console.log('🔍 [Pro] Final video URL:', targetVideoUrl, 'Final timestamp:', timestamp);
         // Add message with video switching
         setMessages(msgs => [...msgs, {
           sender: "AI",
