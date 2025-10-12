@@ -51,8 +51,6 @@ const OverviewPage = () => {
 
         if (interactionsResponse.ok) {
           const interactionsData = await interactionsResponse.json();
-          console.log('Recent interactions data:', interactionsData);
-          console.log('Interactions length:', interactionsData?.length);
           setRecentInteractions(interactionsData.slice(0, 4)); // Show only latest 4
         } else {
           console.error('Failed to fetch recent interactions:', interactionsResponse.status, interactionsResponse.statusText);
@@ -89,7 +87,7 @@ const OverviewPage = () => {
         <div className="text-left">
           <h1 className="text-3xl font-bold text-gray-900 text-left">Overview</h1>
           <p className="text-lg text-gray-600 mt-2 text-left">
-            Welcome back! Here's what's happening with your QuDemos.
+            Welcome back! Here's what's happening with your Qudemos.
           </p>
         </div>
         

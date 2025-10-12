@@ -215,17 +215,12 @@ const PublicQudemoShare = () => {
   }, [shareToken]);
   const fetchSuggestedQuestions = async () => {
     try {
-      console.log('🔍 Fetching suggested questions for shared qudemo, shareToken:', shareToken);
       // Use the public endpoint for shared QuDemos
       const response = await axios.get(getNodeApiUrl(`/api/qudemos/share/${shareToken}/suggested-questions`));
-      console.log('✅ Suggested questions response:', response.data);
       
       if (response.data.success) {
         const questions = response.data.suggested_questions || [];
-        console.log('📝 Suggested questions:', questions);
         setSuggestedQuestions(questions);
-      } else {
-        console.warn('⚠️ Suggested questions request unsuccessful:', response.data);
       }
     } catch (error) {
       console.error('❌ Error fetching suggested questions:', error);
