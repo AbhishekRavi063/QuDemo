@@ -47,29 +47,9 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     e.preventDefault();
     setIsOpen(false);
 
-    // For Pro users, open billing portal
+    // For Pro users, navigate to profile subscription tab
     if (subscriptionPlan === 'pro' || subscriptionPlan === 'enterprise') {
-      try {
-        const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
-        const baseUrl = getApiUrl('node');
-        const response = await fetch(`${baseUrl}/api/subscription/${company.id}/billing-portal`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        const data = await response.json();
-        if (data.success && data.portalUrl) {
-          window.open(data.portalUrl, '_blank');
-        } else {
-          console.error('Failed to get billing portal:', data.error);
-          // Fallback to profile page
-          navigate('/profile');
-        }
-      } catch (error) {
-        console.error('Failed to open billing portal:', error);
-        // Fallback to profile page
-        navigate('/profile');
-      }
+      navigate('/profile', { state: { activeTab: 'subscription' } });
     } else {
       // For Free users, redirect to checkout
       try {

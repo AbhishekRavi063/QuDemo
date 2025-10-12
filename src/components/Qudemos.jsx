@@ -836,13 +836,6 @@ const Qudemos = () => {
             </svg>
             <span>Refresh</span>
           </button>
-          <button
-            onClick={() => navigate('/create')}
-            className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-          >
-            <PlusIcon className="w-5 h-5" />
-            <span>Create Qudemo</span>
-          </button>
         </div>
       </div>
       {/* Qudemos Grid */}
@@ -852,13 +845,7 @@ const Qudemos = () => {
             <PlayIcon className="w-8 h-8 text-gray-400" />
           </div>
           <h3 className="text-lg font-medium text-gray-900 mb-2">No qudemos created yet</h3>
-          <p className="text-gray-600 mb-6">Click 'Create Qudemo' to get started!</p>
-          <button
-            onClick={() => navigate('/create')}
-            className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
-          >
-            Create Qudemo
-          </button>
+          <p className="text-gray-600">Get started by creating your first Qudemo!</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -1432,7 +1419,7 @@ const Qudemos = () => {
                </div>
                <div className="mb-6">
                  <p className="text-sm text-gray-600 mb-6 text-left">
-                   Upload customer data in CSV or Excel format to generate multiple personalized links. The system will create a "Shared QuDemo" column with the generated links.
+                   Upload customer data in CSV or Excel format to generate multiple personalized links. The system will create a "Shared Qudemo" column with the generated links.
                  </p>
                  <div className="space-y-4">
                    {/* Upload CSV File Section */}
@@ -1808,7 +1795,7 @@ const Qudemos = () => {
                     <div className="ml-3 text-left">
                       <h4 className="text-sm font-medium text-red-800">This action will permanently delete:</h4>
                       <ul className="mt-2 text-sm text-red-700 list-disc list-inside space-y-1 text-left">
-                        <li>All shared QuDemos and their links</li>
+                        <li>All shared Qudemo and their links</li>
                         <li>All knowledge sources</li>
                         <li>All analytics data</li>
                       </ul>
@@ -2123,7 +2110,7 @@ const Qudemos = () => {
                         : 'bg-transparent text-gray-600 hover:text-gray-900'
                     }`}
                   >
-                    Questions
+                    Questions asked
                   </button>
                   <button 
                     onClick={() => handleTabClick('past-interactions')}

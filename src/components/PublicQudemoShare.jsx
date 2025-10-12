@@ -424,7 +424,7 @@ const PublicQudemoShare = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading shared QuDemo...</p>
+          <p className="text-gray-600">Loading shared Qudemo...</p>
         </div>
       </div>
     );
@@ -501,12 +501,12 @@ const PublicQudemoShare = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-4">
-              <div>
-                <h1 className="text-lg font-semibold text-gray-900 flex items-center">
+              <div className="text-left">
+                <h1 className="text-lg font-semibold text-gray-900 flex items-center text-left">
                   <BuildingOfficeIcon className="h-4 w-4 mr-1" />
                   {company?.name || 'Unknown Company'}
                 </h1>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-gray-500 text-left">
                   {qudemo.title}
                 </p>
               </div>

@@ -42,7 +42,7 @@ const PricingPage = () => {
       features: [
         'Unlimited Qudemo',
         'Share Qudemo anywhere',
-        'Create unique links for each prospects',
+        'Create unique links for each prospect',
         'Track Engagements',
         'Advanced analytics and insights',
         'Priority Support'

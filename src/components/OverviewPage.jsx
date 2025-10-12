@@ -89,7 +89,7 @@ const OverviewPage = () => {
         <div className="text-left">
           <h1 className="text-3xl font-bold text-gray-900 text-left">Overview</h1>
           <p className="text-lg text-gray-600 mt-2 text-left">
-            Welcome back! Here's what's happening with your demos.
+            Welcome back! Here's what's happening with your QuDemos.
           </p>
         </div>
         
@@ -108,7 +108,7 @@ const OverviewPage = () => {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200 min-h-[140px]">
           <div className="flex items-center justify-between h-full">
              <div className="flex-1 text-left">
-               <h3 className="text-base font-bold text-gray-600 mb-1 text-left">Total Demo Views</h3>
+               <h3 className="text-base font-bold text-gray-600 mb-1 text-left">Total Qudemo Views</h3>
                <p className="text-3xl font-bold text-gray-900 text-left">{stats.totalViews.toLocaleString()}</p>
              </div>
             <div className="p-3 bg-blue-100 rounded-lg ml-4">
@@ -194,7 +194,7 @@ const OverviewPage = () => {
             <div className="p-8 text-center">
               <ChatBubbleLeftRightIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
               <p className="text-gray-500 text-sm">No recent interactions found</p>
-              <p className="text-gray-400 text-xs mt-1">Start sharing your QuDemos to see interactions here</p>
+              <p className="text-gray-400 text-xs mt-1">Start sharing your Qudemo to see interactions here</p>
             </div>
           )}
         </div>

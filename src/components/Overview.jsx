@@ -63,7 +63,7 @@ const Overview = () => {
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card
-          title="Total Demo Views"
+          title="Total Qudemo Views"
           value="2,438"
           change="+12.5%"
           icon={<EyeIcon className="h-8 w-8 text-blue-600" />}

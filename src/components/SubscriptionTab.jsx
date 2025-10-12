@@ -176,7 +176,7 @@ const SubscriptionTab = ({ companyId }) => {
       pro: [
         'Unlimited Qudemo',
         'Share Qudemo anywhere',
-        'Create unique links for each prospects',
+        'Create unique links for each prospect',
         'Track Engagements',
         'Advanced analytics and insights',
         'Priority Support'
@@ -262,11 +262,11 @@ const SubscriptionTab = ({ companyId }) => {
               <h4 className="font-semibold text-gray-900 mb-3 text-left">Usage Statistics</h4>
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-600 text-left">Total QuDemos</span>
+                  <span className="text-gray-600 text-left">Total Qudemos</span>
                   <span className="text-xl font-bold text-gray-900">{subscription.usage?.totalQudemos || 0}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-600 text-left">Shared QuDemos</span>
+                  <span className="text-gray-600 text-left">Shared Qudemos</span>
                   <span className="text-xl font-bold text-gray-900">0</span>
                 </div>
               </div>
@@ -367,11 +367,11 @@ const SubscriptionTab = ({ companyId }) => {
           <h4 className="font-semibold text-gray-900 mb-3 text-left">Usage Statistics</h4>
           <div className="space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-gray-600 text-left">Total QuDemos</span>
+              <span className="text-gray-600 text-left">Total Qudemos</span>
               <span className="text-xl font-bold text-gray-900">{subscription.usage?.totalQudemos || 0}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-gray-600 text-left">Shared QuDemos</span>
+              <span className="text-gray-600 text-left">Shared Qudemos</span>
               <span className="text-xl font-bold text-gray-900">{subscription.usage?.sharedQudemos || 0}</span>
             </div>
           </div>

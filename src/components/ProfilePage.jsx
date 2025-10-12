@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import { getNodeApiUrl } from "../config/api";
 import { useCompany } from "../context/CompanyContext";
@@ -7,6 +7,7 @@ import { useNotification } from "../context/NotificationContext";
 import SubscriptionTab from "./SubscriptionTab";
 export default function ProfilePage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState("personal");
   const { company, refreshCompany, setCompany } = useCompany();
   const { showSuccess, showError } = useNotification();
@@ -52,6 +53,12 @@ export default function ProfilePage() {
     }
     setIsLoading(false);
   }, []);
+  // Handle navigation state to set active tab
+  useEffect(() => {
+    if (location.state?.activeTab) {
+      setActiveTab(location.state.activeTab);
+    }
+  }, [location.state]);
   // Populate company editing fields when company data is loaded
   useEffect(() => {
     if (company) {

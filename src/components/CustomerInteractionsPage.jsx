@@ -479,7 +479,7 @@ const CustomerInteractionsPage = () => {
                         : 'bg-transparent text-gray-600 hover:text-gray-900'
                     }`}
                   >
-                    Questions
+                    Questions asked
                   </button>
                   <button 
                     onClick={() => handleTabClick('past-interactions')}
