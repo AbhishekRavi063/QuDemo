@@ -827,7 +827,7 @@ const CreateQuDemo = () => {
         {/* Processing Message Popup */}
         {success && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 max-w-md w-full mx-4 relative" style={{ margin: '0 auto' }}>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-8 max-w-md w-full mx-4 relative" style={{ margin: '0 auto' }}>
               {/* Close Button */}
               <button
                 onClick={() => setSuccess("")}
@@ -838,16 +838,16 @@ const CreateQuDemo = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
-              <div className="flex items-start pr-8">
+              <div className="flex items-start pr-8 text-left">
               <div className="flex-shrink-0">
                   <svg className="h-6 w-6 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.293l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clipRule="evenodd" />
                 </svg>
               </div>
-              <div className="ml-3">
-                  <h3 className="text-lg font-medium text-blue-800">Processing</h3>
-                  <div className="mt-2 text-sm text-blue-700">{success}</div>
-                  <div className="mt-2 text-xs text-blue-600">
+              <div className="ml-3 text-left">
+                  <h3 className="text-lg font-medium text-blue-800 text-left">Processing</h3>
+                  <div className="mt-2 text-sm text-blue-700 text-left">{success}</div>
+                  <div className="mt-2 text-xs text-blue-600 text-left">
                     You can close this popup - processing will continue in the background
                   </div>
                 </div>

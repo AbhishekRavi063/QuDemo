@@ -253,7 +253,7 @@ const SubscriptionTab = ({ companyId }) => {
               <p className="text-gray-600 mb-4">You're currently on the free plan</p>
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <p className="text-sm text-blue-800">
-                  <strong className="text-blue-900">Upgrade to Pro</strong> to unlock advanced features like share links, analytics, and unlimited QuDemos.
+                  <strong className="text-blue-900">Upgrade to Pro</strong> to unlock advanced features like share links, analytics, and unlimited Qudemos.
                 </p>
               </div>
             </div>

@@ -83,7 +83,7 @@ const UpgradeModal = ({ isOpen, onClose, errorDetails }) => {
                   </div>
                   <div className="text-left">
                     <h3 className="font-semibold text-gray-900 text-sm text-left mb-1">Public Sharing</h3>
-                    <p className="text-xs text-gray-600 text-left leading-relaxed">Generate shareable links for your QuDemos</p>
+                    <p className="text-xs text-gray-600 text-left leading-relaxed">Generate shareable links for your Qudemos</p>
                   </div>
                 </div>
 

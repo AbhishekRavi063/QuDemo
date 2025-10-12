@@ -150,7 +150,7 @@ const Qudemos = () => {
       // Show upgrade popup for free users
       setErrorDetails({
         title: 'View Interactions requires Pro plan',
-        message: 'Upgrade to Pro to view detailed interaction analytics for your QuDemos.',
+        message: 'Upgrade to Pro to view detailed interaction analytics for your Qudemos.',
         currentPlan: 'free',
         subscriptionStatus: 'active',
         isCancelled: false
@@ -202,7 +202,7 @@ const Qudemos = () => {
        // Show upgrade popup for free users
        setErrorDetails({
          title: 'Share functionality requires Pro plan',
-         message: 'Upgrade to Pro to generate shareable links for your QuDemos.',
+         message: 'Upgrade to Pro to generate shareable links for your Qudemos.',
          currentPlan: 'free',
          subscriptionStatus: 'active',
          isCancelled: false
@@ -711,7 +711,7 @@ const Qudemos = () => {
           // Show upgrade popup for free users
           setErrorDetails({
             title: 'View Interactions requires Pro plan',
-            message: 'Upgrade to Pro to view detailed interaction analytics for your QuDemos.',
+            message: 'Upgrade to Pro to view detailed interaction analytics for your Qudemos.',
             currentPlan: 'free',
             subscriptionStatus: 'active',
             isCancelled: false
@@ -1039,10 +1039,10 @@ const Qudemos = () => {
                             if (!isPro) {
                               setErrorDetails({
                                 title: 'View Interactions requires Pro plan',
-                                message: 'Upgrade to Pro to view detailed interaction analytics for your QuDemos.',
+                                message: 'Upgrade to Pro to view detailed interaction analytics for your Qudemos.',
                                 features: [
                                   { title: 'Advanced Analytics', description: 'Track views and engagement', icon: '📊' },
-                                  { title: 'Public Sharing', description: 'Generate shareable links for your QuDemos', icon: '🔗' }
+                                  { title: 'Public Sharing', description: 'Generate shareable links for your Qudemos', icon: '🔗' }
                                 ],
                                 pricing: 'Starting at $29.9/month',
                                 action: 'Upgrade to Pro'
@@ -1063,9 +1063,9 @@ const Qudemos = () => {
                             if (!isPro) {
                               setErrorDetails({
                                 title: 'Share functionality requires Pro plan',
-                                message: 'Upgrade to Pro to generate shareable links for your QuDemos.',
+                                message: 'Upgrade to Pro to generate shareable links for your Qudemos.',
                                 features: [
-                                  { title: 'Public Sharing', description: 'Generate shareable links for your QuDemos', icon: '🔗' },
+                                  { title: 'Public Sharing', description: 'Generate shareable links for your Qudemos', icon: '🔗' },
                                   { title: 'Advanced Analytics', description: 'Track views and engagement', icon: '📊' }
                                 ],
                                 pricing: 'Starting at $29.9/month',
@@ -1113,7 +1113,7 @@ const Qudemos = () => {
                       if (!isPro) {
                         setErrorDetails({
                           title: 'View Interactions requires Pro plan',
-                          message: 'Upgrade to Pro to view detailed interaction analytics for your QuDemos.',
+                          message: 'Upgrade to Pro to view detailed interaction analytics for your Qudemos.',
                           features: [
                             { title: 'Advanced Analytics', description: 'Track views and engagement', icon: '📊' },
                             { title: 'Public Sharing', description: 'Generate shareable links for your QuDemos', icon: '🔗' }
@@ -1142,7 +1142,7 @@ const Qudemos = () => {
                       if (!isPro) {
                         setErrorDetails({
                           title: 'Share functionality requires Pro plan',
-                          message: 'Upgrade to Pro to generate shareable links for your QuDemos.',
+                          message: 'Upgrade to Pro to generate shareable links for your Qudemos.',
                           features: [
                             { title: 'Public Sharing', description: 'Generate shareable links for your QuDemos', icon: '🔗' },
                             { title: 'Advanced Analytics', description: 'Track views and engagement', icon: '📊' }
