@@ -2229,11 +2229,11 @@ const Qudemos = () => {
                         <div className="flex items-start space-x-2 text-left">
                           <span className="text-sm text-blue-800 font-medium whitespace-nowrap">URL:</span>
                           <code className="flex-1 bg-white border border-blue-200 rounded px-2 py-1 text-sm text-blue-900 text-left break-all">
-                            {window.location.origin}/share/{selectedInteraction.share_token}
+                            {window.location.origin.replace(/\/$/, '')}/share/{selectedInteraction.share_token}
                           </code>
                           <button
                             onClick={() => {
-                              navigator.clipboard.writeText(`${window.location.origin}/share/${selectedInteraction.share_token}`);
+                              navigator.clipboard.writeText(`${window.location.origin.replace(/\/$/, '')}/share/${selectedInteraction.share_token}`);
                               // You could add a toast notification here
                             }}
                             className="flex items-center space-x-2 px-3 py-1 bg-white border border-blue-300 text-blue-600 text-sm rounded hover:bg-blue-50"

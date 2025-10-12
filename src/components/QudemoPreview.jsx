@@ -215,16 +215,27 @@ const QudemoPreview = ({ qudemo, onClose }) => {
     try {
       const token = localStorage.getItem('accessToken');
       const apiUrl = getNodeApiUrl(`/api/qudemos/${qudemo.id}/suggested-questions`);
+      console.log('🔍 Fetching suggested questions for qudemo:', qudemo.id);
+      console.log('🔍 API URL:', apiUrl);
+      
       const response = await axios.get(apiUrl, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
+      
+      console.log('✅ Suggested questions response:', response.data);
+      
       if (response.data.success) {
         const questions = response.data.suggested_questions || [];
+        console.log('📝 Suggested questions:', questions);
         setSuggestedQuestions(questions);
+      } else {
+        console.warn('⚠️ Suggested questions request unsuccessful:', response.data);
       }
     } catch (error) {
+      console.error('❌ Error fetching suggested questions:', error);
+      console.error('❌ Error response:', error.response?.data);
       // Don't show error to user, just silently fail
     } finally {
       setLoadingSuggestedQuestions(false);
