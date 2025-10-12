@@ -395,7 +395,7 @@ const QudemoChat = ({ qudemoId, qudemoTitle }) => {
             className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed ${
               !isPro
                 ? 'bg-gray-600 text-white hover:bg-gray-700'
-                : 'bg-green-600 text-white hover:bg-green-700'
+                : 'bg-blue-600 text-white hover:bg-blue-700'
             }`}
           >
             {loadingCalendly ? (

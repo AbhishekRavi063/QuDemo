@@ -9,10 +9,12 @@ import {
   SpeakerWaveIcon,
   SpeakerXMarkIcon,
   ChatBubbleLeftIcon,
-  UserIcon
+  UserIcon,
+  LockClosedIcon
 } from '@heroicons/react/24/outline';
-import { getVideoApiUrl, getNodeApiUrl } from '../config/api';
+import { getVideoApiUrl, getNodeApiUrl, getApiUrl } from '../config/api';
 import { useBackend } from '../context/BackendContext';
+import { useCompany } from '../context/CompanyContext';
 import { refreshAccessToken, clearAuthTokens } from '../utils/tokenRefresh';
 import axios from 'axios';
 const TypingIndicator = () => (
@@ -136,9 +138,21 @@ const QudemoPreview = ({ qudemo, onClose }) => {
   const [showAllQuestions, setShowAllQuestions] = useState(false);
   const [pythonData, setPythonData] = useState(null);
   const [loadingPythonData, setLoadingPythonData] = useState(false);
+  const [showCalendlyError, setShowCalendlyError] = useState(false);
+  const [loadingCalendly, setLoadingCalendly] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [errorDetails, setErrorDetails] = useState(null);
   const messagesEndRef = useRef(null);
   const loomIframeRef = useRef();
   const videoPlayerRef = useRef(null);
+  
+  // Get company context for subscription info
+  const { company } = useCompany();
+  const subscriptionPlan = company?.subscription_plan || 'free';
+  const subscriptionStatus = company?.subscription_status || 'active';
+  const isActive = ['active', 'trialing', 'on_trial'].includes(subscriptionStatus);
+  const isPro = ['pro', 'enterprise'].includes(subscriptionPlan) && isActive;
+  
   // Initialize with welcome message and clear previous messages on page refresh
   useEffect(() => {
     if (qudemo) {
@@ -215,27 +229,22 @@ const QudemoPreview = ({ qudemo, onClose }) => {
     try {
       const token = localStorage.getItem('accessToken');
       const apiUrl = getNodeApiUrl(`/api/qudemos/${qudemo.id}/suggested-questions`);
-      console.log('🔍 Fetching suggested questions for qudemo:', qudemo.id);
-      console.log('🔍 API URL:', apiUrl);
-      
+      console.log('🔍 [Pro] Fetching suggested questions from:', apiUrl);
       const response = await axios.get(apiUrl, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
-      
-      console.log('✅ Suggested questions response:', response.data);
-      
+      console.log('🔍 [Pro] Suggested questions response:', response.data);
       if (response.data.success) {
         const questions = response.data.suggested_questions || [];
-        console.log('📝 Suggested questions:', questions);
+        console.log('🔍 [Pro] Setting suggested questions:', questions);
         setSuggestedQuestions(questions);
       } else {
-        console.warn('⚠️ Suggested questions request unsuccessful:', response.data);
+        console.warn('🔍 [Pro] Suggested questions fetch failed:', response.data);
       }
     } catch (error) {
-      console.error('❌ Error fetching suggested questions:', error);
-      console.error('❌ Error response:', error.response?.data);
+      console.error('🔍 [Pro] Error fetching suggested questions:', error);
       // Don't show error to user, just silently fail
     } finally {
       setLoadingSuggestedQuestions(false);
@@ -341,9 +350,11 @@ const QudemoPreview = ({ qudemo, onClose }) => {
           throw error; // Re-throw non-auth errors
         }
       }
-      // Process the response and handle video switching
+      // Process the response and handle video switching (same logic as PublicQudemoShare)
       try {
+        console.log('🔍 [Pro] Q&A Response data:', response.data);
         const aiAnswer = response.data?.answer || 'Sorry, I could not find an answer.';
+        console.log('🔍 [Pro] AI Answer:', aiAnswer);
         // Check for video navigation data in the response
         let targetVideoUrl = null;
         let timestamp = 0;
@@ -351,6 +362,7 @@ const QudemoPreview = ({ qudemo, onClose }) => {
         if (response.data && response.data.video_url) {
           targetVideoUrl = response.data.video_url;
           timestamp = response.data.start || 0;
+          console.log('🔍 [Pro] Found video URL:', targetVideoUrl, 'timestamp:', timestamp);
           // Ensure timestamp is a number and convert to seconds if needed
           if (typeof timestamp === 'string') {
             timestamp = parseFloat(timestamp);
@@ -365,6 +377,7 @@ const QudemoPreview = ({ qudemo, onClose }) => {
         }
         // Fallback: check sources array for video sources
         else if (response.data && response.data.sources && response.data.sources.length > 0) {
+          console.log('🔍 [Pro] Checking sources for video:', response.data.sources);
           // Find the first video source with a timestamp
           const videoSource = response.data.sources.find(source => 
             source.source_type === 'video' && source.start_timestamp
@@ -372,8 +385,10 @@ const QudemoPreview = ({ qudemo, onClose }) => {
           if (videoSource) {
             targetVideoUrl = videoSource.url;
             timestamp = videoSource.start_timestamp;
+            console.log('🔍 [Pro] Found video in sources:', targetVideoUrl, 'timestamp:', timestamp);
           }
         }
+        console.log('🔍 [Pro] Final video URL:', targetVideoUrl, 'Final timestamp:', timestamp);
         // Add message with video switching
         setMessages(msgs => [...msgs, {
           sender: "AI",
@@ -459,6 +474,57 @@ const QudemoPreview = ({ qudemo, onClose }) => {
       handleSendMessage();
     }
   };
+
+  const handleScheduleMeeting = async () => {
+    // Check if user is Pro
+    if (!isPro) {
+      setErrorDetails({
+        title: 'Schedule Meeting requires Pro plan',
+        message: 'Upgrade to Pro to enable meeting scheduling with Calendly integration for your QuDemos.',
+        features: [
+          { title: 'Calendly Integration', description: 'Add meeting links to your QuDemos', icon: '📅' },
+          { title: 'Advanced Analytics', description: 'Track views and engagement', icon: '📊' }
+        ],
+        pricing: 'Starting at $29.9/month',
+        action: 'Upgrade to Pro'
+      });
+      setShowUpgradeModal(true);
+      return;
+    }
+
+    try {
+      setLoadingCalendly(true);
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        setShowCalendlyError(true);
+        setTimeout(() => setShowCalendlyError(false), 5000);
+        setLoadingCalendly(false);
+        return;
+      }
+
+      const response = await axios.get(getNodeApiUrl(`/api/qudemos/${qudemo.id}`), {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.data.success && response.data.data.calendly_link) {
+        // Open the Calendly link in a new tab
+        window.open(response.data.data.calendly_link, '_blank', 'noopener,noreferrer');
+      } else {
+        // No Calendly link found, show error
+        setShowCalendlyError(true);
+        setTimeout(() => setShowCalendlyError(false), 5000);
+      }
+    } catch (error) {
+      console.error('Failed to fetch Calendly link:', error);
+      setShowCalendlyError(true);
+      setTimeout(() => setShowCalendlyError(false), 5000);
+    } finally {
+      setLoadingCalendly(false);
+    }
+  };
+
   const currentVideo = qudemo?.videos?.[currentVideoIndex];
   return (
     <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center p-4">
@@ -706,6 +772,75 @@ const QudemoPreview = ({ qudemo, onClose }) => {
               <PaperAirplaneIcon className="h-7 w-8" />
             </button>
           </div>
+          
+          {/* Calendly Error Message */}
+          {showCalendlyError && (
+            <div className="px-3 py-2 border-t">
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start">
+                <svg className="w-5 h-5 text-red-500 mt-0.5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div>
+                  <p className="text-sm font-medium text-red-800">Calendly Link Not Available</p>
+                  <p className="text-xs text-red-600 mt-1">The owner hasn't added a Calendly link to this Qudemo yet. Please contact them directly to schedule a meeting.</p>
+                </div>
+                <button
+                  onClick={() => setShowCalendlyError(false)}
+                  className="ml-auto text-red-400 hover:text-red-600"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Schedule Meeting Button */}
+          <div className="px-3 py-2 border-t flex justify-end bg-gray-50">
+            <button
+              onClick={handleScheduleMeeting}
+              disabled={loadingCalendly}
+              className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed ${
+                !isPro
+                  ? 'bg-gray-600 text-white hover:bg-gray-700'
+                  : 'bg-blue-600 text-white hover:bg-blue-700'
+              }`}
+            >
+              {loadingCalendly ? (
+                <>
+                  <svg className="animate-spin h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Loading...
+                </>
+              ) : (
+                <>
+                  {!isPro ? (
+                    <LockClosedIcon className="w-4 h-4 mr-2" />
+                  ) : (
+                    <svg
+                      className="w-4 h-4 mr-2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
+                    </svg>
+                  )}
+                  Schedule Meeting
+                </>
+              )}
+            </button>
+          </div>
+
           {/* Footer */}
           <div className="px-2 py-2 flex justify-center items-center text-xs bg-white border-t">
             <span className="text-gray-500">
@@ -719,6 +854,73 @@ const QudemoPreview = ({ qudemo, onClose }) => {
           </div>
         </div>
       </div>
+
+      {/* Upgrade Modal */}
+      {showUpgradeModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="flex items-center mb-4">
+              <svg className="h-8 w-8 text-orange-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+              <h3 className="text-lg font-semibold text-gray-900 text-left">{errorDetails?.title || 'Upgrade Required'}</h3>
+            </div>
+            
+            <p className="text-gray-600 mb-6 text-left">
+              {errorDetails?.message || 'Upgrade to Pro to access premium features.'}
+            </p>
+            
+            <div className="flex space-x-3">
+              <button
+                onClick={() => {
+                  setShowUpgradeModal(false);
+                  setErrorDetails(null);
+                }}
+                className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  setShowUpgradeModal(false);
+                  setErrorDetails(null);
+                  try {
+                    const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
+                    if (!token) {
+                      window.location.href = '/login';
+                      return;
+                    }
+                    const baseUrl = getApiUrl('node');
+                    const checkoutUrl = `${baseUrl}/api/subscription/checkout`;
+                    const response = await fetch(checkoutUrl, {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                      },
+                      body: JSON.stringify({
+                        plan: 'pro',
+                        billingCycle: 'monthly'
+                      })
+                    });
+                    const data = await response.json();
+                    if (data.success && data.checkoutUrl) {
+                      window.location.href = data.checkoutUrl;
+                    } else {
+                      console.error('Failed to start checkout:', data.error || 'Unknown error');
+                    }
+                  } catch (error) {
+                    console.error('Failed to start checkout:', error.message);
+                  }
+                }}
+                className="flex-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors"
+              >
+                Upgrade to Pro
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
