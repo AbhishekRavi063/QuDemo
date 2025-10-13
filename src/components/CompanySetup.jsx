@@ -84,13 +84,17 @@ const CompanySetup = () => {
       });
       const data = await response.json();
       if (data.success) {
-        setSuccess('🎉 Organization created successfully! Setting up your workspace...');
+        setSuccess('🎉 Organization created successfully! Redirecting...');
         // Refresh company context
         await refreshCompany();
+        
+        // Set flag to show welcome preview after redirect
+        localStorage.setItem('show_welcome_preview', 'true');
+        
         // Redirect to create page after a short delay
         setTimeout(() => {
           navigate('/create');
-        }, 2000);
+        }, 1000);
       } else {
         if (response.status === 409) {
           setError('You already have an organization! Redirecting to create page...');
@@ -107,6 +111,7 @@ const CompanySetup = () => {
       setIsSubmitting(false);
     }
   };
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">

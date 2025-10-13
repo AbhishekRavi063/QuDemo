@@ -25,7 +25,6 @@ const CreateQuDemo = () => {
   // Error popup state
   const [showErrorPopup, setShowErrorPopup] = useState(false);
   const [errorPopupData, setErrorPopupData] = useState(null);
-  // Video processing notification state
   // Handle error popup close and redirect
   const handleErrorPopupClose = () => {
     setShowErrorPopup(false);
@@ -44,6 +43,7 @@ const CreateQuDemo = () => {
       navigate('/qudemos');
     }, 100);
   };
+
   // const handleSourceChange = (index, value) => { // Not used
   //   const updated = [...sources];
   //   updated[index] = value;

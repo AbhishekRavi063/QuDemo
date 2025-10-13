@@ -146,8 +146,9 @@ const QudemoPreview = ({ qudemo, onClose }) => {
   const loomIframeRef = useRef();
   const videoPlayerRef = useRef(null);
   
-  // Get company context for subscription info
-  const { company } = useCompany();
+  // Get company context for subscription info (may be undefined in some contexts)
+  const companyContext = useCompany();
+  const company = companyContext?.company;
   const subscriptionPlan = company?.subscription_plan || 'free';
   const subscriptionStatus = company?.subscription_status || 'active';
   const isActive = ['active', 'trialing', 'on_trial'].includes(subscriptionStatus);
@@ -159,9 +160,12 @@ const QudemoPreview = ({ qudemo, onClose }) => {
       // Clear any existing messages from localStorage
       localStorage.removeItem(chatKey);
       // Always start with a fresh welcome message
+      // Use custom welcome message if provided (for demo/welcome qudemo), otherwise use default
+      const welcomeText = qudemo.welcomeMessage || 
+        `Welcome to the ${qudemo.title}! I'm your AI assistant for this qudemo. I can help you understand the content from the videos and knowledge sources. What would you like to know?`;
       const welcomeMessage = {
         sender: "AI",
-        text: `Welcome to the ${qudemo.title}! I'm your AI assistant for this qudemo. I can help you understand the content from the videos and knowledge sources. What would you like to know?`,
+        text: welcomeText,
         time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
       };
       setMessages([welcomeMessage]);
@@ -516,7 +520,7 @@ const QudemoPreview = ({ qudemo, onClose }) => {
 
   const currentVideo = qudemo?.videos?.[currentVideoIndex];
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black bg-opacity-40 z-[9999] flex items-center justify-center p-4">
       <div className="w-full max-w-7xl h-full max-h-[85vh] bg-white rounded-lg shadow-2xl flex flex-col md:flex-row overflow-hidden relative">
         {/* Video Section */}
         <div 
@@ -846,7 +850,7 @@ const QudemoPreview = ({ qudemo, onClose }) => {
 
       {/* Upgrade Modal */}
       {showUpgradeModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[10000]">
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
             <div className="flex items-center mb-4">
               <svg className="h-8 w-8 text-orange-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">

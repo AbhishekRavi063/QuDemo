@@ -62,8 +62,11 @@ const LoginPage = () => {
         localStorage.setItem('accessToken', data.data.tokens.accessToken);
         localStorage.setItem('refreshToken', data.data.tokens.refreshToken);
         localStorage.setItem('user', JSON.stringify(data.data.user));
-        // Check if user came from homepage, if so stay there, otherwise redirect to overview
+        
+        // Redirect immediately
         const fromHomepage = location.state?.from === '/' || document.referrer.includes(window.location.origin + '/');
+        const targetRoute = fromHomepage ? '/' : '/overview';
+        
         if (fromHomepage) {
           navigate('/', { replace: true });
         } else {
@@ -109,6 +112,7 @@ const LoginPage = () => {
       setIsGoogleLoading(false);
     }
   };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8 -mt-32">

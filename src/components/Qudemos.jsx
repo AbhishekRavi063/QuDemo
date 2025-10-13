@@ -197,6 +197,12 @@ const Qudemos = () => {
   };
   // Share functionality
   const handleShareQudemo = async (qudemo) => {
+     // Special handling for demo Qudemo - bypass Pro check and go straight to single link
+     if (qudemo.isDemo && qudemo.share_token) {
+       await generateSingleShareLink(qudemo);
+       return;
+     }
+     
      // Check if user has Pro/Enterprise plan first
      if (!isPro) {
        // Show upgrade popup for free users
@@ -565,6 +571,23 @@ const Qudemos = () => {
       return;
     }
     setSharingQudemo(qudemo);
+    
+    // Special handling for demo Qudemo - use existing share token
+    if (qudemo.isDemo && qudemo.share_token) {
+      try {
+        const shareUrl = `${window.location.origin}/share/${qudemo.share_token}`;
+        setShareLink(shareUrl);
+        setShowShareModal(true);
+        showSuccess('Share link retrieved successfully!');
+        setSharingQudemo(null);
+        return;
+      } catch (err) {
+        showError('Failed to generate share link. Please try again.');
+        setSharingQudemo(null);
+        return;
+      }
+    }
+    
     try {
       const token = localStorage.getItem('accessToken');
       const response = await fetch(getNodeApiUrl(`/api/qudemos/${qudemo.id}/share`), {
@@ -668,14 +691,50 @@ const Qudemos = () => {
       setLoading(true);
       setError(null);
       const token = localStorage.getItem('accessToken');
+      
+      // Fetch user's own Qudemos
       const response = await fetch(getNodeApiUrl(`/api/qudemos?companyId=${company.id}`), {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
       const data = await response.json();
+      
       if (response.ok && data.success) {
-        setQudemos(data.data || []);
+        const userQudemos = data.data || [];
+        
+        // Fetch the welcome/demo Qudemo using public share link
+        try {
+          const WELCOME_SHARE_TOKEN = 'ca6b5a1b-0764-4e1c-bf6c-3e3c5bc93d1d';
+          const welcomeResponse = await fetch(getNodeApiUrl(`/api/qudemos/share/${WELCOME_SHARE_TOKEN}`));
+          
+          if (welcomeResponse.ok) {
+            const welcomeData = await welcomeResponse.json();
+            
+            if (welcomeData.success && welcomeData.data) {
+              // Add a flag to identify this as the demo Qudemo and include the share token
+              const demoQudemo = {
+                ...welcomeData.data,
+                isDemo: true,
+                share_token: WELCOME_SHARE_TOKEN,
+                title: welcomeData.data.title || 'Welcome to Qudemo'
+              };
+              
+              // Add demo Qudemo at the beginning
+              setQudemos([demoQudemo, ...userQudemos]);
+            } else {
+              // If demo fetch fails, just show user's Qudemos
+              setQudemos(userQudemos);
+            }
+          } else {
+            // If demo fetch fails, just show user's Qudemos
+            setQudemos(userQudemos);
+          }
+        } catch (welcomeError) {
+          console.error('Failed to fetch welcome Qudemo:', welcomeError);
+          // If demo fetch fails, just show user's Qudemos
+          setQudemos(userQudemos);
+        }
       } else {
         setError(data.error || 'Failed to fetch qudemos');
         setQudemos([]);
@@ -995,44 +1054,54 @@ const Qudemos = () => {
                 )}
               </div>
               {/* Card Content */}
-              <div className="p-4">
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="font-semibold text-gray-900 truncate flex-1">
-                    {qudemo.title}
-                  </h3>
-                  <div className="relative">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setDropdownOpen(dropdownOpen === qudemo.id ? null : qudemo.id);
-                      }}
-                      className="p-1 hover:bg-gray-100 rounded"
-                    >
-                      <EllipsisVerticalIcon className="w-5 h-5 text-gray-500" />
-                    </button>
-                    {dropdownOpen === qudemo.id && (
-                      <div className="absolute right-0 top-8 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-[160px]">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                              setPreviewingQudemo(qudemo);
-                              setDropdownOpen(null);
-                          }}
-                          className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center space-x-2"
-                        >
-                            <PlayIcon className="w-4 h-4" />
-                            <span>Preview</span>
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDropdownAction('edit', qudemo);
-                          }}
-                          className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center space-x-2"
-                        >
-                          <PencilIcon className="w-4 h-4" />
-                          <span>View</span>
-                        </button>
+              <div className={qudemo.isDemo ? "p-3" : "p-4"}>
+                <div className={qudemo.isDemo ? "flex justify-between items-start" : "flex justify-between items-start mb-2"}>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold text-gray-900 truncate">
+                        {qudemo.title}
+                      </h3>
+                      {qudemo.isDemo && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 whitespace-nowrap">
+                          Demo
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  {!qudemo.isDemo && (
+                    <div className="relative">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setDropdownOpen(dropdownOpen === qudemo.id ? null : qudemo.id);
+                        }}
+                        className="p-1 hover:bg-gray-100 rounded"
+                      >
+                        <EllipsisVerticalIcon className="w-5 h-5 text-gray-500" />
+                      </button>
+                      {dropdownOpen === qudemo.id && (
+                        <div className="absolute right-0 top-8 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-[160px]">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                                setPreviewingQudemo(qudemo);
+                                setDropdownOpen(null);
+                            }}
+                            className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center space-x-2"
+                          >
+                              <PlayIcon className="w-4 h-4" />
+                              <span>Preview</span>
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDropdownAction('edit', qudemo);
+                            }}
+                            className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center space-x-2"
+                          >
+                            <PencilIcon className="w-4 h-4" />
+                            <span>View</span>
+                          </button>
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -1083,31 +1152,58 @@ const Qudemos = () => {
                           <span>Share</span>
                         </button>
                         <hr className="my-1" />
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDropdownAction('delete', qudemo);
-                          }}
-                          disabled={deletingQudemoId === qudemo.id}
-                          className={`w-full px-4 py-2 text-left hover:bg-red-50 text-red-600 flex items-center space-x-2 ${
-                            deletingQudemoId === qudemo.id ? 'opacity-50 cursor-not-allowed' : ''
-                          }`}
-                        >
-                          {deletingQudemoId === qudemo.id ? (
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
-                          ) : (
-                            <TrashIcon className="w-4 h-4" />
-                          )}
-                          <span>{deletingQudemoId === qudemo.id ? 'Deleting...' : 'Delete'}</span>
-                        </button>
-                      </div>
-                    )}
-                  </div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDropdownAction('delete', qudemo);
+                            }}
+                            disabled={deletingQudemoId === qudemo.id}
+                            className={`w-full px-4 py-2 text-left hover:bg-red-50 text-red-600 flex items-center space-x-2 ${
+                              deletingQudemoId === qudemo.id ? 'opacity-50 cursor-not-allowed' : ''
+                            }`}
+                          >
+                            {deletingQudemoId === qudemo.id ? (
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
+                            ) : (
+                              <TrashIcon className="w-4 h-4" />
+                            )}
+                            <span>{deletingQudemoId === qudemo.id ? 'Deleting...' : 'Delete'}</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
                 {/* Action Buttons */}
-                <div className="mb-3 space-y-2">
+                {qudemo.isDemo ? (
+                  <div className="mt-6 space-y-2">
+                    {/* Preview Button for Demo Qudemo */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setPreviewingQudemo(qudemo);
+                      }}
+                      className="w-full flex items-center justify-center space-x-2 transition-colors duration-200 py-2 px-3 rounded-lg border text-blue-600 hover:text-blue-800 hover:bg-blue-50 border-blue-200"
+                    >
+                      <PlayIcon className="w-4 h-4" />
+                      <span className="text-sm font-medium">Preview Demo</span>
+                    </button>
+                    {/* Share Button for Demo Qudemo */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleShareQudemo(qudemo);
+                      }}
+                      className="w-full flex items-center justify-center space-x-2 transition-colors duration-200 py-2 px-3 rounded-lg border text-green-600 hover:text-green-800 hover:bg-green-50 border-green-200"
+                    >
+                      <ShareIcon className="w-4 h-4" />
+                      <span className="text-sm font-medium">Share Demo</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="mb-3 space-y-2">
                     {/* View Interactions Button */}
-                  <button
+                    <button
                     onClick={(e) => {
                       e.stopPropagation();
                       if (!isPro) {
@@ -1164,8 +1260,10 @@ const Qudemos = () => {
                     {!isPro ? <LockClosedIcon className="w-4 h-4" /> : <ShareIcon className="w-4 h-4" />}
                     <span className="text-sm font-medium">Share Qudemo</span>
                   </button>
-                </div>
-                 {/* Stats */}
+                  </div>
+                )}
+                {/* Stats - Hide for demo Qudemos */}
+                {!qudemo.isDemo && (
                  <div className="flex items-center justify-between text-sm text-gray-500">
                    <div className="flex items-center space-x-4">
                      {/* Video count - keep as is */}
@@ -1193,6 +1291,7 @@ const Qudemos = () => {
                      <span>{getRelativeTime(qudemo.created_at)}</span>
                    </div>
                  </div>
+                )}
               </div>
             </div>
           ))}

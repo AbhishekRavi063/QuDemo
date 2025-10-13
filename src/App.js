@@ -124,18 +124,75 @@ const CompanyCheck = ({ children }) => {
 // Dashboard Layout Component
 const DashboardLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showWelcomePreview, setShowWelcomePreview] = useState(false);
+  const [demoQudemo, setDemoQudemo] = useState(null);
+
+  // Import dynamically to avoid circular dependencies
+  const QudemoPreview = React.lazy(() => import('./components/QudemoPreview'));
+
+  // Check for welcome preview flag and show after 5 seconds
+  useEffect(() => {
+    const shouldShowWelcome = localStorage.getItem('show_welcome_preview');
+    
+    if (shouldShowWelcome === 'true') {
+      // Show welcome preview after 5 seconds
+      const timer = setTimeout(async () => {
+        const WELCOME_SHARE_TOKEN = 'ca6b5a1b-0764-4e1c-bf6c-3e3c5bc93d1d';
+        
+        try {
+          const welcomeResponse = await fetch(getNodeApiUrl(`/api/qudemos/share/${WELCOME_SHARE_TOKEN}`));
+          
+          if (welcomeResponse.ok) {
+            const welcomeData = await welcomeResponse.json();
+            
+            if (welcomeData.success && welcomeData.data) {
+              setDemoQudemo(welcomeData.data);
+              setShowWelcomePreview(true);
+              
+              // Clear the flag AFTER successfully showing the preview
+              localStorage.removeItem('show_welcome_preview');
+            }
+          }
+        } catch (error) {
+          // Silently fail - user can still access demo from Qudemos page
+        }
+      }, 5000);
+      
+      return () => {
+        clearTimeout(timer);
+      };
+    }
+  }, []);
+
+  const handleCloseWelcomePreview = () => {
+    setShowWelcomePreview(false);
+    setDemoQudemo(null);
+  };
+
   return (
-    <div className="flex h-screen bg-gray-100">
-      <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header onMenuClick={() => setSidebarOpen(true)} />
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 mt-16">
-          <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-8">
-            {children}
-          </div>
-        </main>
+    <>
+      {/* Welcome Preview Modal */}
+      {showWelcomePreview && demoQudemo && (
+        <React.Suspense fallback={<div>Loading...</div>}>
+          <QudemoPreview 
+            qudemo={demoQudemo} 
+            onClose={handleCloseWelcomePreview}
+          />
+        </React.Suspense>
+      )}
+      
+      <div className="flex h-screen bg-gray-100">
+        <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <Header onMenuClick={() => setSidebarOpen(true)} />
+          <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 mt-16">
+            <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-8">
+              {children}
+            </div>
+          </main>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 function App() {

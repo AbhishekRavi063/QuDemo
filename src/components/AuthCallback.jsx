@@ -147,23 +147,37 @@ const AuthCallback = () => {
             const companyData = await companyResponse.json();
             // Dispatch custom event to trigger company refresh
             window.dispatchEvent(new CustomEvent('authCompleted'));
+            
+            const currentOrigin = window.location.origin;
+            const hasCompany = companyData.success && companyData.data && companyData.data.length > 0;
+            
+            // Only set welcome flag for NEW users (no company yet)
+            if (!hasCompany) {
+              localStorage.setItem('show_welcome_preview', 'true');
+            }
+            
+            const targetUrl = hasCompany 
+              ? `${currentOrigin}/overview`
+              : `${currentOrigin}/create`;
+            
+            // Redirect immediately
             setTimeout(() => {
-              const currentOrigin = window.location.origin;
-              if (companyData.success && companyData.data && companyData.data.length > 0) {
-                // User has a company - redirect to overview page
-                window.location.href = `${currentOrigin}/overview`;
-              } else {
-                // User has no company - redirect to create page
-                window.location.href = `${currentOrigin}/create`;
-              }
+              window.location.href = targetUrl;
             }, 500);
           } catch (companyError) {
-            // Fallback to create page if company check fails
+            // Fallback to create page if company check fails (assume new user)
             // Dispatch custom event to trigger company refresh
             window.dispatchEvent(new CustomEvent('authCompleted'));
+            
+            // Set flag for new user (company check failed, likely no company)
+            localStorage.setItem('show_welcome_preview', 'true');
+            
+            const currentOrigin = window.location.origin;
+            const targetUrl = `${currentOrigin}/create`;
+            
+            // Redirect immediately
             setTimeout(() => {
-              const currentOrigin = window.location.origin;
-              window.location.href = `${currentOrigin}/create`;
+              window.location.href = targetUrl;
             }, 500);
           }
         } else {
@@ -178,6 +192,7 @@ const AuthCallback = () => {
     };
     handleAuthCallback();
   }, [navigate]);
+
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
