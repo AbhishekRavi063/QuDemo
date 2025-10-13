@@ -444,8 +444,8 @@ const SubscriptionTab = ({ companyId }) => {
           <div className="flex items-start">
             <XCircleIcon className="h-6 w-6 text-red-600 mr-3 flex-shrink-0" />
             <div>
-              <h4 className="text-red-900 font-semibold mb-1">Subscription {statusBadge.text}</h4>
-              <p className="text-red-700 text-sm">
+              <h4 className="text-red-900 font-semibold mb-1 text-left">Subscription {statusBadge.text}</h4>
+              <p className="text-red-700 text-sm text-left">
                 Your subscription is no longer active. All shared Qudemo links have been disabled.
                 Reactivate your subscription to restore access.
               </p>
