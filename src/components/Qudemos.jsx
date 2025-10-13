@@ -1186,7 +1186,7 @@ const Qudemos = () => {
                       className="w-full flex items-center justify-center space-x-2 transition-colors duration-200 py-2 px-3 rounded-lg border text-blue-600 hover:text-blue-800 hover:bg-blue-50 border-blue-200"
                     >
                       <PlayIcon className="w-4 h-4" />
-                      <span className="text-sm font-medium">Preview Demo</span>
+                      <span className="text-sm font-medium">Preview Qudemo</span>
                     </button>
                     {/* Share Button for Demo Qudemo */}
                     <button
@@ -1197,7 +1197,7 @@ const Qudemos = () => {
                       className="w-full flex items-center justify-center space-x-2 transition-colors duration-200 py-2 px-3 rounded-lg border text-green-600 hover:text-green-800 hover:bg-green-50 border-green-200"
                     >
                       <ShareIcon className="w-4 h-4" />
-                      <span className="text-sm font-medium">Share Demo</span>
+                      <span className="text-sm font-medium">Share Qudemo</span>
                     </button>
                   </div>
                 ) : (

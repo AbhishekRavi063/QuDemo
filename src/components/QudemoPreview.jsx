@@ -154,6 +154,10 @@ const QudemoPreview = ({ qudemo, onClose }) => {
   const isActive = ['active', 'trialing', 'on_trial'].includes(subscriptionStatus);
   const isPro = ['pro', 'enterprise'].includes(subscriptionPlan) && isActive;
   
+  // Check if this is the welcome/demo Qudemo
+  const WELCOME_QUDEMO_ID = '48b29bfb-b290-4669-9f25-ee411cdb1d9d';
+  const isWelcomeQudemo = qudemo?.id === WELCOME_QUDEMO_ID || qudemo?.isDemo === true;
+  
   // Initialize with welcome message and clear previous messages on page refresh
   useEffect(() => {
     if (qudemo) {
@@ -469,13 +473,14 @@ const QudemoPreview = ({ qudemo, onClose }) => {
   };
 
   const handleScheduleMeeting = async () => {
-    // Check if user is Pro
-    if (!isPro) {
+    // For welcome/demo Qudemo, allow all users (free & Pro) to book meetings
+    // For regular Qudemos, only Pro users can book meetings
+    if (!isPro && !isWelcomeQudemo) {
       setErrorDetails({
         title: 'Schedule Meeting requires Pro plan',
-        message: 'Upgrade to Pro to enable meeting scheduling with Calendly integration for your QuDemos.',
+        message: 'Upgrade to Pro to enable meeting scheduling with Calendly integration for your Qudemos.',
         features: [
-          { title: 'Calendly Integration', description: 'Add meeting links to your QuDemos', icon: '📅' },
+          { title: 'Calendly Integration', description: 'Add meeting links to your Qudemos', icon: '📅' },
           { title: 'Advanced Analytics', description: 'Track views and engagement', icon: '📊' }
         ],
         pricing: 'Starting at $29.9/month',
@@ -495,15 +500,24 @@ const QudemoPreview = ({ qudemo, onClose }) => {
         return;
       }
 
-      const response = await axios.get(getNodeApiUrl(`/api/qudemos/${qudemo.id}`), {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      // For welcome Qudemo, use the share token to get Qudemo data
+      let calendlyLink = null;
+      if (isWelcomeQudemo) {
+        const WELCOME_SHARE_TOKEN = 'ca6b5a1b-0764-4e1c-bf6c-3e3c5bc93d1d';
+        const response = await axios.get(getNodeApiUrl(`/api/qudemos/share/${WELCOME_SHARE_TOKEN}`));
+        calendlyLink = response.data?.data?.calendly_link;
+      } else {
+        const response = await axios.get(getNodeApiUrl(`/api/qudemos/${qudemo.id}`), {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        calendlyLink = response.data?.data?.calendly_link;
+      }
 
-      if (response.data.success && response.data.data.calendly_link) {
+      if (calendlyLink) {
         // Open the Calendly link in a new tab
-        window.open(response.data.data.calendly_link, '_blank', 'noopener,noreferrer');
+        window.open(calendlyLink, '_blank', 'noopener,noreferrer');
       } else {
         // No Calendly link found, show error
         setShowCalendlyError(true);
@@ -795,7 +809,7 @@ const QudemoPreview = ({ qudemo, onClose }) => {
               onClick={handleScheduleMeeting}
               disabled={loadingCalendly}
               className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed ${
-                !isPro
+                !isPro && !isWelcomeQudemo
                   ? 'bg-gray-600 text-white hover:bg-gray-700'
                   : 'bg-blue-600 text-white hover:bg-blue-700'
               }`}
@@ -810,7 +824,7 @@ const QudemoPreview = ({ qudemo, onClose }) => {
                 </>
               ) : (
                 <>
-                  {!isPro ? (
+                  {!isPro && !isWelcomeQudemo ? (
                     <LockClosedIcon className="w-4 h-4 mr-2" />
                   ) : (
                     <svg
@@ -828,7 +842,7 @@ const QudemoPreview = ({ qudemo, onClose }) => {
                       />
                     </svg>
                   )}
-                  Book Meeting
+                  {!isPro && !isWelcomeQudemo ? 'Upgrade to Book Meeting' : 'Book Meeting'}
                 </>
               )}
             </button>
