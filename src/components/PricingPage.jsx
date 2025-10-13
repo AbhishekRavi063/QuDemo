@@ -8,6 +8,10 @@ const PricingPage = () => {
   const { company } = useCompany();
   const [billingCycle, setBillingCycle] = useState('monthly');
   const [loading, setLoading] = useState(null);
+  const [showDowngradeModal, setShowDowngradeModal] = useState(false);
+  const [showNotification, setShowNotification] = useState(false);
+  const [notificationMessage, setNotificationMessage] = useState('');
+  const [notificationType, setNotificationType] = useState('success'); // 'success' or 'error'
   // Get current subscription info (with fallback for non-authenticated users)
   const currentPlan = company?.subscription_plan || 'free';
   const currentStatus = company?.subscription_status || 'active';
@@ -81,42 +85,52 @@ const PricingPage = () => {
     //   isCancelled: currentPlan === 'enterprise' && isCancelled && isAuthenticated
     // }
   };
+  
+  // Show notification helper
+  const showNotificationMessage = (message, type = 'success') => {
+    setNotificationMessage(message);
+    setNotificationType(type);
+    setShowNotification(true);
+    setTimeout(() => setShowNotification(false), 5000);
+  };
+  
+  // Handle actual downgrade/cancellation
+  const handleDowngrade = async () => {
+    setShowDowngradeModal(false);
+    setLoading('free');
+    try {
+      const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
+      if (!token) {
+        navigate('/login');
+        return;
+      }
+      const baseUrl = getApiUrl('node');
+      const cancelUrl = `${baseUrl}/api/subscription/${company.id}/cancel`;
+      const response = await fetch(cancelUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const data = await response.json();
+      if (data.success) {
+        showNotificationMessage('Your subscription has been cancelled. You will have access to Pro features until the end of your billing period.', 'success');
+        setTimeout(() => window.location.reload(), 2000); // Reload to update subscription status
+      } else {
+        showNotificationMessage(`Failed to cancel subscription: ${data.error || 'Unknown error'}`, 'error');
+      }
+    } catch (error) {
+      showNotificationMessage(`Failed to cancel subscription: ${error.message}`, 'error');
+    } finally {
+      setLoading(null);
+    }
+  };
+  
   const handleSelectPlan = async (planName) => {
     // Handle downgrade to free by canceling subscription
     if (planName === 'free') {
       if (currentPlan !== 'free') {
-        const confirmed = window.confirm(
-          'Are you sure you want to downgrade to Free plan? Your Pro subscription will be cancelled and you will lose access to premium features at the end of your billing period.'
-        );
-        if (!confirmed) return;
-        
-        setLoading(planName);
-        try {
-          const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
-          if (!token) {
-            navigate('/login');
-            return;
-          }
-          const baseUrl = getApiUrl('node');
-          const cancelUrl = `${baseUrl}/api/subscription/${company.id}/cancel`;
-          const response = await fetch(cancelUrl, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
-          });
-          const data = await response.json();
-          if (data.success) {
-            alert('Your subscription has been cancelled. You will have access to Pro features until the end of your billing period.');
-            window.location.reload(); // Reload to update subscription status
-          } else {
-            alert(`Failed to cancel subscription: ${data.error || 'Unknown error'}`);
-          }
-        } catch (error) {
-          alert(`Failed to cancel subscription: ${error.message}`);
-        } finally {
-          setLoading(null);
-        }
+        setShowDowngradeModal(true);
       }
       return;
     }
@@ -146,10 +160,10 @@ const PricingPage = () => {
         // Redirect to Lemon Squeezy checkout
         window.location.href = data.checkoutUrl;
       } else {
-        alert(`Failed to start checkout: ${data.error || 'Unknown error'}`);
+        showNotificationMessage(`Failed to start checkout: ${data.error || 'Unknown error'}`, 'error');
       }
     } catch (error) {
-      alert(`Failed to start checkout: ${error.message}`);
+      showNotificationMessage(`Failed to start checkout: ${error.message}`, 'error');
     } finally {
       setLoading(null);
     }
@@ -298,6 +312,83 @@ const PricingPage = () => {
           })}
         </div>
       </div>
+
+      {/* Downgrade Confirmation Modal */}
+      {showDowngradeModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-2xl">
+            <div className="flex items-center mb-4">
+              <svg className="h-8 w-8 text-red-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <h3 className="text-lg font-semibold text-gray-900">Confirm Downgrade to Free</h3>
+            </div>
+            
+            <p className="text-gray-600 mb-6 text-left">
+              Are you sure you want to downgrade to Free plan? Your Pro subscription will be cancelled and you will lose access to premium features at the end of your billing period.
+            </p>
+            
+            <div className="flex space-x-3">
+              <button
+                onClick={() => setShowDowngradeModal(false)}
+                className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDowngrade}
+                className="flex-1 px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors"
+              >
+                Yes, Downgrade
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Notification Toast */}
+      {showNotification && (
+        <div className="fixed top-4 right-4 z-50 animate-fade-in">
+          <div className={`rounded-lg p-4 shadow-lg max-w-md ${
+            notificationType === 'success' 
+              ? 'bg-green-50 border border-green-200' 
+              : 'bg-red-50 border border-red-200'
+          }`}>
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                {notificationType === 'success' ? (
+                  <svg className="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                ) : (
+                  <svg className="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                )}
+              </div>
+              <div className="ml-3 flex-1">
+                <p className={`text-sm font-medium ${
+                  notificationType === 'success' ? 'text-green-900' : 'text-red-900'
+                }`}>
+                  {notificationMessage}
+                </p>
+              </div>
+              <div className="ml-4 flex-shrink-0">
+                <button
+                  onClick={() => setShowNotification(false)}
+                  className={`inline-flex rounded-md ${
+                    notificationType === 'success' 
+                      ? 'text-green-500 hover:text-green-600' 
+                      : 'text-red-500 hover:text-red-600'
+                  }`}
+                >
+                  <XMarkIcon className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

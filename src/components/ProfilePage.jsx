@@ -18,6 +18,7 @@ export default function ProfilePage() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
   // Delete company modal state
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -46,8 +47,9 @@ export default function ProfilePage() {
     if (userData) {
       const parsedUser = JSON.parse(userData);
       setUser(parsedUser);
-      setFirstName(parsedUser.firstName || "");
-      setLastName(parsedUser.lastName || "");
+      // Handle both snake_case (from DB) and camelCase (legacy)
+      setFirstName(parsedUser.first_name || parsedUser.firstName || "");
+      setLastName(parsedUser.last_name || parsedUser.lastName || "");
       setEmail(parsedUser.email || "");
       setProfilePicture(parsedUser.profile_picture || "");
     }
@@ -71,6 +73,76 @@ export default function ProfilePage() {
     { name: "Organization", key: "company" },
     { name: "Subscription & Billing", key: "subscription" },
   ];
+  
+  // Handle saving profile changes
+  const handleSaveProfile = async () => {
+    setIsSavingProfile(true);
+    try {
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        showError('Please log in to update your profile');
+        navigate('/login');
+        return;
+      }
+      
+      // Decode token to get the actual authenticated user ID
+      const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+      const authenticatedUserId = tokenPayload.userId || tokenPayload.sub;
+      
+      console.log('Saving profile with authenticated user ID:', authenticatedUserId);
+      
+      const response = await axios.put(
+        getNodeApiUrl(`/api/users/${authenticatedUserId}/profile`),
+        {
+          first_name: firstName,
+          last_name: lastName
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      
+      if (response.data.success) {
+        // Update localStorage with new user data (using snake_case to match DB)
+        const updatedUserData = response.data.data || {};
+        const updatedUser = {
+          id: updatedUserData.id,
+          email: updatedUserData.email,
+          first_name: firstName,
+          last_name: lastName,
+          // Keep legacy camelCase for backward compatibility
+          firstName: firstName,
+          lastName: lastName,
+          profile_picture: updatedUserData.profile_picture || user?.profile_picture,
+          role: updatedUserData.role || user?.role
+        };
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        setUser(updatedUser);
+        
+        showSuccess('Profile updated successfully!');
+      } else {
+        showError('Failed to update profile');
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      showError(error.response?.data?.error || 'Failed to update profile');
+    } finally {
+      setIsSavingProfile(false);
+    }
+  };
+  
+  // Handle canceling profile changes
+  const handleCancelProfile = () => {
+    if (user) {
+      // Handle both snake_case (from DB) and camelCase (legacy)
+      setFirstName(user.first_name || user.firstName || "");
+      setLastName(user.last_name || user.lastName || "");
+      showSuccess('Changes discarded');
+    }
+  };
   // Custom Switch component for better UX
   const Switch = ({ checked, onChange }) => (
     <button
@@ -249,21 +321,26 @@ export default function ProfilePage() {
               <input
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                readOnly
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-100 text-gray-600 cursor-not-allowed"
               />
+              <p className="mt-1 text-xs text-gray-500 text-left">Email address cannot be changed</p>
             </div>
             {/* Action Buttons */}
             <div className="flex space-x-3">
               <button
                 type="button"
-                className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                onClick={handleSaveProfile}
+                disabled={isSavingProfile}
+                className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Save Changes
+                {isSavingProfile ? 'Saving...' : 'Save Changes'}
               </button>
               <button
                 type="button"
-                className="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                onClick={handleCancelProfile}
+                disabled={isSavingProfile}
+                className="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Cancel
               </button>

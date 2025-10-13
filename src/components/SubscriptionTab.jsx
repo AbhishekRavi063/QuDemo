@@ -427,12 +427,14 @@ const SubscriptionTab = ({ companyId }) => {
           </>
         )}
         {isPaid && !isActive && (
-          <button
-            onClick={handleUpgrade}
-            className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors w-full"
-          >
-            Reactivate Subscription
-          </button>
+          <div className="md:col-span-3 flex justify-center">
+            <button
+              onClick={handleUpgrade}
+              className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors max-w-xs"
+            >
+              Reactivate Subscription
+            </button>
+          </div>
         )}
         </div>
       </div>
@@ -444,7 +446,7 @@ const SubscriptionTab = ({ companyId }) => {
             <div>
               <h4 className="text-red-900 font-semibold mb-1">Subscription {statusBadge.text}</h4>
               <p className="text-red-700 text-sm">
-                Your subscription is no longer active. All shared QuDemo links have been disabled.
+                Your subscription is no longer active. All shared Qudemo links have been disabled.
                 Reactivate your subscription to restore access.
               </p>
             </div>
@@ -459,8 +461,8 @@ const SubscriptionTab = ({ companyId }) => {
               <XCircleIcon className="h-8 w-8 text-red-600 mr-3" />
               <h3 className="text-lg font-semibold text-gray-900">Cancel Subscription</h3>
             </div>
-            <p className="text-gray-600 mb-6">
-              Are you sure you want to cancel your subscription? All your shared QuDemos will stop working and you'll lose access to premium features.
+            <p className="text-gray-600 mb-6 text-left">
+              Are you sure you want to cancel your subscription? All your shared Qudemos will stop working and you'll lose access to premium features.
             </p>
             <div className="flex justify-end space-x-3">
               <button
