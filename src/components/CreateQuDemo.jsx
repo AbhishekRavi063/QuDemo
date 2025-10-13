@@ -826,31 +826,30 @@ const CreateQuDemo = () => {
         )}
         {/* Processing Message Popup */}
         {success && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-8 max-w-md w-full mx-4 relative" style={{ margin: '0 auto' }}>
-              {/* Close Button */}
-              <button
-                onClick={() => setSuccess("")}
-                className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-full p-1"
-                title="Close (processing will continue)"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-              <div className="flex items-start pr-8 text-left">
-              <div className="flex-shrink-0">
-                  <svg className="h-6 w-6 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.293l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="ml-3 text-left">
-                  <h3 className="text-lg font-medium text-blue-800 text-left">Processing</h3>
-                  <div className="mt-2 text-sm text-blue-700 text-left">{success}</div>
-                  <div className="mt-2 text-xs text-blue-600 text-left">
-                    You can close this popup - processing will continue in the background
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+              <div className="flex items-center mb-4">
+                <div className="flex-shrink-0">
+                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                    <svg className="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
                   </div>
                 </div>
+                <h3 className="ml-3 text-lg font-semibold text-gray-900 text-left">Processing Your Qudemo</h3>
+              </div>
+              
+              <p className="text-gray-600 mb-6 text-left">
+                {success}
+              </p>
+              
+              <div className="flex justify-end">
+                <button
+                  onClick={() => setSuccess("")}
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors"
+                >
+                  Close
+                </button>
               </div>
             </div>
           </div>
