@@ -21,6 +21,7 @@ import {
   CreditCardIcon,
   HomeIcon,
   QuestionMarkCircleIcon,
+  SparklesIcon,
 } from '@heroicons/react/24/outline';
 
 // Base menu items (available to all users)
@@ -29,6 +30,7 @@ const baseMenuItems = [
     { name: 'Create Qudemo', icon: PlusIcon, path: '/create' },
     { name: 'Qudemos', icon: PlayIcon, path: '/qudemos' },
     { name: 'Interactions', icon: UserGroupIcon, path: '/customer-interactions', requiresPro: true },
+    { name: 'Beta Version', icon: SparklesIcon, path: '/beta-version', isBeta: true },
 ];
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
@@ -114,7 +116,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         {/* Menu Links */}
         <nav className="flex flex-col mt-16 md:mt-24 space-y-6 px-4 text-gray-600">
           {/* Base menu items (available to all users) */}
-          {baseMenuItems.map(({ name, icon: Icon, path, requiresEnterprise, requiresPro }) => {
+          {baseMenuItems.map(({ name, icon: Icon, path, requiresEnterprise, requiresPro, isBeta }) => {
             const showLock = (requiresEnterprise && !isEnterprise) || (requiresPro && !isPro);
             const isAnalytics = name === 'Analytics';
             const isBulkShare = name === 'Bulk Share';
@@ -125,7 +127,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                 to={path}
                 onClick={() => setIsOpen(false)} // Close menu on mobile after click
                 className={({ isActive }) => {
-                  const baseClasses = "flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors duration-200";
+                  const baseClasses = "flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors duration-200 relative";
                   
                   if (isActive) {
                     if ((isAnalytics || isBulkShare) && isPro) {
@@ -145,6 +147,11 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                 {Icon && <Icon className="h-5 w-5" />}
                 {showLock && <LockClosedIcon className="h-3 w-3" />}
                 <span>{name}</span>
+                {isBeta && (
+                  <span className="ml-2 px-2 py-0.5 text-xs font-semibold text-purple-700 bg-purple-100 rounded-full">
+                    BETA
+                  </span>
+                )}
               </NavLink>
             );
           })}

@@ -29,6 +29,7 @@ import PrivacyPolicy from './components/PrivacyPolicy';
 import PricingPage from './components/PricingPage';
 import CustomerInteractionsPage from './components/CustomerInteractionsPage';
 import BulkUploadsPage from './components/BulkUploadsPage';
+import VideoChatPage from './components/VideoChatPage';
 import { CompanyProvider, useCompany } from './context/CompanyContext';
 import { BackendProvider } from './context/BackendContext';
 import { NotificationProvider } from './context/NotificationContext';
@@ -418,6 +419,20 @@ function App() {
                     <CompanyCheck>
                       <DashboardLayout>
                         <TestRunner />
+                      </DashboardLayout>
+                    </CompanyCheck>
+                  </ProtectedRoute>
+                </CompanyProvider>
+              } 
+            />
+            <Route 
+              path="/beta-version" 
+              element={
+                <CompanyProvider>
+                  <ProtectedRoute>
+                    <CompanyCheck>
+                      <DashboardLayout>
+                        <VideoChatPage />
                       </DashboardLayout>
                     </CompanyCheck>
                   </ProtectedRoute>
