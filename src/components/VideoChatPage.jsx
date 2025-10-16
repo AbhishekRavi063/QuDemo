@@ -36,6 +36,7 @@ const VideoChatPage = () => {
   const [currentSubtitle, setCurrentSubtitle] = useState('');
   const [showNextQuestions, setShowNextQuestions] = useState(false);
   const [videoEnded, setVideoEnded] = useState(false);
+  const [videoLoading, setVideoLoading] = useState(true);
   
   // ========== REFS ==========
   const videoPlayerRef = useRef(null);
@@ -61,22 +62,32 @@ const VideoChatPage = () => {
     }
   }, [messages]);
 
+  // Play intro video when videoFlow is loaded and video element is ready
+  useEffect(() => {
+    if (videoFlow && videoPlayerRef.current && videoFlow.videos.length > 0) {
+      console.log('🎬 Video element ready, playing intro video...');
+      // Small delay to ensure everything is mounted
+      const playTimer = setTimeout(() => {
+        playVideo(0);
+      }, 300);
+      return () => clearTimeout(playTimer);
+    }
+  }, [videoFlow]);
+
   // ========== DATA LOADING ==========
   const loadVideoFlow = async () => {
     // OPTION 1: Load from your video-flow.json file (recommended for production)
     try {
       const response = await fetch('/video-flow.json'); // Make sure this file is in your public folder
       const data = await response.json();
+      console.log('✅ Video flow loaded successfully:', data.videos.length, 'videos');
+      console.log('📹 First video (intro):', data.videos[0]);
       setVideoFlow(data);
       // Add welcome message only on initial load
       addMessage("Welcome to Qudemo! I'm your AI assistant. I can help you understand our interactive video demos. What would you like to know?", 'AI');
-      setTimeout(() => {
-        if (data.videos.length > 0) {
-          playVideo(0); // Plays intro video
-        }
-      }, 500);
+      // Video will auto-play via useEffect when videoFlow is set
     } catch (error) {
-      console.error('Error loading video flow:', error);
+      console.error('❌ Error loading video flow:', error);
       
       // FALLBACK: Use mock data if file not found (for testing)
       const mockVideoFlow = {
@@ -118,11 +129,7 @@ const VideoChatPage = () => {
       setVideoFlow(mockVideoFlow);
       // Add welcome message only on initial load
       addMessage("Welcome to Qudemo! I'm your AI assistant. What would you like to know?", 'AI');
-      setTimeout(() => {
-        if (mockVideoFlow.videos.length > 0) {
-          playVideo(0);
-        }
-      }, 500);
+      // Video will auto-play via useEffect when videoFlow is set
     }
   };
 
@@ -176,49 +183,152 @@ const VideoChatPage = () => {
 
   // ========== VIDEO PLAYBACK ==========
   const playVideo = (index) => {
-    if (!videoFlow || !videoFlow.videos || index >= videoFlow.videos.length) return;
+    if (!videoFlow || !videoFlow.videos || index >= videoFlow.videos.length) {
+      console.error('❌ Cannot play video - invalid index or no videos');
+      return;
+    }
 
     const video = videoFlow.videos[index];
+    console.log('🎥 Playing video:', video.title, '- URL:', video.src);
+    console.log('📊 Video details:', { id: video.id, isIntro: video.isIntro, hasSubtitle: !!video.subtitle });
+    
+    if (!videoPlayerRef.current) {
+      console.error('❌ Video player ref is NULL!');
+      setTimeout(() => playVideo(index), 500); // Retry after 500ms
+      return;
+    }
+    
+    console.log('✅ Video player ref exists:', videoPlayerRef.current);
+    
     setCurrentVideoIndex(index);
     setCurrentSubtitle('');
     setShowNextQuestions(false);
     setVideoEnded(false);
+    setShowPlayButton(false);
+    setVideoLoading(true);
     
-    if (videoPlayerRef.current) {
-      // Clear existing subtitle tracks
-      const existingTracks = videoPlayerRef.current.querySelectorAll('track');
-      existingTracks.forEach(track => track.remove());
-      
-      videoPlayerRef.current.src = video.src;
-      videoPlayerRef.current.load();
-      
-      // Load subtitle if available
-      if (video.subtitle) {
-        loadSubtitles(video.subtitle);
-      }
-      
-      // Add video ended event listener
-      videoPlayerRef.current.onended = () => {
-        setVideoEnded(true);
-        setShowNextQuestions(true);
-      };
-      
-      // Add play event to hide next questions
-      videoPlayerRef.current.onplay = () => {
-        if (videoEnded) {
-          setShowNextQuestions(false);
-          setVideoEnded(false);
-        }
-      };
-      
-      videoPlayerRef.current.oncanplay = () => {
-        videoPlayerRef.current.play().catch(error => {
-          if (error.name === 'NotAllowedError') {
-            setShowPlayButton(true);
-          }
-        });
-      };
+    // Clear existing subtitle tracks
+    const existingTracks = videoPlayerRef.current.querySelectorAll('track');
+    existingTracks.forEach(track => track.remove());
+    
+    // Remove old event listeners
+    videoPlayerRef.current.onended = null;
+    videoPlayerRef.current.onplay = null;
+    videoPlayerRef.current.oncanplay = null;
+    videoPlayerRef.current.onerror = null;
+    videoPlayerRef.current.onloadstart = null;
+    videoPlayerRef.current.onloadeddata = null;
+    
+    console.log('🔄 Setting video source:', video.src);
+    
+    // Set new video source
+    videoPlayerRef.current.src = video.src;
+    // Always play with sound
+    videoPlayerRef.current.muted = false;
+    console.log('📼 Calling video.load() with sound enabled');
+    videoPlayerRef.current.load();
+    
+    // Force hide loading after 5 seconds and show play button
+    const loadingTimeout = setTimeout(() => {
+      console.log('⏰ 5 second loading timeout - showing play button');
+      setVideoLoading(false);
+      setShowPlayButton(true);
+    }, 5000);
+    
+    // Add loading event listener
+    videoPlayerRef.current.onloadstart = () => {
+      console.log('⏳ Video loading started');
+      setVideoLoading(true);
+    };
+    
+    videoPlayerRef.current.onloadeddata = () => {
+      console.log('✅ Video data loaded');
+      setVideoLoading(false);
+      clearTimeout(loadingTimeout);
+    };
+    
+    videoPlayerRef.current.onloadedmetadata = () => {
+      console.log('✅ Video metadata loaded');
+      setVideoLoading(false);
+      clearTimeout(loadingTimeout);
+    };
+    
+    // Load subtitle if available
+    if (video.subtitle) {
+      loadSubtitles(video.subtitle);
     }
+    
+    // Add error handler
+    videoPlayerRef.current.onerror = (e) => {
+      console.error('❌ Video loading error:', e);
+      console.error('Video URL:', video.src);
+      console.error('Error code:', videoPlayerRef.current.error?.code);
+      console.error('Error message:', videoPlayerRef.current.error?.message);
+      setVideoLoading(false);
+      clearTimeout(loadingTimeout);
+      
+      // If intro video fails, try to play the first regular video instead
+      if (video.isIntro && index === 0) {
+        console.log('⚠️ Intro video failed, playing video_1 instead...');
+        setTimeout(() => {
+          playVideo(1); // Play first regular video
+        }, 500);
+      } else {
+        setShowPlayButton(true);
+        // Show error message in chat
+        addMessage(`⚠️ Could not load video: ${video.title}. Click play button to try again.`, 'AI');
+      }
+    };
+    
+    // Add video ended event listener
+    videoPlayerRef.current.onended = () => {
+      console.log('✅ Video ended, showing next questions');
+      setVideoEnded(true);
+      setShowNextQuestions(true);
+    };
+    
+    // Add play event to hide next questions
+    videoPlayerRef.current.onplay = () => {
+      console.log('▶️ Video playing');
+      if (videoEnded) {
+        setShowNextQuestions(false);
+        setVideoEnded(false);
+      }
+    };
+    
+    // Auto-play when ready
+    videoPlayerRef.current.oncanplay = () => {
+      console.log('✅ Video can play, attempting autoplay');
+      setVideoLoading(false);
+      clearTimeout(loadingTimeout);
+      
+      // Try to play with delay
+      setTimeout(() => {
+        if (videoPlayerRef.current) {
+          // Always play with sound
+          videoPlayerRef.current.muted = false;
+          const playPromise = videoPlayerRef.current.play();
+          if (playPromise !== undefined) {
+            playPromise
+              .then(() => {
+                console.log('✅ Video playing successfully with sound');
+                setShowPlayButton(false);
+              })
+              .catch(error => {
+                console.warn('⚠️ Autoplay prevented:', error.name);
+                if (error.name === 'NotAllowedError') {
+                  // Autoplay with sound blocked, show play button
+                  console.log('💡 Showing play button - user needs to click to start');
+                  setShowPlayButton(true);
+                } else {
+                  console.error('❌ Play error:', error);
+                  setShowPlayButton(true);
+                }
+              });
+          }
+        }
+      }, 100);
+    };
   };
 
   // ========== SUBTITLE LOADING ==========
@@ -257,24 +367,41 @@ const VideoChatPage = () => {
   const matchQuestion = (userQuestion) => {
     if (!videoFlow || !videoFlow.videos) return { matched: false };
 
-    const lowerQuestion = userQuestion.toLowerCase().trim();
+    // Normalize voice recognition variations
+    let normalizedQuestion = userQuestion.toLowerCase().trim();
     
-    // First pass: Exact match with video questions
+    // Handle voice recognition variations of "Qudemo"
+    normalizedQuestion = normalizedQuestion.replace(/\bq\s*demo\b/gi, 'qudemo');  // "Q demo" → "qudemo"
+    normalizedQuestion = normalizedQuestion.replace(/\bq\s*d\s*e\s*m\s*o\b/gi, 'qudemo');  // "Q D E M O" → "qudemo"
+    normalizedQuestion = normalizedQuestion.replace(/\bque\s*demo\b/gi, 'qudemo');  // "que demo" → "qudemo"
+    normalizedQuestion = normalizedQuestion.replace(/\bcue\s*demo\b/gi, 'qudemo');  // "cue demo" → "qudemo"
+    
+    const lowerQuestion = normalizedQuestion;
+    
+    console.log('🔍 Original question:', userQuestion);
+    if (normalizedQuestion !== userQuestion.toLowerCase().trim()) {
+      console.log('🔄 Normalized to:', normalizedQuestion);
+    }
+    
+    // First pass: Exact match with video questions (skip intro)
     for (const video of videoFlow.videos) {
-      if (video.question) {
+      // Skip intro videos when matching questions
+      if (video.question && !video.isIntro) {
         const lowerVideoQuestion = video.question.toLowerCase();
-        // Exact match
         if (lowerQuestion === lowerVideoQuestion) {
+          console.log('✅ Exact match found:', video.question, '(video:', video.id + ')');
           return { matched: true, videoId: video.id, question: video.question, confidence: 'high' };
         }
       }
     }
 
-    // Second pass: Contains match (question contains video question or vice versa)
+    // Second pass: Contains match (skip intro)
     for (const video of videoFlow.videos) {
-      if (video.question && video.question !== 'Intro' && video.question !== 'Fallback Response') {
+      // Skip intro videos when matching questions
+      if (video.question && !video.isIntro) {
         const lowerVideoQuestion = video.question.toLowerCase();
         if (lowerQuestion.includes(lowerVideoQuestion) || lowerVideoQuestion.includes(lowerQuestion)) {
+          console.log('✅ Substring match found:', video.question, '(video:', video.id + ')');
           return { matched: true, videoId: video.id, question: video.question, confidence: 'high' };
         }
       }
@@ -282,31 +409,33 @@ const VideoChatPage = () => {
 
     // Third pass: Keyword-based matching for key questions
     const keywordMappings = [
-      { keywords: ['what is qudemo', 'what is this', 'what does qudemo', 'tell me about qudemo'], videoQuestion: 'What is Qudemo?' },
-      { keywords: ['how does qudemo work', 'how qudemo works', 'how does it work', 'how to use'], videoQuestion: 'How does Qudemo work?' },
-      { keywords: ['who is qudemo for', 'who can use', 'who should use', 'target audience'], videoQuestion: 'Who is Qudemo for?' },
-      { keywords: ['pricing', 'how much', 'cost', 'price', 'plans'], videoQuestion: "What's the pricing?" },
-      { keywords: ['secure', 'security', 'data security', 'safe', 'privacy'], videoQuestion: 'How secure is my data?' },
-      { keywords: ['integrate', 'integration', 'crm', 'connect'], videoQuestion: 'Can I integrate Qudemo with other tools?' },
-      { keywords: ['embed', 'share'], videoQuestion: 'Can I embed Qudemo or share it?' },
-      { keywords: ['insights', 'analytics', 'what can i see'], videoQuestion: 'What insights can I see?' },
-      { keywords: ['onboarding', 'training'], videoQuestion: 'Can I use Qudemo for onboarding or training?' },
+      { keywords: ['what is qudemo', 'what is this', 'what is demo', 'tell me about'], videoId: 'video_1', videoQuestion: 'What is Qudemo?' },
+      { keywords: ['how does qudemo work', 'how qudemo works', 'how does it work', 'how does demo work', 'how demo works'], videoId: 'video_2', videoQuestion: 'How does Qudemo work?' },
+      { keywords: ['who is qudemo for', 'who can use', 'who should use', 'who is demo for'], videoId: 'video_3', videoQuestion: 'Who is Qudemo for?' },
+      { keywords: ['pricing', 'how much', 'cost', "what's the pricing"], videoId: 'video_12', videoQuestion: "What's the pricing?" },
+      { keywords: ['secure', 'security', 'how secure'], videoId: 'video_11', videoQuestion: 'How secure is my data?' },
+      { keywords: ['integrate', 'integration'], videoId: 'video_14', videoQuestion: 'Can I integrate Qudemo with other tools?' },
+      { keywords: ['embed', 'share'], videoId: 'video_7', videoQuestion: 'Can I embed Qudemo or share it?' },
+      { keywords: ['insights', 'what insights'], videoId: 'video_9', videoQuestion: 'What insights can I see?' },
+      { keywords: ['onboarding', 'training'], videoId: 'video_10', videoQuestion: 'Can I use Qudemo for onboarding or training?' },
     ];
 
     for (const mapping of keywordMappings) {
       for (const keyword of mapping.keywords) {
         if (lowerQuestion.includes(keyword)) {
-          const matchedVideo = videoFlow.videos.find(v => v.question === mapping.videoQuestion);
+          const matchedVideo = videoFlow.videos.find(v => v.id === mapping.videoId);
           if (matchedVideo) {
+            console.log('✅ Keyword match found:', matchedVideo.question, '(video:', matchedVideo.id + ')');
             return { matched: true, videoId: matchedVideo.id, question: matchedVideo.question, confidence: 'high' };
           }
         }
       }
     }
 
-    // Fourth pass: Word-based fuzzy matching (more conservative)
+    // Fourth pass: Word-based fuzzy matching (skip intro, more conservative)
     for (const video of videoFlow.videos) {
-      if (video.question && video.question !== 'Intro' && video.question !== 'Fallback Response') {
+      // Skip intro videos when matching questions
+      if (video.question && !video.isIntro && video.question !== 'Fallback Response') {
         const lowerVideoQuestion = video.question.toLowerCase();
         const videoWords = lowerVideoQuestion.split(/\W+/).filter(w => w.length > 3);
         const questionWords = lowerQuestion.split(/\W+/).filter(w => w.length > 3);
@@ -315,13 +444,15 @@ const VideoChatPage = () => {
         const matchingWords = videoWords.filter(word => questionWords.includes(word));
         
         if (matchingWords.length >= 3) {
+          console.log('✅ Fuzzy match found:', video.question, '(video:', video.id + ')');
           return { matched: true, videoId: video.id, question: video.question, confidence: 'medium' };
         }
       }
     }
 
-    // Fallback video
-    const fallbackVideo = videoFlow.videos.find(v => v.isFallback) || videoFlow.videos[1] || videoFlow.videos[0];
+    // Fallback video (use designated fallback or second video, never intro)
+    console.log('⚠️ No match found, using fallback');
+    const fallbackVideo = videoFlow.videos.find(v => v.isFallback) || videoFlow.videos[1];
     if (fallbackVideo) {
       return { matched: true, videoId: fallbackVideo.id, question: fallbackVideo.question, confidence: 'fallback', isFallback: true };
     }
@@ -475,12 +606,40 @@ const VideoChatPage = () => {
         {/* ========== VIDEO SECTION (2/3) ========== */}
         <div className="w-2/3 bg-black flex items-center justify-center relative">
           <div className="relative w-full h-full">
-            <video ref={videoPlayerRef} controls className="w-full h-full object-contain bg-black">
+            <video 
+              ref={videoPlayerRef} 
+              controls 
+              className="w-full h-full object-contain bg-black"
+              playsInline
+              preload="auto"
+            >
               Your browser does not support the video tag.
             </video>
 
+            {/* Loading indicator */}
+            {videoLoading && (
+              <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center z-15">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-16 w-16 border-4 border-white border-t-transparent mb-4"></div>
+                  <p className="text-white text-sm">Loading video...</p>
+                  {videoFlow?.videos?.[currentVideoIndex] && (
+                    <p className="text-white text-xs mt-2 opacity-75">{videoFlow.videos[currentVideoIndex].title}</p>
+                  )}
+                  <button 
+                    onClick={() => {
+                      setVideoLoading(false);
+                      setShowPlayButton(true);
+                    }}
+                    className="mt-4 px-4 py-2 bg-white bg-opacity-20 text-white text-xs rounded-lg hover:bg-opacity-30"
+                  >
+                    Skip Loading
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Play button overlay */}
-            {showPlayButton && (
+            {showPlayButton && !videoLoading && (
               <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center cursor-pointer z-10" onClick={() => { videoPlayerRef.current?.play(); setShowPlayButton(false); }}>
                 <button className="bg-white bg-opacity-20 border-2 border-white rounded-full w-20 h-20 flex items-center justify-center hover:bg-opacity-30 transition-all">
                   <svg width="60" height="60" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg>
