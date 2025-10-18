@@ -267,13 +267,26 @@ class VideoCache {
   }
 
   /**
-   * Check if video is cached
+   * Check if video is cached (optimized for speed)
    */
   async isCached(url) {
     try {
       await this.initPromise;
-      const cached = await this.getCachedVideo(url);
-      return !!cached;
+      
+      // Fast check - just check if key exists, don't retrieve full blob
+      return new Promise((resolve) => {
+        const transaction = this.db.transaction([STORE_NAME], 'readonly');
+        const store = transaction.objectStore(STORE_NAME);
+        const request = store.getKey(url); // Faster than get()
+        
+        request.onsuccess = () => {
+          resolve(!!request.result);
+        };
+        
+        request.onerror = () => {
+          resolve(false);
+        };
+      });
     } catch (error) {
       return false;
     }

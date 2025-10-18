@@ -248,18 +248,18 @@ const VideoChatPage = () => {
       return;
     }
     
+    // STEP 1: IMMEDIATELY pause and hide old video to prevent it showing during load
+    videoPlayerRef.current.pause();
+    videoPlayerRef.current.currentTime = 0; // Reset to start
+    videoPlayerRef.current.style.opacity = '0'; // Hide instantly
+    
+    // Update state immediately
     setCurrentVideoIndex(index);
     setCurrentSubtitle('');
     setShowNextQuestions(false);
     setVideoEnded(false);
     setShowPlayButton(false);
-    
-    // Check if video is cached
-    const isCached = await videoCache.isCached(video.src);
-    console.log(isCached ? '⚡ Loading from cache (INSTANT)' : '📥 Downloading from network...');
-    
-    // Show loading only if not cached
-    setVideoLoading(!isCached);
+    setVideoLoading(false); // Start with no loading screen
     
     // Clear existing subtitle tracks
     const existingTracks = videoPlayerRef.current.querySelectorAll('track');
@@ -273,27 +273,50 @@ const VideoChatPage = () => {
     videoPlayerRef.current.onloadstart = null;
     videoPlayerRef.current.onloadeddata = null;
     
+    // Debounced loading screen - only show if video takes > 150ms to load
+    const loadingTimer = setTimeout(() => {
+      console.log('⏳ Video taking longer, showing loading screen...');
+      setVideoLoading(true);
+    }, 150);
+    
     try {
-      // Get video from cache (or download and cache)
+      // STEP 2: Load video from cache (very fast for cached videos)
+      const isCached = await videoCache.isCached(video.src);
+      console.log(isCached ? '⚡ Loading from cache (INSTANT)' : '📥 Downloading from network...');
+      
+      const startTime = performance.now();
       const videoBlob = await videoCache.getVideo(video.src);
+      const loadTime = (performance.now() - startTime).toFixed(0);
+      console.log(`✅ Video loaded in ${loadTime}ms`);
+      
+      // Cancel loading timer - video is ready
+      clearTimeout(loadingTimer);
+      setVideoLoading(false);
       
       // Create blob URL
       const blobUrl = URL.createObjectURL(videoBlob);
       blobUrlsRef.current.add(blobUrl);
       
-      console.log('✅ Video ready, setting source...');
+      console.log('✅ Setting new video source...');
       
-      // Set video source
+      // STEP 3: Set new video source
       videoPlayerRef.current.src = blobUrl;
       videoPlayerRef.current.muted = false;
       videoPlayerRef.current.load();
       
+      // STEP 4: Show video once ready
+      videoPlayerRef.current.style.opacity = '1';
+      
     } catch (error) {
       console.error('❌ Failed to load video from cache, using direct URL:', error);
+      clearTimeout(loadingTimer);
+      setVideoLoading(false);
+      
       // Fallback to direct URL
       videoPlayerRef.current.src = video.src;
       videoPlayerRef.current.muted = false;
       videoPlayerRef.current.load();
+      videoPlayerRef.current.style.opacity = '1';
     }
     
     // Force hide loading after 5 seconds and show play button
@@ -723,22 +746,13 @@ const VideoChatPage = () => {
 
             {/* Loading indicator */}
             {videoLoading && (
-              <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center z-15">
+              <div className="absolute inset-0 bg-black bg-opacity-80 flex items-center justify-center z-15">
                 <div className="text-center">
                   <div className="animate-spin rounded-full h-16 w-16 border-4 border-white border-t-transparent mb-4"></div>
-                  <p className="text-white text-sm">Loading video...</p>
+                  <p className="text-white text-base font-semibold">Loading video...</p>
                   {videoFlow?.videos?.[currentVideoIndex] && (
-                    <p className="text-white text-xs mt-2 opacity-75">{videoFlow.videos[currentVideoIndex].title}</p>
+                    <p className="text-white text-sm mt-2 opacity-90">{videoFlow.videos[currentVideoIndex].title}</p>
                   )}
-                  <button 
-                    onClick={() => {
-                      setVideoLoading(false);
-                      setShowPlayButton(true);
-                    }}
-                    className="mt-4 px-4 py-2 bg-white bg-opacity-20 text-white text-xs rounded-lg hover:bg-opacity-30"
-                  >
-                    Skip Loading
-                  </button>
                 </div>
               </div>
             )}
