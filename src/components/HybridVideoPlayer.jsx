@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { SpeakerWaveIcon, SpeakerXMarkIcon } from '@heroicons/react/24/outline';
 import CustomVideoPlayer from './CustomVideoPlayer';
 import { getVideoType, canPlayWithCustomPlayer } from '../utils/videoUrlProcessor';
+import videoCache from '../utils/videoCache';
 
 const HybridVideoPlayer = ({ 
   url, 
@@ -21,6 +22,7 @@ const HybridVideoPlayer = ({
 
   const [audioEnabled, setAudioEnabled] = useState(true); // Start with audio enabled
   const [hasUserInteracted, setHasUserInteracted] = useState(true); // Assume user has interacted
+  const [isVideoReady, setIsVideoReady] = useState(false);
   const internalIframeRef = useRef(null);
   const videoType = getVideoType(url);
   const canUseCustomPlayer = canPlayWithCustomPlayer(url);
@@ -61,7 +63,15 @@ const HybridVideoPlayer = ({
 
   // Handle iframe load
   const handleIframeLoad = () => {
+    setIsVideoReady(true);
     if (onReady) onReady();
+    
+    // Cache video metadata
+    videoCache.cacheVideo(url, { 
+      loaded: true, 
+      loadedAt: Date.now(),
+      videoType 
+    });
     
     // Enable audio immediately after iframe loads
     setTimeout(() => {
@@ -343,69 +353,26 @@ const HybridVideoPlayer = ({
     }
   }, [playing, videoType]);
 
-  // Convert URL to embed format with audio parameters
+  // Convert URL to embed format with audio parameters - use cache when available
   const getEmbedUrl = () => {
     if (!url) return '';
 
-    switch (videoType) {
-      case 'youtube':
-        // Extract video ID and create embed URL
-        let videoId = '';
-        if (url.includes('youtube.com/watch')) {
-          const urlParams = new URLSearchParams(url.split('?')[1]);
-          videoId = urlParams.get('v');
-        } else if (url.includes('youtu.be/')) {
-          videoId = url.split('youtu.be/')[1].split('?')[0];
-        }
-        if (!videoId) return url;
-        
-        // Ensure startTime is properly formatted for YouTube
-        const ytStart = startTime && startTime > 0 ? `&start=${Math.floor(startTime)}` : '';
-        const autoplay = playing ? '1' : '0';
-        // Use YouTube nocookie domain for better control and no suggestions
-        const embedUrl = `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=${autoplay}&muted=0&enablejsapi=1&controls=1&rel=0&modestbranding=1&version=3&playerapiid=ytplayer&iv_load_policy=3&fs=0&cc_load_policy=0&disablekb=1&playsinline=1&showinfo=0&loop=0&end=0&start=${Math.floor(startTime) || 0}&wmode=opaque&origin=${window.location.origin}&widget_referrer=${window.location.origin}&html5=1&vq=hd720&disable_polymer=1&no_https=1&hl=en&cc_lang_pref=en&cc_load_policy=0&iv_load_policy=3&fs=0&rel=0&showinfo=0&modestbranding=1&playsinline=1&enablejsapi=1&origin=${window.location.origin}&widget_referrer=${window.location.origin}&html5=1&vq=hd720${ytStart}`;
-
-        return embedUrl;
-
-      case 'loom':
-        // Convert Loom share URL to embed URL with enhanced API support
-        if (url.includes('loom.com/share/')) {
-          const videoId = url.split('loom.com/share/')[1].split('?')[0];
-          
-          // Extract existing query parameters (like timestamp)
-          const urlParams = new URLSearchParams(url.split('?')[1] || '');
-          const existingTimestamp = urlParams.get('t');
-          
-          // Build base embed URL with parameters
-          const autoplay = playing ? '1' : '0';
-          let embedUrl = `https://www.loom.com/embed/${videoId}?autoplay=${autoplay}&hide_share=1&hide_title=1&muted=0&enablejsapi=1&allowfullscreen=1&showinfo=0&controls=1&rel=0`;
-
-          // Add timestamp - prioritize startTime prop over existing URL timestamp
-          const timestampToUse = startTime && startTime > 0 ? Math.floor(startTime) : existingTimestamp;
-          if (timestampToUse) {
-            embedUrl += `&t=${timestampToUse}`;
-
-          }
-          
-          return embedUrl;
-        }
-        return url;
-
-      case 'vimeo':
-        // Convert Vimeo URL to embed URL
-        if (url.includes('vimeo.com/')) {
-          const videoId = url.split('vimeo.com/')[1].split('?')[0];
-          const vimeoTime = startTime && startTime > 0 ? `#t=${Math.floor(startTime)}s` : '';
-          const autoplay = playing ? '1' : '0';
-          const embedUrl = videoId ? `https://player.vimeo.com/video/${videoId}?autoplay=${autoplay}&muted=0&controls=1${vimeoTime}` : url;
-
-          return embedUrl;
-        }
-        return url;
-
-      default:
-        return url;
+    // Check if we have a cached embed URL
+    const cachedVideo = videoCache.getCachedVideo(url, startTime);
+    if (cachedVideo && cachedVideo.embedUrl) {
+      return cachedVideo.embedUrl;
     }
+
+    // Generate embed URL using cache utility
+    const embedUrl = videoCache.generateEmbedUrl(url, startTime, playing);
+    
+    // Cache the generated URL
+    videoCache.cacheVideo(url, { 
+      embedUrl,
+      generatedAt: Date.now() 
+    });
+
+    return embedUrl;
   };
 
   // Handle user interaction
@@ -479,7 +446,13 @@ const HybridVideoPlayer = ({
         mozallowfullscreen
         allowFullScreen
         title={`${videoType} Video Player`}
-        style={{ width: '100%', height: '100%', borderRadius: '0.5rem' }}
+        style={{ 
+          width: '100%', 
+          height: '100%', 
+          borderRadius: '0.5rem',
+          opacity: isVideoReady ? 1 : 0,
+          transition: 'opacity 0.3s ease-in-out'
+        }}
         onLoad={handleIframeLoad}
         allow="autoplay; encrypted-media"
       />
