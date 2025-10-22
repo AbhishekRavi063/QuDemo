@@ -753,9 +753,17 @@ const VideoChatPage = () => {
             />
             <button 
               onClick={handleVoiceInput} 
-              className={`min-w-[2.5rem] h-11 flex items-center justify-center rounded-lg text-white transition-all duration-200 ${isListening ? 'bg-gradient-to-br from-green-500 to-green-600 animate-pulse' : 'bg-gradient-to-br from-blue-500 to-blue-600 hover:shadow-lg hover:-translate-y-0.5'}`}
+              className={`min-w-[2.5rem] h-11 flex items-center justify-center rounded-lg text-white transition-all duration-200 ${isListening ? 'bg-gradient-to-br from-green-500 to-green-600 animate-pulse shadow-lg' : 'bg-gradient-to-br from-gray-500 to-gray-600 hover:shadow-lg hover:-translate-y-0.5'}`}
+              title={isListening ? 'Stop recording' : 'Start voice input'}
             >
-              🎤
+              <svg 
+                className="w-5 h-5" 
+                fill="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+              </svg>
             </button>
             <button 
               onClick={() => handleSendMessage()} 

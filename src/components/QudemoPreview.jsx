@@ -142,9 +142,12 @@ const QudemoPreview = ({ qudemo, onClose }) => {
   const [loadingCalendly, setLoadingCalendly] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [errorDetails, setErrorDetails] = useState(null);
+  const [isListening, setIsListening] = useState(false);
+  const [recognitionSupported, setRecognitionSupported] = useState(false);
   const messagesEndRef = useRef(null);
   const loomIframeRef = useRef();
   const videoPlayerRef = useRef(null);
+  const recognitionRef = useRef(null);
   
   // Get company context for subscription info (may be undefined in some contexts)
   const companyContext = useCompany();
@@ -175,6 +178,74 @@ const QudemoPreview = ({ qudemo, onClose }) => {
       setMessages([welcomeMessage]);
     }
   }, [qudemo, chatKey]);
+
+  // Initialize speech recognition
+  useEffect(() => {
+    setupSpeechRecognition();
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+    };
+  }, []);
+
+  // Setup speech recognition
+  const setupSpeechRecognition = () => {
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognition = new SpeechRecognition();
+      
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = 'en-US';
+
+      recognition.onstart = () => {
+        setIsListening(true);
+      };
+
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        setInputMessage(transcript);
+        setIsListening(false);
+        // Auto-send the voice message
+        setTimeout(() => {
+          handleSendMessage(transcript);
+        }, 100);
+      };
+
+      recognition.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        setIsListening(false);
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognitionRef.current = recognition;
+      setRecognitionSupported(true);
+    } else {
+      setRecognitionSupported(false);
+    }
+  };
+
+  // Handle voice input
+  const handleVoiceInput = async () => {
+    if (!recognitionRef.current) {
+      alert('Voice input is not supported in your browser.\n\nPlease use Chrome, Edge, or Safari.');
+      return;
+    }
+    if (isListening) {
+      recognitionRef.current.stop();
+    } else {
+      try {
+        await navigator.mediaDevices.getUserMedia({ audio: true });
+        recognitionRef.current.start();
+      } catch (error) {
+        alert('Could not access microphone. Please check permissions.');
+      }
+    }
+  };
   // Auto-scroll to bottom when new messages arriveh
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -762,15 +833,37 @@ const QudemoPreview = ({ qudemo, onClose }) => {
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyDown={handleKeyPress}
-              placeholder="Ask a question about this qudemo..."
+              placeholder={isListening ? '🎙️ Listening...' : 'Ask a question about this qudemo...'}
               rows={1}
-              className="flex-1 px-3 py-1 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none overflow-hidden"
+              className={`flex-1 px-3 py-1 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none overflow-hidden ${
+                isListening ? 'border-green-500' : 'border-gray-300'
+              }`}
               style={{ minHeight: '2.5rem', maxHeight: '7.5rem' }}
               onInput={(e) => {
                 e.target.style.height = 'auto';
                 e.target.style.height = Math.min(e.target.scrollHeight, 7.5 * 16) + 'px';
               }}
             />
+            {recognitionSupported && (
+              <button
+                onClick={handleVoiceInput}
+                className={`min-w-[2.5rem] h-10 flex items-center justify-center rounded-lg text-white transition-all duration-200 ${
+                  isListening 
+                    ? 'bg-gradient-to-br from-green-500 to-green-600 animate-pulse shadow-lg' 
+                    : 'bg-gradient-to-br from-gray-500 to-gray-600 hover:shadow-lg hover:-translate-y-0.5'
+                }`}
+                title={isListening ? 'Stop recording' : 'Start voice input'}
+              >
+                <svg 
+                  className="w-5 h-5" 
+                  fill="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                  <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+                </svg>
+              </button>
+            )}
             <button
               onClick={handleSendMessage}
               disabled={!inputMessage.trim() || isTyping}
