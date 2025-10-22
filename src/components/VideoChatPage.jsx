@@ -38,6 +38,9 @@ const VideoChatPage = () => {
   const [videoEnded, setVideoEnded] = useState(false);
   const [videoLoading, setVideoLoading] = useState(true);
   const [showBookingPrompt, setShowBookingPrompt] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [shareLink, setShareLink] = useState('');
+  const [copySuccess, setCopySuccess] = useState(false);
   
   // ========== REFS ==========
   const videoPlayerRef = useRef(null);
@@ -565,6 +568,24 @@ const VideoChatPage = () => {
     e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
   };
 
+  // ========== SHARE FUNCTIONALITY ==========
+  const handleShare = () => {
+    const currentUrl = window.location.href;
+    setShareLink(currentUrl);
+    setShowShareModal(true);
+    setCopySuccess(false);
+  };
+
+  const copyShareLink = async () => {
+    try {
+      await navigator.clipboard.writeText(shareLink);
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy link');
+    }
+  };
+
   // ========== RENDER HELPERS ==========
   const TypingIndicator = () => (
     <div className="flex justify-start">
@@ -625,14 +646,26 @@ const VideoChatPage = () => {
               <p className="text-xs text-gray-500">Interactive Demo</p>
             </div>
           </div>
-          <div className="text-xs text-gray-500">Shared Qudemo</div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleShare}
+              className="flex items-center gap-2 px-3 py-1.5 text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
+              title="Share this demo"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+              </svg>
+              <span className="hidden sm:inline">Share</span>
+            </button>
+            <div className="text-xs text-gray-500">Shared Qudemo</div>
+          </div>
         </div>
       </header>
 
       {/* ========== MAIN CONTENT ========== */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* ========== VIDEO SECTION (2/3) ========== */}
-        <div className="w-2/3 bg-black flex items-center justify-center relative">
+      <div className="flex flex-1 flex-col overflow-hidden">
+        {/* ========== VIDEO SECTION (FULL WIDTH) ========== */}
+        <div className="flex-1 bg-black flex items-center justify-center relative">
           <div className="relative w-full h-full">
             <video 
               ref={videoPlayerRef} 
@@ -706,39 +739,29 @@ const VideoChatPage = () => {
           </div>
         </div>
 
-        {/* ========== CHAT SECTION (1/3) ========== */}
-        <div className="w-1/3 flex flex-col bg-white border-l border-gray-200">
-          {/* Chat header */}
-          <div className="bg-blue-600 text-white px-4 py-4 flex items-center gap-3 flex-shrink-0">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
-            </svg>
-            <span className="font-semibold text-base">Ask questions about this demo</span>
-          </div>
-
-          {/* Chat messages */}
-          <div ref={chatMessagesRef} className="flex-1 overflow-y-auto p-4 bg-gray-50 flex flex-col gap-3">
-            {messages.map((msg, i) => (
-              <div key={i}>
-                <div className={`flex ${msg.sender === 'AI' ? 'justify-start' : 'justify-end'}`}>
-                  <div className={`max-w-[80%] px-4 py-3 rounded-xl text-sm leading-relaxed ${msg.sender === 'AI' ? 'bg-white border border-gray-200 text-gray-800 text-left' : 'bg-blue-600 text-white text-right'}`}>
-                    {msg.text}
-                  </div>
-                </div>
-                {/* Show suggested questions after first AI message (welcome message) */}
-                {msg.sender === 'AI' && i === 0 && <SuggestedQuestions />}
-              </div>
-            ))}
-            {isTyping && <TypingIndicator />}
-          </div>
-
+        {/* ========== INPUT SECTION BELOW VIDEO ========== */}
+        <div className="bg-white border-t border-gray-200 flex-shrink-0">
           {/* Chat input */}
-          <div className="flex items-end gap-2 p-3 border-t border-gray-200 bg-white flex-shrink-0">
-            <textarea value={inputMessage} onChange={handleInputChange} onKeyDown={handleKeyPress} placeholder={isListening ? '🎙️ Listening...' : 'Ask a question...'} rows="1" className={`flex-1 px-3 py-2.5 border ${isListening ? 'border-green-500' : 'border-gray-300'} rounded-lg text-sm resize-none overflow-hidden min-h-[2.5rem] max-h-[7.5rem] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm`} />
-            <button onClick={handleVoiceInput} className={`min-w-[2.5rem] h-10 flex items-center justify-center rounded-lg text-white transition-all duration-200 ${isListening ? 'bg-gradient-to-br from-green-500 to-green-600 animate-pulse' : 'bg-gradient-to-br from-blue-500 to-blue-600 hover:shadow-lg hover:-translate-y-0.5'}`}>
+          <div className="flex items-end gap-2 p-4 max-w-4xl mx-auto">
+            <textarea 
+              value={inputMessage} 
+              onChange={handleInputChange} 
+              onKeyDown={handleKeyPress} 
+              placeholder={isListening ? '🎙️ Listening...' : 'Ask a question...'} 
+              rows="1" 
+              className={`flex-1 px-4 py-3 border ${isListening ? 'border-green-500' : 'border-gray-300'} rounded-lg text-sm resize-none overflow-hidden min-h-[2.5rem] max-h-[7.5rem] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm`} 
+            />
+            <button 
+              onClick={handleVoiceInput} 
+              className={`min-w-[2.5rem] h-11 flex items-center justify-center rounded-lg text-white transition-all duration-200 ${isListening ? 'bg-gradient-to-br from-green-500 to-green-600 animate-pulse' : 'bg-gradient-to-br from-blue-500 to-blue-600 hover:shadow-lg hover:-translate-y-0.5'}`}
+            >
               🎤
             </button>
-            <button onClick={() => handleSendMessage()} disabled={!inputMessage.trim() || isTyping} className="min-w-[2.5rem] h-10 flex items-center justify-center bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-lg hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+            <button 
+              onClick={() => handleSendMessage()} 
+              disabled={!inputMessage.trim() || isTyping} 
+              className="min-w-[2.5rem] h-11 flex items-center justify-center bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-lg hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 12L3.269 3.125A59.769 59.769 0 0121.485 12 59.768 59.768 0 013.27 20.875L5.999 12zm0 0h7.5"></path>
               </svg>
@@ -747,7 +770,7 @@ const VideoChatPage = () => {
 
           {/* Book Meeting Button (shows when user asks about sales) */}
           {showBookingPrompt && (
-            <div className="px-3 py-3 border-t bg-blue-50 flex-shrink-0">
+            <div className="px-4 pb-4 max-w-4xl mx-auto">
               <button
                 onClick={handleBookMeeting}
                 className="w-full inline-flex items-center justify-center px-4 py-3 text-sm font-semibold rounded-lg transition-all duration-200 shadow-md hover:shadow-lg bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700"
@@ -772,11 +795,83 @@ const VideoChatPage = () => {
           )}
 
           {/* Footer */}
-          <div className="px-2 py-2 border-t border-gray-200 bg-white flex justify-center items-center text-xs text-gray-500 flex-shrink-0">
+          <div className="px-2 py-2 border-t border-gray-200 bg-white flex justify-center items-center text-xs text-gray-500">
             <span>Powered by <span className="text-blue-600 font-semibold cursor-pointer">Qudemo</span> AI</span>
           </div>
         </div>
       </div>
+
+      {/* ========== SHARE MODAL ========== */}
+      {showShareModal && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4">
+            <div className="p-8">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-semibold text-gray-900">Share This Demo</h3>
+                <button
+                  onClick={() => setShowShareModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <div className="mb-6">
+                <p className="text-sm text-gray-600 mb-3">
+                  Share this interactive demo with anyone using the link below:
+                </p>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="text"
+                    value={shareLink}
+                    readOnly
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm bg-gray-50"
+                  />
+                  <button
+                    onClick={copyShareLink}
+                    className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-colors ${
+                      copySuccess 
+                        ? 'bg-green-600 text-white' 
+                        : 'bg-blue-600 text-white hover:bg-blue-700'
+                    }`}
+                  >
+                    {copySuccess ? (
+                      <>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        Copied!
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                        Copy
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+              <div className="bg-blue-50 p-4 rounded-lg mb-6">
+                <p className="text-sm text-blue-800">
+                  <strong>💡 Tip:</strong> Anyone with this link can view and interact with this demo. 
+                  They can ask questions and get instant AI-powered answers with video timestamps.
+                </p>
+              </div>
+              <div className="flex justify-end">
+                <button
+                  onClick={() => setShowShareModal(false)}
+                  className="px-6 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 font-medium"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
