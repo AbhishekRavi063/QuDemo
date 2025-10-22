@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { SpeakerWaveIcon, SpeakerXMarkIcon, PlayIcon, PauseIcon } from '@heroicons/react/24/outline';
-import videoCache from '../utils/videoCache';
 
 const CustomVideoPlayer = ({ 
   url, 
@@ -24,7 +23,6 @@ const CustomVideoPlayer = ({
   const [duration, setDuration] = useState(0);
   const [showControls, setShowControls] = useState(true);
   const [hasUserInteracted, setHasUserInteracted] = useState(false);
-  const [isVideoReady, setIsVideoReady] = useState(false);
 
   // Handle startTime changes
   useEffect(() => {
@@ -45,16 +43,7 @@ const CustomVideoPlayer = ({
   // Handle video metadata loaded
   const handleLoadedMetadata = () => {
     if (videoRef.current) {
-      setIsVideoReady(true);
       setDuration(videoRef.current.duration);
-      
-      // Cache video metadata
-      videoCache.cacheVideo(url, { 
-        loaded: true, 
-        loadedAt: Date.now(),
-        duration: videoRef.current.duration,
-        videoType: 'custom'
-      });
       
       // Set start time if provided
       if (startTime > 0) {
@@ -212,13 +201,7 @@ const CustomVideoPlayer = ({
       <video
         ref={videoRef}
         src={url}
-        style={{ 
-          width: '100%', 
-          height: '100%', 
-          objectFit: 'contain',
-          opacity: isVideoReady ? 1 : 0,
-          transition: 'opacity 0.3s ease-in-out'
-        }}
+        style={{ width: '100%', height: '100%', objectFit: 'contain' }}
         onLoadedMetadata={handleLoadedMetadata}
         onTimeUpdate={handleTimeUpdate}
         onEnded={handleEnded}
