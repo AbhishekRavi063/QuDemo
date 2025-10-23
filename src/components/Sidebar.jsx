@@ -117,7 +117,9 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         <nav className="flex flex-col mt-16 md:mt-24 space-y-6 px-4 text-gray-600">
           {/* Base menu items (available to all users) */}
           {baseMenuItems.map(({ name, icon: Icon, path, requiresEnterprise, requiresPro, isBeta }) => {
-            const showLock = (requiresEnterprise && !isEnterprise) || (requiresPro && !isPro);
+            // COMMENTED OUT FOR TESTING - Allow free users to access Pro features
+            // const showLock = (requiresEnterprise && !isEnterprise) || (requiresPro && !isPro);
+            const showLock = false; // TEST MODE: No locks for any features
             const isAnalytics = name === 'Analytics';
             const isBulkShare = name === 'Bulk Share';
             
@@ -145,7 +147,8 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                 }}
               >
                 {Icon && <Icon className="h-5 w-5" />}
-                {showLock && <LockClosedIcon className="h-3 w-3" />}
+                {/* COMMENTED OUT FOR TESTING - No lock icons shown */}
+                {/* {showLock && <LockClosedIcon className="h-3 w-3" />} */}
                 <span>{name}</span>
                 {isBeta && (
                   <span className="ml-2 px-2 py-0.5 text-xs font-semibold text-purple-700 bg-purple-100 rounded-full">
@@ -211,21 +214,23 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
               className={`group flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors duration-200 ${
                 location.pathname === '/bulk-uploads'
                   ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600'
-                  : !isPro 
-                    ? 'text-gray-400'
-                    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                  // COMMENTED OUT FOR TESTING - Allow free users to access
+                  // : !isPro 
+                  //   ? 'text-gray-400'
+                  : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
               }`}
               onClick={() => setIsOpen(false)}
             >
-              {!isPro ? (
+              {/* COMMENTED OUT FOR TESTING - No lock icon shown */}
+              {/* {!isPro ? (
                 <LockClosedIcon className={`mr-3 h-5 w-5 flex-shrink-0 ${
                   location.pathname === '/bulk-uploads' ? 'text-indigo-700' : 'text-gray-400'
                 }`} />
-              ) : (
+              ) : ( */}
                 <DocumentArrowUpIcon className={`mr-3 h-5 w-5 flex-shrink-0 ${
                   location.pathname === '/bulk-uploads' ? 'text-indigo-700' : 'text-gray-400 group-hover:text-gray-500'
                 }`} />
-              )}
+              {/* )} */}
               Bulk Upload
             </Link>
             
