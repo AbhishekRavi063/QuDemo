@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { SpeakerWaveIcon, SpeakerXMarkIcon } from '@heroicons/react/24/outline';
+import ReactPlayer from 'react-player';
 import CustomVideoPlayer from './CustomVideoPlayer';
 import { getVideoType, canPlayWithCustomPlayer } from '../utils/videoUrlProcessor';
 
@@ -21,7 +22,9 @@ const HybridVideoPlayer = ({
 
   const [audioEnabled, setAudioEnabled] = useState(true); // Start with audio enabled
   const [hasUserInteracted, setHasUserInteracted] = useState(true); // Assume user has interacted
+  const [videoEnded, setVideoEnded] = useState(false); // Track if YouTube video ended
   const internalIframeRef = useRef(null);
+  const reactPlayerRef = useRef(null); // For ReactPlayer (YouTube)
   const videoType = getVideoType(url);
   const canUseCustomPlayer = canPlayWithCustomPlayer(url);
   
@@ -74,101 +77,29 @@ const HybridVideoPlayer = ({
       // Don't try to seek here - let VideoDemoChatPopup handle it
     }
     
-    // Hide YouTube suggestions after iframe loads
-    if (videoType === 'youtube') {
-      setTimeout(() => {
-        hideYouTubeSuggestions();
-      }, 1000);
-      
-      // Set up periodic check to hide suggestions that might appear later
-      const interval = setInterval(() => {
-        hideYouTubeSuggestions();
-      }, 2000);
-      
-      // Clear interval after 30 seconds
-      setTimeout(() => {
-        clearInterval(interval);
-      }, 30000);
-    }
+    // For YouTube, no need for CSS hiding (using embed parameters instead)
   };
 
-  // Function to hide YouTube suggestions
-  const hideYouTubeSuggestions = () => {
-    try {
-      const iframe = currentIframeRef?.current;
-      if (iframe && iframe.contentWindow) {
-        // Try to access the iframe's document
-        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-        if (iframeDoc) {
-          // Hide all possible YouTube suggestion elements
-          const selectors = [
-            '.ytp-endscreen',
-            '.ytp-endscreen-content',
-            '.ytp-endscreen-preview',
-            '.ytp-endscreen-element',
-            '.ytp-endscreen-video',
-            '.ytp-endscreen-playlist',
-            '.ytp-endscreen-next',
-            '.ytp-endscreen-previous',
-            '.ytp-endscreen-close',
-            '.ytp-endscreen-close-button',
-            '.ytp-endscreen-close-icon',
-            '.ytp-endscreen-close-svg',
-            '.ytp-endscreen-close-path',
-            '.ytp-endscreen-close-circle',
-            '.ytp-endscreen-close-rect',
-            '.ytp-endscreen-close-polygon',
-            '.ytp-endscreen-close-line',
-            '.ytp-endscreen-close-ellipse',
-            '.ytp-endscreen-close-text',
-            '.ytp-endscreen-close-tspan',
-            '.ytp-endscreen-close-textpath',
-            '.ytp-endscreen-close-clippath',
-            '.ytp-endscreen-close-defs',
-            '.ytp-endscreen-close-g',
-            '.ytp-endscreen-close-svg',
-            '.ytp-endscreen-close-use',
-            '.ytp-endscreen-close-image',
-            '.ytp-endscreen-close-pattern',
-            '.ytp-endscreen-close-mask',
-            '.ytp-endscreen-close-marker',
-            '.ytp-endscreen-close-symbol',
-            '.ytp-endscreen-close-view',
-            '.ytp-endscreen-close-animate',
-            '.ytp-endscreen-close-animateTransform',
-            '.ytp-endscreen-close-animateMotion',
-            '.ytp-endscreen-close-set',
-            '.ytp-endscreen-close-discard',
-            '.ytp-endscreen-close-switch',
-            '.ytp-endscreen-close-foreignObject',
-            '.ytp-endscreen-close-mpath'
-          ];
-          
-          selectors.forEach(selector => {
-            const elements = iframeDoc.querySelectorAll(selector);
-            elements.forEach(element => {
-              element.style.display = 'none';
-              element.style.visibility = 'hidden';
-              element.style.opacity = '0';
-              element.style.height = '0';
-              element.style.width = '0';
-              element.style.overflow = 'hidden';
-            });
-          });
 
-        }
-      }
-    } catch (error) {
+  // Reset video ended state when URL changes
+  useEffect(() => {
+    setVideoEnded(false);
+  }, [url]);
 
+  // Handle timestamp changes for ReactPlayer (YouTube)
+  useEffect(() => {
+    if (startTime > 0 && videoType === 'youtube' && reactPlayerRef.current) {
+      // For YouTube with ReactPlayer, seek directly
+      reactPlayerRef.current.seekTo(startTime, 'seconds');
     }
-  };
+  }, [startTime, videoType]);
 
-          // Handle timestamp changes
+  // OLD iframe timestamp handling (for non-YouTube videos)
   useEffect(() => {
 
-    if (startTime > 0 && currentIframeRef) {
+    if (startTime > 0 && currentIframeRef && videoType !== 'youtube') {
 
-      // For YouTube videos, we need to reload the iframe with the new timestamp
+      // For YouTube videos, skip (handled by ReactPlayer above)
       if (videoType === 'youtube') {
         const currentSrc = currentIframeRef.src;
         const newSrc = getEmbedUrl(); // This will include the new startTime
@@ -360,10 +291,28 @@ const HybridVideoPlayer = ({
         if (!videoId) return url;
         
         // Ensure startTime is properly formatted for YouTube
-        const ytStart = startTime && startTime > 0 ? `&start=${Math.floor(startTime)}` : '';
+        const ytStart = startTime && startTime > 0 ? Math.floor(startTime) : 0;
         const autoplay = playing ? '1' : '0';
-        // Use YouTube nocookie domain for better control and no suggestions
-        const embedUrl = `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=${autoplay}&muted=0&enablejsapi=1&controls=1&rel=0&modestbranding=1&version=3&playerapiid=ytplayer&iv_load_policy=3&fs=0&cc_load_policy=0&disablekb=1&playsinline=1&showinfo=0&loop=0&end=0&start=${Math.floor(startTime) || 0}&wmode=opaque&origin=${window.location.origin}&widget_referrer=${window.location.origin}&html5=1&vq=hd720&disable_polymer=1&no_https=1&hl=en&cc_lang_pref=en&cc_load_policy=0&iv_load_policy=3&fs=0&rel=0&showinfo=0&modestbranding=1&playsinline=1&enablejsapi=1&origin=${window.location.origin}&widget_referrer=${window.location.origin}&html5=1&vq=hd720${ytStart}`;
+        
+        // CUSTOM YOUTUBE PLAYER - NO SUGGESTIONS, NO THUMBNAILS
+        // Key parameters:
+        // - rel=0: Only show related videos from same channel (not perfect but best we can do)
+        // - modestbranding=1: Minimal YouTube branding
+        // - fs=1: Allow fullscreen
+        // - controls=1: Show player controls
+        // - playsinline=1: Play inline on mobile
+        // - enablejsapi=1: Enable JavaScript API for seeking
+        const embedUrl = `https://www.youtube-nocookie.com/embed/${videoId}?` +
+          `autoplay=${autoplay}&` +
+          `start=${ytStart}&` +
+          `rel=0&` +              // Don't show related videos from other channels
+          `modestbranding=1&` +   // Minimal branding
+          `controls=1&` +         // Show controls
+          `fs=1&` +               // Allow fullscreen
+          `playsinline=1&` +      // Play inline on mobile
+          `enablejsapi=1&` +      // Enable JS API
+          `origin=${encodeURIComponent(window.location.origin)}&` +
+          `widget_referrer=${encodeURIComponent(window.location.origin)}`;
 
         return embedUrl;
 
@@ -446,7 +395,101 @@ const HybridVideoPlayer = ({
     );
   }
 
-  // Otherwise, use iframe with audio controls
+  // For YouTube, use ReactPlayer with custom end screen overlay
+  if (videoType === 'youtube') {
+    return (
+      <div 
+        className={`relative ${className}`}
+        style={{ width, height, ...style }}
+        onClick={handleUserInteraction}
+      >
+        <ReactPlayer
+          ref={reactPlayerRef}
+          url={url}
+          width="100%"
+          height="100%"
+          controls={controls}
+          playing={playing && !videoEnded}
+          volume={1.0}
+          muted={false}
+          config={{
+            youtube: {
+              playerVars: {
+                autoplay: playing ? 1 : 0,
+                controls: 1,
+                modestbranding: 1,
+                rel: 0,
+                showinfo: 0,
+                fs: 1,
+                playsinline: 1,
+                start: Math.floor(startTime) || 0
+              }
+            }
+          }}
+          onReady={() => {
+            if (onReady) onReady();
+            setVideoEnded(false); // Reset ended state
+            // Seek to start time after ready
+            if (startTime > 0 && reactPlayerRef.current) {
+              reactPlayerRef.current.seekTo(startTime, 'seconds');
+            }
+          }}
+          onPlay={() => {
+            setVideoEnded(false); // Reset if playing again
+            if (onPlay) onPlay();
+          }}
+          onPause={() => {
+            if (onPause) onPause();
+          }}
+          onEnded={() => {
+            // IMMEDIATELY show custom overlay to hide YouTube end screen
+            setVideoEnded(true);
+            if (onEnded) onEnded();
+          }}
+        />
+
+        {/* Custom End Screen Overlay - HIDES YOUTUBE SUGGESTIONS! */}
+        {videoEnded && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-black bg-opacity-95 z-20">
+            <div className="text-center px-6">
+              {/* Replay Button */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setVideoEnded(false);
+                  if (reactPlayerRef.current) {
+                    reactPlayerRef.current.seekTo(0);
+                  }
+                }}
+                className="group relative inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-white bg-gradient-to-r from-blue-600 to-blue-700 rounded-full hover:from-blue-700 hover:to-blue-800 transform hover:scale-105 transition-all duration-200 shadow-xl hover:shadow-2xl"
+              >
+                <svg 
+                  className="w-6 h-6 mr-3" 
+                  fill="currentColor" 
+                  viewBox="0 0 20 20"
+                >
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+                </svg>
+                Replay Video
+              </button>
+              
+              {/* Optional: Thank you message */}
+              <p className="mt-6 text-gray-300 text-base">
+                Thanks for watching!
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Video Type Indicator */}
+        <div className="absolute top-4 right-4 bg-black/50 text-white px-2 py-1 rounded text-xs z-10">
+          YOUTUBE (Custom Player)
+        </div>
+      </div>
+    );
+  }
+
+  // For Loom and other videos, use iframe
   return (
     <div 
       className={`relative ${className}`}
