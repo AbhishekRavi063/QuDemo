@@ -455,7 +455,7 @@ const FloatingQudemoWidget = ({
                  <style>{`
                    video::cue {
                      font-size: 12px;
-                     line-height: 1.1;
+                     line-height: 1.0;
                      background-color: rgba(0, 0, 0, 0.8);
                    }
                  `}</style>
