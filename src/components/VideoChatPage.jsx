@@ -415,7 +415,7 @@ const VideoChatPage = () => {
       clearTimeout(loadingTimeout);
     };
     
-    // Load subtitle if available
+    // Load subtitle if availablee
     if (video.subtitle) {
       loadSubtitles(video.subtitle);
     }
