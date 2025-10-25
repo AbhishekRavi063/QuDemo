@@ -95,9 +95,9 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       {/* Sidebar */}
       <div
         className={`
-          fixed top-0 left-0 h-full w-64 bg-white border-r border-gray-200 z-50 transform
+          fixed top-0 left-0 h-screen w-64 bg-white border-r border-gray-200 z-50 transform
           transition-transform duration-300 ease-in-out
-          overflow-y-auto
+          overflow-y-auto scroll-smooth
           ${isOpen ? 'translate-x-0' : '-translate-x-full'}
           md:translate-x-0 md:static md:block
         `}
@@ -114,7 +114,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         </div>
 
         {/* Menu Links */}
-        <nav className="flex flex-col mt-16 md:mt-24 space-y-6 px-4 text-gray-600">
+        <nav className="flex flex-col mt-12 md:mt-24 space-y-6 px-4 pb-80 text-gray-600">
           {/* Base menu items (available to all users) */}
           {baseMenuItems.map(({ name, icon: Icon, path, requiresEnterprise, requiresPro, isBeta }) => {
             // COMMENTED OUT FOR TESTING - Allow free users to access Pro features

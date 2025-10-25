@@ -237,13 +237,13 @@ function App() {
   // Component to conditionally show floating widget (uses static beta version data)
   const FloatingWidgetWrapper = () => {
     const location = useLocation();
-    const shouldShowWidget = location.pathname !== '/';
+    const shouldShowWidget = location.pathname === '/';
     
     return shouldShowWidget ? (
       <FloatingQudemoWidget 
         position="bottom-right"
         previewImage="/round.png"  // Fallback image if video thumbnail fails to load
-        previewText="Watch Demo"
+        previewText="Watch Beta Version"
       />
     ) : null;
   };
