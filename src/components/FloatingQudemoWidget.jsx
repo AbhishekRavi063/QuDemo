@@ -41,9 +41,27 @@ const FloatingQudemoWidget = ({
   // Load full data when expanded
   useEffect(() => {
     if (isExpanded && !videoFlow && !loading) {
+      console.log('🔄 Widget expanded - loading beta version data');
       loadBetaVersionData();
     }
   }, [isExpanded]);
+  
+  // Trigger video load when videoFlow becomes available
+  useEffect(() => {
+    if (isExpanded && videoFlow && videoFlow.videos && videoFlow.videos.length > 0) {
+      console.log('✅ Video data available, initializing player');
+      // Force a re-render to ensure video player loads
+      if (videoPlayerRef.current && currentVideoIndex === 0) {
+        const video = videoFlow.videos[0];
+        const videoUrl = video.url || video.src;
+        if (videoUrl) {
+          console.log('🎬 Loading initial video:', video.title);
+          videoPlayerRef.current.src = videoUrl;
+          videoPlayerRef.current.load();
+        }
+      }
+    }
+  }, [videoFlow, isExpanded]);
 
   // Auto-scroll chat messages
   useEffect(() => {
@@ -136,8 +154,10 @@ const FloatingQudemoWidget = ({
     }
   }, [currentVideoIndex, videoFlow]);
 
-  // Update video when currentVideoIndex changes
+  // Update video when currentVideoIndex changes or when videoFlow is loaded
   useEffect(() => {
+    if (!isExpanded) return; // Only load video when widget is expanded
+    
     if (videoPlayerRef.current && videoFlow?.videos[currentVideoIndex]) {
       const video = videoFlow.videos[currentVideoIndex];
       
@@ -156,6 +176,12 @@ const FloatingQudemoWidget = ({
       
       // Set video source
       const videoUrl = video.url || video.src;
+      if (!videoUrl) {
+        console.error('❌ Widget - No video URL found');
+        return;
+      }
+      
+      console.log('🔗 Widget - Setting video source:', videoUrl);
       if (videoPlayerRef.current.src !== videoUrl) {
         videoPlayerRef.current.src = videoUrl;
       }
@@ -853,17 +879,26 @@ const FloatingQudemoWidget = ({
                      background-color: rgba(0, 0, 0, 0.8);
                    }
                  `}</style>
-                <video 
-                  ref={videoPlayerRef}
-                  controls 
-                  muted
-                  className="w-full h-full object-contain bg-black"
-                  playsInline
-                  preload="auto"
-                  crossOrigin="anonymous"
-                >
-                  Your browser does not support the video tag.
-                </video>
+                 
+                 {/* Show loading indicator if video data is not loaded */}
+                 {!videoFlow || !videoFlow.videos || videoFlow.videos.length === 0 ? (
+                   <div className="flex flex-col items-center justify-center text-white">
+                     <div className="animate-spin rounded-full h-12 w-12 border-4 border-white border-t-transparent mb-3"></div>
+                     <p className="text-sm">Loading video...</p>
+                   </div>
+                 ) : (
+                  <video 
+                    ref={videoPlayerRef}
+                    controls 
+                    muted
+                    className="w-full h-full object-contain bg-black"
+                    playsInline
+                    preload="auto"
+                    crossOrigin="anonymous"
+                  >
+                    Your browser does not support the video tag.
+                  </video>
+                 )}
               </div>
 
                {/* Chat Section (Right on desktop, Bottom on mobile) */}
@@ -956,12 +991,15 @@ const FloatingQudemoWidget = ({
                      rows="1" 
                      className={`flex-1 px-3 py-2.5 border ${isListening ? 'border-green-500' : 'border-gray-300'} rounded-lg text-sm resize-none overflow-hidden min-h-[2.5rem] max-h-[7.5rem] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm`}
                    />
-                   <button 
-                     onClick={handleVoiceInput} 
-                     className={`min-w-[2.5rem] h-10 flex items-center justify-center rounded-lg text-white transition-all duration-200 ${isListening ? 'bg-gradient-to-br from-green-500 to-green-600 animate-pulse' : 'bg-gradient-to-br from-blue-500 to-blue-600 hover:shadow-lg hover:-translate-y-0.5'}`}
-                   >
-                     🎤
-                   </button>
+                  <button 
+                    onClick={handleVoiceInput} 
+                    className={`min-w-[2.5rem] h-10 flex items-center justify-center rounded-lg text-white transition-all duration-200 ${isListening ? 'bg-gradient-to-br from-green-500 to-green-600 animate-pulse' : 'bg-gradient-to-br from-blue-500 to-blue-600 hover:shadow-lg hover:-translate-y-0.5'}`}
+                  >
+                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                      <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+                    </svg>
+                  </button>
                    <button 
                      onClick={() => handleSendMessage()} 
                      disabled={!inputMessage.trim() || isTyping} 
