@@ -26,10 +26,10 @@ const FloatingQudemoWidget = ({
 
   // Position classes
   const positionClasses = {
-    'bottom-right': 'bottom-6 right-6',
-    'bottom-left': 'bottom-6 left-6',
-    'top-right': 'top-6 right-6',
-    'top-left': 'top-6 left-6'
+    'bottom-right': 'bottom-4 right-4 md:bottom-6 md:right-6',
+    'bottom-left': 'bottom-4 left-4 md:bottom-6 md:left-6',
+    'top-right': 'top-4 right-4 md:top-6 md:right-6',
+    'top-left': 'top-4 left-4 md:top-6 md:left-6'
   };
 
   // Load video thumbnail on mount (for preview)
@@ -173,6 +173,10 @@ const FloatingQudemoWidget = ({
       
       // Auto-play when ready
       const handleCanPlay = () => {
+        // Unmute if widget is expanded
+        if (isExpanded) {
+          videoPlayerRef.current.muted = false;
+        }
         videoPlayerRef.current.play().catch((err) => {
           console.log('Autoplay prevented:', err);
         });
@@ -202,7 +206,7 @@ const FloatingQudemoWidget = ({
         }
       };
     }
-  }, [currentVideoIndex, videoFlow, currentTimestamp]);
+  }, [currentVideoIndex, videoFlow, currentTimestamp, isExpanded]);
 
   const loadVideoThumbnail = async () => {
     try {
@@ -687,6 +691,13 @@ const FloatingQudemoWidget = ({
   const handleExpand = () => {
     setIsExpanded(true);
     setIsMinimized(false);
+    
+    // Unmute the video when widget is expanded
+    setTimeout(() => {
+      if (videoPlayerRef.current) {
+        videoPlayerRef.current.muted = false;
+      }
+    }, 100);
   };
 
   const handleMinimize = () => {
@@ -696,6 +707,11 @@ const FloatingQudemoWidget = ({
   const handleClose = () => {
     setIsExpanded(false);
     setIsMinimized(false);
+    
+    // Mute the video when closing
+    if (videoPlayerRef.current) {
+      videoPlayerRef.current.muted = true;
+    }
     
     // Clean up preloaded videos when widget is closed
     Object.keys(videoPreloadCacheRef.current).forEach(id => {
@@ -730,7 +746,7 @@ const FloatingQudemoWidget = ({
           className="group relative"
         >
           {/* Circular video preview with pulse animation */}
-          <div className="relative w-36 h-36 rounded-full overflow-hidden shadow-2xl border-4 border-white hover:border-blue-500 transition-all duration-300">
+          <div className="relative w-20 h-20 md:w-36 md:h-36 rounded-full overflow-hidden shadow-2xl border-4 border-white hover:border-blue-500 transition-all duration-300">
             {videoFlow && videoFlow.videos && videoFlow.videos[0] && videoFlow.videos[0].src ? (
               <video 
                 src={videoFlow.videos[0].src || videoFlow.videos[0].url}
@@ -754,7 +770,7 @@ const FloatingQudemoWidget = ({
             
             {/* Play icon overlay */}
             <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center group-hover:bg-opacity-50 transition-all">
-              <svg className="w-16 h-16 text-white" fill="currentColor" viewBox="0 0 20 20">
+              <svg className="w-8 h-8 md:w-16 md:h-16 text-white" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
               </svg>
             </div>
@@ -779,8 +795,12 @@ const FloatingQudemoWidget = ({
 
   // Expanded widget
   return (
-    <div className={`fixed ${positionClasses[position]} z-50 transition-all duration-300`}>
-      {/* Minimized bar */}
+    <>
+      {/* Mobile overlay */}
+      <div className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden" onClick={handleClose}></div>
+      
+      <div className={`fixed inset-0 md:inset-auto md:${positionClasses[position]} z-50 transition-all duration-300 p-4 md:p-0 flex items-center justify-center md:block`}>
+        {/* Minimized bar */}
       {isMinimized ? (
         <div className="bg-white rounded-lg shadow-2xl border border-gray-200 overflow-hidden">
           <button
@@ -795,8 +815,14 @@ const FloatingQudemoWidget = ({
           </button>
         </div>
       ) : (
-         // Full expanded widget - horizontal layout with video left and chat right
-         <div className="bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-row" style={{ width: '950px', height: '500px' }}>
+         // Full expanded widget - horizontal layout with video left and chat right (responsive)
+         <div 
+           className="bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row w-full md:w-auto" 
+           style={{ 
+             width: window.innerWidth >= 768 ? '950px' : '100%',
+             height: window.innerWidth >= 768 ? '500px' : 'auto'
+           }}
+         >
            {loading ? (
              <div className="w-full p-8 flex flex-col items-center justify-center bg-white">
                <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
@@ -812,8 +838,14 @@ const FloatingQudemoWidget = ({
                  <XMarkIcon className="w-5 h-5" />
                </button>
 
-               {/* Video Section (Left - 2/3) */}
-               <div className="w-2/3 relative bg-black flex items-center justify-center">
+               {/* Video Section (Left on desktop, Top on mobile) */}
+               <div 
+                 className="w-full md:w-[55%] relative bg-black flex items-center justify-center" 
+                 style={{ 
+                   height: window.innerWidth >= 768 ? 'auto' : '300px',
+                   minHeight: window.innerWidth >= 768 ? 'auto' : '300px'
+                 }}
+               >
                  <style>{`
                    video::cue {
                      font-size: 12px;
@@ -821,41 +853,28 @@ const FloatingQudemoWidget = ({
                      background-color: rgba(0, 0, 0, 0.8);
                    }
                  `}</style>
-                 <video 
-                   ref={videoPlayerRef}
-                   controls 
-                   muted
-                   className="w-full h-full object-contain bg-black"
-                   playsInline
-                   preload="auto"
-                   crossOrigin="anonymous"
-                 >
-                   Your browser does not support the video tag.
-                 </video>
+                <video 
+                  ref={videoPlayerRef}
+                  controls 
+                  muted
+                  className="w-full h-full object-contain bg-black"
+                  playsInline
+                  preload="auto"
+                  crossOrigin="anonymous"
+                >
+                  Your browser does not support the video tag.
+                </video>
+              </div>
 
-                 {/* Suggested Questions Overlay - Only show after video ends */}
-                 {videoEnded && videoFlow?.videos[currentVideoIndex]?.nextQuestions && videoFlow.videos[currentVideoIndex].nextQuestions.length > 0 && (
-                   <div className="absolute bottom-16 left-0 right-0 px-6 pb-4 pointer-events-none">
-                     <div className="flex flex-wrap gap-2 justify-center pointer-events-auto">
-                       {videoFlow.videos[currentVideoIndex].nextQuestions.slice(0, 3).map((question, index) => (
-                         <button
-                           key={index}
-                           onClick={() => handleSuggestedQuestionClick(question.text)}
-                           disabled={isTyping}
-                           className="bg-gray-900 bg-opacity-80 hover:bg-opacity-95 text-white px-4 py-2 rounded-full text-xs font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm border border-gray-700 hover:border-gray-500"
-                         >
-                           {question.text}
-                         </button>
-                       ))}
-                     </div>
-                   </div>
-                 )}
-               </div>
-
-               {/* Chat Section (Right - 1/3) */}
-               <div className="w-1/3 flex flex-col bg-white border-l border-gray-200">
+               {/* Chat Section (Right on desktop, Bottom on mobile) */}
+               <div 
+                 className="w-full md:w-[45%] flex flex-col bg-white border-t md:border-t-0 md:border-l border-gray-200" 
+                 style={{ 
+                   minHeight: 'auto'
+                 }}
+               >
                  {/* Chat header */}
-                 <div className="bg-blue-600 text-white px-4 py-3 flex items-center gap-2 flex-shrink-0">
+                 <div className="bg-blue-600 text-white px-3 py-2 md:px-4 md:py-3 flex items-center gap-2 flex-shrink-0">
                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
                    </svg>
@@ -863,19 +882,64 @@ const FloatingQudemoWidget = ({
                  </div>
 
                  {/* Chat messages */}
-                 <div ref={chatMessagesRef} className="flex-1 overflow-y-auto p-3 bg-gray-50 flex flex-col gap-2">
+                 <div 
+                   ref={chatMessagesRef} 
+                   className="flex-1 overflow-y-auto p-2 md:p-3 bg-gray-50 flex flex-col gap-2" 
+                   style={{ 
+                     maxHeight: window.innerWidth >= 768 ? 'none' : '300px',
+                     minHeight: window.innerWidth >= 768 ? 'auto' : '250px'
+                   }}
+                 >
                    {chatMessages.length === 0 ? (
-                     <div className="text-center text-gray-500 text-sm py-4">
-                       👋 Hi! Ask me anything about this demo
-                     </div>
+                     <>
+                       <div className="text-center text-gray-500 text-sm py-2 md:py-4">
+                         👋 Hi! Ask me anything about this demo
+                       </div>
+                       
+                       {/* Initial Suggested Questions */}
+                       {videoFlow?.videos[currentVideoIndex]?.nextQuestions && videoFlow.videos[currentVideoIndex].nextQuestions.length > 0 && (
+                         <div className="flex flex-col gap-2 mt-2">
+                           <p className="text-xs text-gray-500 font-medium px-1">Suggested questions:</p>
+                           {videoFlow.videos[currentVideoIndex].nextQuestions.slice(0, 4).map((question, index) => (
+                             <button
+                               key={index}
+                               onClick={() => handleSuggestedQuestionClick(question.text)}
+                               disabled={isTyping}
+                               className="text-left bg-white hover:bg-blue-50 text-gray-700 hover:text-blue-600 px-3 py-2 rounded-lg text-xs border border-gray-200 hover:border-blue-300 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                             >
+                               {question.text}
+                             </button>
+                           ))}
+                         </div>
+                       )}
+                     </>
                    ) : (
                      <>
                        {chatMessages.map((msg, i) => (
-                         <div key={i} className={`flex ${msg.type === 'bot' ? 'justify-start' : 'justify-end'}`}>
-                           <div className={`max-w-[85%] px-3 py-2 rounded-xl text-sm leading-relaxed text-left ${msg.type === 'bot' ? 'bg-white border border-gray-200 text-gray-800' : 'bg-blue-600 text-white'}`}>
-                             {msg.text}
+                         <React.Fragment key={i}>
+                           <div className={`flex ${msg.type === 'bot' ? 'justify-start' : 'justify-end'}`}>
+                             <div className={`max-w-[85%] px-3 py-2 rounded-xl text-sm leading-relaxed text-left ${msg.type === 'bot' ? 'bg-white border border-gray-200 text-gray-800' : 'bg-blue-600 text-white'}`}>
+                               {msg.text}
+                             </div>
                            </div>
-                         </div>
+                           
+                           {/* Show suggested questions after each bot response */}
+                           {msg.type === 'bot' && i === chatMessages.length - 1 && !isTyping && videoFlow?.videos[currentVideoIndex]?.nextQuestions && videoFlow.videos[currentVideoIndex].nextQuestions.length > 0 && (
+                             <div className="flex flex-col gap-2 mt-1">
+                               <p className="text-xs text-gray-500 font-medium px-1">Related questions:</p>
+                               {videoFlow.videos[currentVideoIndex].nextQuestions.slice(0, 3).map((question, qIndex) => (
+                                 <button
+                                   key={qIndex}
+                                   onClick={() => handleSuggestedQuestionClick(question.text)}
+                                   disabled={isTyping}
+                                   className="text-left bg-white hover:bg-blue-50 text-gray-700 hover:text-blue-600 px-3 py-2 rounded-lg text-xs border border-gray-200 hover:border-blue-300 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                                 >
+                                   {question.text}
+                                 </button>
+                               ))}
+                             </div>
+                           )}
+                         </React.Fragment>
                        ))}
                        {isTyping && <TypingIndicator />}
                      </>
@@ -883,7 +947,7 @@ const FloatingQudemoWidget = ({
                  </div>
 
                  {/* Chat input */}
-                 <div className="flex items-end gap-2 p-3 border-t border-gray-200 bg-white flex-shrink-0">
+                 <div className="flex items-end gap-2 p-2 md:p-3 border-t border-gray-200 bg-white flex-shrink-0">
                    <textarea 
                      value={inputMessage} 
                      onChange={handleInputChange} 
@@ -910,7 +974,7 @@ const FloatingQudemoWidget = ({
                  </div>
 
                  {/* Book Meeting Button - Always Visible */}
-                 <div className="px-3 py-2 border-t bg-gray-50 flex-shrink-0">
+                 <div className="px-3 py-2 md:py-2 border-t bg-gray-50 flex-shrink-0" style={{ paddingTop: window.innerWidth >= 768 ? '0.5rem' : '0.25rem', paddingBottom: window.innerWidth >= 768 ? '0.5rem' : '0.25rem' }}>
                    <button
                      onClick={handleBookMeeting}
                      className="w-full inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md bg-blue-600 text-white hover:bg-blue-700"
@@ -942,6 +1006,7 @@ const FloatingQudemoWidget = ({
          </div>
       )}
     </div>
+    </>
   );
 };
 
