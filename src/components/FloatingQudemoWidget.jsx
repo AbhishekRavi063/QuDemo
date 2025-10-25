@@ -18,9 +18,11 @@ const FloatingQudemoWidget = ({
   const [videoThumbnail, setVideoThumbnail] = useState(null);
   const [videoEnded, setVideoEnded] = useState(false);
   const [inputMessage, setInputMessage] = useState('');
+  const [isListening, setIsListening] = useState(false);
   const videoPlayerRef = useRef(null);
   const chatMessagesRef = useRef(null);
   const videoPreloadCacheRef = useRef({}); // Cache of preloaded video elements
+  const recognitionRef = useRef(null);
 
   // Position classes
   const positionClasses = {
@@ -33,6 +35,7 @@ const FloatingQudemoWidget = ({
   // Load video thumbnail on mount (for preview)
   useEffect(() => {
     loadVideoThumbnail();
+    setupSpeechRecognition();
   }, []);
 
   // Load full data when expanded
@@ -349,6 +352,52 @@ const FloatingQudemoWidget = ({
     }
   };
 
+  // ========== SPEECH RECOGNITION ==========
+  const setupSpeechRecognition = () => {
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
+
+      recognition.onstart = () => setIsListening(true);
+      recognition.onresult = (event) => {
+        let finalTranscript = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          if (event.results[i].isFinal) {
+            finalTranscript += event.results[i][0].transcript;
+          }
+        }
+        if (finalTranscript) {
+          setInputMessage(finalTranscript);
+          recognition.stop();
+        }
+      };
+      recognition.onerror = () => setIsListening(false);
+      recognition.onend = () => setIsListening(false);
+
+      recognitionRef.current = recognition;
+    }
+  };
+
+  // Check if question is about sales/meeting
+  const isSalesRelated = (question) => {
+    const lowerQuestion = question.toLowerCase();
+    const salesKeywords = [
+      'sales', 'talk to sales', 'connect with sales', 'speak to sales',
+      'book a call', 'schedule a call', 'book meeting', 'schedule meeting',
+      'demo call', 'sales team', 'talk to someone', 'speak to someone',
+      'contact sales', 'get in touch', 'arrange a call', 'setup a call',
+      'meeting', 'call', 'talk', 'speak', 'connect me', 'reach out'
+    ];
+    return salesKeywords.some(keyword => lowerQuestion.includes(keyword));
+  };
+
+  const handleBookMeeting = () => {
+    window.open('https://calendly.com/jazeemchoori/30min', '_blank', 'noopener,noreferrer');
+  };
+
   // ========== USER INPUT HANDLING ==========
   const handleInputChange = (e) => {
     setInputMessage(e.target.value);
@@ -363,6 +412,23 @@ const FloatingQudemoWidget = ({
     }
   };
 
+  const handleVoiceInput = async () => {
+    if (!recognitionRef.current) {
+      alert('Voice input is not supported in your browser.\n\nPlease use Chrome, Edge, or Safari.');
+      return;
+    }
+    if (isListening) {
+      recognitionRef.current.stop();
+    } else {
+      try {
+        await navigator.mediaDevices.getUserMedia({ audio: true });
+        recognitionRef.current.start();
+      } catch (error) {
+        alert('Could not access microphone. Please check permissions.');
+      }
+    }
+  };
+
   const handleSendMessage = async (messageText = null) => {
     const userQuestion = messageText || inputMessage.trim();
     if (!userQuestion || isTyping) return;
@@ -372,6 +438,16 @@ const FloatingQudemoWidget = ({
     setInputMessage('');
     setIsTyping(true);
     setVideoEnded(false); // Hide video ended overlay when new question is asked
+
+    // Check if user wants to book a meeting
+    if (isSalesRelated(userQuestion)) {
+      setIsTyping(false);
+      setChatMessages(prev => [...prev, { 
+        type: 'bot', 
+        text: "I'd be happy to connect you with our team! Please click the 'Book a Meeting' button below to schedule a call with our sales team."
+      }]);
+      return;
+    }
 
     // Find matching video in video flow
     const matchResult = matchQuestion(userQuestion);
@@ -655,7 +731,16 @@ const FloatingQudemoWidget = ({
         >
           {/* Circular video preview with pulse animation */}
           <div className="relative w-36 h-36 rounded-full overflow-hidden shadow-2xl border-4 border-white hover:border-blue-500 transition-all duration-300">
-            {(videoThumbnail || previewImage) ? (
+            {videoFlow && videoFlow.videos && videoFlow.videos[0] && videoFlow.videos[0].src ? (
+              <video 
+                src={videoFlow.videos[0].src || videoFlow.videos[0].url}
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="w-full h-full object-cover"
+              />
+            ) : (videoThumbnail || previewImage) ? (
               <img 
                 src={videoThumbnail || previewImage} 
                 alt="Demo" 
@@ -711,7 +796,7 @@ const FloatingQudemoWidget = ({
         </div>
       ) : (
          // Full expanded widget - horizontal layout with video left and chat right
-         <div className="bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-row" style={{ width: '800px', height: '500px' }}>
+         <div className="bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-row" style={{ width: '950px', height: '500px' }}>
            {loading ? (
              <div className="w-full p-8 flex flex-col items-center justify-center bg-white">
                <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
@@ -739,6 +824,7 @@ const FloatingQudemoWidget = ({
                  <video 
                    ref={videoPlayerRef}
                    controls 
+                   muted
                    className="w-full h-full object-contain bg-black"
                    playsInline
                    preload="auto"
@@ -802,10 +888,16 @@ const FloatingQudemoWidget = ({
                      value={inputMessage} 
                      onChange={handleInputChange} 
                      onKeyDown={handleKeyPress} 
-                     placeholder="Ask a question..." 
+                     placeholder={isListening ? '🎙️ Listening...' : 'Ask a question...'} 
                      rows="1" 
-                     className="flex-1 px-3 py-2.5 border border-gray-300 rounded-lg text-sm resize-none overflow-hidden min-h-[2.5rem] max-h-[7.5rem] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm"
+                     className={`flex-1 px-3 py-2.5 border ${isListening ? 'border-green-500' : 'border-gray-300'} rounded-lg text-sm resize-none overflow-hidden min-h-[2.5rem] max-h-[7.5rem] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm`}
                    />
+                   <button 
+                     onClick={handleVoiceInput} 
+                     className={`min-w-[2.5rem] h-10 flex items-center justify-center rounded-lg text-white transition-all duration-200 ${isListening ? 'bg-gradient-to-br from-green-500 to-green-600 animate-pulse' : 'bg-gradient-to-br from-blue-500 to-blue-600 hover:shadow-lg hover:-translate-y-0.5'}`}
+                   >
+                     🎤
+                   </button>
                    <button 
                      onClick={() => handleSendMessage()} 
                      disabled={!inputMessage.trim() || isTyping} 
@@ -814,6 +906,30 @@ const FloatingQudemoWidget = ({
                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 12L3.269 3.125A59.769 59.769 0 0121.485 12 59.768 59.768 0 013.27 20.875L5.999 12zm0 0h7.5"></path>
                      </svg>
+                   </button>
+                 </div>
+
+                 {/* Book Meeting Button - Always Visible */}
+                 <div className="px-3 py-2 border-t bg-gray-50 flex-shrink-0">
+                   <button
+                     onClick={handleBookMeeting}
+                     className="w-full inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md bg-blue-600 text-white hover:bg-blue-700"
+                   >
+                     <svg
+                       className="w-4 h-4 mr-2"
+                       fill="none"
+                       stroke="currentColor"
+                       viewBox="0 0 24 24"
+                       xmlns="http://www.w3.org/2000/svg"
+                     >
+                       <path
+                         strokeLinecap="round"
+                         strokeLinejoin="round"
+                         strokeWidth={2}
+                         d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                       />
+                     </svg>
+                     Book a Meeting
                    </button>
                  </div>
                </div>

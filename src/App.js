@@ -237,7 +237,8 @@ function App() {
   // Component to conditionally show floating widget (uses static beta version data)
   const FloatingWidgetWrapper = () => {
     const location = useLocation();
-    const shouldShowWidget = location.pathname === '/';
+    // Show widget on all pages
+    const shouldShowWidget = true;
     
     return shouldShowWidget ? (
       <FloatingQudemoWidget 
