@@ -538,6 +538,13 @@ const VideoChatPage = () => {
     normalizedQuestion = normalizedQuestion.replace(/\bque\s*demo\b/gi, 'qudemo');  // "que demo" → "qudemo"
     normalizedQuestion = normalizedQuestion.replace(/\bcue\s*demo\b/gi, 'qudemo');  // "cue demo" → "qudemo"
     
+    // Handle voice recognition variations of "Chatwoot"
+    normalizedQuestion = normalizedQuestion.replace(/\bchat\s*wood\b/gi, 'chatwoot');  // "chat wood" → "chatwoot"
+    normalizedQuestion = normalizedQuestion.replace(/\bchatwood\b/gi, 'chatwoot');  // "chatwood" → "chatwoot"
+    normalizedQuestion = normalizedQuestion.replace(/\bchat\s*woot\b/gi, 'chatwoot');  // "chat woot" → "chatwoot"
+    normalizedQuestion = normalizedQuestion.replace(/\bchat\s*wot\b/gi, 'chatwoot');  // "chat wot" → "chatwoot"
+    normalizedQuestion = normalizedQuestion.replace(/\bchatwot\b/gi, 'chatwoot');  // "chatwot" → "chatwoot"
+    
     const lowerQuestion = normalizedQuestion;
     
     console.log('🔍 Original question:', userQuestion);

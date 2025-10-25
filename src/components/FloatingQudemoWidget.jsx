@@ -17,7 +17,10 @@ const FloatingQudemoWidget = ({
   const [isTyping, setIsTyping] = useState(false);
   const [videoThumbnail, setVideoThumbnail] = useState(null);
   const [videoEnded, setVideoEnded] = useState(false);
+  const [inputMessage, setInputMessage] = useState('');
   const videoPlayerRef = useRef(null);
+  const chatMessagesRef = useRef(null);
+  const videoPreloadCacheRef = useRef({}); // Cache of preloaded video elements
 
   // Position classes
   const positionClasses = {
@@ -39,38 +42,142 @@ const FloatingQudemoWidget = ({
     }
   }, [isExpanded]);
 
+  // Auto-scroll chat messages
+  useEffect(() => {
+    if (chatMessagesRef.current) {
+      chatMessagesRef.current.scrollTop = chatMessagesRef.current.scrollHeight;
+    }
+  }, [chatMessages]);
+
+  // Aggressive video preloading - actually load videos into memory for instant playback
+  useEffect(() => {
+    if (!videoFlow || currentVideoIndex === null || currentVideoIndex === undefined) return;
+    
+    const videosToPreload = [];
+    
+    // Preload next video in sequence (highest priority)
+    if (currentVideoIndex + 1 < videoFlow.videos.length) {
+      videosToPreload.push(videoFlow.videos[currentVideoIndex + 1]);
+    }
+    
+    // Preload videos from current video's nextQuestions
+    const currentVideo = videoFlow.videos[currentVideoIndex];
+    if (currentVideo?.nextQuestions) {
+      currentVideo.nextQuestions.forEach(question => {
+        const result = matchQuestion(question.text);
+        if (result.matched) {
+          const matchedVideo = videoFlow.videos.find(v => v.id === result.videoId);
+          if (matchedVideo && !videosToPreload.includes(matchedVideo)) {
+            videosToPreload.push(matchedVideo);
+          }
+        }
+      });
+    }
+    
+    // Actually preload videos (limit to 3 to avoid bandwidth waste)
+    videosToPreload.slice(0, 3).forEach((video, index) => {
+      // Skip if already preloaded
+      if (videoPreloadCacheRef.current[video.id]) {
+        console.log('✅ Widget - Already cached:', video.id);
+        return;
+      }
+      
+      // Create hidden video element for preloading
+      const preloadVideo = document.createElement('video');
+      preloadVideo.src = video.url || video.src;
+      preloadVideo.preload = 'auto'; // Aggressively preload
+      preloadVideo.muted = true;
+      preloadVideo.style.display = 'none';
+      
+      // Add to DOM to trigger loading
+      document.body.appendChild(preloadVideo);
+      
+      // Track loading progress
+      preloadVideo.addEventListener('loadeddata', () => {
+        console.log('✅ Widget - Video cached and ready:', video.id, `(${index + 1}/${videosToPreload.slice(0, 3).length})`);
+        videoPreloadCacheRef.current[video.id] = {
+          element: preloadVideo,
+          ready: true,
+          src: video.url || video.src
+        };
+      });
+      
+      preloadVideo.addEventListener('error', () => {
+        console.error('❌ Widget - Failed to preload:', video.id);
+        if (preloadVideo.parentNode) {
+          preloadVideo.parentNode.removeChild(preloadVideo);
+        }
+      });
+      
+      // Store reference immediately (even before loaded)
+      videoPreloadCacheRef.current[video.id] = {
+        element: preloadVideo,
+        ready: false,
+        src: video.url || video.src
+      };
+      
+      console.log('🔄 Widget - Preloading video:', video.id, `(${index + 1}/${videosToPreload.slice(0, 3).length})`);
+    });
+    
+    // Cleanup old cached videos (keep only last 5)
+    const cachedIds = Object.keys(videoPreloadCacheRef.current);
+    if (cachedIds.length > 5) {
+      cachedIds.slice(0, cachedIds.length - 5).forEach(id => {
+        const cached = videoPreloadCacheRef.current[id];
+        if (cached?.element?.parentNode) {
+          cached.element.parentNode.removeChild(cached.element);
+        }
+        delete videoPreloadCacheRef.current[id];
+        console.log('🗑️ Widget - Removed old cache:', id);
+      });
+    }
+  }, [currentVideoIndex, videoFlow]);
+
   // Update video when currentVideoIndex changes
   useEffect(() => {
     if (videoPlayerRef.current && videoFlow?.videos[currentVideoIndex]) {
       const video = videoFlow.videos[currentVideoIndex];
       
-      console.log('📹 Loading video:', video.title);
-      console.log('📝 Subtitle URL:', video.subtitle);
+      console.log('📹 Widget - Loading video:', video.title);
+      console.log('📝 Widget - Video ID:', video.id);
+      console.log('📝 Widget - Subtitle URL:', video.subtitle);
+      
+      // Check if video is cached
+      const cachedVideo = videoPreloadCacheRef.current[video.id];
+      if (cachedVideo && cachedVideo.ready) {
+        console.log('⚡ Widget - Using cached video:', video.id);
+      }
       
       // Reset video ended state
       setVideoEnded(false);
       
-      videoPlayerRef.current.src = video.url || video.src;
+      // Set video source
+      const videoUrl = video.url || video.src;
+      if (videoPlayerRef.current.src !== videoUrl) {
+        videoPlayerRef.current.src = videoUrl;
+      }
       videoPlayerRef.current.currentTime = currentTimestamp;
       videoPlayerRef.current.load();
       
       // Load subtitles after video is ready
-      videoPlayerRef.current.addEventListener('loadedmetadata', () => {
+      const handleMetadataLoaded = () => {
         if (video.subtitle) {
           console.log('✅ Loading subtitles:', video.subtitle);
           loadSubtitles(video.subtitle);
         }
-      }, { once: true });
+      };
+      videoPlayerRef.current.addEventListener('loadedmetadata', handleMetadataLoaded, { once: true });
       
-      // Auto-play
-      videoPlayerRef.current.addEventListener('canplay', () => {
+      // Auto-play when ready
+      const handleCanPlay = () => {
         videoPlayerRef.current.play().catch((err) => {
           console.log('Autoplay prevented:', err);
         });
-      }, { once: true });
+      };
+      videoPlayerRef.current.addEventListener('canplay', handleCanPlay, { once: true });
 
       // Handle video ended - hide subtitles and show questions
-      videoPlayerRef.current.addEventListener('ended', () => {
+      const handleVideoEnded = () => {
         console.log('🎬 Video ended - showing questions');
         setVideoEnded(true);
         
@@ -80,9 +187,19 @@ const FloatingQudemoWidget = ({
             videoPlayerRef.current.textTracks[i].mode = 'disabled';
           }
         }
-      }, { once: true });
+      };
+      videoPlayerRef.current.addEventListener('ended', handleVideoEnded, { once: true });
+
+      // Cleanup function
+      return () => {
+        if (videoPlayerRef.current) {
+          videoPlayerRef.current.removeEventListener('loadedmetadata', handleMetadataLoaded);
+          videoPlayerRef.current.removeEventListener('canplay', handleCanPlay);
+          videoPlayerRef.current.removeEventListener('ended', handleVideoEnded);
+        }
+      };
     }
-  }, [currentVideoIndex, videoFlow]);
+  }, [currentVideoIndex, videoFlow, currentTimestamp]);
 
   const loadVideoThumbnail = async () => {
     try {
@@ -232,41 +349,70 @@ const FloatingQudemoWidget = ({
     }
   };
 
-  const handleSuggestedQuestionClick = (question) => {
-    // Reset video ended state when clicking a question
-    setVideoEnded(false);
-    
+  // ========== USER INPUT HANDLING ==========
+  const handleInputChange = (e) => {
+    setInputMessage(e.target.value);
+    e.target.style.height = 'auto';
+    e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
+
+  const handleSendMessage = async (messageText = null) => {
+    const userQuestion = messageText || inputMessage.trim();
+    if (!userQuestion || isTyping) return;
+
     // Add user message
-    setChatMessages(prev => [...prev, { type: 'user', text: question }]);
+    setChatMessages(prev => [...prev, { type: 'user', text: userQuestion }]);
+    setInputMessage('');
     setIsTyping(true);
+    setVideoEnded(false); // Hide video ended overlay when new question is asked
 
     // Find matching video in video flow
-    const matchResult = matchQuestion(question);
+    const matchResult = matchQuestion(userQuestion);
     
     setTimeout(() => {
-      if (matchResult.matched && matchResult.videoIndex !== null) {
-        const video = videoFlow.videos[matchResult.videoIndex];
-        
-        // Add bot response
+      if (matchResult.matched && matchResult.videoIndex !== null && matchResult.videoIndex !== -1) {
+        // Add bot response with the matched video's answer
         setChatMessages(prev => [...prev, { 
           type: 'bot', 
-          text: matchResult.answer || `Let me show you a video about "${question}"`
+          text: matchResult.isFallback 
+            ? matchResult.answer 
+            : (matchResult.answer || "Let me show you a video that answers your question!")
         }]);
 
         // Play the matched video (this will trigger the useEffect which resets videoEnded)
         setCurrentVideoIndex(matchResult.videoIndex);
         setCurrentTimestamp(0);
         
+        // Auto-play video
+        setTimeout(() => {
+          if (videoPlayerRef.current) {
+            videoPlayerRef.current.play().catch(err => {
+              console.log('Autoplay prevented:', err);
+            });
+          }
+        }, 100);
+        
       } else {
         // No match found - generic response
         setChatMessages(prev => [...prev, { 
           type: 'bot', 
-          text: 'That\'s a great question! Let me show you our product demo.'
+          text: "I'm not sure about that. You can ask me about Qudemo, pricing, security, or other features!"
         }]);
       }
       
       setIsTyping(false);
-    }, 1000); // Simulate typing delay
+    }, 300); // Reduced delay for faster response
+  };
+
+  const handleSuggestedQuestionClick = (question) => {
+    handleSendMessage(question);
   };
 
   const loadSubtitles = (subtitleUrl) => {
@@ -321,34 +467,142 @@ const FloatingQudemoWidget = ({
     });
   };
 
-  const matchQuestion = (question) => {
-    if (!videoFlow || !videoFlow.videos) {
-      return { matched: false };
+  const matchQuestion = (userQuestion) => {
+    if (!videoFlow || !videoFlow.videos) return { matched: false };
+
+    // Normalize voice recognition variations
+    let normalizedQuestion = userQuestion.toLowerCase().trim();
+    
+    // Handle voice recognition variations of "Qudemo"
+    normalizedQuestion = normalizedQuestion.replace(/\bq\s*demo\b/gi, 'qudemo');
+    normalizedQuestion = normalizedQuestion.replace(/\bq\s*d\s*e\s*m\s*o\b/gi, 'qudemo');
+    normalizedQuestion = normalizedQuestion.replace(/\bque\s*demo\b/gi, 'qudemo');
+    normalizedQuestion = normalizedQuestion.replace(/\bcue\s*demo\b/gi, 'qudemo');
+    
+    // Handle voice recognition variations of "Chatwoot"
+    normalizedQuestion = normalizedQuestion.replace(/\bchat\s*wood\b/gi, 'chatwoot');
+    normalizedQuestion = normalizedQuestion.replace(/\bchatwood\b/gi, 'chatwoot');
+    normalizedQuestion = normalizedQuestion.replace(/\bchat\s*woot\b/gi, 'chatwoot');
+    normalizedQuestion = normalizedQuestion.replace(/\bchat\s*wot\b/gi, 'chatwoot');
+    normalizedQuestion = normalizedQuestion.replace(/\bchatwot\b/gi, 'chatwoot');
+    
+    const lowerQuestion = normalizedQuestion;
+    
+    console.log('🔍 Widget - Original question:', userQuestion);
+    if (normalizedQuestion !== userQuestion.toLowerCase().trim()) {
+      console.log('🔄 Widget - Normalized to:', normalizedQuestion);
+    }
+    
+    // First pass: Exact match with video questions (skip intro)
+    for (const video of videoFlow.videos) {
+      if (video.question && !video.isIntro) {
+        const lowerVideoQuestion = video.question.toLowerCase();
+        if (lowerQuestion === lowerVideoQuestion) {
+          console.log('✅ Exact match found:', video.question, '(video:', video.id + ')');
+          const videoIndex = videoFlow.videos.findIndex(v => v.id === video.id);
+          return { 
+            matched: true, 
+            videoId: video.id, 
+            videoIndex: videoIndex,
+            question: video.question,
+            answer: video.answer,
+            confidence: 'high'
+          };
+        }
+      }
     }
 
-    const questionLower = question.toLowerCase();
-    
-    // Search through all videos for matching questions
-    for (let i = 0; i < videoFlow.videos.length; i++) {
-      const video = videoFlow.videos[i];
-      
-      if (video.nextQuestions) {
-        for (const q of video.nextQuestions) {
-          if (q.text.toLowerCase() === questionLower) {
-            // Handle both nextVideo and nextVideoId formats
-            const nextVideoRef = q.nextVideo || q.nextVideoId;
-            const videoIndex = nextVideoRef ? 
-              videoFlow.videos.findIndex(v => v.id === nextVideoRef) : i;
-              
-            return {
-              matched: true,
-              videoIndex: videoIndex >= 0 ? videoIndex : i,
-              answer: q.answer || video.answer || null,
-              videoId: nextVideoRef || video.id
+    // Second pass: Contains match (skip intro)
+    for (const video of videoFlow.videos) {
+      if (video.question && !video.isIntro) {
+        const lowerVideoQuestion = video.question.toLowerCase();
+        if (lowerQuestion.includes(lowerVideoQuestion) || lowerVideoQuestion.includes(lowerQuestion)) {
+          console.log('✅ Substring match found:', video.question, '(video:', video.id + ')');
+          const videoIndex = videoFlow.videos.findIndex(v => v.id === video.id);
+          return { 
+            matched: true, 
+            videoId: video.id, 
+            videoIndex: videoIndex,
+            question: video.question,
+            answer: video.answer,
+            confidence: 'high' 
+          };
+        }
+      }
+    }
+
+    // Third pass: Keyword-based matching for key questions
+    const keywordMappings = [
+      { keywords: ['what is qudemo', 'what is this', 'what is demo', 'tell me about'], videoId: 'video_1', videoQuestion: 'What is Qudemo?' },
+      { keywords: ['how does qudemo work', 'how qudemo works', 'how does it work', 'how does demo work', 'how demo works'], videoId: 'video_2', videoQuestion: 'How does Qudemo work?' },
+      { keywords: ['who is qudemo for', 'who can use', 'who should use', 'who is demo for'], videoId: 'video_3', videoQuestion: 'Who is Qudemo for?' },
+      { keywords: ['pricing', 'how much', 'cost', "what's the pricing"], videoId: 'video_12', videoQuestion: "What's the pricing?" },
+      { keywords: ['secure', 'security', 'how secure'], videoId: 'video_11', videoQuestion: 'How secure is my data?' },
+      { keywords: ['integrate', 'integration'], videoId: 'video_14', videoQuestion: 'Can I integrate Qudemo with other tools?' },
+      { keywords: ['embed', 'share'], videoId: 'video_7', videoQuestion: 'Can I embed Qudemo or share it?' },
+      { keywords: ['insights', 'what insights'], videoId: 'video_9', videoQuestion: 'What insights can I see?' },
+      { keywords: ['onboarding', 'training'], videoId: 'video_10', videoQuestion: 'Can I use Qudemo for onboarding or training?' },
+    ];
+
+    for (const mapping of keywordMappings) {
+      for (const keyword of mapping.keywords) {
+        if (lowerQuestion.includes(keyword)) {
+          const matchedVideo = videoFlow.videos.find(v => v.id === mapping.videoId);
+          if (matchedVideo) {
+            console.log('✅ Keyword match found:', matchedVideo.question, '(video:', matchedVideo.id + ')');
+            const videoIndex = videoFlow.videos.findIndex(v => v.id === matchedVideo.id);
+            return { 
+              matched: true, 
+              videoId: matchedVideo.id, 
+              videoIndex: videoIndex,
+              question: matchedVideo.question,
+              answer: matchedVideo.answer,
+              confidence: 'high' 
             };
           }
         }
       }
+    }
+
+    // Fourth pass: Word-based fuzzy matching (skip intro, more conservative)
+    for (const video of videoFlow.videos) {
+      if (video.question && !video.isIntro && video.question !== 'Fallback Response') {
+        const lowerVideoQuestion = video.question.toLowerCase();
+        const videoWords = lowerVideoQuestion.split(/\W+/).filter(w => w.length > 3);
+        const questionWords = lowerQuestion.split(/\W+/).filter(w => w.length > 3);
+        
+        // Need at least 3 matching words for fuzzy match
+        const matchingWords = videoWords.filter(word => questionWords.includes(word));
+        
+        if (matchingWords.length >= 3) {
+          console.log('✅ Fuzzy match found:', video.question, '(video:', video.id + ')');
+          const videoIndex = videoFlow.videos.findIndex(v => v.id === video.id);
+          return { 
+            matched: true, 
+            videoId: video.id, 
+            videoIndex: videoIndex,
+            question: video.question,
+            answer: video.answer,
+            confidence: 'medium' 
+          };
+        }
+      }
+    }
+
+    // Fallback video (use designated fallback or second video, never intro)
+    console.log('⚠️ No match found, using fallback');
+    const fallbackVideo = videoFlow.videos.find(v => v.isFallback) || videoFlow.videos[1];
+    if (fallbackVideo) {
+      const videoIndex = videoFlow.videos.findIndex(v => v.id === fallbackVideo.id);
+      return { 
+        matched: true, 
+        videoId: fallbackVideo.id, 
+        videoIndex: videoIndex,
+        question: fallbackVideo.question,
+        answer: fallbackVideo.answer,
+        confidence: 'fallback', 
+        isFallback: true 
+      };
     }
 
     return { matched: false };
@@ -366,7 +620,30 @@ const FloatingQudemoWidget = ({
   const handleClose = () => {
     setIsExpanded(false);
     setIsMinimized(false);
+    
+    // Clean up preloaded videos when widget is closed
+    Object.keys(videoPreloadCacheRef.current).forEach(id => {
+      const cached = videoPreloadCacheRef.current[id];
+      if (cached?.element?.parentNode) {
+        cached.element.parentNode.removeChild(cached.element);
+      }
+    });
+    videoPreloadCacheRef.current = {};
+    console.log('🧹 Widget - Cleared video cache on close');
   };
+
+  // ========== RENDER HELPERS ==========
+  const TypingIndicator = () => (
+    <div className="flex justify-start">
+      <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-xl px-4 py-3 max-w-[80%]">
+        <div className="flex gap-1">
+          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+        </div>
+      </div>
+    </div>
+  );
 
   // Small circular widget (collapsed state)
   if (!isExpanded) {
@@ -433,16 +710,16 @@ const FloatingQudemoWidget = ({
           </button>
         </div>
       ) : (
-         // Full expanded widget - clean video only (like Y Combinator)
-         <div className="bg-black rounded-2xl shadow-2xl overflow-hidden" style={{ width: '550px' }}>
+         // Full expanded widget - horizontal layout with video left and chat right
+         <div className="bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-row" style={{ width: '800px', height: '500px' }}>
            {loading ? (
-             <div className="p-8 flex flex-col items-center justify-center bg-white">
+             <div className="w-full p-8 flex flex-col items-center justify-center bg-white">
                <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
                <p className="mt-4 text-gray-600">Loading demo...</p>
              </div>
            ) : videoFlow && videoFlow.videos && videoFlow.videos.length > 0 ? (
-             <div className="relative">
-               {/* Close button - top right corner */}
+             <>
+               {/* Close button - absolute positioned */}
                <button
                  onClick={handleClose}
                  className="absolute top-4 right-4 z-30 bg-black bg-opacity-50 hover:bg-opacity-70 text-white rounded-full p-2 transition-all"
@@ -450,8 +727,8 @@ const FloatingQudemoWidget = ({
                  <XMarkIcon className="w-5 h-5" />
                </button>
 
-               {/* Video Player */}
-               <div className="relative bg-black" style={{ height: '450px' }}>
+               {/* Video Section (Left - 2/3) */}
+               <div className="w-2/3 relative bg-black flex items-center justify-center">
                  <style>{`
                    video::cue {
                      font-size: 12px;
@@ -464,13 +741,13 @@ const FloatingQudemoWidget = ({
                    controls 
                    className="w-full h-full object-contain bg-black"
                    playsInline
-                   preload="metadata"
+                   preload="auto"
                    crossOrigin="anonymous"
                  >
                    Your browser does not support the video tag.
                  </video>
 
-                 {/* Suggested Questions Overlay - Only show after video ends (like Y Combinator) */}
+                 {/* Suggested Questions Overlay - Only show after video ends */}
                  {videoEnded && videoFlow?.videos[currentVideoIndex]?.nextQuestions && videoFlow.videos[currentVideoIndex].nextQuestions.length > 0 && (
                    <div className="absolute bottom-16 left-0 right-0 px-6 pb-4 pointer-events-none">
                      <div className="flex flex-wrap gap-2 justify-center pointer-events-auto">
@@ -479,7 +756,7 @@ const FloatingQudemoWidget = ({
                            key={index}
                            onClick={() => handleSuggestedQuestionClick(question.text)}
                            disabled={isTyping}
-                           className="bg-gray-900 bg-opacity-80 hover:bg-opacity-95 text-white px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm border border-gray-700 hover:border-gray-500"
+                           className="bg-gray-900 bg-opacity-80 hover:bg-opacity-95 text-white px-4 py-2 rounded-full text-xs font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm border border-gray-700 hover:border-gray-500"
                          >
                            {question.text}
                          </button>
@@ -488,9 +765,61 @@ const FloatingQudemoWidget = ({
                    </div>
                  )}
                </div>
-             </div>
+
+               {/* Chat Section (Right - 1/3) */}
+               <div className="w-1/3 flex flex-col bg-white border-l border-gray-200">
+                 {/* Chat header */}
+                 <div className="bg-blue-600 text-white px-4 py-3 flex items-center gap-2 flex-shrink-0">
+                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
+                   </svg>
+                   <span className="font-semibold text-sm">Ask questions</span>
+                 </div>
+
+                 {/* Chat messages */}
+                 <div ref={chatMessagesRef} className="flex-1 overflow-y-auto p-3 bg-gray-50 flex flex-col gap-2">
+                   {chatMessages.length === 0 ? (
+                     <div className="text-center text-gray-500 text-sm py-4">
+                       👋 Hi! Ask me anything about this demo
+                     </div>
+                   ) : (
+                     <>
+                       {chatMessages.map((msg, i) => (
+                         <div key={i} className={`flex ${msg.type === 'bot' ? 'justify-start' : 'justify-end'}`}>
+                           <div className={`max-w-[85%] px-3 py-2 rounded-xl text-sm leading-relaxed text-left ${msg.type === 'bot' ? 'bg-white border border-gray-200 text-gray-800' : 'bg-blue-600 text-white'}`}>
+                             {msg.text}
+                           </div>
+                         </div>
+                       ))}
+                       {isTyping && <TypingIndicator />}
+                     </>
+                   )}
+                 </div>
+
+                 {/* Chat input */}
+                 <div className="flex items-end gap-2 p-3 border-t border-gray-200 bg-white flex-shrink-0">
+                   <textarea 
+                     value={inputMessage} 
+                     onChange={handleInputChange} 
+                     onKeyDown={handleKeyPress} 
+                     placeholder="Ask a question..." 
+                     rows="1" 
+                     className="flex-1 px-3 py-2.5 border border-gray-300 rounded-lg text-sm resize-none overflow-hidden min-h-[2.5rem] max-h-[7.5rem] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm"
+                   />
+                   <button 
+                     onClick={() => handleSendMessage()} 
+                     disabled={!inputMessage.trim() || isTyping} 
+                     className="min-w-[2.5rem] h-10 flex items-center justify-center bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-lg hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                   >
+                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 12L3.269 3.125A59.769 59.769 0 0121.485 12 59.768 59.768 0 013.27 20.875L5.999 12zm0 0h7.5"></path>
+                     </svg>
+                   </button>
+                 </div>
+               </div>
+             </>
            ) : (
-             <div className="p-8 text-center text-gray-500 bg-white">
+             <div className="w-full p-8 text-center text-gray-500 bg-white">
                <p>No demo available</p>
              </div>
            )}
