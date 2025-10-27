@@ -522,18 +522,42 @@ const FloatingQudemoWidget = ({
           text: data.answer
         }]);
 
-        // If video URL and timestamp are provided, play the video
-        if (data.video_url && data.video_url.trim() !== '' && qudemoData.videos) {
+        // Check for video navigation data in the response
+        let targetVideoUrl = null;
+        let timestamp = 0;
+        
+        // First check direct video fields (this is how the Python backend sends video data)
+        if (data && data.video_url) {
+          targetVideoUrl = data.video_url;
+          timestamp = data.start || data.timestamp || 0;
+          
+          // Ensure timestamp is a number and convert to seconds if needed
+          if (typeof timestamp === 'string') {
+            timestamp = parseFloat(timestamp);
+          }
+          if (isNaN(timestamp)) {
+            timestamp = 0;
+          }
+          // Additional validation - ensure timestamp is reasonable
+          if (timestamp < 0 || timestamp > 36000) { // Max 10 hours
+            timestamp = 0;
+          }
+        }
+
+        // Switch video if we have a valid video URL
+        if (targetVideoUrl && qudemoData.videos) {
+          // First, pause the current video to ensure clean transition
+          setIsPlaying(false);
+          
+          // Find if this video is in our qudemo's videos
           const videoIndex = qudemoData.videos.findIndex(v => 
-            v.video_url === data.video_url || v.video_url.includes(data.video_url)
+            v.video_url === targetVideoUrl || v.video_url.includes(targetVideoUrl)
           );
 
           if (videoIndex !== -1) {
-            // Pause current video
-            setIsPlaying(false);
+            const qudemoVideo = qudemoData.videos[videoIndex];
             
             // Update the video flow to use the Qudemo video
-            const qudemoVideo = qudemoData.videos[videoIndex];
             const tempVideo = {
               id: `qudemo-${qudemoVideo.id}`,
               url: qudemoVideo.video_url,
@@ -556,44 +580,43 @@ const FloatingQudemoWidget = ({
               }
               return prev;
             });
-
-            // Switch to the video
+            
+            // Set the video index and timestamp
             setTimeout(() => {
-              // Find the index (either newly added or existing)
-              const newVideoFlow = videoFlow.videos;
-              const targetIndex = newVideoFlow.findIndex(v => 
+              // Find the index in videoFlow
+              const targetIndex = videoFlow.videos.findIndex(v => 
                 (v.url || v.src) === tempVideo.url
               );
               
               if (targetIndex !== -1) {
                 setCurrentVideoIndex(targetIndex);
               } else {
-                setCurrentVideoIndex(videoFlow.videos.length); // Use the last index
+                setCurrentVideoIndex(videoFlow.videos.length);
               }
               
-              setCurrentTimestamp(data.timestamp || 0);
+              setCurrentTimestamp(timestamp);
               
-              // Force video player to refresh and play
+              // Force video to seek to new timestamp after a brief delay
               setTimeout(() => {
-                setVideoRefreshKey(prev => prev + 1);
+                // Update timestamp
+                setCurrentTimestamp(timestamp);
+                // Set playing to true BEFORE incrementing refresh key
                 setIsPlaying(true);
+                // Increment refresh key to force video player re-render with playing=true
+                setVideoRefreshKey(prev => prev + 1);
                 
-                // For Loom videos, give extra time to load before seeking
-                const isLoomVideo = tempVideo.url.includes('loom.com');
-                const seekDelay = isLoomVideo ? 1000 : 500;
-                
-                // Try to seek directly if player supports it
+                // Try to seek directly using the player ref if available
                 setTimeout(() => {
                   if (videoPlayerRef.current && videoPlayerRef.current.seekTo) {
                     try {
-                      videoPlayerRef.current.seekTo(data.timestamp || 0);
+                      videoPlayerRef.current.seekTo(timestamp);
                     } catch (error) {
                       // Seek failed
                     }
                   }
-                }, seekDelay);
-              }, 300);
-            }, 200);
+                }, 500); // Wait for player to be ready
+              }, 200);
+            }, 100);
           }
         }
       } else {
