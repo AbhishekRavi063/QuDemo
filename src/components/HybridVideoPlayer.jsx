@@ -22,7 +22,6 @@ const HybridVideoPlayer = ({
 
   const [audioEnabled, setAudioEnabled] = useState(true); // Start with audio enabled
   const [hasUserInteracted, setHasUserInteracted] = useState(true); // Assume user has interacted
-  const [videoEnded, setVideoEnded] = useState(false); // Track if YouTube video ended
   const internalIframeRef = useRef(null);
   const reactPlayerRef = useRef(null); // For ReactPlayer (YouTube)
   const videoType = getVideoType(url);
@@ -81,10 +80,6 @@ const HybridVideoPlayer = ({
   };
 
 
-  // Reset video ended state when URL changes
-  useEffect(() => {
-    setVideoEnded(false);
-  }, [url]);
 
   // Handle timestamp changes for ReactPlayer (YouTube)
   useEffect(() => {
@@ -299,7 +294,7 @@ const HybridVideoPlayer = ({
         // - rel=0: Only show related videos from same channel (not perfect but best we can do)
         // - modestbranding=1: Minimal YouTube branding
         // - fs=1: Allow fullscreen
-        // - controls=1: Show player controls
+        // - controls: Show/hide player controls based on controls prop
         // - playsinline=1: Play inline on mobile
         // - enablejsapi=1: Enable JavaScript API for seeking
         const embedUrl = `https://www.youtube-nocookie.com/embed/${videoId}?` +
@@ -307,7 +302,7 @@ const HybridVideoPlayer = ({
           `start=${ytStart}&` +
           `rel=0&` +              // Don't show related videos from other channels
           `modestbranding=1&` +   // Minimal branding
-          `controls=1&` +         // Show controls
+          `controls=${controls ? 1 : 0}&` +         // Show/hide controls based on prop
           `fs=1&` +               // Allow fullscreen
           `playsinline=1&` +      // Play inline on mobile
           `enablejsapi=1&` +      // Enable JS API
@@ -327,7 +322,7 @@ const HybridVideoPlayer = ({
           
           // Build base embed URL with parameters
           const autoplay = playing ? '1' : '0';
-          let embedUrl = `https://www.loom.com/embed/${videoId}?autoplay=${autoplay}&hide_share=1&hide_title=1&muted=0&enablejsapi=1&allowfullscreen=1&showinfo=0&controls=1&rel=0`;
+          let embedUrl = `https://www.loom.com/embed/${videoId}?autoplay=${autoplay}&hide_share=1&hide_title=1&muted=0&enablejsapi=1&allowfullscreen=1&showinfo=0&controls=${controls ? 1 : 0}&rel=0`;
 
           // Add timestamp - prioritize startTime prop over existing URL timestamp
           const timestampToUse = startTime && startTime > 0 ? Math.floor(startTime) : existingTimestamp;
@@ -346,7 +341,7 @@ const HybridVideoPlayer = ({
           const videoId = url.split('vimeo.com/')[1].split('?')[0];
           const vimeoTime = startTime && startTime > 0 ? `#t=${Math.floor(startTime)}s` : '';
           const autoplay = playing ? '1' : '0';
-          const embedUrl = videoId ? `https://player.vimeo.com/video/${videoId}?autoplay=${autoplay}&muted=0&controls=1${vimeoTime}` : url;
+          const embedUrl = videoId ? `https://player.vimeo.com/video/${videoId}?autoplay=${autoplay}&muted=0&controls=${controls ? 1 : 0}${vimeoTime}` : url;
 
           return embedUrl;
         }
@@ -409,14 +404,14 @@ const HybridVideoPlayer = ({
           width="100%"
           height="100%"
           controls={controls}
-          playing={playing && !videoEnded}
+          playing={playing}
           volume={1.0}
           muted={false}
           config={{
             youtube: {
               playerVars: {
                 autoplay: playing ? 1 : 0,
-                controls: 1,
+                controls: controls ? 1 : 0,
                 modestbranding: 1,
                 rel: 0,
                 showinfo: 0,
@@ -428,58 +423,24 @@ const HybridVideoPlayer = ({
           }}
           onReady={() => {
             if (onReady) onReady();
-            setVideoEnded(false); // Reset ended state
             // Seek to start time after ready
             if (startTime > 0 && reactPlayerRef.current) {
               reactPlayerRef.current.seekTo(startTime, 'seconds');
             }
           }}
           onPlay={() => {
-            setVideoEnded(false); // Reset if playing again
             if (onPlay) onPlay();
           }}
           onPause={() => {
             if (onPause) onPause();
           }}
           onEnded={() => {
-            // IMMEDIATELY show custom overlay to hide YouTube end screen
-            setVideoEnded(true);
+            // For video call experience - just pause on last frame, don't show overlay
+            // The video will freeze on the last frame naturally
             if (onEnded) onEnded();
           }}
         />
 
-        {/* Custom End Screen Overlay - HIDES YOUTUBE SUGGESTIONS! */}
-        {videoEnded && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-black bg-opacity-95 z-20">
-            <div className="text-center px-6">
-              {/* Replay Button */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setVideoEnded(false);
-                  if (reactPlayerRef.current) {
-                    reactPlayerRef.current.seekTo(0);
-                  }
-                }}
-                className="group relative inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-white bg-gradient-to-r from-blue-600 to-blue-700 rounded-full hover:from-blue-700 hover:to-blue-800 transform hover:scale-105 transition-all duration-200 shadow-xl hover:shadow-2xl"
-              >
-                <svg 
-                  className="w-6 h-6 mr-3" 
-                  fill="currentColor" 
-                  viewBox="0 0 20 20"
-                >
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
-                </svg>
-                Replay Video
-              </button>
-              
-              {/* Optional: Thank you message */}
-              <p className="mt-6 text-gray-300 text-base">
-                Thanks for watching!
-              </p>
-            </div>
-          </div>
-        )}
 
         {/* Video Type Indicator */}
         <div className="absolute top-4 right-4 bg-black/50 text-white px-2 py-1 rounded text-xs z-10">

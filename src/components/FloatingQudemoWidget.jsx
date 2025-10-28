@@ -19,13 +19,14 @@ const FloatingQudemoWidget = ({
   const [chatMessages, setChatMessages] = useState([]);
   const [isTyping, setIsTyping] = useState(false);
   const [videoThumbnail, setVideoThumbnail] = useState(null);
-  const [videoEnded, setVideoEnded] = useState(false);
+  const [previewVideoUrl, setPreviewVideoUrl] = useState(null);
   const [inputMessage, setInputMessage] = useState('');
   const [isListening, setIsListening] = useState(false);
   const [showBookingPrompt, setShowBookingPrompt] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [videoRefreshKey, setVideoRefreshKey] = useState(0);
   const videoPlayerRef = useRef(null);
+  const previewVideoRef = useRef(null);
   const chatMessagesRef = useRef(null);
   const videoPreloadCacheRef = useRef({}); // Cache of preloaded video elements
   const recognitionRef = useRef(null);
@@ -151,8 +152,7 @@ const FloatingQudemoWidget = ({
   // Update video state when currentVideoIndex changes
   useEffect(() => {
     if (isExpanded && videoFlow?.videos[currentVideoIndex]) {
-      // Reset video ended state
-      setVideoEnded(false);
+      // Video index changed - no need to reset ended state anymore
     }
   }, [currentVideoIndex, videoFlow, isExpanded]);
 
@@ -435,12 +435,11 @@ const FloatingQudemoWidget = ({
   const handleSendMessage = async (messageText = null) => {
     const userQuestion = messageText || inputMessage.trim();
     if (!userQuestion || isTyping) return;
-
+    
     // Add user message
     setChatMessages(prev => [...prev, { type: 'user', text: userQuestion }]);
     setInputMessage('');
     setIsTyping(true);
-    setVideoEnded(false); // Hide video ended overlay when new question is asked
 
     // Check if user wants to book a meeting
     if (isSalesRelated(userQuestion)) {
@@ -459,7 +458,7 @@ const FloatingQudemoWidget = ({
     // Only use static video if it's a STRONG match (not fallback)
     if (matchResult.matched && matchResult.videoIndex !== null && matchResult.videoIndex !== -1 && !matchResult.isFallback) {
       // Use static video response
-      setTimeout(() => {
+    setTimeout(() => {
         setChatMessages(prev => [...prev, { 
           type: 'bot', 
           text: matchResult.answer || "Let me show you a video that answers your question!"
@@ -677,7 +676,7 @@ const FloatingQudemoWidget = ({
         }
       }
     });
-    
+
     track.addEventListener('error', (e) => {
       // Subtitle loading failed
     });
@@ -759,8 +758,8 @@ const FloatingQudemoWidget = ({
           const matchedVideo = videoFlow.videos.find(v => v.id === mapping.videoId);
           if (matchedVideo) {
             const videoIndex = videoFlow.videos.findIndex(v => v.id === matchedVideo.id);
-            return { 
-              matched: true, 
+            return {
+              matched: true,
               videoId: matchedVideo.id, 
               videoIndex: videoIndex,
               question: matchedVideo.question,
@@ -866,6 +865,14 @@ const FloatingQudemoWidget = ({
   if (!isExpanded) {
     return (
       <div className={`fixed ${positionClasses[position]} z-50`}>
+        {/* Text above widget */}
+        <div className="absolute inset-0 pointer-events-none">
+          {/* Top text */}
+          <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white px-3 py-1 rounded-lg text-sm font-medium whitespace-nowrap shadow-lg">
+            Ask me questions
+          </div>
+        </div>
+        
         <button
           onClick={handleExpand}
           className="group relative"
@@ -925,7 +932,7 @@ const FloatingQudemoWidget = ({
       <div className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden" onClick={handleClose}></div>
       
       <div className={`fixed inset-0 md:inset-auto md:${positionClasses[position]} z-50 transition-all duration-300 p-4 md:p-0 flex items-center justify-center md:block`}>
-        {/* Minimized bar */}
+      {/* Minimized bar */}
       {isMinimized ? (
         <div className="bg-white rounded-lg shadow-2xl border border-gray-200 overflow-hidden">
           <button
@@ -984,7 +991,7 @@ const FloatingQudemoWidget = ({
                      url={videoFlow.videos[currentVideoIndex].url || videoFlow.videos[currentVideoIndex].src}
                      width="100%"
                      height="100%"
-                     controls={true}
+                     controls={false}
                      playing={isPlaying}
                      startTime={currentTimestamp}
                     style={{ width: '100%', height: '100%', background: 'black' }}
@@ -1036,16 +1043,16 @@ const FloatingQudemoWidget = ({
                          <div className="flex flex-col gap-2 mt-2">
                            <p className="text-xs text-gray-500 font-medium px-1">Suggested questions:</p>
                            {suggestedQuestions.map((question, index) => (
-                             <button
-                               key={index}
+                         <button
+                           key={index}
                                onClick={() => handleSuggestedQuestionClick(question)}
-                               disabled={isTyping}
+                           disabled={isTyping}
                                className="text-left bg-white hover:bg-blue-50 text-gray-700 hover:text-blue-600 px-3 py-2 rounded-lg text-xs border border-gray-200 hover:border-blue-300 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                             >
+                         >
                                {question}
-                             </button>
-                           ))}
-                         </div>
+                         </button>
+                       ))}
+                     </div>
                        )}
                      </>
                    ) : (
@@ -1072,8 +1079,8 @@ const FloatingQudemoWidget = ({
                                    {question}
                                  </button>
                                ))}
-                             </div>
-                           )}
+                   </div>
+                 )}
                          </React.Fragment>
                        ))}
                        {isTyping && <TypingIndicator />}
