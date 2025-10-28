@@ -281,8 +281,8 @@ const CustomVideoPlayer = ({
         </div>
       )}
 
-      {/* Click to Play Overlay */}
-      {!isPlaying && (
+      {/* Click to Play Overlay - Only show if controls are enabled */}
+      {!isPlaying && controls && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/50">
           <button
             onClick={togglePlay}

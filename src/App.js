@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import './App.css';
 import { getNodeApiUrl } from './config/api';
 import { clearAuthTokens } from './utils/tokenRefresh';
@@ -30,6 +30,9 @@ import PricingPage from './components/PricingPage';
 import CustomerInteractionsPage from './components/CustomerInteractionsPage';
 import BulkUploadsPage from './components/BulkUploadsPage';
 import VideoChatPage from './components/VideoChatPage';
+import FloatingWidgetDemo from './components/FloatingWidgetDemo';
+import FloatingQudemoWidget from './components/FloatingQudemoWidget';
+import WidgetTokenHelper from './components/WidgetTokenHelper';
 import { CompanyProvider, useCompany } from './context/CompanyContext';
 import { BackendProvider } from './context/BackendContext';
 import { NotificationProvider } from './context/NotificationContext';
@@ -231,6 +234,21 @@ function App() {
       window.removeEventListener('storage', handleStorageChange);
     };
   }, []);
+  // Component to conditionally show floating widget (uses static beta version data)
+  const FloatingWidgetWrapper = () => {
+    const location = useLocation();
+    // Show widget on all pages
+    const shouldShowWidget = true;
+    
+    return shouldShowWidget ? (
+      <FloatingQudemoWidget 
+        position="bottom-right"
+        previewImage="/round.png"  // Fallback image if video thumbnail fails to load
+        previewText="Watch Beta Version"
+      />
+    ) : null;
+  };
+
   return (
     <Router>
       <BackendProvider>
@@ -244,6 +262,7 @@ function App() {
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/auth/callback" element={<AuthCallback />} />
               <Route path="/share/:shareToken" element={<PublicQudemoShare />} />
+              <Route path="/widget-demo" element={<FloatingWidgetDemo />} />
               {/* Protected Routes - Wrapped with CompanyProvider */}
               <Route 
                 path="/overview" 
@@ -439,9 +458,26 @@ function App() {
                 </CompanyProvider>
               } 
             />
+            <Route 
+              path="/widget-tokens" 
+              element={
+                <CompanyProvider>
+                  <ProtectedRoute>
+                    <CompanyCheck>
+                      <DashboardLayout>
+                        <WidgetTokenHelper />
+                      </DashboardLayout>
+                    </CompanyCheck>
+                  </ProtectedRoute>
+                </CompanyProvider>
+              } 
+            />
             {/* Catch all route */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
+          
+          {/* Floating Widget - Shows on all pages except home */}
+          <FloatingWidgetWrapper />
           </div>
         </NotificationProvider>
       </BackendProvider>

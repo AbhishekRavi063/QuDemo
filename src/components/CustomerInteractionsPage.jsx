@@ -154,11 +154,12 @@ const CustomerInteractionsPage = () => {
   // Handle view details
   const handleViewDetails = async (interaction) => {
     // Check if user has active Pro plan
-    if (!isPro) {
-      // Show upgrade modal for inactive Pro users
-      setShowUpgradeModal(true);
-      return;
-    }
+    // COMMENTED OUT FOR TESTING - Allow free users to view details
+    // if (!isPro) {
+    //   // Show upgrade modal for inactive Pro users
+    //   setShowUpgradeModal(true);
+    //   return;
+    // }
     
     // Reset AI summary state
     setAiInsightSummary('');

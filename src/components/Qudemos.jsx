@@ -146,18 +146,19 @@ const Qudemos = () => {
   // Handle view interactions for a QuDemo
   const handleViewQudemoInteractions = async (qudemo) => {
     // Check if user has Pro/Enterprise plan first
-    if (!isPro) {
-      // Show upgrade popup for free users
-      setErrorDetails({
-        title: 'View Interactions requires Pro plan',
-        message: 'Upgrade to Pro to view detailed interaction analytics for your Qudemos.',
-        currentPlan: 'free',
-        subscriptionStatus: 'active',
-        isCancelled: false
-      });
-      setShowUpgradeModal(true);
-      return;
-    }
+    // COMMENTED OUT FOR TESTING - Allow free users to view interactions
+    // if (!isPro) {
+    //   // Show upgrade popup for free users
+    //   setErrorDetails({
+    //     title: 'View Interactions requires Pro plan',
+    //     message: 'Upgrade to Pro to view detailed interaction analytics for your Qudemos.',
+    //     currentPlan: 'free',
+    //     subscriptionStatus: 'active',
+    //     isCancelled: false
+    //   });
+    //   setShowUpgradeModal(true);
+    //   return;
+    // }
     try {
       setLoadingInteractions(true);
       setSearchTerm(''); // Clear search when opening modal
@@ -204,18 +205,19 @@ const Qudemos = () => {
      }
      
      // Check if user has Pro/Enterprise plan first
-     if (!isPro) {
-       // Show upgrade popup for free users
-       setErrorDetails({
-         title: 'Share functionality requires Pro plan',
-         message: 'Upgrade to Pro to generate shareable links for your Qudemos.',
-         currentPlan: 'free',
-         subscriptionStatus: 'active',
-         isCancelled: false
-       });
-       setShowUpgradeModal(true);
-       return;
-     }
+     // COMMENTED OUT FOR TESTING - Allow free users to share
+     // if (!isPro) {
+     //   // Show upgrade popup for free users
+     //   setErrorDetails({
+     //     title: 'Share functionality requires Pro plan',
+     //     message: 'Upgrade to Pro to generate shareable links for your Qudemos.',
+     //     currentPlan: 'free',
+     //     subscriptionStatus: 'active',
+     //     isCancelled: false
+     //   });
+     //   setShowUpgradeModal(true);
+     //   return;
+     // }
      // Show share options modal for Pro/Enterprise users (don't generate link yet)
      setQudemoToShare(qudemo);
      setShowShareOptionsModal(true);
@@ -766,18 +768,19 @@ const Qudemos = () => {
         break;
       case 'interactions':
         // Check if user has Pro/Enterprise plan first
-        if (!isPro) {
-          // Show upgrade popup for free users
-          setErrorDetails({
-            title: 'View Interactions requires Pro plan',
-            message: 'Upgrade to Pro to view detailed interaction analytics for your Qudemos.',
-            currentPlan: 'free',
-            subscriptionStatus: 'active',
-            isCancelled: false
-          });
-          setShowUpgradeModal(true);
-          return;
-        }
+        // COMMENTED OUT FOR TESTING - Allow free users to view interactions
+        // if (!isPro) {
+        //   // Show upgrade popup for free users
+        //   setErrorDetails({
+        //     title: 'View Interactions requires Pro plan',
+        //     message: 'Upgrade to Pro to view detailed interaction analytics for your Qudemos.',
+        //     currentPlan: 'free',
+        //     subscriptionStatus: 'active',
+        //     isCancelled: false
+        //   });
+        //   setShowUpgradeModal(true);
+        //   return;
+        // }
         try {
           setLoadingInteractions(true);
         // Fetch interactions for this specific QuDemo and show people list
@@ -1105,50 +1108,55 @@ const Qudemos = () => {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            if (!isPro) {
-                              setErrorDetails({
-                                title: 'View Interactions requires Pro plan',
-                                message: 'Upgrade to Pro to view detailed interaction analytics for your Qudemos.',
-                                features: [
-                                  { title: 'Advanced Analytics', description: 'Track views and engagement', icon: '📊' },
-                                  { title: 'Public Sharing', description: 'Generate shareable links for your Qudemos', icon: '🔗' }
-                                ],
-                                pricing: 'Starting at $29.9/month',
-                                action: 'Upgrade to Pro'
-                              });
-                              setShowUpgradeModal(true);
-                            } else {
+                            // COMMENTED OUT FOR TESTING - Allow free users to view interactions
+                            // if (!isPro) {
+                            //   setErrorDetails({
+                            //     title: 'View Interactions requires Pro plan',
+                            //     message: 'Upgrade to Pro to view detailed interaction analytics for your Qudemos.',
+                            //     features: [
+                            //       { title: 'Advanced Analytics', description: 'Track views and engagement', icon: '📊' },
+                            //       { title: 'Public Sharing', description: 'Generate shareable links for your Qudemos', icon: '🔗' }
+                            //     ],
+                            //     pricing: 'Starting at $29.9/month',
+                            //     action: 'Upgrade to Pro'
+                            //   });
+                            //   setShowUpgradeModal(true);
+                            // } else {
                               handleDropdownAction('interactions', qudemo);
-                            }
+                            // }
                           }}
                           className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center space-x-2 text-gray-700"
                         >
-                          {!isPro ? <LockClosedIcon className="w-4 h-4" /> : <ChartBarIcon className="w-4 h-4" />}
+                          {/* COMMENTED OUT FOR TESTING - Always show ChartBar icon */}
+                          {/* {!isPro ? <LockClosedIcon className="w-4 h-4" /> : <ChartBarIcon className="w-4 h-4" />} */}
+                          <ChartBarIcon className="w-4 h-4" />
                           <span>View Interactions</span>
                         </button>
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            if (!isPro) {
-                              setErrorDetails({
-                                title: 'Share functionality requires Pro plan',
-                                message: 'Upgrade to Pro to generate shareable links for your Qudemos.',
-                                features: [
-                                  { title: 'Public Sharing', description: 'Generate shareable links for your Qudemos', icon: '🔗' },
-                                  { title: 'Advanced Analytics', description: 'Track views and engagement', icon: '📊' }
-                                ],
-                                pricing: 'Starting at $29.9/month',
-                                action: 'Upgrade to Pro'
-                              });
-                              setShowUpgradeModal(true);
-                            } else {
+                            // COMMENTED OUT FOR TESTING - Allow free users to share
+                            // if (!isPro) {
+                            //   setErrorDetails({
+                            //     title: 'Share functionality requires Pro plan',
+                            //     message: 'Upgrade to Pro to generate shareable links for your Qudemos.',
+                            //     features: [
+                            //       { title: 'Public Sharing', description: 'Generate shareable links for your Qudemos', icon: '🔗' },
+                            //       { title: 'Advanced Analytics', description: 'Track views and engagement', icon: '📊' }
+                            //     ],
+                            //     pricing: 'Starting at $29.9/month',
+                            //     action: 'Upgrade to Pro'
+                            //   });
+                            //   setShowUpgradeModal(true);
+                            // } else {
                               handleDropdownAction('share', qudemo);
-                            }
+                            // }
                           }}
                           className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center space-x-2 text-gray-700"
                         >
                           <ShareIcon className="w-4 h-4" />
-                          {!isPro && <LockClosedIcon className="w-3 h-3" />}
+                          {/* COMMENTED OUT FOR TESTING - No lock icon shown */}
+                          {/* {!isPro && <LockClosedIcon className="w-3 h-3" />} */}
                           <span>Share</span>
                         </button>
                         <hr className="my-1" />
@@ -1206,58 +1214,56 @@ const Qudemos = () => {
                     <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      if (!isPro) {
-                        setErrorDetails({
-                          title: 'View Interactions requires Pro plan',
-                          message: 'Upgrade to Pro to view detailed interaction analytics for your Qudemos.',
-                          features: [
-                            { title: 'Advanced Analytics', description: 'Track views and engagement', icon: '📊' },
-                            { title: 'Public Sharing', description: 'Generate shareable links for your QuDemos', icon: '🔗' }
-                          ],
-                          pricing: 'Starting at $29.9/month',
-                          action: 'Upgrade to Pro'
-                        });
-                        setShowUpgradeModal(true);
-                      } else {
+                      // COMMENTED OUT FOR TESTING - Allow free users to view interactions
+                      // if (!isPro) {
+                      //   setErrorDetails({
+                      //     title: 'View Interactions requires Pro plan',
+                      //     message: 'Upgrade to Pro to view detailed interaction analytics for your Qudemos.',
+                      //     features: [
+                      //       { title: 'Advanced Analytics', description: 'Track views and engagement', icon: '📊' },
+                      //       { title: 'Public Sharing', description: 'Generate shareable links for your QuDemos', icon: '🔗' }
+                      //     ],
+                      //     pricing: 'Starting at $29.9/month',
+                      //     action: 'Upgrade to Pro'
+                      //   });
+                      //   setShowUpgradeModal(true);
+                      // } else {
                         handleViewQudemoInteractions(qudemo);
-                      }
+                      // }
                     }}
-                    className={`w-full flex items-center justify-center space-x-2 transition-colors duration-200 py-2 px-3 rounded-lg border ${
-                      !isPro
-                        ? 'text-gray-600 border-gray-300 hover:bg-gray-50 cursor-pointer'
-                        : 'text-blue-600 hover:text-blue-800 hover:bg-blue-50 border-blue-200'
-                    }`}
+                    className="w-full flex items-center justify-center space-x-2 transition-colors duration-200 py-2 px-3 rounded-lg border text-blue-600 hover:text-blue-800 hover:bg-blue-50 border-blue-200"
                   >
-                      {!isPro ? <LockClosedIcon className="w-4 h-4" /> : <EyeIcon className="w-4 h-4" />}
+                      {/* COMMENTED OUT FOR TESTING - Always show Eye icon */}
+                      {/* {!isPro ? <LockClosedIcon className="w-4 h-4" /> : <EyeIcon className="w-4 h-4" />} */}
+                      <EyeIcon className="w-4 h-4" />
                       <span className="text-sm font-medium">View Interactions</span>
                   </button>
                   {/* Share Button */}
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      if (!isPro) {
-                        setErrorDetails({
-                          title: 'Share functionality requires Pro plan',
-                          message: 'Upgrade to Pro to generate shareable links for your Qudemos.',
-                          features: [
-                            { title: 'Public Sharing', description: 'Generate shareable links for your QuDemos', icon: '🔗' },
-                            { title: 'Advanced Analytics', description: 'Track views and engagement', icon: '📊' }
-                          ],
-                          pricing: 'Starting at $29.9/month',
-                          action: 'Upgrade to Pro'
-                        });
-                        setShowUpgradeModal(true);
-                      } else {
+                      // COMMENTED OUT FOR TESTING - Allow free users to share
+                      // if (!isPro) {
+                      //   setErrorDetails({
+                      //     title: 'Share functionality requires Pro plan',
+                      //     message: 'Upgrade to Pro to generate shareable links for your Qudemos.',
+                      //     features: [
+                      //       { title: 'Public Sharing', description: 'Generate shareable links for your QuDemos', icon: '🔗' },
+                      //       { title: 'Advanced Analytics', description: 'Track views and engagement', icon: '📊' }
+                      //     ],
+                      //     pricing: 'Starting at $29.9/month',
+                      //     action: 'Upgrade to Pro'
+                      //   });
+                      //   setShowUpgradeModal(true);
+                      // } else {
                         handleDropdownAction('share', qudemo);
-                      }
+                      // }
                     }}
-                    className={`w-full flex items-center justify-center space-x-2 transition-colors duration-200 py-2 px-3 rounded-lg border ${
-                      !isPro 
-                        ? 'text-gray-600 border-gray-300 hover:bg-gray-50 cursor-pointer' 
-                        : 'text-green-600 hover:text-green-800 hover:bg-green-50 border-green-200'
-                    }`}
+                    className="w-full flex items-center justify-center space-x-2 transition-colors duration-200 py-2 px-3 rounded-lg border text-green-600 hover:text-green-800 hover:bg-green-50 border-green-200"
                   >
-                    {!isPro ? <LockClosedIcon className="w-4 h-4" /> : <ShareIcon className="w-4 h-4" />}
+                    {/* COMMENTED OUT FOR TESTING - Always show Share icon */}
+                    {/* {!isPro ? <LockClosedIcon className="w-4 h-4" /> : <ShareIcon className="w-4 h-4" />} */}
+                    <ShareIcon className="w-4 h-4" />
                     <span className="text-sm font-medium">Share Qudemo</span>
                   </button>
                   </div>

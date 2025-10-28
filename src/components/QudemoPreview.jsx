@@ -546,20 +546,21 @@ const QudemoPreview = ({ qudemo, onClose }) => {
   const handleScheduleMeeting = async () => {
     // For welcome/demo Qudemo, allow all users (free & Pro) to book meetings
     // For regular Qudemos, only Pro users can book meetings
-    if (!isPro && !isWelcomeQudemo) {
-      setErrorDetails({
-        title: 'Schedule Meeting requires Pro plan',
-        message: 'Upgrade to Pro to enable meeting scheduling with Calendly integration for your Qudemos.',
-        features: [
-          { title: 'Calendly Integration', description: 'Add meeting links to your Qudemos', icon: '📅' },
-          { title: 'Advanced Analytics', description: 'Track views and engagement', icon: '📊' }
-        ],
-        pricing: 'Starting at $29.9/month',
-        action: 'Upgrade to Pro'
-      });
-      setShowUpgradeModal(true);
-      return;
-    }
+    // COMMENTED OUT FOR TESTING - Allow free users to schedule meetings
+    // if (!isPro && !isWelcomeQudemo) {
+    //   setErrorDetails({
+    //     title: 'Schedule Meeting requires Pro plan',
+    //     message: 'Upgrade to Pro to enable meeting scheduling with Calendly integration for your Qudemos.',
+    //     features: [
+    //       { title: 'Calendly Integration', description: 'Add meeting links to your Qudemos', icon: '📅' },
+    //       { title: 'Advanced Analytics', description: 'Track views and engagement', icon: '📊' }
+    //     ],
+    //     pricing: 'Starting at $29.9/month',
+    //     action: 'Upgrade to Pro'
+    //   });
+    //   setShowUpgradeModal(true);
+    //   return;
+    // }
 
     try {
       setLoadingCalendly(true);
@@ -901,11 +902,8 @@ const QudemoPreview = ({ qudemo, onClose }) => {
             <button
               onClick={handleScheduleMeeting}
               disabled={loadingCalendly}
-              className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed ${
-                !isPro && !isWelcomeQudemo
-                  ? 'bg-gray-600 text-white hover:bg-gray-700'
-                  : 'bg-blue-600 text-white hover:bg-blue-700'
-              }`}
+              className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed 
+                bg-blue-600 text-white hover:bg-blue-700`}
             >
               {loadingCalendly ? (
                 <>
@@ -917,9 +915,10 @@ const QudemoPreview = ({ qudemo, onClose }) => {
                 </>
               ) : (
                 <>
-                  {!isPro && !isWelcomeQudemo ? (
+                  {/* COMMENTED OUT FOR TESTING - Always show calendar icon, no lock */}
+                  {/* {!isPro && !isWelcomeQudemo ? (
                     <LockClosedIcon className="w-4 h-4 mr-2" />
-                  ) : (
+                  ) : ( */}
                     <svg
                       className="w-4 h-4 mr-2"
                       fill="none"
@@ -934,8 +933,9 @@ const QudemoPreview = ({ qudemo, onClose }) => {
                         d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                       />
                     </svg>
-                  )}
-                  {!isPro && !isWelcomeQudemo ? 'Upgrade to Book Meeting' : 'Book Meeting'}
+                  {/* )} */}
+                  {/* {!isPro && !isWelcomeQudemo ? 'Upgrade to Book Meeting' : 'Book Meeting'} */}
+                  Book Meeting
                 </>
               )}
             </button>

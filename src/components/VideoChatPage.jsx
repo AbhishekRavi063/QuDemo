@@ -48,6 +48,7 @@ const VideoChatPage = () => {
   const recognitionRef = useRef(null);
   const subtitleTrackRef = useRef(null);
   const isInitializedRef = useRef(false);
+  const videoPreloadCacheRef = useRef({}); // Cache of preloaded video elements
 
   // ========== INITIALIZATION ==========
   useEffect(() => {
@@ -77,6 +78,105 @@ const VideoChatPage = () => {
       return () => clearTimeout(playTimer);
     }
   }, [videoFlow]);
+
+  // Aggressive video preloading - actually load videos into memory for instant playback
+  useEffect(() => {
+    if (!videoFlow || currentVideoIndex === null || currentVideoIndex === undefined) return;
+    
+    const videosToPreload = [];
+    
+    // Preload next video in sequence (highest priority)
+    if (currentVideoIndex + 1 < videoFlow.videos.length) {
+      videosToPreload.push(videoFlow.videos[currentVideoIndex + 1]);
+    }
+    
+    // Preload videos from nextQuestions
+    const currentVideo = videoFlow.videos[currentVideoIndex];
+    if (currentVideo?.nextQuestions) {
+      currentVideo.nextQuestions.forEach(question => {
+        const result = matchQuestion(question.text);
+        if (result.matched) {
+          const matchedVideo = videoFlow.videos.find(v => v.id === result.videoId);
+          if (matchedVideo && !videosToPreload.includes(matchedVideo)) {
+            videosToPreload.push(matchedVideo);
+          }
+        }
+      });
+    }
+    
+    // Preload suggested questions' videos (limit to avoid bandwidth waste)
+    if (suggestedQuestions?.questions) {
+      suggestedQuestions.questions.slice(0, 3).forEach(q => {
+        const result = matchQuestion(q.text);
+        if (result.matched) {
+          const matchedVideo = videoFlow.videos.find(v => v.id === result.videoId);
+          if (matchedVideo && !videosToPreload.includes(matchedVideo)) {
+            videosToPreload.push(matchedVideo);
+          }
+        }
+      });
+    }
+    
+    // Actually preload videos (limit to 3 to avoid bandwidth waste)
+    videosToPreload.slice(0, 3).forEach((video, index) => {
+      // Skip if already preloaded
+      if (videoPreloadCacheRef.current[video.id]) {
+        console.log('✅ Already cached:', video.id);
+        return;
+      }
+      
+      // Create hidden video element for preloading
+      const preloadVideo = document.createElement('video');
+      preloadVideo.src = video.src;
+      preloadVideo.preload = 'auto'; // Aggressively preload
+      preloadVideo.muted = true;
+      preloadVideo.style.display = 'none';
+      
+      // Add to DOM to trigger loading
+      document.body.appendChild(preloadVideo);
+      
+      // Track loading progress
+      preloadVideo.addEventListener('loadeddata', () => {
+        console.log('✅ Video cached and ready:', video.id, `(${index + 1}/${videosToPreload.slice(0, 3).length})`);
+        videoPreloadCacheRef.current[video.id] = {
+          element: preloadVideo,
+          ready: true,
+          src: video.src
+        };
+      });
+      
+      preloadVideo.addEventListener('error', () => {
+        console.error('❌ Failed to preload:', video.id);
+        if (preloadVideo.parentNode) {
+          preloadVideo.parentNode.removeChild(preloadVideo);
+        }
+      });
+      
+      // Store reference immediately (even before loaded)
+      videoPreloadCacheRef.current[video.id] = {
+        element: preloadVideo,
+        ready: false,
+        src: video.src
+      };
+      
+      console.log('📦 Preloading video in background:', video.id);
+    });
+    
+    // Cleanup old cached videos (keep only 5 most recent)
+    const cachedIds = Object.keys(videoPreloadCacheRef.current);
+    if (cachedIds.length > 5) {
+      const toRemove = cachedIds.slice(0, cachedIds.length - 5);
+      toRemove.forEach(id => {
+        const cached = videoPreloadCacheRef.current[id];
+        if (cached?.element?.parentNode) {
+          cached.element.parentNode.removeChild(cached.element);
+        }
+        delete videoPreloadCacheRef.current[id];
+        console.log('🗑️ Removed old cached video:', id);
+      });
+    }
+    
+  }, [currentVideoIndex, videoFlow, suggestedQuestions]);
 
   // ========== DATA LOADING ==========
   const loadVideoFlow = async () => {
@@ -193,7 +293,68 @@ const VideoChatPage = () => {
     }
 
     const video = videoFlow.videos[index];
-    console.log('🎥 Playing video:', video.title, '- URL:', video.src);
+    
+    // ✅ OPTIMIZATION: Check if video is already loaded (avoid re-loading)
+    if (videoPlayerRef.current && videoPlayerRef.current.src.includes(video.src)) {
+      console.log('✅ Video already loaded, restarting playback');
+      videoPlayerRef.current.currentTime = 0;
+      videoPlayerRef.current.play().catch(err => {
+        if (err.name === 'NotAllowedError') setShowPlayButton(true);
+      });
+      setShowPlayButton(false);
+      setCurrentVideoIndex(index);
+      return;
+    }
+    
+    // 🚀 SUPER OPTIMIZATION: Use preloaded video if available (INSTANT PLAYBACK!)
+    const cachedVideo = videoPreloadCacheRef.current[video.id];
+    if (cachedVideo && cachedVideo.ready) {
+      console.log('⚡ Using cached video for INSTANT playback:', video.id);
+      
+      setCurrentVideoIndex(index);
+      setCurrentSubtitle('');
+      setShowNextQuestions(false);
+      setVideoEnded(false);
+      setShowPlayButton(false);
+      setVideoLoading(false); // NO LOADING SCREEN!
+      
+      if (!videoPlayerRef.current) {
+        console.error('❌ Video player ref is NULL!');
+        return;
+      }
+      
+      // Copy from cached video to main player
+      videoPlayerRef.current.src = video.src;
+      videoPlayerRef.current.muted = false;
+      videoPlayerRef.current.load();
+      
+      // Load subtitle if available
+      if (video.subtitle) {
+        loadSubtitles(video.subtitle);
+      }
+      
+      // Play immediately when ready
+      videoPlayerRef.current.onloadeddata = () => {
+        videoPlayerRef.current.play()
+          .then(() => {
+            console.log('✅ Cached video playing instantly!');
+            setShowPlayButton(false);
+          })
+          .catch(err => {
+            if (err.name === 'NotAllowedError') setShowPlayButton(true);
+          });
+      };
+      
+      // Add ended event
+      videoPlayerRef.current.onended = () => {
+        setVideoEnded(true);
+        setShowNextQuestions(true);
+      };
+      
+      return;
+    }
+    
+    console.log('🎥 Loading new video (not cached):', video.title, '- URL:', video.src);
     console.log('📊 Video details:', { id: video.id, isIntro: video.isIntro, hasSubtitle: !!video.subtitle });
     
     if (!videoPlayerRef.current) {
@@ -232,12 +393,12 @@ const VideoChatPage = () => {
     console.log('📼 Calling video.load() with sound enabled');
     videoPlayerRef.current.load();
     
-    // Force hide loading after 5 seconds and show play button
+    // Force hide loading after 2 seconds and show play button (reduced timeout)
     const loadingTimeout = setTimeout(() => {
-      console.log('⏰ 5 second loading timeout - showing play button');
+      console.log('⏰ 2 second loading timeout - showing play button');
       setVideoLoading(false);
       setShowPlayButton(true);
-    }, 5000);
+    }, 2000);
     
     // Add loading event listener
     videoPlayerRef.current.onloadstart = () => {
@@ -257,7 +418,7 @@ const VideoChatPage = () => {
       clearTimeout(loadingTimeout);
     };
     
-    // Load subtitle if available
+    // Load subtitle if availablee
     if (video.subtitle) {
       loadSubtitles(video.subtitle);
     }
@@ -379,6 +540,13 @@ const VideoChatPage = () => {
     normalizedQuestion = normalizedQuestion.replace(/\bq\s*d\s*e\s*m\s*o\b/gi, 'qudemo');  // "Q D E M O" → "qudemo"
     normalizedQuestion = normalizedQuestion.replace(/\bque\s*demo\b/gi, 'qudemo');  // "que demo" → "qudemo"
     normalizedQuestion = normalizedQuestion.replace(/\bcue\s*demo\b/gi, 'qudemo');  // "cue demo" → "qudemo"
+    
+    // Handle voice recognition variations of "Chatwoot"
+    normalizedQuestion = normalizedQuestion.replace(/\bchat\s*wood\b/gi, 'chatwoot');  // "chat wood" → "chatwoot"
+    normalizedQuestion = normalizedQuestion.replace(/\bchatwood\b/gi, 'chatwoot');  // "chatwood" → "chatwoot"
+    normalizedQuestion = normalizedQuestion.replace(/\bchat\s*woot\b/gi, 'chatwoot');  // "chat woot" → "chatwoot"
+    normalizedQuestion = normalizedQuestion.replace(/\bchat\s*wot\b/gi, 'chatwoot');  // "chat wot" → "chatwoot"
+    normalizedQuestion = normalizedQuestion.replace(/\bchatwot\b/gi, 'chatwoot');  // "chatwot" → "chatwoot"
     
     const lowerQuestion = normalizedQuestion;
     
@@ -503,7 +671,7 @@ const VideoChatPage = () => {
 
     try {
       const result = matchQuestion(userQuestion);
-      await new Promise(resolve => setTimeout(resolve, 800));
+      await new Promise(resolve => setTimeout(resolve, 300)); // Reduced from 800ms for faster response
 
       if (result.matched && videoFlow && videoFlow.videos) {
         const matchedVideo = videoFlow.videos.find(v => v.id === result.videoId);
@@ -672,29 +840,17 @@ const VideoChatPage = () => {
               controls 
               className="w-full h-full object-contain bg-black"
               playsInline
-              preload="auto"
+              preload="metadata"
             >
               Your browser does not support the video tag.
             </video>
 
-            {/* Loading indicator */}
+            {/* Loading indicator - Minimal and subtle */}
             {videoLoading && (
-              <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center z-15">
-                <div className="text-center">
-                  <div className="animate-spin rounded-full h-16 w-16 border-4 border-white border-t-transparent mb-4"></div>
-                  <p className="text-white text-sm">Loading video...</p>
-                  {videoFlow?.videos?.[currentVideoIndex] && (
-                    <p className="text-white text-xs mt-2 opacity-75">{videoFlow.videos[currentVideoIndex].title}</p>
-                  )}
-                  <button 
-                    onClick={() => {
-                      setVideoLoading(false);
-                      setShowPlayButton(true);
-                    }}
-                    className="mt-4 px-4 py-2 bg-white bg-opacity-20 text-white text-xs rounded-lg hover:bg-opacity-30"
-                  >
-                    Skip Loading
-                  </button>
+              <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-20">
+                <div className="bg-black bg-opacity-80 backdrop-blur-sm rounded-full px-4 py-2 flex items-center gap-3 shadow-lg">
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                  <span className="text-white text-xs font-medium">Loading...</span>
                 </div>
               </div>
             )}

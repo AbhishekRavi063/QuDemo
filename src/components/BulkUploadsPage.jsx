@@ -116,79 +116,80 @@ const BulkUploadsPage = () => {
   }
   
   // Show upgrade message for free users
-  if (!isPro) {
-    return (
-      <div className="p-6">
-        <div className="max-w-4xl mx-auto">
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-8">
-            <div className="text-left">
-              <h2 className="text-2xl font-bold text-blue-900 mb-4">Bulk Upload requires Pro plan</h2>
-              <p className="text-blue-800 text-lg mb-6">
-                Upgrade to Pro to access bulk upload functionality for generating multiple customer links at once.
-              </p>
-              <div className="space-y-4 mb-6">
-                <div className="flex items-center">
-                  <div className="w-2 h-2 bg-blue-600 rounded-full mr-3"></div>
-                  <span className="text-blue-800">Upload CSV/Excel files with customer data</span>
-                </div>
-                <div className="flex items-center">
-                  <div className="w-2 h-2 bg-blue-600 rounded-full mr-3"></div>
-                  <span className="text-blue-800">Generate multiple personalized links automatically</span>
-                </div>
-                <div className="flex items-center">
-                  <div className="w-2 h-2 bg-blue-600 rounded-full mr-3"></div>
-                  <span className="text-blue-800">Download files with generated links</span>
-                </div>
-              </div>
-              <div className="flex gap-4">
-                <button 
-                  onClick={async () => {
-                    try {
-                      const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
-                      if (!token) {
-                        window.location.href = '/login';
-                        return;
-                      }
-                      const baseUrl = getApiUrl('node');
-                      const checkoutUrl = `${baseUrl}/api/subscription/checkout`;
-                      const response = await fetch(checkoutUrl, {
-                        method: 'POST',
-                        headers: {
-                          'Content-Type': 'application/json',
-                          'Authorization': `Bearer ${token}`
-                        },
-                        body: JSON.stringify({
-                          plan: 'pro',
-                          billingCycle: 'monthly'
-                        })
-                      });
-                      const data = await response.json();
-                      if (data.success && data.checkoutUrl) {
-                        window.location.href = data.checkoutUrl;
-                      } else {
-                        alert(`Failed to start checkout: ${data.error || 'Unknown error'}`);
-                      }
-                    } catch (error) {
-                      alert(`Failed to start checkout: ${error.message}`);
-                    }
-                  }}
-                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
-                >
-                  Upgrade to Pro
-                </button>
-                <button 
-                  onClick={() => window.location.href = '/qudemos'}
-                  className="px-6 py-3 bg-white text-blue-600 border border-blue-300 rounded-lg hover:bg-blue-50 font-medium"
-                >
-                  Back to Qudemos
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // COMMENTED OUT FOR TESTING - Allow free users to access bulk uploads
+  // if (!isPro) {
+  //   return (
+  //     <div className="p-6">
+  //       <div className="max-w-4xl mx-auto">
+  //         <div className="bg-blue-50 border border-blue-200 rounded-lg p-8">
+  //           <div className="text-left">
+  //             <h2 className="text-2xl font-bold text-blue-900 mb-4">Bulk Upload requires Pro plan</h2>
+  //             <p className="text-blue-800 text-lg mb-6">
+  //               Upgrade to Pro to access bulk upload functionality for generating multiple customer links at once.
+  //             </p>
+  //             <div className="space-y-4 mb-6">
+  //               <div className="flex items-center">
+  //                 <div className="w-2 h-2 bg-blue-600 rounded-full mr-3"></div>
+  //                 <span className="text-blue-800">Upload CSV/Excel files with customer data</span>
+  //               </div>
+  //               <div className="flex items-center">
+  //                 <div className="w-2 h-2 bg-blue-600 rounded-full mr-3"></div>
+  //                 <span className="text-blue-800">Generate multiple personalized links automatically</span>
+  //               </div>
+  //               <div className="flex items-center">
+  //                 <div className="w-2 h-2 bg-blue-600 rounded-full mr-3"></div>
+  //                 <span className="text-blue-800">Download files with generated links</span>
+  //               </div>
+  //             </div>
+  //             <div className="flex gap-4">
+  //               <button 
+  //                 onClick={async () => {
+  //                   try {
+  //                     const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
+  //                     if (!token) {
+  //                       window.location.href = '/login';
+  //                       return;
+  //                     }
+  //                     const baseUrl = getApiUrl('node');
+  //                     const checkoutUrl = `${baseUrl}/api/subscription/checkout`;
+  //                     const response = await fetch(checkoutUrl, {
+  //                       method: 'POST',
+  //                       headers: {
+  //                         'Content-Type': 'application/json',
+  //                         'Authorization': `Bearer ${token}`
+  //                       },
+  //                       body: JSON.stringify({
+  //                         plan: 'pro',
+  //                         billingCycle: 'monthly'
+  //                       })
+  //                     });
+  //                     const data = await response.json();
+  //                     if (data.success && data.checkoutUrl) {
+  //                       window.location.href = data.checkoutUrl;
+  //                     } else {
+  //                       alert(`Failed to start checkout: ${data.error || 'Unknown error'}`);
+  //                     }
+  //                   } catch (error) {
+  //                     alert(`Failed to start checkout: ${error.message}`);
+  //                   }
+  //                 }}
+  //                 className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+  //               >
+  //                 Upgrade to Pro
+  //               </button>
+  //               <button 
+  //                 onClick={() => window.location.href = '/qudemos'}
+  //                 className="px-6 py-3 bg-white text-blue-600 border border-blue-300 rounded-lg hover:bg-blue-50 font-medium"
+  //               >
+  //                 Back to Qudemos
+  //               </button>
+  //             </div>
+  //           </div>
+  //         </div>
+  //       </div>
+  //     </div>
+  //   );
+  // }
   
   return (
     <div className="p-6">
