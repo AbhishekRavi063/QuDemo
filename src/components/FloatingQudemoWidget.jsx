@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { XMarkIcon, ChevronDownIcon, ChatBubbleLeftRightIcon } from '@heroicons/react/24/outline';
 import { getNodeApiUrl, getVideoApiUrl } from '../config/api';
 import HybridVideoPlayer from './HybridVideoPlayer';
+import AvatarVideoPlayer from './AvatarVideoPlayer';
 
 const FloatingQudemoWidget = ({ 
   position = 'bottom-right',
@@ -25,6 +26,7 @@ const FloatingQudemoWidget = ({
   const [showBookingPrompt, setShowBookingPrompt] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [videoRefreshKey, setVideoRefreshKey] = useState(0);
+  const [currentAvatarVideo, setCurrentAvatarVideo] = useState(null); // State for avatar video
   const videoPlayerRef = useRef(null);
   const chatMessagesRef = useRef(null);
   const videoPreloadCacheRef = useRef({}); // Cache of preloaded video elements
@@ -522,6 +524,24 @@ const FloatingQudemoWidget = ({
           text: data.answer
         }]);
 
+        // Check if there's an avatar video (for document-based answers)
+        if (data.has_avatar_video && data.avatar_video_url) {
+          // Display avatar video
+          setCurrentAvatarVideo({
+            videoUrl: data.avatar_video_url,
+            answer: data.answer,
+            faqId: data.faq_id
+          });
+          
+          // Pause any playing video
+          setIsPlaying(false);
+          setIsTyping(false);
+          return;
+        } else {
+          // Clear avatar video if switching back to regular video
+          setCurrentAvatarVideo(null);
+        }
+
         // Check for video navigation data in the response
         let targetVideoUrl = null;
         let timestamp = 0;
@@ -976,6 +996,14 @@ const FloatingQudemoWidget = ({
                    <div className="flex flex-col items-center justify-center text-white">
                      <div className="animate-spin rounded-full h-12 w-12 border-4 border-white border-t-transparent mb-3"></div>
                      <p className="text-sm">Loading video...</p>
+                   </div>
+                 ) : currentAvatarVideo ? (
+                   <div className="w-full h-full p-4 overflow-y-auto bg-gradient-to-br from-gray-900 to-gray-800">
+                     <AvatarVideoPlayer
+                       avatarVideoUrl={currentAvatarVideo.videoUrl}
+                       answer={currentAvatarVideo.answer}
+                       isVisible={isExpanded}
+                     />
                    </div>
                  ) : videoFlow.videos[currentVideoIndex] ? (
                    <HybridVideoPlayer
