@@ -45,6 +45,7 @@ const FloatingQudemoWidget = ({
   const recognitionRef = useRef(null);
   const loomIframeRef = useRef(null);
   const hasLoadedDataRef = useRef(false); // Track if we've already loaded data
+  const hasShownIntroRef = useRef(false); // Track if intro video has been shown
   
   // Universal Demo share token
   const UNIVERSAL_DEMO_TOKEN = 'ca6b5a1b-0764-4e1c-bf6c-3e3c5bc93d1d';
@@ -101,6 +102,15 @@ const FloatingQudemoWidget = ({
       chatMessagesRef.current.scrollTop = chatMessagesRef.current.scrollHeight;
     }
   }, [chatMessages]);
+
+  // Auto-play intro video when widget is first expanded
+  useEffect(() => {
+    if (isExpanded && !hasShownIntroRef.current && qudemoData && qudemoData.id) {
+      console.log('🎬 Widget expanded - loading intro video...');
+      loadIntroVideo();
+      hasShownIntroRef.current = true; // Mark as shown
+    }
+  }, [isExpanded, qudemoData]);
 
   // Aggressive video preloading - actually load videos into memory for instant playback
   useEffect(() => {
@@ -791,6 +801,56 @@ const FloatingQudemoWidget = ({
         }]);
         setIsTyping(false);
       }, 300);
+    }
+  };
+
+  const loadIntroVideo = async () => {
+    try {
+      console.log('🎥 Loading intro video for QuDemo...');
+      
+      if (!qudemoData || !qudemoData.id) {
+        console.log('❌ No QuDemo data available');
+        return;
+      }
+      
+      const companyName = qudemoData.company_name || qudemoData.company?.name;
+      
+      if (!companyName) {
+        console.log('❌ No company name available');
+        return;
+      }
+      
+      // Make a special request to get the intro video
+      const response = await fetch(
+        getVideoApiUrl(`/ask/${encodeURIComponent(companyName)}/${qudemoData.id}`),
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question: "INTRO_VIDEO" })
+        }
+      );
+      
+      const data = await response.json();
+      
+      console.log('🎥 Intro video response:', data);
+      
+      if (data && data.has_avatar_video && data.avatar_video_url) {
+        console.log('✅ Intro video found, auto-playing...');
+        
+        // Set the intro avatar video
+        setCurrentAvatarVideo({
+          videoUrl: data.avatar_video_url,
+          answer: data.answer,
+          faqId: 'faq_intro'
+        });
+        
+        // Pause any regular video
+        setIsPlaying(false);
+      } else {
+        console.log('ℹ️ No intro video available yet');
+      }
+    } catch (error) {
+      console.error('❌ Error loading intro video:', error);
     }
   };
 
