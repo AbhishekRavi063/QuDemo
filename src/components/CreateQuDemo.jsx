@@ -488,8 +488,12 @@ const CreateQuDemo = () => {
       }
       
       // Show avatar video generation message if presenter photo was provided
-      if (presenterPhoto && (documents.length > 0 || selectedFiles.length > 0)) {
-        setSuccess(prev => prev + "\n\n🤖 AI Avatar videos will be generated for your document FAQs (this may take 10-15 minutes).");
+      if (presenterPhoto) {
+        if (documents.length > 0 || selectedFiles.length > 0) {
+          setSuccess(prev => prev + "\n\n🤖 AI Avatar videos will be generated for your FAQs + fallback messages (this may take 10-15 minutes).");
+        } else {
+          setSuccess(prev => prev + "\n\n🤖 AI Avatar videos will be generated for fallback messages like 'no answer' and 'sales inquiry' (this may take 5-10 minutes).");
+        }
       }
       // Process all content automatically using the new endpoint
       if (validVideoUrls.length > 0 || validWebsiteUrls.length > 0) {
@@ -833,15 +837,14 @@ const CreateQuDemo = () => {
           </div>
         </div>
 
-        {/* Presenter Photo Upload Section - Only shown when documents are uploaded */}
-        {(documents.length > 0 || selectedFiles.length > 0) && (
-          <div className="mt-6">
-            <label className="block text-sm font-bold text-gray-900 mb-2 text-left">
-              Presenter Photo 🎬 <span className="text-xs text-green-600 font-normal">(New Feature!)</span>
-            </label>
-            <p className="text-xs text-gray-500 mb-3 text-left">
-              Upload a presenter photo to create AI avatar videos for document-based answers
-            </p>
+        {/* Presenter Photo Upload Section - Always visible */}
+        <div className="mt-6">
+          <label className="block text-sm font-bold text-gray-900 mb-2 text-left">
+            Presenter Photo 🎬 <span className="text-xs text-green-600 font-normal">(New Feature!)</span>
+          </label>
+          <p className="text-xs text-gray-500 mb-3 text-left">
+            Upload a presenter photo to create AI avatar videos for all responses (including fallback messages)
+          </p>
             <div className="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-lg p-4 mb-3">
               <div className="flex items-start">
                 <div className="flex-shrink-0">
@@ -877,15 +880,12 @@ const CreateQuDemo = () => {
                   <p className="text-sm font-medium text-gray-700 mb-1">
                     Upload Presenter Photo
                   </p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-gray-500 mb-3">
                     JPG or PNG, max 5MB
                   </p>
-                  <button
-                    type="button"
-                    className="mt-3 px-4 py-2 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 transition-colors"
-                  >
+                  <div className="mt-3 px-4 py-2 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 transition-colors inline-block">
                     Choose Photo
-                  </button>
+                  </div>
                 </label>
               </div>
             ) : (
@@ -923,8 +923,7 @@ const CreateQuDemo = () => {
                 </div>
               </div>
             )}
-          </div>
-        )}
+        </div>
 
         {/* Calendly Link Section */}
         <div className="mt-6">

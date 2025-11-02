@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ReactPlayer from 'react-player';
 import HybridVideoPlayer from './HybridVideoPlayer';
+import AvatarVideoPlayer from './AvatarVideoPlayer';
 import { 
   XMarkIcon, 
   PaperAirplaneIcon, 
@@ -142,6 +143,7 @@ const QudemoPreview = ({ qudemo, onClose }) => {
   const [loadingCalendly, setLoadingCalendly] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [errorDetails, setErrorDetails] = useState(null);
+  const [currentAvatarVideo, setCurrentAvatarVideo] = useState(null); // State for avatar video
   const messagesEndRef = useRef(null);
   const loomIframeRef = useRef();
   const videoPlayerRef = useRef(null);
@@ -356,6 +358,40 @@ const QudemoPreview = ({ qudemo, onClose }) => {
       // Process the response and handle video switching (same logic as PublicQudemoShare)
       try {
         const aiAnswer = response.data?.answer || 'Sorry, I could not find an answer.';
+        
+        // Check if there's an avatar video (for document-based or FAQ answers)
+        console.log('🎬🎬🎬 QUDEMO PREVIEW - Avatar Video Check:', {
+          has_avatar_video: response.data?.has_avatar_video,
+          avatar_video_url: response.data?.avatar_video_url,
+          faq_id: response.data?.faq_id,
+          full_response: response.data
+        });
+        
+        if (response.data?.has_avatar_video && response.data?.avatar_video_url) {
+          console.log('✅ Setting avatar video:', response.data.avatar_video_url);
+          // Display avatar video
+          setCurrentAvatarVideo({
+            videoUrl: response.data.avatar_video_url,
+            answer: aiAnswer,
+            faqId: response.data.faq_id
+          });
+          
+          // Add the answer message
+          setMessages(msgs => [...msgs, {
+            sender: "AI",
+            text: cleanMessageText(aiAnswer),
+            time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+          }]);
+          
+          // Pause any playing video
+          setIsPlaying(false);
+          setIsTyping(false);
+          return;
+        } else {
+          // Clear avatar video if switching back to regular video
+          setCurrentAvatarVideo(null);
+        }
+        
         // Check for video navigation data in the response
         let targetVideoUrl = null;
         let timestamp = 0;
@@ -542,7 +578,15 @@ const QudemoPreview = ({ qudemo, onClose }) => {
           className="w-full md:w-2/3 relative flex flex-col items-center justify-center bg-black"
           onClick={enableAudio}
         >
-          {currentVideo ? (
+          {currentAvatarVideo ? (
+            <div className="relative w-full h-full p-4 overflow-y-auto bg-gradient-to-br from-gray-900 to-gray-800">
+              <AvatarVideoPlayer
+                avatarVideoUrl={currentAvatarVideo.videoUrl}
+                answer={currentAvatarVideo.answer}
+                isVisible={true}
+              />
+            </div>
+          ) : currentVideo ? (
             <div className="relative w-full h-full">
               <HybridVideoPlayer
                 ref={videoPlayerRef}

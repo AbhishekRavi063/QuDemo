@@ -6,6 +6,7 @@ import { getNodeApiUrl, getApiUrl } from '../config/api';
 import ReactPlayer from "react-player";
 import HybridVideoPlayer from "./HybridVideoPlayer";
 import QudemoPreview from "./QudemoPreview";
+import WidgetGeneratorModal from "./WidgetGeneratorModal";
 import {
   EyeIcon,
   PencilIcon,
@@ -18,7 +19,8 @@ import {
   VideoCameraIcon,
   DocumentTextIcon,
   ChartBarIcon,
-  LockClosedIcon
+  LockClosedIcon,
+  CodeBracketIcon
 } from '@heroicons/react/24/outline';
 const Qudemos = () => {
   const [qudemos, setQudemos] = useState([]);
@@ -64,6 +66,9 @@ const Qudemos = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [aiInsightSummary, setAiInsightSummary] = useState('');
   const [loadingAiSummary, setLoadingAiSummary] = useState(false);
+  const [showWidgetGeneratorModal, setShowWidgetGeneratorModal] = useState(false);
+  const [selectedQudemoForWidget, setSelectedQudemoForWidget] = useState(null);
+  const [widgetData, setWidgetData] = useState(null);
   const navigate = useNavigate();
   const { showSuccess, showError, showInfo } = useNotification();
   // Filter interactions based on search term and exclude users with no engagement
@@ -760,6 +765,40 @@ const Qudemos = () => {
   //   window.addEventListener('focus', handleFocus);
   //   return () => window.removeEventListener('focus', handleFocus);
   // }, [company]);
+  const handleGenerateWidget = async (qudemo) => {
+    try {
+      console.log('Generating widget for qudemo:', qudemo.id);
+      const token = localStorage.getItem('accessToken');
+      
+      const response = await fetch(getNodeApiUrl(`/api/qudemos/${qudemo.id}/generate-widget`), {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          theme: 'light',
+          position: 'bottom-right',
+          size: 'medium'
+        })
+      });
+
+      const data = await response.json();
+      
+      if (response.ok && data.success) {
+        setWidgetData(data);
+        setSelectedQudemoForWidget(qudemo);
+        setShowWidgetGeneratorModal(true);
+        showSuccess('Widget code generated successfully!');
+      } else {
+        showError('Failed to generate widget code');
+      }
+    } catch (error) {
+      console.error('Error generating widget:', error);
+      showError('Failed to generate widget code');
+    }
+  };
+
   const handleDropdownAction = async (action, qudemo) => {
     setDropdownOpen(null);
     switch (action) {
@@ -803,6 +842,9 @@ const Qudemos = () => {
         break;
       case 'share':
         handleShareQudemo(qudemo);
+        break;
+      case 'generate-widget':
+        handleGenerateWidget(qudemo);
         break;
       default:
         break;
@@ -1158,6 +1200,16 @@ const Qudemos = () => {
                           {/* COMMENTED OUT FOR TESTING - No lock icon shown */}
                           {/* {!isPro && <LockClosedIcon className="w-3 h-3" />} */}
                           <span>Share</span>
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDropdownAction('generate-widget', qudemo);
+                          }}
+                          className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center space-x-2 text-purple-600"
+                        >
+                          <CodeBracketIcon className="w-4 h-4" />
+                          <span>Generate Widget</span>
                         </button>
                         <hr className="my-1" />
                           <button
@@ -2724,6 +2776,18 @@ const Qudemos = () => {
           </div>
         </div>
       )}
+
+      {/* Widget Generator Modal */}
+      <WidgetGeneratorModal
+        isOpen={showWidgetGeneratorModal}
+        onClose={() => {
+          setShowWidgetGeneratorModal(false);
+          setSelectedQudemoForWidget(null);
+          setWidgetData(null);
+        }}
+        widgetData={widgetData}
+        qudemo={selectedQudemoForWidget}
+      />
     </div>
   );
 };
