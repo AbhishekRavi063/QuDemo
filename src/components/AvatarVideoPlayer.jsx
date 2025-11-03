@@ -126,7 +126,7 @@ const AvatarVideoPlayer = ({ avatarVideoUrl, answer, isVisible }) => {
 
         <video
           ref={videoRef}
-          className="w-full h-full object-contain"
+          className="w-full h-full object-cover"
           src={avatarVideoUrl.replace(/ /g, '%20')}
           autoPlay
           muted={false}

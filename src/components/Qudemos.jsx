@@ -69,6 +69,7 @@ const Qudemos = () => {
   const [showWidgetGeneratorModal, setShowWidgetGeneratorModal] = useState(false);
   const [selectedQudemoForWidget, setSelectedQudemoForWidget] = useState(null);
   const [widgetData, setWidgetData] = useState(null);
+  const [introVideos, setIntroVideos] = useState({}); // Store intro videos for each QuDemo
   const navigate = useNavigate();
   const { showSuccess, showError, showInfo } = useNotification();
   // Filter interactions based on search term and exclude users with no engagement
@@ -756,6 +757,44 @@ const Qudemos = () => {
   useEffect(() => {
     fetchQudemos();
   }, [company]);
+
+  // Fetch intro videos for all QuDemos
+  useEffect(() => {
+    if (qudemos.length > 0 && company?.name) {
+      fetchIntroVideos();
+    }
+  }, [qudemos, company]);
+
+  const fetchIntroVideos = async () => {
+    console.log('🎬 Fetching intro videos for all QuDemos...');
+    const newIntroVideos = {};
+    
+    for (const qudemo of qudemos) {
+      try {
+        const response = await fetch(
+          getApiUrl(`/ask/${encodeURIComponent(company.name)}/${qudemo.id}`),
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ question: "INTRO_VIDEO" })
+          }
+        );
+        
+        const data = await response.json();
+        
+        if (data && data.has_avatar_video && data.avatar_video_url) {
+          console.log(`✅ Intro video found for QuDemo: ${qudemo.title}`);
+          newIntroVideos[qudemo.id] = data.avatar_video_url;
+        }
+      } catch (error) {
+        console.error(`❌ Error fetching intro video for ${qudemo.id}:`, error);
+      }
+    }
+    
+    setIntroVideos(newIntroVideos);
+    console.log(`🎬 Loaded ${Object.keys(newIntroVideos).length} intro videos`);
+  };
+
   // Refresh data when component comes into focus (e.g., when navigating back)
   // Removed aggressive refresh to prevent UI refresh issues
   // useEffect(() => {
@@ -971,7 +1010,19 @@ const Qudemos = () => {
                     </div>
                   </div>
                 )}
-                {qudemo.videos && qudemo.videos.length > 0 ? (
+                {introVideos[qudemo.id] ? (
+                  // Show intro AI video preview if available
+                  <div className="w-full h-full bg-black flex items-center justify-center">
+                    <video
+                      src={introVideos[qudemo.id].replace(/ /g, '%20')}
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ) : qudemo.videos && qudemo.videos.length > 0 ? (
                   <div className="w-full h-full bg-black flex items-center justify-center">
                     <div className="relative w-full h-full group">
                       {/* Video Player Preview */}

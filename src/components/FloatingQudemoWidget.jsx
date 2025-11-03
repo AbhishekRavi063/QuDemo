@@ -39,6 +39,7 @@ const FloatingQudemoWidget = ({
   const [isPlaying, setIsPlaying] = useState(false);
   const [videoRefreshKey, setVideoRefreshKey] = useState(0);
   const [currentAvatarVideo, setCurrentAvatarVideo] = useState(null); // State for avatar video
+  const [introVideoPreview, setIntroVideoPreview] = useState(null); // State for intro video preview URL
   const videoPlayerRef = useRef(null);
   const chatMessagesRef = useRef(null);
   const videoPreloadCacheRef = useRef({}); // Cache of preloaded video elements
@@ -46,6 +47,7 @@ const FloatingQudemoWidget = ({
   const loomIframeRef = useRef(null);
   const hasLoadedDataRef = useRef(false); // Track if we've already loaded data
   const hasShownIntroRef = useRef(false); // Track if intro video has been shown
+  const introPreviewRef = useRef(null); // Ref for intro video preview element
   
   // Universal Demo share token
   const UNIVERSAL_DEMO_TOKEN = 'ca6b5a1b-0764-4e1c-bf6c-3e3c5bc93d1d';
@@ -109,8 +111,49 @@ const FloatingQudemoWidget = ({
       console.log('🎬 Widget expanded - loading intro video...');
       loadIntroVideo();
       hasShownIntroRef.current = true; // Mark as shown
+      
+      // Unmute the intro preview video if it's playing
+      if (introPreviewRef.current) {
+        introPreviewRef.current.muted = false;
+      }
     }
   }, [isExpanded, qudemoData]);
+
+  // Fetch intro video preview for collapsed state
+  useEffect(() => {
+    if (qudemoData && qudemoData.id && !introVideoPreview) {
+      console.log('🎬 Triggering intro video preview fetch...');
+      fetchIntroVideoPreview();
+    }
+  }, [qudemoData]);
+  
+  // Also try to fetch intro video preview directly when qudemoId/companyName are provided as props
+  useEffect(() => {
+    if (qudemoId && companyName && !introVideoPreview && !qudemoData) {
+      console.log('🎬 Fetching intro video preview with props (before qudemoData)...');
+      // Fetch intro video directly
+      const fetchDirectIntroVideo = async () => {
+        try {
+          const response = await fetch(
+            getVideoApiUrl(`/ask/${encodeURIComponent(companyName)}/${qudemoId}`),
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ question: "INTRO_VIDEO" })
+            }
+          );
+          const data = await response.json();
+          if (data && data.has_avatar_video && data.avatar_video_url) {
+            console.log('✅ Setting intro video preview URL (from props)');
+            setIntroVideoPreview(data.avatar_video_url);
+          }
+        } catch (error) {
+          console.error('❌ Error fetching intro video preview (from props):', error);
+        }
+      };
+      fetchDirectIntroVideo();
+    }
+  }, [qudemoId, companyName]);
 
   // Aggressive video preloading - actually load videos into memory for instant playback
   useEffect(() => {
@@ -854,6 +897,47 @@ const FloatingQudemoWidget = ({
     }
   };
 
+  const fetchIntroVideoPreview = async () => {
+    try {
+      console.log('🎬 Fetching intro video for collapsed preview...');
+      
+      if (!qudemoData || !qudemoData.id) {
+        console.log('❌ No QuDemo data available for preview');
+        return;
+      }
+      
+      const companyName = qudemoData.company_name || qudemoData.company?.name;
+      
+      if (!companyName) {
+        console.log('❌ No company name available for preview');
+        return;
+      }
+      
+      // Fetch intro video URL
+      const response = await fetch(
+        getVideoApiUrl(`/ask/${encodeURIComponent(companyName)}/${qudemoData.id}`),
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question: "INTRO_VIDEO" })
+        }
+      );
+      
+      const data = await response.json();
+      
+      console.log('🎬 Intro video preview response:', data);
+      
+      if (data && data.has_avatar_video && data.avatar_video_url) {
+        console.log('✅ Setting intro video preview URL');
+        setIntroVideoPreview(data.avatar_video_url);
+      } else {
+        console.log('ℹ️ No intro video available for preview');
+      }
+    } catch (error) {
+      console.error('❌ Error fetching intro video preview:', error);
+    }
+  };
+
   const handleSuggestedQuestionClick = (question) => {
     handleSendMessage(question);
   };
@@ -1088,7 +1172,17 @@ const FloatingQudemoWidget = ({
         >
           {/* Circular video preview with pulse animation */}
           <div className="relative w-20 h-20 md:w-36 md:h-36 rounded-full overflow-hidden shadow-2xl border-4 border-white hover:border-blue-500 transition-all duration-300">
-            {videoFlow && videoFlow.videos && videoFlow.videos[0] && videoFlow.videos[0].src ? (
+            {introVideoPreview ? (
+              <video 
+                ref={introPreviewRef}
+                src={introVideoPreview.replace(/ /g, '%20')}
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="w-full h-full object-cover"
+              />
+            ) : !qudemoId && videoFlow && videoFlow.videos && videoFlow.videos[0] && videoFlow.videos[0].src ? (
               <video 
                 src={videoFlow.videos[0].src || videoFlow.videos[0].url}
                 autoPlay
@@ -1158,11 +1252,11 @@ const FloatingQudemoWidget = ({
       ) : (
          // Full expanded widget - horizontal layout with video left and chat right (responsive)
          <div 
-           className="bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row w-full md:w-auto" 
-           style={{ 
-             width: window.innerWidth >= 768 ? '950px' : '100%',
-             height: window.innerWidth >= 768 ? '500px' : 'auto'
-           }}
+          className="bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row w-full md:w-auto" 
+          style={{ 
+            width: window.innerWidth >= 768 ? '700px' : '100%',
+            height: window.innerWidth >= 768 ? '436px' : 'auto'
+          }}
          >
           {loading ? (
             <div className="w-full p-8 flex flex-col items-center justify-center bg-white">
@@ -1179,17 +1273,17 @@ const FloatingQudemoWidget = ({
                  <XMarkIcon className="w-5 h-5" />
                </button>
 
-               {/* Video Section (Left on desktop, Top on mobile) */}
+               {/* Video Section (Left on desktop, Top on mobile) - Optimized for Portrait Videos */}
               <div 
-                className="w-full md:w-[55%] relative bg-black flex items-center justify-center" 
+                className="w-full md:w-[35%] relative bg-black flex items-center justify-center overflow-hidden" 
                 style={{ 
-                  height: window.innerWidth >= 768 ? 'auto' : '300px',
-                  minHeight: window.innerWidth >= 768 ? 'auto' : '300px'
+                  height: window.innerWidth >= 768 ? '100%' : '300px',
+                  minHeight: window.innerWidth >= 768 ? '100%' : '300px'
                 }}
               >
                 {/* Show avatar video if available */}
                 {currentAvatarVideo ? (
-                   <div className="w-full h-full p-4 overflow-y-auto bg-gradient-to-br from-gray-900 to-gray-800">
+                   <div className="w-full h-full overflow-hidden bg-black">
                      <AvatarVideoPlayer
                        avatarVideoUrl={currentAvatarVideo.videoUrl}
                        answer={currentAvatarVideo.answer}
@@ -1227,12 +1321,12 @@ const FloatingQudemoWidget = ({
                 )}
               </div>
 
-               {/* Chat Section (Right on desktop, Bottom on mobile) */}
-               <div 
-                 className="w-full md:w-[45%] flex flex-col bg-white border-t md:border-t-0 md:border-l border-gray-200" 
-                 style={{ 
-                   minHeight: 'auto'
-                 }}
+              {/* Chat Section (Right on desktop, Bottom on mobile) */}
+              <div 
+                className="w-full md:w-[65%] flex flex-col bg-white border-t md:border-t-0 md:border-l border-gray-200" 
+                style={{ 
+                  minHeight: 'auto'
+                }}
                >
                  {/* Chat header */}
                  <div className="bg-blue-600 text-white px-3 py-2 md:px-4 md:py-3 flex items-center gap-2 flex-shrink-0">
