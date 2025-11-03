@@ -62,8 +62,13 @@ const FloatingQudemoWidget = ({
 
   // Load video thumbnail on mount (for preview)
   useEffect(() => {
+    console.log('🚀 FloatingQudemoWidget MOUNTED', { qudemoId, companyName, isPreview });
     loadVideoThumbnail();
     setupSpeechRecognition();
+    
+    return () => {
+      console.log('💀 FloatingQudemoWidget UNMOUNTED', { qudemoId, companyName });
+    };
   }, []);
 
   // Load specific QuDemo data immediately if qudemoId is provided (for playground/embed)
@@ -128,9 +133,20 @@ const FloatingQudemoWidget = ({
   }, [qudemoData]);
   
   // Also try to fetch intro video preview directly when qudemoId/companyName are provided as props
+  const hasAttemptedDirectFetchRef = useRef(false);
+  
   useEffect(() => {
-    if (qudemoId && companyName && !introVideoPreview && !qudemoData) {
+    // Only fetch once, with proper validation
+    if (qudemoId && companyName && !introVideoPreview && !qudemoData && !hasAttemptedDirectFetchRef.current) {
+      // Validate that companyName and qudemoId are valid strings
+      if (typeof companyName !== 'string' || typeof qudemoId !== 'string' || !companyName.trim() || !qudemoId.trim()) {
+        console.warn('⚠️ Invalid companyName or qudemoId, skipping intro video fetch');
+        return;
+      }
+      
       console.log('🎬 Fetching intro video preview with props (before qudemoData)...');
+      hasAttemptedDirectFetchRef.current = true; // Mark as attempted
+      
       // Fetch intro video directly
       const fetchDirectIntroVideo = async () => {
         try {
@@ -153,7 +169,7 @@ const FloatingQudemoWidget = ({
       };
       fetchDirectIntroVideo();
     }
-  }, [qudemoId, companyName]);
+  }, [qudemoId, companyName, qudemoData, introVideoPreview]);
 
   // Aggressive video preloading - actually load videos into memory for instant playback
   useEffect(() => {
