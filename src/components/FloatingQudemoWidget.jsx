@@ -1298,7 +1298,7 @@ const FloatingQudemoWidget = ({
 
                {/* Video Section (Left on desktop, Top on mobile) - Optimized for Portrait Videos */}
               <div 
-                className="w-full md:w-[35%] relative bg-black flex items-center justify-center overflow-hidden" 
+                className="w-full md:w-[60%] relative bg-black flex items-center justify-center overflow-hidden" 
                 style={{ 
                   height: window.innerWidth >= 768 ? '100%' : '300px',
                   minHeight: window.innerWidth >= 768 ? '100%' : '300px'
@@ -1339,7 +1339,7 @@ const FloatingQudemoWidget = ({
 
               {/* Chat Section (Right on desktop, Bottom on mobile) */}
               <div 
-                className="w-full md:w-[65%] flex flex-col bg-white border-t md:border-t-0 md:border-l border-gray-200" 
+                className="w-full md:w-[40%] flex flex-col bg-white border-t md:border-t-0 md:border-l border-gray-200" 
                 style={{ 
                   minHeight: 'auto'
                 }}
