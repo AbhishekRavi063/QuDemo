@@ -28,6 +28,8 @@ const FloatingQudemoWidget = ({
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [currentTimestamp, setCurrentTimestamp] = useState(0);
   const [suggestedQuestions, setSuggestedQuestions] = useState([]);
+  const [overlayQuestions, setOverlayQuestions] = useState([]); // 3 random questions for video overlay
+  const [clickedQuestions, setClickedQuestions] = useState([]); // Track clicked questions to exclude them
   const [showAllQuestions, setShowAllQuestions] = useState(false); // State for "More..." button
   const [chatMessages, setChatMessages] = useState([]);
   const [isTyping, setIsTyping] = useState(false);
@@ -171,6 +173,28 @@ const FloatingQudemoWidget = ({
       fetchDirectIntroVideo();
     }
   }, [qudemoId, companyName, qudemoData, introVideoPreview]);
+
+  // Randomly select 3 questions for video overlay - triggers on suggestedQuestions change and after each bot message
+  useEffect(() => {
+    if (!suggestedQuestions || suggestedQuestions.length === 0) return;
+    
+    // Filter out clicked questions
+    const availableQuestions = suggestedQuestions.filter(q => !clickedQuestions.includes(q));
+    
+    // If less than 3 questions remain, reset clicked questions
+    if (availableQuestions.length < 3) {
+      setClickedQuestions([]);
+      // Use all suggested questions
+      const shuffled = [...suggestedQuestions].sort(() => 0.5 - Math.random());
+      const selected = shuffled.slice(0, Math.min(3, suggestedQuestions.length));
+      setOverlayQuestions(selected);
+    } else {
+      // Shuffle and pick 3 random questions from available ones
+      const shuffled = [...availableQuestions].sort(() => 0.5 - Math.random());
+      const selected = shuffled.slice(0, 3);
+      setOverlayQuestions(selected);
+    }
+  }, [suggestedQuestions, chatMessages, clickedQuestions]);
 
   // Aggressive video preloading - actually load videos into memory for instant playback
   useEffect(() => {
@@ -954,6 +978,8 @@ const FloatingQudemoWidget = ({
   };
 
   const handleSuggestedQuestionClick = (question) => {
+    // Track the clicked question to exclude it from future overlay selections
+    setClickedQuestions(prev => [...prev, question]);
     handleSendMessage(question);
   };
 
@@ -1335,6 +1361,27 @@ const FloatingQudemoWidget = ({
                      iframeRef={loomIframeRef}
                    />
                  ) : null}
+                
+                {/* 3 Suggested Questions - Overlay on Video */}
+                {overlayQuestions.length > 0 && (
+                  <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-full px-4 z-20 flex flex-col gap-2">
+                    {overlayQuestions.map((question, index) => (
+                      <button
+                        key={index}
+                        onClick={() => handleSuggestedQuestionClick(question)}
+                        disabled={isTyping}
+                        className="group relative text-left bg-white/90 backdrop-blur-sm hover:bg-blue-600 text-gray-800 hover:text-white px-3 py-2 rounded-xl text-xs font-medium border border-white/40 hover:border-blue-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                      >
+                        <span className="flex items-center gap-2">
+                          <svg className="w-3 h-3 flex-shrink-0 opacity-60 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <span className="line-clamp-1">{question}</span>
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Chat Section (Right on desktop, Bottom on mobile) */}
@@ -1414,10 +1461,10 @@ const FloatingQudemoWidget = ({
                              Try asking:
                            </p>
                            {suggestedQuestions.map((question, index) => (
-                             <button
-                               key={index}
+                         <button
+                           key={index}
                                onClick={() => handleSuggestedQuestionClick(question)}
-                               disabled={isTyping}
+                           disabled={isTyping}
                                className="group relative text-left bg-white hover:bg-gradient-to-r hover:from-blue-50 hover:to-blue-100/50 text-gray-700 hover:text-blue-700 px-4 py-2.5 rounded-xl text-xs border border-gray-200 hover:border-blue-400 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
                              >
                                <span className="flex items-center gap-2">
@@ -1426,8 +1473,8 @@ const FloatingQudemoWidget = ({
                                  </svg>
                                  {question}
                                </span>
-                             </button>
-                           ))}
+                         </button>
+                       ))}
                          </div>
                        )}
                      </>
@@ -1454,9 +1501,9 @@ const FloatingQudemoWidget = ({
                              <div className="flex justify-end">
                                <div className="max-w-[80%] bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-3 rounded-2xl rounded-tr-sm shadow-md text-sm leading-relaxed text-white">
                                  {msg.text}
-                               </div>
-                             </div>
-                           )}
+                     </div>
+                   </div>
+                 )}
                            
                            {/* Show suggested questions after each bot response - Modern chip design */}
                            {msg.type === 'bot' && i === chatMessages.length - 1 && !isTyping && suggestedQuestions && suggestedQuestions.length > 0 && (
