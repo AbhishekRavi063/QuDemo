@@ -1586,7 +1586,7 @@ const FloatingQudemoWidget = ({
                                    </svg>
                                  </div>
                                </div>
-                               <div className="max-w-[80%] bg-gradient-to-br from-white to-gray-50 border border-gray-200 px-4 py-3 rounded-2xl rounded-tl-sm shadow-sm text-sm leading-relaxed text-gray-800">
+                               <div className="max-w-[80%] bg-gradient-to-br from-white to-gray-50 border border-gray-200 px-4 py-3 rounded-2xl rounded-tl-sm shadow-sm text-sm leading-relaxed text-gray-800 text-left">
                                  {msg.text}
                                </div>
                              </div>
@@ -1634,17 +1634,17 @@ const FloatingQudemoWidget = ({
 
                  {/* Chat input - Futuristic design */}
                  <div className="relative p-3 md:p-4 bg-gradient-to-r from-gray-50 to-white border-t border-gray-200 flex-shrink-0">
-                   <div className="flex items-end gap-2">
+                   <div className="flex items-center gap-2">
                      {/* Modern input field with glass effect */}
                      <div className="flex-1 relative">
                        <textarea 
-                         value={inputMessage} 
-                         onChange={handleInputChange} 
-                         onKeyDown={handleKeyPress} 
-                         placeholder={isListening ? '🎙️ Listening...' : 'Type your message...'} 
-                         rows="1" 
-                         className={`w-full px-4 py-3 pr-12 bg-white/80 backdrop-blur-sm border-2 ${isListening ? 'border-green-400 shadow-green-100' : 'border-gray-200 focus:border-blue-400'} rounded-2xl text-sm resize-none overflow-hidden min-h-[2.75rem] max-h-[7.5rem] focus:outline-none focus:ring-2 focus:ring-blue-100 shadow-sm placeholder:text-gray-400 transition-all duration-200`}
-                       />
+                        value={inputMessage} 
+                        onChange={handleInputChange} 
+                        onKeyDown={handleKeyPress} 
+                        placeholder={isListening ? '🎙️ Listening...' : 'Type your message...'} 
+                        rows="1" 
+                        className={`w-full px-4 py-3 pr-12 bg-white/80 backdrop-blur-sm border-2 ${isListening ? 'border-green-400 shadow-green-100' : 'border-gray-200 focus:border-blue-400'} rounded-2xl text-sm resize-none overflow-hidden min-h-[2.75rem] max-h-[7.5rem] focus:outline-none focus:ring-2 focus:ring-blue-100 shadow-sm placeholder:text-gray-400 transition-all duration-200 text-left`}
+                      />
                        {/* Character/typing indicator */}
                        {inputMessage && (
                          <div className="absolute right-3 top-1/2 -translate-y-1/2">
