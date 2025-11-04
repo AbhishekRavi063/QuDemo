@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { XMarkIcon, ChevronDownIcon, ChatBubbleLeftRightIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, ChevronDownIcon, ChatBubbleLeftRightIcon, ArrowsPointingOutIcon, ArrowsPointingInIcon } from '@heroicons/react/24/outline';
 import { getNodeApiUrl, getVideoApiUrl } from '../config/api';
 import HybridVideoPlayer from './HybridVideoPlayer';
 import AvatarVideoPlayer from './AvatarVideoPlayer';
@@ -22,6 +22,7 @@ const FloatingQudemoWidget = ({
 
   const [isExpanded, setIsExpanded] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
+  const [isMaximized, setIsMaximized] = useState(false);
   const [videoFlow, setVideoFlow] = useState(null);
   const [qudemoData, setQudemoData] = useState(null); // Universal Demo Qudemo data
   const [loading, setLoading] = useState(false);
@@ -1299,12 +1300,14 @@ const FloatingQudemoWidget = ({
           </button>
         </div>
       ) : (
-         // Full expanded widget - vertical layout with video on top, button below, chat on side
+         // Full expanded widget - shows only video in normal view, adds chat when maximized
          <div 
-          className="bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-row w-full md:w-auto" 
+          className={`bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-row w-full md:w-auto transition-all duration-300 ${
+            isMaximized ? 'fixed inset-4' : ''
+          }`}
           style={{ 
-            width: window.innerWidth >= 768 ? '800px' : '100%',
-            height: window.innerWidth >= 768 ? '700px' : 'auto'
+            width: isMaximized ? 'auto' : (window.innerWidth >= 768 ? '500px' : '100%'),
+            height: isMaximized ? 'auto' : (window.innerWidth >= 768 ? '700px' : 'auto')
           }}
          >
            {loading ? (
@@ -1314,27 +1317,45 @@ const FloatingQudemoWidget = ({
              </div>
           ) : (videoFlow && videoFlow.videos && videoFlow.videos.length > 0) || qudemoData ? (
              <>
-               {/* Close button - absolute positioned */}
+               {/* Action buttons - absolute positioned */}
+               <div className="absolute top-4 right-4 z-30 flex gap-2">
+                 {/* Maximize/Restore button */}
+                 <button
+                   onClick={() => setIsMaximized(!isMaximized)}
+                   className="bg-black bg-opacity-50 hover:bg-opacity-70 text-white rounded-full p-2 transition-all"
+                   title={isMaximized ? "Restore" : "Maximize"}
+                 >
+                   {isMaximized ? (
+                     <ArrowsPointingInIcon className="w-5 h-5" />
+                   ) : (
+                     <ArrowsPointingOutIcon className="w-5 h-5" />
+                   )}
+                 </button>
+                 
+                 {/* Close button */}
                <button
                  onClick={handleClose}
-                 className="absolute top-4 right-4 z-30 bg-black bg-opacity-50 hover:bg-opacity-70 text-white rounded-full p-2 transition-all"
+                   className="bg-black bg-opacity-50 hover:bg-opacity-70 text-white rounded-full p-2 transition-all"
+                   title="Close"
                >
                  <XMarkIcon className="w-5 h-5" />
                </button>
+               </div>
 
                {/* Left Column: Video + Book a Meeting Button */}
-               <div className="w-full md:w-[60%] flex flex-col">
+               <div className={`w-full ${isMaximized ? 'md:w-[60%]' : 'md:w-full'} flex flex-col`}>
                  {/* Video Section - Optimized for Portrait Videos */}
                  <div 
-                   className="relative bg-black flex items-center justify-center overflow-hidden flex-1" 
+                   className="relative bg-black flex items-center justify-center flex-1" 
                    style={{ 
                      height: window.innerWidth >= 768 ? 'auto' : '300px',
-                     minHeight: window.innerWidth >= 768 ? '550px' : '300px'
+                     minHeight: window.innerWidth >= 768 ? '550px' : '300px',
+                     overflow: 'visible'
                    }}
                  >
                 {/* Show avatar video if available */}
                 {currentAvatarVideo ? (
-                   <div className="w-full h-full overflow-hidden bg-black">
+                   <div className="w-full h-full flex items-center justify-center bg-black">
                      <AvatarVideoPlayer
                        avatarVideoUrl={currentAvatarVideo.videoUrl}
                        answer={currentAvatarVideo.answer}
@@ -1453,7 +1474,8 @@ const FloatingQudemoWidget = ({
                  </div>
                </div>
 
-              {/* Chat Section (Right on desktop, Bottom on mobile) */}
+              {/* Chat Section (Right on desktop, Bottom on mobile) - Only show when maximized */}
+              {isMaximized && (
               <div 
                 className="w-full md:w-[40%] flex flex-col bg-white border-t md:border-t-0 md:border-l border-gray-200" 
                 style={{ 
@@ -1716,6 +1738,7 @@ const FloatingQudemoWidget = ({
                    </div>
                  </div>
                </div>
+              )}
              </>
            ) : (
              <div className="w-full p-8 text-center text-gray-500 bg-white">
