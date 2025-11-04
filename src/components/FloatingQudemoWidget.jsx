@@ -1313,7 +1313,7 @@ const FloatingQudemoWidget = ({
                        isVisible={isExpanded}
                      />
                    </div>
-                 ) : videoFlow.videos[currentVideoIndex] ? (
+                 ) : videoFlow && videoFlow.videos && videoFlow.videos[currentVideoIndex] ? (
                    <HybridVideoPlayer
                    ref={videoPlayerRef}
                      key={`${videoFlow.videos[currentVideoIndex].url || videoFlow.videos[currentVideoIndex].src}-${currentTimestamp}-${videoRefreshKey}`}
@@ -1344,17 +1344,17 @@ const FloatingQudemoWidget = ({
                   minHeight: 'auto'
                 }}
                >
-                 {/* Chat header - Modern AI Design */}
-                 <div className="relative bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 px-4 py-3 flex items-center justify-between flex-shrink-0 overflow-hidden">
+                 {/* Chat header - Professional Blue Design */}
+                 <div className="relative bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 px-4 py-3 flex items-center justify-between flex-shrink-0 overflow-hidden">
                    {/* Animated background effect */}
-                   <div className="absolute inset-0 bg-gradient-to-r from-indigo-600/20 via-purple-600/20 to-pink-600/20 animate-pulse"></div>
+                   <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 via-blue-600/20 to-blue-700/20 animate-pulse"></div>
                    
                    <div className="relative flex items-center gap-3">
                      {/* AI Avatar Icon */}
                      <div className="relative">
                        <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center ring-2 ring-white/40">
                          <div className="w-5 h-5 rounded-full bg-gradient-to-br from-white to-white/80 flex items-center justify-center">
-                           <svg className="w-3 h-3 text-indigo-600" fill="currentColor" viewBox="0 0 24 24">
+                           <svg className="w-3 h-3 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
                              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" strokeWidth="1.5" fill="none"/>
                            </svg>
                          </div>
@@ -1387,11 +1387,11 @@ const FloatingQudemoWidget = ({
                  >
                    {chatMessages.length === 0 ? (
                      <>
-                       {/* Welcome message - Futuristic design */}
-                       <div className="relative bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-100/50 rounded-2xl p-4 shadow-sm">
+                       {/* Welcome message - Professional Blue design */}
+                       <div className="relative bg-gradient-to-br from-blue-50 to-blue-100/50 border border-blue-200/50 rounded-2xl p-4 shadow-sm">
                          <div className="flex items-start gap-3">
                            <div className="flex-shrink-0">
-                             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center shadow-lg">
+                             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center shadow-lg">
                                <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
                                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" strokeWidth="1.5" fill="none"/>
                                </svg>
@@ -1414,20 +1414,20 @@ const FloatingQudemoWidget = ({
                              Try asking:
                            </p>
                            {suggestedQuestions.map((question, index) => (
-                         <button
-                           key={index}
+                             <button
+                               key={index}
                                onClick={() => handleSuggestedQuestionClick(question)}
-                           disabled={isTyping}
-                               className="group relative text-left bg-white hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 text-gray-700 hover:text-indigo-700 px-4 py-2.5 rounded-xl text-xs border border-gray-200 hover:border-indigo-300 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
+                               disabled={isTyping}
+                               className="group relative text-left bg-white hover:bg-gradient-to-r hover:from-blue-50 hover:to-blue-100/50 text-gray-700 hover:text-blue-700 px-4 py-2.5 rounded-xl text-xs border border-gray-200 hover:border-blue-400 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
                              >
                                <span className="flex items-center gap-2">
-                                 <svg className="w-3 h-3 text-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                 <svg className="w-3 h-3 text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                                  </svg>
                                  {question}
                                </span>
-                         </button>
-                       ))}
+                             </button>
+                           ))}
                          </div>
                        )}
                      </>
@@ -1436,10 +1436,10 @@ const FloatingQudemoWidget = ({
                        {chatMessages.map((msg, i) => (
                          <React.Fragment key={i}>
                            {msg.type === 'bot' ? (
-                             /* AI Message - Futuristic design with avatar */
+                             /* AI Message - Professional Blue design with avatar */
                              <div className="flex justify-start items-start gap-2">
                                <div className="flex-shrink-0 mt-1">
-                                 <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center shadow-md">
+                                 <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center shadow-md">
                                    <svg className="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 24 24">
                                      <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" strokeWidth="1.5" fill="none"/>
                                    </svg>
@@ -1450,13 +1450,13 @@ const FloatingQudemoWidget = ({
                                </div>
                              </div>
                            ) : (
-                             /* User Message - Modern clean design */
+                             /* User Message - Professional Blue design */
                              <div className="flex justify-end">
-                               <div className="max-w-[80%] bg-gradient-to-r from-indigo-600 to-purple-600 px-4 py-3 rounded-2xl rounded-tr-sm shadow-md text-sm leading-relaxed text-white">
+                               <div className="max-w-[80%] bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-3 rounded-2xl rounded-tr-sm shadow-md text-sm leading-relaxed text-white">
                                  {msg.text}
-                     </div>
-                   </div>
-                 )}
+                               </div>
+                             </div>
+                           )}
                            
                            {/* Show suggested questions after each bot response - Modern chip design */}
                            {msg.type === 'bot' && i === chatMessages.length - 1 && !isTyping && suggestedQuestions && suggestedQuestions.length > 0 && (
@@ -1472,10 +1472,10 @@ const FloatingQudemoWidget = ({
                                    key={qIndex}
                                    onClick={() => handleSuggestedQuestionClick(question)}
                                    disabled={isTyping}
-                                   className="group relative text-left bg-white hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 text-gray-700 hover:text-indigo-700 px-3 py-2 rounded-xl text-xs border border-gray-200 hover:border-indigo-300 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
+                                   className="group relative text-left bg-white hover:bg-gradient-to-r hover:from-blue-50 hover:to-blue-100/50 text-gray-700 hover:text-blue-700 px-3 py-2 rounded-xl text-xs border border-gray-200 hover:border-blue-400 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
                                  >
                                    <span className="flex items-center gap-2">
-                                     <svg className="w-3 h-3 text-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                     <svg className="w-3 h-3 text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                                      </svg>
                                      {question}
@@ -1502,12 +1502,12 @@ const FloatingQudemoWidget = ({
                          onKeyDown={handleKeyPress} 
                          placeholder={isListening ? '🎙️ Listening...' : 'Type your message...'} 
                          rows="1" 
-                         className={`w-full px-4 py-3 pr-12 bg-white/80 backdrop-blur-sm border-2 ${isListening ? 'border-green-400 shadow-green-100' : 'border-gray-200 focus:border-indigo-300'} rounded-2xl text-sm resize-none overflow-hidden min-h-[2.75rem] max-h-[7.5rem] focus:outline-none focus:ring-2 focus:ring-indigo-100 shadow-sm placeholder:text-gray-400 transition-all duration-200`}
+                         className={`w-full px-4 py-3 pr-12 bg-white/80 backdrop-blur-sm border-2 ${isListening ? 'border-green-400 shadow-green-100' : 'border-gray-200 focus:border-blue-400'} rounded-2xl text-sm resize-none overflow-hidden min-h-[2.75rem] max-h-[7.5rem] focus:outline-none focus:ring-2 focus:ring-blue-100 shadow-sm placeholder:text-gray-400 transition-all duration-200`}
                        />
                        {/* Character/typing indicator */}
                        {inputMessage && (
                          <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                           <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></div>
+                           <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
                          </div>
                        )}
                      </div>
@@ -1524,11 +1524,11 @@ const FloatingQudemoWidget = ({
                        </svg>
                      </button>
                      
-                     {/* Send button - Futuristic gradient */}
+                     {/* Send button - Professional Blue gradient */}
                      <button 
                        onClick={() => handleSendMessage()} 
                        disabled={!inputMessage.trim() || isTyping} 
-                       className="relative min-w-[2.75rem] h-11 flex items-center justify-center bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white rounded-2xl hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 group overflow-hidden"
+                       className="relative min-w-[2.75rem] h-11 flex items-center justify-center bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-2xl hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 group overflow-hidden"
                        title="Send message"
                      >
                        {/* Shimmer effect on hover */}
@@ -1548,27 +1548,27 @@ const FloatingQudemoWidget = ({
                        Press Enter to send
                      </span>
                      {isTyping && (
-                       <span className="flex items-center gap-1 text-indigo-500">
-                         <div className="w-1 h-1 bg-indigo-500 rounded-full animate-bounce"></div>
-                         <div className="w-1 h-1 bg-indigo-500 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                         <div className="w-1 h-1 bg-indigo-500 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                       <span className="flex items-center gap-1 text-blue-600">
+                         <div className="w-1 h-1 bg-blue-600 rounded-full animate-bounce"></div>
+                         <div className="w-1 h-1 bg-blue-600 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                         <div className="w-1 h-1 bg-blue-600 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
                          AI is thinking
                        </span>
                      )}
                    </div>
                  </div>
 
-                 {/* Book Meeting Button - Futuristic Design */}
+                 {/* Book Meeting Button - Professional Blue Design */}
                  <div className="relative px-3 py-3 md:py-3 bg-gradient-to-r from-gray-50 to-white border-t border-gray-200 flex-shrink-0">
                    <button
                      onClick={handleBookMeeting}
-                     className="group relative w-full inline-flex items-center justify-center px-5 py-3 text-sm font-semibold rounded-2xl transition-all duration-300 shadow-lg hover:shadow-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white hover:from-indigo-700 hover:via-purple-700 hover:to-pink-700 transform hover:-translate-y-0.5 overflow-hidden"
+                     className="group relative w-full inline-flex items-center justify-center px-5 py-3 text-sm font-semibold rounded-2xl transition-all duration-300 shadow-lg hover:shadow-xl bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 transform hover:-translate-y-0.5 overflow-hidden"
                    >
                      {/* Shimmer effect on hover */}
                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
                      
                      {/* Animated background pulse */}
-                     <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/20 via-purple-500/20 to-pink-500/20 animate-pulse"></div>
+                     <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-blue-600/20 animate-pulse"></div>
                      
                      <svg
                        className="relative z-10 w-5 h-5 mr-2"
