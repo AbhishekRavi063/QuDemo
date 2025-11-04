@@ -1278,7 +1278,7 @@ const FloatingQudemoWidget = ({
           className="bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row w-full md:w-auto" 
           style={{ 
             width: window.innerWidth >= 768 ? '700px' : '100%',
-            height: window.innerWidth >= 768 ? '600px' : 'auto'
+            height: window.innerWidth >= 768 ? '700px' : 'auto'
           }}
          >
            {loading ? (
