@@ -33,6 +33,8 @@ import VideoChatPage from './components/VideoChatPage';
 import FloatingWidgetDemo from './components/FloatingWidgetDemo';
 import FloatingQudemoWidget from './components/FloatingQudemoWidget';
 import WidgetTokenHelper from './components/WidgetTokenHelper';
+import WidgetPlayground from './components/WidgetPlayground';
+import WidgetEmbed from './components/WidgetEmbed';
 import { CompanyProvider, useCompany } from './context/CompanyContext';
 import { BackendProvider } from './context/BackendContext';
 import { NotificationProvider } from './context/NotificationContext';
@@ -237,8 +239,18 @@ function App() {
   // Component to conditionally show floating widget (uses static beta version data)
   const FloatingWidgetWrapper = () => {
     const location = useLocation();
-    // Show widget on all pages
-    const shouldShowWidget = true;
+    
+    // Don't show universal widget on widget playground/embed pages
+    const isWidgetPage = location.pathname.includes('/widget-playground') || 
+                         location.pathname.includes('/widget-embed');
+    
+    const shouldShowWidget = !isWidgetPage;
+    
+    console.log('🔍 FloatingWidgetWrapper:', {
+      pathname: location.pathname,
+      isWidgetPage,
+      shouldShowWidget
+    });
     
     return shouldShowWidget ? (
       <FloatingQudemoWidget 
@@ -263,6 +275,8 @@ function App() {
               <Route path="/auth/callback" element={<AuthCallback />} />
               <Route path="/share/:shareToken" element={<PublicQudemoShare />} />
               <Route path="/widget-demo" element={<FloatingWidgetDemo />} />
+              <Route path="/widget-playground/:qudemoId" element={<WidgetPlayground />} />
+              <Route path="/widget-embed/:qudemoId" element={<WidgetEmbed />} />
               {/* Protected Routes - Wrapped with CompanyProvider */}
               <Route 
                 path="/overview" 
@@ -477,7 +491,8 @@ function App() {
           </Routes>
           
           {/* Floating Widget - Shows on all pages except home */}
-          <FloatingWidgetWrapper />
+          {/* TEMPORARILY DISABLED FOR TESTING WIDGET GENERATOR */}
+          {/* <FloatingWidgetWrapper /> */}
           </div>
         </NotificationProvider>
       </BackendProvider>

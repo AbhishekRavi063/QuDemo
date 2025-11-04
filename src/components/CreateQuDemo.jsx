@@ -25,6 +25,11 @@ const CreateQuDemo = () => {
   // Error popup state
   const [showErrorPopup, setShowErrorPopup] = useState(false);
   const [errorPopupData, setErrorPopupData] = useState(null);
+  
+  // Avatar video feature states
+  const [presenterPhoto, setPresenterPhoto] = useState(null);
+  const [presenterPhotoPreview, setPresenterPhotoPreview] = useState(null);
+  const [presenterName, setPresenterName] = useState("");
   // Handle error popup close and redirect
   const handleErrorPopupClose = () => {
     setShowErrorPopup(false);
@@ -38,10 +43,46 @@ const CreateQuDemo = () => {
     setDocuments([]);
     setSelectedFiles([]);
     setCreatedQudemoId(null);
+    setPresenterPhoto(null);
+    setPresenterPhotoPreview(null);
+    setPresenterName("");
     // Navigate to qudemos page after closing popup
     setTimeout(() => {
       navigate('/qudemos');
     }, 100);
+  };
+
+  // Handle presenter photo upload
+  const handlePresenterPhotoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        setError("Please upload an image file (JPG, PNG, etc.)");
+        return;
+      }
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setError("Image size must be less than 5MB");
+        return;
+      }
+      
+      setPresenterPhoto(file);
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPresenterPhotoPreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+      setError("");
+    }
+  };
+
+  // Remove presenter photo
+  const removePresenterPhoto = () => {
+    setPresenterPhoto(null);
+    setPresenterPhotoPreview(null);
   };
 
   // const handleSourceChange = (index, value) => { // Not used
@@ -371,6 +412,7 @@ const CreateQuDemo = () => {
         description: "No description provided",
         companyId: company.id,
         calendlyLink: calendlyLink.trim() || null,
+        presenterName: presenterName.trim() || null,
         videos: validVideoUrls.map((url, index) => {
           const validation = validateVideoUrl(url);
           return {
@@ -409,10 +451,49 @@ const CreateQuDemo = () => {
       }
       const qudemoId = createResult.data.id;
       setCreatedQudemoId(qudemoId); // Set the created QuDemo ID
+      
+      // Upload presenter photo if provided
+      if (presenterPhoto) {
+        try {
+          const formData = new FormData();
+          formData.append('presenterPhoto', presenterPhoto);
+          formData.append('qudemoId', qudemoId);
+          formData.append('companyName', company.name);
+          
+          const photoResponse = await fetch(getNodeApiUrl('/api/qudemos/upload-presenter-photo'), {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            },
+            body: formData
+          });
+          
+          const photoResult = await photoResponse.json();
+          if (!photoResult.success) {
+            console.error('Failed to upload presenter photo:', photoResult.error);
+            // Don't fail the entire process, just log the error
+          } else {
+            console.log('✓ Presenter photo uploaded successfully');
+          }
+        } catch (photoError) {
+          console.error('Error uploading presenter photo:', photoError);
+          // Don't fail the entire process
+        }
+      }
+      
       if (validVideoUrls.length > 0 || validWebsiteUrls.length > 0) {
         setSuccess("Please wait, your content is now processing. This may take a few minutes. Once it's ready, you'll be redirected to your Qudemos page.");
       } else {
         setSuccess("QuDemo created successfully! Documents will be processed automatically.");
+      }
+      
+      // Show avatar video generation message if presenter photo was provided
+      if (presenterPhoto) {
+        if (documents.length > 0 || selectedFiles.length > 0) {
+          setSuccess(prev => prev + "\n\n🤖 AI Avatar videos will be generated for your FAQs + fallback messages (this may take 10-15 minutes).");
+        } else {
+          setSuccess(prev => prev + "\n\n🤖 AI Avatar videos will be generated for fallback messages like 'no answer' and 'sales inquiry' (this may take 5-10 minutes).");
+        }
       }
       // Process all content automatically using the new endpoint
       if (validVideoUrls.length > 0 || validWebsiteUrls.length > 0) {
@@ -533,6 +614,9 @@ const CreateQuDemo = () => {
       setDocuments([]);
       setSelectedFiles([]);
       setCreatedQudemoId(null);
+      setPresenterPhoto(null);
+      setPresenterPhotoPreview(null);
+      setPresenterName("");
       // Navigate to qudemos page after a short delay to show success message
       setTimeout(() => {
         navigate('/qudemos');
@@ -751,6 +835,94 @@ const CreateQuDemo = () => {
               onSelectedFilesChange={setSelectedFiles}
             />
           </div>
+        </div>
+
+        {/* Presenter Photo Upload Section - Always visible */}
+        <div className="mt-6">
+          <label className="block text-sm font-bold text-gray-900 mb-2 text-left">
+            Presenter Photo 🎬 <span className="text-xs text-green-600 font-normal">(New Feature!)</span>
+          </label>
+          <p className="text-xs text-gray-500 mb-3 text-left">
+            Upload a presenter photo to create AI avatar videos for all responses (including fallback messages)
+          </p>
+            <div className="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-lg p-4 mb-3">
+              <div className="flex items-start">
+                <div className="flex-shrink-0">
+                  <span className="text-2xl">🤖✨</span>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm text-purple-900 font-semibold mb-1 text-left">
+                    AI Avatar Videos for Document Answers
+                  </p>
+                  <p className="text-xs text-purple-700 text-left">
+                    When customers ask questions about your documents, they'll see an AI-generated video of your presenter speaking the answer - making document-based responses as engaging as video demos!
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            {!presenterPhotoPreview ? (
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-purple-400 transition-colors">
+                <input
+                  type="file"
+                  id="presenter-photo"
+                  accept="image/*"
+                  onChange={handlePresenterPhotoChange}
+                  className="hidden"
+                />
+                <label 
+                  htmlFor="presenter-photo" 
+                  className="cursor-pointer flex flex-col items-center"
+                >
+                  <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mb-3">
+                    <span className="text-3xl">👤</span>
+                  </div>
+                  <p className="text-sm font-medium text-gray-700 mb-1">
+                    Upload Presenter Photo
+                  </p>
+                  <p className="text-xs text-gray-500 mb-3">
+                    JPG or PNG, max 5MB
+                  </p>
+                  <div className="mt-3 px-4 py-2 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 transition-colors inline-block">
+                    Choose Photo
+                  </div>
+                </label>
+              </div>
+            ) : (
+              <div className="border border-gray-300 rounded-lg p-4 bg-white">
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0">
+                    <img 
+                      src={presenterPhotoPreview} 
+                      alt="Presenter preview" 
+                      className="w-24 h-24 rounded-lg object-cover border-2 border-purple-300"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-sm font-semibold text-gray-900">Presenter Photo Uploaded</p>
+                      <button
+                        type="button"
+                        onClick={removePresenterPhoto}
+                        className="text-red-600 hover:text-red-700 text-sm font-medium"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                    <input
+                      type="text"
+                      value={presenterName}
+                      onChange={(e) => setPresenterName(e.target.value)}
+                      placeholder="Presenter Name (Optional)"
+                      className="w-full border border-gray-300 px-3 py-2 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    />
+                    <p className="text-xs text-gray-500 mt-2">
+                      ✓ This photo will be used to generate AI avatar videos for FAQ answers
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
         </div>
 
         {/* Calendly Link Section */}
