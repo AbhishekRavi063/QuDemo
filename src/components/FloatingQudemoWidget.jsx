@@ -1299,11 +1299,11 @@ const FloatingQudemoWidget = ({
           </button>
         </div>
       ) : (
-         // Full expanded widget - horizontal layout with video left and chat right (responsive)
+         // Full expanded widget - vertical layout with video on top, button below, chat on side
          <div 
-          className="bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row w-full md:w-auto" 
+          className="bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-row w-full md:w-auto" 
           style={{ 
-            width: window.innerWidth >= 768 ? '700px' : '100%',
+            width: window.innerWidth >= 768 ? '800px' : '100%',
             height: window.innerWidth >= 768 ? '700px' : 'auto'
           }}
          >
@@ -1322,14 +1322,16 @@ const FloatingQudemoWidget = ({
                  <XMarkIcon className="w-5 h-5" />
                </button>
 
-               {/* Video Section (Left on desktop, Top on mobile) - Optimized for Portrait Videos */}
-              <div 
-                className="w-full md:w-[60%] relative bg-black flex items-center justify-center overflow-hidden" 
-                style={{ 
-                  height: window.innerWidth >= 768 ? '100%' : '300px',
-                  minHeight: window.innerWidth >= 768 ? '100%' : '300px'
-                }}
-              >
+               {/* Left Column: Video + Book a Meeting Button */}
+               <div className="w-full md:w-[60%] flex flex-col">
+                 {/* Video Section - Optimized for Portrait Videos */}
+                 <div 
+                   className="relative bg-black flex items-center justify-center overflow-hidden flex-1" 
+                   style={{ 
+                     height: window.innerWidth >= 768 ? 'auto' : '300px',
+                     minHeight: window.innerWidth >= 768 ? '550px' : '300px'
+                   }}
+                 >
                 {/* Show avatar video if available */}
                 {currentAvatarVideo ? (
                    <div className="w-full h-full overflow-hidden bg-black">
@@ -1382,7 +1384,34 @@ const FloatingQudemoWidget = ({
                     ))}
                   </div>
                 )}
-              </div>
+                 </div>
+
+                 {/* Book a Meeting Button - Below Video */}
+                 <div className="w-full bg-white p-4 border-t border-gray-200">
+                   <button
+                     onClick={handleBookMeeting}
+                     className="group relative w-full inline-flex items-center justify-center px-5 py-3 text-sm font-semibold rounded-2xl transition-all duration-300 shadow-lg hover:shadow-xl bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 transform hover:-translate-y-0.5 overflow-hidden"
+                   >
+                     {/* Shimmer effect */}
+                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                     
+                     <svg
+                       className="relative z-10 w-5 h-5 mr-2"
+                       fill="none"
+                       stroke="currentColor"
+                       viewBox="0 0 24 24"
+                       strokeWidth={2.5}
+                     >
+                       <path
+                         strokeLinecap="round"
+                         strokeLinejoin="round"
+                         d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                       />
+                     </svg>
+                     <span className="relative z-10 font-semibold">Book a Meeting</span>
+                   </button>
+                 </div>
+               </div>
 
               {/* Chat Section (Right on desktop, Bottom on mobile) */}
               <div 
