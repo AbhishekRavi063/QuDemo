@@ -1385,8 +1385,8 @@ const FloatingQudemoWidget = ({
                    />
                  ) : null}
                 
-                {/* 3 Suggested Questions - Overlay on Video */}
-                {overlayQuestions.length > 0 && (
+                {/* 3 Suggested Questions - Overlay on Video (Only show when NOT maximized) */}
+                {!isMaximized && overlayQuestions.length > 0 && (
                   <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-full px-4 z-20 flex flex-col gap-2">
                     {overlayQuestions.map((question, index) => (
                       <button
@@ -1407,7 +1407,8 @@ const FloatingQudemoWidget = ({
                 )}
                  </div>
 
-                 {/* Chat Input - Below Video, Above Book a Meeting */}
+                 {/* Chat Input - Below Video, Above Book a Meeting (Only show when NOT maximized) */}
+                 {!isMaximized && (
                  <div className="w-full bg-white p-4 border-t border-gray-200">
                    <div className="relative flex items-center gap-2 bg-gray-50 rounded-2xl p-2 border border-gray-200 shadow-sm">
                      <textarea 
@@ -1445,8 +1446,10 @@ const FloatingQudemoWidget = ({
                      </button>
                    </div>
                  </div>
+                 )}
 
-                 {/* Book a Meeting Button - Below Chat Input */}
+                 {/* Book a Meeting Button - Below Chat Input (Only show when NOT maximized) */}
+                 {!isMaximized && (
                  <div className="w-full bg-white px-4 pb-4">
                    <button
                      onClick={handleBookMeeting}
@@ -1471,6 +1474,7 @@ const FloatingQudemoWidget = ({
                      <span className="relative z-10 font-semibold">Book a Meeting</span>
                    </button>
                  </div>
+                 )}
                </div>
 
               {/* Chat Section (Right on desktop, Bottom on mobile) - Only show when maximized */}
