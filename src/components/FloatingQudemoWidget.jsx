@@ -343,7 +343,7 @@ const FloatingQudemoWidget = ({
         console.log('📹 Widget: Loading static video flow');
         const videoFlowResponse = await fetch('/video-flow.json');
         videoFlowData = await videoFlowResponse.json();
-        setVideoFlow(videoFlowData);
+      setVideoFlow(videoFlowData);
       } else {
         console.log('🎯 Widget: Skipping static video flow (qudemoId provided)');
       }
@@ -613,8 +613,8 @@ const FloatingQudemoWidget = ({
         
         // If we got an avatar video for sales inquiry, use it
         if (data && data.has_avatar_video && data.avatar_video_url) {
-          setChatMessages(prev => [...prev, { 
-            type: 'bot', 
+        setChatMessages(prev => [...prev, { 
+          type: 'bot', 
             text: data.answer
           }]);
           
@@ -740,7 +740,7 @@ const FloatingQudemoWidget = ({
           setIsPlaying(false);
           setIsTyping(false);
           return;
-        } else {
+      } else {
           console.log('❌ No avatar video, clearing avatar state');
           // Clear avatar video if switching back to regular video
           setCurrentAvatarVideo(null);
@@ -1099,17 +1099,17 @@ const FloatingQudemoWidget = ({
         
         if (matchingWords.length >= 3) {
           const videoIndex = videoFlow.videos.findIndex(v => v.id === video.id);
-          return { 
-            matched: true, 
+            return {
+              matched: true,
             videoId: video.id, 
             videoIndex: videoIndex,
             question: video.question,
             answer: video.answer,
             confidence: 'medium' 
-          };
+            };
+          }
         }
       }
-    }
 
     // Fallback video (use designated fallback or second video, never intro)
     const fallbackVideo = videoFlow.videos.find(v => v.isFallback) || videoFlow.videos[1];
@@ -1281,11 +1281,11 @@ const FloatingQudemoWidget = ({
             height: window.innerWidth >= 768 ? '436px' : 'auto'
           }}
          >
-          {loading ? (
+           {loading ? (
             <div className="w-full p-8 flex flex-col items-center justify-center bg-white">
-              <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
-              <p className="mt-4 text-gray-600">Loading demo...</p>
-            </div>
+               <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
+               <p className="mt-4 text-gray-600">Loading demo...</p>
+             </div>
           ) : (videoFlow && videoFlow.videos && videoFlow.videos.length > 0) || qudemoData ? (
              <>
                {/* Close button - absolute positioned */}
@@ -1315,7 +1315,7 @@ const FloatingQudemoWidget = ({
                    </div>
                  ) : videoFlow.videos[currentVideoIndex] ? (
                    <HybridVideoPlayer
-                     ref={videoPlayerRef}
+                   ref={videoPlayerRef}
                      key={`${videoFlow.videos[currentVideoIndex].url || videoFlow.videos[currentVideoIndex].src}-${currentTimestamp}-${videoRefreshKey}`}
                      url={videoFlow.videos[currentVideoIndex].url || videoFlow.videos[currentVideoIndex].src}
                      width="100%"
@@ -1344,18 +1344,42 @@ const FloatingQudemoWidget = ({
                   minHeight: 'auto'
                 }}
                >
-                 {/* Chat header */}
-                 <div className="bg-blue-600 text-white px-3 py-2 md:px-4 md:py-3 flex items-center gap-2 flex-shrink-0">
-                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
-                   </svg>
-                   <span className="font-semibold text-sm">Ask questions</span>
+                 {/* Chat header - Modern AI Design */}
+                 <div className="relative bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 px-4 py-3 flex items-center justify-between flex-shrink-0 overflow-hidden">
+                   {/* Animated background effect */}
+                   <div className="absolute inset-0 bg-gradient-to-r from-indigo-600/20 via-purple-600/20 to-pink-600/20 animate-pulse"></div>
+                   
+                   <div className="relative flex items-center gap-3">
+                     {/* AI Avatar Icon */}
+                     <div className="relative">
+                       <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center ring-2 ring-white/40">
+                         <div className="w-5 h-5 rounded-full bg-gradient-to-br from-white to-white/80 flex items-center justify-center">
+                           <svg className="w-3 h-3 text-indigo-600" fill="currentColor" viewBox="0 0 24 24">
+                             <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+                           </svg>
+                         </div>
+                       </div>
+                       {/* Online indicator pulse */}
+                       <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-400 rounded-full ring-2 ring-white animate-pulse"></div>
+                     </div>
+                     
+                     <div className="flex flex-col">
+                       <span className="font-semibold text-white text-sm">AI Assistant</span>
+                       <span className="text-white/80 text-[10px]">Ready to help</span>
+                     </div>
+                   </div>
+                   
+                   {/* Status indicator */}
+                   <div className="relative flex items-center gap-1 bg-white/20 backdrop-blur-sm px-2 py-1 rounded-full">
+                     <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></div>
+                     <span className="text-white text-[10px] font-medium">Online</span>
+                   </div>
                  </div>
 
-                 {/* Chat messages */}
+                 {/* Chat messages - Modern scrollable area */}
                  <div 
                    ref={chatMessagesRef} 
-                   className="flex-1 overflow-y-auto p-2 md:p-3 bg-gray-50 flex flex-col gap-2" 
+                   className="flex-1 overflow-y-auto p-3 md:p-4 bg-gradient-to-br from-gray-50 to-gray-100/50 flex flex-col gap-3" 
                    style={{ 
                      maxHeight: window.innerWidth >= 768 ? 'none' : '300px',
                      minHeight: window.innerWidth >= 768 ? 'auto' : '250px'
@@ -1363,24 +1387,47 @@ const FloatingQudemoWidget = ({
                  >
                    {chatMessages.length === 0 ? (
                      <>
-                       <div className="text-center text-gray-500 text-sm py-2 md:py-4">
-                         👋 Hi! Ask me anything about this demo
+                       {/* Welcome message - Futuristic design */}
+                       <div className="relative bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-100/50 rounded-2xl p-4 shadow-sm">
+                         <div className="flex items-start gap-3">
+                           <div className="flex-shrink-0">
+                             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center shadow-lg">
+                               <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                 <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+                               </svg>
+                             </div>
+                           </div>
+                           <div className="flex-1">
+                             <p className="text-gray-700 text-sm font-medium mb-1">Hi! I'm your AI assistant 👋</p>
+                             <p className="text-gray-600 text-xs">Ask me anything about this demo, and I'll help you find what you're looking for.</p>
+                           </div>
+                         </div>
                        </div>
                        
-                       {/* Initial Suggested Questions - Show combined static + Qudemo questions */}
+                       {/* Initial Suggested Questions - Modern chip design */}
                        {suggestedQuestions && suggestedQuestions.length > 0 && (
-                         <div className="flex flex-col gap-2 mt-2">
-                           <p className="text-xs text-gray-500 font-medium px-1">Suggested questions:</p>
+                         <div className="flex flex-col gap-2">
+                           <p className="text-xs text-gray-500 font-semibold px-1 flex items-center gap-1">
+                             <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                               <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+                             </svg>
+                             Try asking:
+                           </p>
                            {suggestedQuestions.map((question, index) => (
-                             <button
-                               key={index}
+                         <button
+                           key={index}
                                onClick={() => handleSuggestedQuestionClick(question)}
                            disabled={isTyping}
-                               className="text-left bg-white hover:bg-blue-50 text-gray-700 hover:text-blue-600 px-3 py-2 rounded-lg text-xs border border-gray-200 hover:border-blue-300 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                         >
-                               {question}
-                             </button>
-                           ))}
+                               className="group relative text-left bg-white hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 text-gray-700 hover:text-indigo-700 px-4 py-2.5 rounded-xl text-xs border border-gray-200 hover:border-indigo-300 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
+                             >
+                               <span className="flex items-center gap-2">
+                                 <svg className="w-3 h-3 text-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                 </svg>
+                                 {question}
+                               </span>
+                         </button>
+                       ))}
                          </div>
                        )}
                      </>
@@ -1388,87 +1435,169 @@ const FloatingQudemoWidget = ({
                      <>
                        {chatMessages.map((msg, i) => (
                          <React.Fragment key={i}>
-                           <div className={`flex ${msg.type === 'bot' ? 'justify-start' : 'justify-end'}`}>
-                             <div className={`max-w-[85%] px-3 py-2 rounded-xl text-sm leading-relaxed text-left ${msg.type === 'bot' ? 'bg-white border border-gray-200 text-gray-800' : 'bg-blue-600 text-white'}`}>
-                               {msg.text}
+                           {msg.type === 'bot' ? (
+                             /* AI Message - Futuristic design with avatar */
+                             <div className="flex justify-start items-start gap-2">
+                               <div className="flex-shrink-0 mt-1">
+                                 <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center shadow-md">
+                                   <svg className="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                     <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+                                   </svg>
+                                 </div>
+                               </div>
+                               <div className="max-w-[80%] bg-gradient-to-br from-white to-gray-50 border border-gray-200 px-4 py-3 rounded-2xl rounded-tl-sm shadow-sm text-sm leading-relaxed text-gray-800">
+                                 {msg.text}
+                               </div>
                              </div>
-                           </div>
+                           ) : (
+                             /* User Message - Modern clean design */
+                             <div className="flex justify-end">
+                               <div className="max-w-[80%] bg-gradient-to-r from-indigo-600 to-purple-600 px-4 py-3 rounded-2xl rounded-tr-sm shadow-md text-sm leading-relaxed text-white">
+                                 {msg.text}
+                     </div>
+                   </div>
+                 )}
                            
-                           {/* Show suggested questions after each bot response - Show combined questions */}
+                           {/* Show suggested questions after each bot response - Modern chip design */}
                            {msg.type === 'bot' && i === chatMessages.length - 1 && !isTyping && suggestedQuestions && suggestedQuestions.length > 0 && (
-                             <div className="flex flex-col gap-2 mt-1">
-                               <p className="text-xs text-gray-500 font-medium px-1">Related questions:</p>
+                             <div className="flex flex-col gap-2 mt-2 ml-9">
+                               <p className="text-xs text-gray-500 font-semibold px-1 flex items-center gap-1">
+                                 <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                   <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+                                 </svg>
+                                 Related:
+                               </p>
                                {(showAllQuestions ? suggestedQuestions : suggestedQuestions.slice(0, 3)).map((question, qIndex) => (
                                  <button
                                    key={qIndex}
                                    onClick={() => handleSuggestedQuestionClick(question)}
                                    disabled={isTyping}
-                                   className="text-left bg-white hover:bg-blue-50 text-gray-700 hover:text-blue-600 px-3 py-2 rounded-lg text-xs border border-gray-200 hover:border-blue-300 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                                   className="group relative text-left bg-white hover:bg-gradient-to-r hover:from-indigo-50 hover:to-purple-50 text-gray-700 hover:text-indigo-700 px-3 py-2 rounded-xl text-xs border border-gray-200 hover:border-indigo-300 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
                                  >
-                                   {question}
+                                   <span className="flex items-center gap-2">
+                                     <svg className="w-3 h-3 text-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                     </svg>
+                                     {question}
+                                   </span>
                                  </button>
                                ))}
-                             </div>
+               </div>
                            )}
                          </React.Fragment>
                        ))}
                        {isTyping && <TypingIndicator />}
                      </>
                    )}
+             </div>
+
+                 {/* Chat input - Futuristic design */}
+                 <div className="relative p-3 md:p-4 bg-gradient-to-r from-gray-50 to-white border-t border-gray-200 flex-shrink-0">
+                   <div className="flex items-end gap-2">
+                     {/* Modern input field with glass effect */}
+                     <div className="flex-1 relative">
+                       <textarea 
+                         value={inputMessage} 
+                         onChange={handleInputChange} 
+                         onKeyDown={handleKeyPress} 
+                         placeholder={isListening ? '🎙️ Listening...' : 'Type your message...'} 
+                         rows="1" 
+                         className={`w-full px-4 py-3 pr-12 bg-white/80 backdrop-blur-sm border-2 ${isListening ? 'border-green-400 shadow-green-100' : 'border-gray-200 focus:border-indigo-300'} rounded-2xl text-sm resize-none overflow-hidden min-h-[2.75rem] max-h-[7.5rem] focus:outline-none focus:ring-2 focus:ring-indigo-100 shadow-sm placeholder:text-gray-400 transition-all duration-200`}
+                       />
+                       {/* Character/typing indicator */}
+                       {inputMessage && (
+                         <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                           <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></div>
+                         </div>
+                       )}
+                     </div>
+                     
+                     {/* Voice input button - Modern glassmorphism */}
+                     <button 
+                       onClick={handleVoiceInput} 
+                       className={`min-w-[2.75rem] h-11 flex items-center justify-center rounded-2xl text-white transition-all duration-200 shadow-lg ${isListening ? 'bg-gradient-to-br from-green-500 to-emerald-600 animate-pulse ring-4 ring-green-200' : 'bg-gradient-to-br from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 hover:shadow-xl hover:-translate-y-0.5'}`}
+                       title={isListening ? "Stop recording" : "Voice input"}
+                     >
+                       <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                         <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                         <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+                       </svg>
+                     </button>
+                     
+                     {/* Send button - Futuristic gradient */}
+                     <button 
+                       onClick={() => handleSendMessage()} 
+                       disabled={!inputMessage.trim() || isTyping} 
+                       className="relative min-w-[2.75rem] h-11 flex items-center justify-center bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white rounded-2xl hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 group overflow-hidden"
+                       title="Send message"
+                     >
+                       {/* Shimmer effect on hover */}
+                       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                       <svg className="w-5 h-5 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 12L3.269 3.125A59.769 59.769 0 0121.485 12 59.768 59.768 0 013.27 20.875L5.999 12zm0 0h7.5"></path>
+                       </svg>
+                     </button>
+                   </div>
+                   
+                   {/* Helper text */}
+                   <div className="mt-2 px-1 text-[10px] text-gray-400 flex items-center justify-between">
+                     <span className="flex items-center gap-1">
+                       <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                         <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                       </svg>
+                       Press Enter to send
+                     </span>
+                     {isTyping && (
+                       <span className="flex items-center gap-1 text-indigo-500">
+                         <div className="w-1 h-1 bg-indigo-500 rounded-full animate-bounce"></div>
+                         <div className="w-1 h-1 bg-indigo-500 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                         <div className="w-1 h-1 bg-indigo-500 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                         AI is thinking
+                       </span>
+                     )}
+                   </div>
                  </div>
 
-                 {/* Chat input */}
-                 <div className="flex items-end gap-2 p-2 md:p-3 border-t border-gray-200 bg-white flex-shrink-0">
-                   <textarea 
-                     value={inputMessage} 
-                     onChange={handleInputChange} 
-                     onKeyDown={handleKeyPress} 
-                     placeholder={isListening ? '🎙️ Listening...' : 'Ask a question...'} 
-                     rows="1" 
-                     className={`flex-1 px-3 py-2.5 border ${isListening ? 'border-green-500' : 'border-gray-300'} rounded-lg text-sm resize-none overflow-hidden min-h-[2.5rem] max-h-[7.5rem] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm`}
-                   />
-                  <button 
-                    onClick={handleVoiceInput} 
-                    className={`min-w-[2.5rem] h-10 flex items-center justify-center rounded-lg text-white transition-all duration-200 ${isListening ? 'bg-gradient-to-br from-green-500 to-green-600 animate-pulse' : 'bg-gradient-to-br from-blue-500 to-blue-600 hover:shadow-lg hover:-translate-y-0.5'}`}
-                  >
-                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
-                      <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
-                    </svg>
-                  </button>
-                   <button 
-                     onClick={() => handleSendMessage()} 
-                     disabled={!inputMessage.trim() || isTyping} 
-                     className="min-w-[2.5rem] h-10 flex items-center justify-center bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-lg hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                   >
-                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 12L3.269 3.125A59.769 59.769 0 0121.485 12 59.768 59.768 0 013.27 20.875L5.999 12zm0 0h7.5"></path>
-                     </svg>
-                   </button>
-                 </div>
-
-                 {/* Book Meeting Button - Always Visible */}
-                 <div className="px-3 py-2 md:py-2 border-t bg-gray-50 flex-shrink-0" style={{ paddingTop: window.innerWidth >= 768 ? '0.5rem' : '0.25rem', paddingBottom: window.innerWidth >= 768 ? '0.5rem' : '0.25rem' }}>
+                 {/* Book Meeting Button - Futuristic Design */}
+                 <div className="relative px-3 py-3 md:py-3 bg-gradient-to-r from-gray-50 to-white border-t border-gray-200 flex-shrink-0">
                    <button
                      onClick={handleBookMeeting}
-                     className="w-full inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md bg-blue-600 text-white hover:bg-blue-700"
+                     className="group relative w-full inline-flex items-center justify-center px-5 py-3 text-sm font-semibold rounded-2xl transition-all duration-300 shadow-lg hover:shadow-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white hover:from-indigo-700 hover:via-purple-700 hover:to-pink-700 transform hover:-translate-y-0.5 overflow-hidden"
                    >
+                     {/* Shimmer effect on hover */}
+                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                     
+                     {/* Animated background pulse */}
+                     <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/20 via-purple-500/20 to-pink-500/20 animate-pulse"></div>
+                     
                      <svg
-                       className="w-4 h-4 mr-2"
+                       className="relative z-10 w-5 h-5 mr-2"
                        fill="none"
                        stroke="currentColor"
                        viewBox="0 0 24 24"
-                       xmlns="http://www.w3.org/2000/svg"
+                       strokeWidth={2.5}
                      >
                        <path
                          strokeLinecap="round"
                          strokeLinejoin="round"
-                         strokeWidth={2}
                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                        />
                      </svg>
-                     Book a Meeting
+                     <span className="relative z-10">Book a Meeting</span>
+                     
+                     {/* Arrow icon that appears on hover */}
+                     <svg className="relative z-10 w-4 h-4 ml-2 opacity-0 group-hover:opacity-100 transform translate-x-0 group-hover:translate-x-1 transition-all duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                     </svg>
                    </button>
+                   
+                   {/* Helper text */}
+                   <div className="mt-1.5 text-center text-[10px] text-gray-400 flex items-center justify-center gap-1">
+                     <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                     </svg>
+                     Schedule a 1-on-1 demo call
+                   </div>
                  </div>
                </div>
              </>
