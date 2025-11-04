@@ -1364,26 +1364,66 @@ const FloatingQudemoWidget = ({
                    />
                  ) : null}
                 
-                {/* 3 Suggested Questions - Overlay on Video */}
-                {overlayQuestions.length > 0 && (
-                  <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-full px-4 z-20 flex flex-col gap-2">
-                    {overlayQuestions.map((question, index) => (
-                      <button
-                        key={index}
-                        onClick={() => handleSuggestedQuestionClick(question)}
-                        disabled={isTyping}
-                        className="group relative text-left bg-white/90 backdrop-blur-sm hover:bg-blue-600 text-gray-800 hover:text-white px-3 py-2 rounded-xl text-xs font-medium border border-white/40 hover:border-blue-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-                      >
-                        <span className="flex items-center gap-2">
-                          <svg className="w-3 h-3 flex-shrink-0 opacity-60 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                          <span className="line-clamp-1">{question}</span>
-                        </span>
-                      </button>
-                    ))}
+                {/* Overlay Container: Questions + Chat Input */}
+                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-full px-4 z-20 flex flex-col gap-3">
+                  {/* 3 Suggested Questions */}
+                  {overlayQuestions.length > 0 && (
+                    <div className="flex flex-col gap-2">
+                      {overlayQuestions.map((question, index) => (
+                        <button
+                          key={index}
+                          onClick={() => handleSuggestedQuestionClick(question)}
+                          disabled={isTyping}
+                          className="group relative text-left bg-white/90 backdrop-blur-sm hover:bg-blue-600 text-gray-800 hover:text-white px-3 py-2 rounded-xl text-xs font-medium border border-white/40 hover:border-blue-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                        >
+                          <span className="flex items-center gap-2">
+                            <svg className="w-3 h-3 flex-shrink-0 opacity-60 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span className="line-clamp-1">{question}</span>
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {/* Chat Input - Embedded in Video */}
+                  <div className="relative flex items-center gap-2 bg-white/95 backdrop-blur-sm rounded-2xl p-2 shadow-lg border border-white/40">
+                    <textarea 
+                      value={inputMessage} 
+                      onChange={handleInputChange} 
+                      onKeyDown={handleKeyPress} 
+                      placeholder={isListening ? '🎙️ Listening...' : 'Type your message...'} 
+                      rows="1" 
+                      className={`flex-1 px-3 py-2 bg-transparent border-0 text-sm resize-none overflow-hidden min-h-[2.5rem] max-h-[5rem] focus:outline-none placeholder:text-gray-500 text-gray-900`}
+                    />
+                    
+                    {/* Voice input button */}
+                    <button 
+                      onClick={handleVoiceInput} 
+                      className={`min-w-[2.5rem] h-10 flex items-center justify-center rounded-xl text-white transition-all duration-200 shadow-md ${isListening ? 'bg-gradient-to-br from-green-500 to-emerald-600 animate-pulse ring-2 ring-green-300' : 'bg-gradient-to-br from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700'}`}
+                      title={isListening ? "Stop recording" : "Voice input"}
+                    >
+                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                        <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+                      </svg>
+                    </button>
+                    
+                    {/* Send button */}
+                    <button 
+                      onClick={() => handleSendMessage()} 
+                      disabled={!inputMessage.trim() || isTyping} 
+                      className="relative min-w-[2.5rem] h-10 flex items-center justify-center bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed group overflow-hidden"
+                      title="Send message"
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                      <svg className="w-4 h-4 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 12L3.269 3.125A59.769 59.769 0 0121.485 12 59.768 59.768 0 013.27 20.875L5.999 12zm0 0h7.5"></path>
+                      </svg>
+                    </button>
                   </div>
-                )}
+                </div>
                  </div>
 
                  {/* Book a Meeting Button - Below Video */}
