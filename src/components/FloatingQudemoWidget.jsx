@@ -356,12 +356,32 @@ const FloatingQudemoWidget = ({
         // If qudemoId is provided, fetch that specific QuDemo
         if (qudemoId && companyName) {
           console.log('🎯 Widget: Loading specific QuDemo:', qudemoId, companyName);
+          
+          // Try with authentication first (for logged-in users)
           const token = localStorage.getItem('accessToken');
-          qudemoResponse = await fetch(getNodeApiUrl(`/api/qudemos/${qudemoId}`), {
-            headers: {
-              'Authorization': `Bearer ${token}`
+          if (token) {
+            try {
+              qudemoResponse = await fetch(getNodeApiUrl(`/api/qudemos/${qudemoId}`), {
+                headers: {
+                  'Authorization': `Bearer ${token}`
+                }
+              });
+              
+              // If auth fails, fall through to public endpoint
+              if (!qudemoResponse.ok) {
+                console.log('⚠️ Auth fetch failed, trying public endpoint');
+                throw new Error('Auth failed');
+              }
+            } catch (authError) {
+              console.log('⚠️ Trying public endpoint without auth');
+              // Try public endpoint without auth
+              qudemoResponse = await fetch(getNodeApiUrl(`/api/qudemos/public/${qudemoId}`));
             }
-          });
+          } else {
+            // No token, use public endpoint
+            console.log('🌐 No auth token, using public endpoint');
+            qudemoResponse = await fetch(getNodeApiUrl(`/api/qudemos/public/${qudemoId}`));
+          }
         } else {
           // Otherwise, load Universal Demo
           console.log('🌐 Widget: Loading Universal Demo');
