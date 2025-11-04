@@ -1189,6 +1189,7 @@ const FloatingQudemoWidget = ({
           {/* Circular video preview with pulse animation */}
           <div className="relative w-20 h-20 md:w-36 md:h-36 rounded-full overflow-hidden shadow-2xl border-4 border-white hover:border-blue-500 transition-all duration-300">
             {introVideoPreview ? (
+              // Show intro video preview (priority 1)
               <video 
                 ref={introPreviewRef}
                 src={introVideoPreview.replace(/ /g, '%20')}
@@ -1198,7 +1199,13 @@ const FloatingQudemoWidget = ({
                 playsInline
                 className="w-full h-full object-cover"
               />
+            ) : qudemoId ? (
+              // If qudemoId provided but intro video not loaded yet, show placeholder only
+              <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                <ChatBubbleLeftRightIcon className="w-16 h-16 text-white" />
+              </div>
             ) : !qudemoId && videoFlow && videoFlow.videos && videoFlow.videos[0] && videoFlow.videos[0].src ? (
+              // Show static video ONLY for universal widget (no qudemoId)
               <video 
                 src={videoFlow.videos[0].src || videoFlow.videos[0].url}
                 autoPlay
@@ -1208,12 +1215,14 @@ const FloatingQudemoWidget = ({
                 className="w-full h-full object-cover"
               />
             ) : (videoThumbnail || previewImage) ? (
+              // Show thumbnail/preview image (universal widget fallback)
               <img 
                 src={videoThumbnail || previewImage} 
                 alt="Demo" 
                 className="w-full h-full object-cover"
               />
             ) : (
+              // Final fallback: placeholder icon
               <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
                 <ChatBubbleLeftRightIcon className="w-16 h-16 text-white" />
               </div>
