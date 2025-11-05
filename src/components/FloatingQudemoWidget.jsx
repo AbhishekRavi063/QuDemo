@@ -67,7 +67,12 @@ const FloatingQudemoWidget = ({
   // Load video thumbnail on mount (for preview)
   useEffect(() => {
     console.log('🚀 FloatingQudemoWidget MOUNTED', { qudemoId, companyName, isPreview });
-    loadVideoThumbnail();
+    
+    // Only load static video thumbnail if NOT in playground mode (no qudemoId)
+    if (!qudemoId) {
+      loadVideoThumbnail();
+    }
+    
     setupSpeechRecognition();
     
     return () => {
@@ -1261,7 +1266,7 @@ const FloatingQudemoWidget = ({
                 playsInline
                 className="w-full h-full object-cover"
               />
-            ) : (videoThumbnail || previewImage) ? (
+            ) : !qudemoId && (videoThumbnail || previewImage) ? (
               <img 
                 src={videoThumbnail || previewImage} 
                 alt="Demo" 
