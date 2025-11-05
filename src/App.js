@@ -251,8 +251,9 @@ function App() {
     return isHomePage ? (
       <FloatingQudemoWidget 
         position="bottom-right"
-        previewImage="/round.png"  // Fallback image if video thumbnail fails to load
+        previewImage="/round.png"
         previewText="Watch Beta Version"
+        isPreview={false}
       />
     ) : null;
   };
