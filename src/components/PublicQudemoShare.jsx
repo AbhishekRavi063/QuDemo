@@ -571,7 +571,7 @@ const PublicQudemoShare = () => {
       </div>
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+        <div className="bg-white rounded-lg border overflow-hidden">
           <div className="flex flex-col lg:flex-row h-[80vh]">
             {/* Video Section */}
             <div
@@ -602,7 +602,7 @@ const PublicQudemoShare = () => {
                   {showLoomTimestamp &&
                     currentVideo.video_url.includes("loom.com") &&
                     currentTimestamp > 0 && (
-                      <div className="absolute top-4 right-4 bg-yellow-500 text-black px-4 py-3 rounded-lg text-sm font-medium z-20 shadow-lg max-w-xs">
+                      <div className="absolute top-4 right-4 bg-yellow-500 text-black px-4 py-3 rounded-lg text-sm font-medium z-20 border max-w-xs">
                         <div className="flex items-center space-x-2">
                           <span>⏰</span>
                           <div>
@@ -621,7 +621,7 @@ const PublicQudemoShare = () => {
                   {/* YouTube Timestamp Indicator */}
                   {currentTimestamp > 0 &&
                     currentVideo.video_url.includes("youtube.com") && (
-                      <div className="absolute top-4 right-4 bg-blue-500 text-white px-4 py-3 rounded-lg text-sm font-medium z-20 shadow-lg max-w-xs">
+                      <div className="absolute top-4 right-4 bg-blue-500 text-white px-4 py-3 rounded-lg text-sm font-medium z-20 border max-w-xs">
                         <div className="flex items-center space-x-2">
                           <span>⏰</span>
                           <div>
@@ -819,7 +819,7 @@ const PublicQudemoShare = () => {
                 <button
                   onClick={handleScheduleMeeting}
                   disabled={loadingCalendly}
-                  className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed bg-blue-600 text-white hover:bg-blue-700"
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200 shadow-sm hover:border disabled:opacity-50 disabled:cursor-not-allowed bg-blue-600 text-white hover:bg-blue-700"
                 >
                   {loadingCalendly ? (
                     <>

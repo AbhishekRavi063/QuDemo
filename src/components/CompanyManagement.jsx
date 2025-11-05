@@ -182,7 +182,7 @@ const CompanyManagement = () => {
         {companies.map((company) => (
           <div
             key={company.id}
-            className="bg-white rounded-xl shadow-lg p-6 flex flex-col items-center border border-gray-100 hover:shadow-2xl transition-shadow duration-200"
+            className="bg-white rounded-xl border p-6 flex flex-col items-center border border-gray-100 hover:shadow-2xl transition-shadow duration-200"
           >
             {/* Logo */}
             {company.logo && (
@@ -305,7 +305,7 @@ const CompanyManagement = () => {
       {/* Create Company Modal */}
       {showCreateForm && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+          <div className="relative top-20 mx-auto p-5 border w-96 border rounded-md bg-white">
             <div className="mt-3">
               <h3 className="text-lg font-medium text-gray-900 mb-4">
                 Create New Company

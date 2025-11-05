@@ -93,7 +93,7 @@ const DemoHomePage = () => {
             </button>
 
             {showHeroDropdown && (
-              <div className="absolute right-0 md:left-0 top-full mt-2 w-56 bg-white shadow-lg rounded-lg text-sm text-gray-800 z-10">
+              <div className="absolute right-0 md:left-0 top-full mt-2 w-56 bg-white border rounded-lg text-sm text-gray-800 z-10">
                 <button
                   onClick={openInteractivePopup}
                   className="w-full text-left px-4 py-2 hover:bg-gray-100"
@@ -117,7 +117,7 @@ const DemoHomePage = () => {
           <img
             src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?auto=format&fit=crop&w=900&q=80"
             alt="Team collaboration"
-            className="rounded-xl shadow-lg w-full object-cover"
+            className="rounded-xl border w-full object-cover"
           />
         </div>
       </section>
@@ -125,7 +125,7 @@ const DemoHomePage = () => {
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 px-4">
-          <div className="bg-white rounded-lg shadow-lg w-full max-w-lg p-6 sm:p-8 relative max-h-screen overflow-y-auto">
+          <div className="bg-white rounded-lg border w-full max-w-lg p-6 sm:p-8 relative max-h-screen overflow-y-auto">
             <h2 className="text-xl font-semibold mb-1 flex items-center gap-2">
               📅 Schedule an In-Person Demo
             </h2>

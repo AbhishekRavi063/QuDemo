@@ -231,7 +231,7 @@ const HomePage = () => {
             <div className="flex items-center gap-2 md:gap-4">
               <div
                 onClick={() => navigate("/profile")}
-                className="text-white font-medium px-3 md:px-6 py-2 rounded-[20px] border text-xs md:text-sm hover:shadow-lg transition-all duration-300 cursor-pointer"
+                className="text-white font-medium px-3 md:px-6 py-2 rounded-[20px] border text-xs md:text-sm hover:border transition-all duration-300 cursor-pointer"
                 style={{
                   background: "rgba(18, 20, 38, 0.6)",
                   backdropFilter: "blur(16px)",
@@ -260,7 +260,7 @@ const HomePage = () => {
           ) : (
             <div
               onClick={() => navigate("/login", { state: { from: "/" } })}
-              className="text-white font-medium px-4 md:px-8 py-2 rounded-[20px] border hover:shadow-lg transition-all duration-300 cursor-pointer text-sm md:text-base"
+              className="text-white font-medium px-4 md:px-8 py-2 rounded-[20px] border hover:border transition-all duration-300 cursor-pointer text-sm md:text-base"
               style={{
                 background: "rgba(18, 20, 38, 0.6)",
                 backdropFilter: "blur(16px)",

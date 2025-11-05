@@ -711,7 +711,7 @@ const CreateQuDemo = () => {
   }
   if (!company) {
     return (
-      <div className="text-center py-12 px-4 sm:px-6 lg:px-8 bg-white rounded-lg shadow-none">
+      <div className="text-center py-12 px-4 sm:px-6 lg:px-8 bg-white rounded-lg border">
         <h3 className="mt-2 text-lg font-medium text-graydark">
           No Company Found
         </h3>

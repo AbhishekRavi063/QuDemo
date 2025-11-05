@@ -390,7 +390,7 @@ const CustomerInteractionsPage = () => {
             </div>
             <div>
               <nav
-                className="isolate inline-flex -space-x-px rounded-md shadow-none"
+                className="isolate inline-flex -space-x-px rounded-md border"
                 aria-label="Pagination"
               >
                 <button
@@ -462,7 +462,7 @@ const CustomerInteractionsPage = () => {
       {/* Details Modal */}
       {showDetailsModal && selectedInteraction && (
         <div className="fixed inset-0 z-50 flex items-start justify-center bg-black bg-opacity-50 pt-4">
-          <div className="bg-white rounded-lg shadow-none max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden flex flex-col">
+          <div className="bg-white rounded-lg border max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden flex flex-col">
             <div className="flex flex-col h-full">
               {/* Header */}
               <div className="bg-white border-b border-strokedark/10 p-6 rounded-t-lg">
@@ -579,7 +579,7 @@ const CustomerInteractionsPage = () => {
                     onClick={() => handleTabClick("overview")}
                     className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                       activeTab === "overview"
-                        ? "bg-white text-graydark shadow-none"
+                        ? "bg-white text-graydark border"
                         : "bg-transparent text-bodydark hover:text-graydark"
                     }`}
                   >
@@ -589,7 +589,7 @@ const CustomerInteractionsPage = () => {
                     onClick={() => handleTabClick("questions")}
                     className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                       activeTab === "questions"
-                        ? "bg-white text-graydark shadow-none"
+                        ? "bg-white text-graydark border"
                         : "bg-transparent text-bodydark hover:text-graydark"
                     }`}
                   >
@@ -599,7 +599,7 @@ const CustomerInteractionsPage = () => {
                     onClick={() => handleTabClick("past-interactions")}
                     className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                       activeTab === "past-interactions"
-                        ? "bg-white text-graydark shadow-none"
+                        ? "bg-white text-graydark border"
                         : "bg-transparent text-bodydark hover:text-graydark"
                     }`}
                   >

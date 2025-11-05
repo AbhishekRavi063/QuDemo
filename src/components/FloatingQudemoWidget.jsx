@@ -1508,7 +1508,7 @@ const FloatingQudemoWidget = ({
 
           {/* Text label */}
           {previewText && (
-            <div className="absolute -top-14 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity shadow-lg">
+            <div className="absolute -top-14 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity border">
               {previewText}
               <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-full">
                 <div className="border-8 border-transparent border-t-gray-900"></div>
@@ -1793,7 +1793,7 @@ const FloatingQudemoWidget = ({
                     />
                     <button
                       onClick={handleVoiceInput}
-                      className={`min-w-[2.5rem] h-10 flex items-center justify-center rounded-lg text-white transition-all duration-200 ${isListening ? "bg-gradient-to-br from-green-500 to-green-600 animate-pulse" : "bg-gradient-to-br from-blue-500 to-blue-600 hover:shadow-lg hover:-translate-y-0.5"}`}
+                      className={`min-w-[2.5rem] h-10 flex items-center justify-center rounded-lg text-white transition-all duration-200 ${isListening ? "bg-gradient-to-br from-green-500 to-green-600 animate-pulse" : "bg-gradient-to-br from-blue-500 to-blue-600 hover:border hover:-translate-y-0.5"}`}
                     >
                       <svg
                         className="w-5 h-5"
@@ -1807,7 +1807,7 @@ const FloatingQudemoWidget = ({
                     <button
                       onClick={() => handleSendMessage()}
                       disabled={!inputMessage.trim() || isTyping}
-                      className="min-w-[2.5rem] h-10 flex items-center justify-center bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-lg hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="min-w-[2.5rem] h-10 flex items-center justify-center bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-lg hover:border hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <svg
                         className="w-5 h-5"
@@ -1837,7 +1837,7 @@ const FloatingQudemoWidget = ({
                   >
                     <button
                       onClick={handleBookMeeting}
-                      className="w-full inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md bg-blue-600 text-white hover:bg-blue-700"
+                      className="w-full inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 shadow-sm hover:border bg-blue-600 text-white hover:bg-blue-700"
                     >
                       <svg
                         className="w-4 h-4 mr-2"

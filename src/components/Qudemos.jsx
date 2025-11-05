@@ -1115,7 +1115,7 @@ const Qudemos = () => {
           {qudemos.map((qudemo) => (
             <div
               key={qudemo.id}
-              className={`bg-white rounded-lg shadow-none hover:shadow-none transition-shadow border border-strokedark/10 ${
+              className={`bg-white rounded-lg border hover:border transition-shadow border border-strokedark/10 ${
                 deletingQudemoId === qudemo.id
                   ? "opacity-50 pointer-events-none"
                   : ""
@@ -1257,7 +1257,7 @@ const Qudemos = () => {
                             e.stopPropagation();
                             setPreviewingQudemo(qudemo);
                           }}
-                          className="w-16 h-16 bg-black bg-opacity-60 rounded-full flex items-center justify-center hover:bg-opacity-80 hover:scale-110 transition-all duration-300 shadow-none"
+                          className="w-16 h-16 bg-black bg-opacity-60 rounded-full flex items-center justify-center hover:bg-opacity-80 hover:scale-110 transition-all duration-300 border"
                         >
                           <PlayIcon className="w-8 h-8 text-white ml-1" />
                         </button>
@@ -1314,7 +1314,7 @@ const Qudemos = () => {
                         <EllipsisVerticalIcon className="w-5 h-5 text-gray-500" />
                       </button>
                       {dropdownOpen === qudemo.id && (
-                        <div className="absolute right-0 top-8 bg-white border border-strokedark/10 rounded-lg shadow-none z-10 min-w-[160px]">
+                        <div className="absolute right-0 top-8 bg-white border border-strokedark/10 rounded-lg border z-10 min-w-[160px]">
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
@@ -1574,7 +1574,7 @@ const Qudemos = () => {
       {/* Share Modal */}
       {showShareModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg shadow-none max-w-2xl w-full mx-4">
+          <div className="bg-white rounded-lg border max-w-2xl w-full mx-4">
             <div className="p-8">
               <div className="flex items-center justify-between mb-6">
                 <button
@@ -1678,7 +1678,7 @@ const Qudemos = () => {
       {/* Share Options Modal */}
       {showShareOptionsModal && qudemoToShare && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg shadow-none max-w-lg w-full mx-4">
+          <div className="bg-white rounded-lg border max-w-lg w-full mx-4">
             <div className="p-6">
               <div className="relative mb-4">
                 <h3 className="text-lg font-semibold text-graydark text-center">
@@ -1777,7 +1777,7 @@ const Qudemos = () => {
       {/* Generate Unique Links Modal */}
       {showUniqueLinksModal && qudemoToShare && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg shadow-none max-w-lg w-full mx-4">
+          <div className="bg-white rounded-lg border max-w-lg w-full mx-4">
             <div className="p-6">
               <div className="relative mb-4">
                 <h3 className="text-lg font-semibold text-graydark text-left">
@@ -1887,7 +1887,7 @@ const Qudemos = () => {
       {/* Bulk Upload Modal */}
       {showBulkUploadModal && qudemoToShare && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg shadow-none max-w-4xl w-full mx-4">
+          <div className="bg-white rounded-lg border max-w-4xl w-full mx-4">
             <div className="p-6">
               <div className="relative mb-4">
                 <h3 className="text-lg font-semibold text-graydark text-left">
@@ -2058,7 +2058,7 @@ const Qudemos = () => {
       {/* Generate Few Unique Links Modal */}
       {showFewUniqueLinksModal && qudemoToShare && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg shadow-none max-w-4xl w-full mx-4">
+          <div className="bg-white rounded-lg border max-w-4xl w-full mx-4">
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <button
@@ -2244,7 +2244,7 @@ const Qudemos = () => {
       {/* Generated Links Results Modal */}
       {showGeneratedLinksModal && generatedLinks.length > 0 && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg shadow-none max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-lg border max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-graydark text-left flex-1">
@@ -2439,7 +2439,7 @@ const Qudemos = () => {
       {/* Custom Delete Confirmation Modal */}
       {showDeleteModal && qudemoToDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg shadow-none max-w-md w-full mx-4">
+          <div className="bg-white rounded-lg border max-w-md w-full mx-4">
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-graydark">
@@ -2604,7 +2604,7 @@ const Qudemos = () => {
       {/* Download Generated File Modal */}
       {showDownloadModal && downloadData && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg shadow-none max-w-md w-full mx-4">
+          <div className="bg-white rounded-lg border max-w-md w-full mx-4">
             <div className="p-6">
               <div className="text-left mb-6">
                 <div className="flex items-center justify-start h-10 w-10 rounded-full bg-green-100 mb-4">
@@ -2692,7 +2692,7 @@ const Qudemos = () => {
       {/* People List Modal */}
       {showPeopleListModal && qudemoPeople.length > 0 && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg shadow-none max-w-2xl w-full mx-4 max-h-[80vh] overflow-hidden">
+          <div className="bg-white rounded-lg border max-w-2xl w-full mx-4 max-h-[80vh] overflow-hidden">
             {/* Modal Header */}
             <div className="px-6 py-4 border-b border-strokedark/10">
               <div className="flex items-center justify-between">
@@ -2790,7 +2790,7 @@ const Qudemos = () => {
       {/* Interaction Details Modal */}
       {showDetailsModal && selectedInteraction && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg shadow-none max-w-4xl w-full mx-4 max-h-[95vh] overflow-hidden">
+          <div className="bg-white rounded-lg border max-w-4xl w-full mx-4 max-h-[95vh] overflow-hidden">
             {/* Modal Header */}
             <div className="px-6 py-4 border-b border-strokedark/10">
               <div className="flex items-center justify-between">
@@ -3406,7 +3406,7 @@ const Qudemos = () => {
       {/* Interactions List Modal */}
       {showInteractionsListModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg shadow-none max-w-5xl w-full mx-4 max-h-[90vh] overflow-hidden">
+          <div className="bg-white rounded-lg border max-w-5xl w-full mx-4 max-h-[90vh] overflow-hidden">
             <div className="p-6">
               {/* Header */}
               <div className="flex items-center justify-between mb-6">
@@ -3709,7 +3709,7 @@ const Qudemos = () => {
       {/* Loading Interactions Modal */}
       {loadingInteractions && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg shadow-none max-w-sm w-full mx-4 p-6">
+          <div className="bg-white rounded-lg border max-w-sm w-full mx-4 p-6">
             <div className="flex flex-col items-center space-y-4">
               {/* Spinner */}
               <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>

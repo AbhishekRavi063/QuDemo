@@ -610,7 +610,7 @@ ${metadata.description || "Website content has been processed and is available f
         {knowledgeSources.map((source) => (
           <div
             key={source.id}
-            className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200"
+            className="bg-white rounded-lg border overflow-hidden border border-gray-200"
           >
             <div className="p-4">
               <div className="flex items-center justify-between mb-3">

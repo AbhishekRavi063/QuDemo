@@ -211,7 +211,7 @@ const PricingPage = () => {
       <div className="max-w-7xl mx-auto py-8">
         {/* Billing Toggle */}
         <div className="flex justify-center mb-8">
-          <div className="inline-flex items-center bg-white rounded-lg p-1 shadow-md">
+          <div className="inline-flex items-center bg-white rounded-lg p-1 border">
             <button
               onClick={() => setBillingCycle("monthly")}
               className={`px-6 py-2 rounded-md text-sm font-medium transition-all ${
@@ -403,7 +403,7 @@ const PricingPage = () => {
       {showNotification && (
         <div className="fixed top-4 right-4 z-50 animate-fade-in">
           <div
-            className={`rounded-lg p-4 shadow-lg max-w-md ${
+            className={`rounded-lg p-4 border max-w-md ${
               notificationType === "success"
                 ? "bg-green-50 border border-green-200"
                 : "bg-red-50 border border-red-200"

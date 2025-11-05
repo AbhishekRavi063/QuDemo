@@ -132,7 +132,7 @@ const WidgetTokenHelper = () => {
           {qudemos.map((qudemo) => (
             <div
               key={qudemo.id}
-              className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow border border-gray-200"
+              className="bg-white rounded-lg transition-shadow border border-gray-200"
             >
               <div className="p-6">
                 <div className="flex items-start justify-between mb-4">

@@ -87,7 +87,7 @@ const WidgetPlayground = () => {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Instructions Card */}
-        <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
+        <div className="bg-white rounded-xl border p-6 mb-6">
           <div className="flex items-start space-x-4">
             <div className="bg-purple-100 rounded-full p-3">
               <svg
@@ -149,7 +149,7 @@ const WidgetPlayground = () => {
         </div>
 
         {/* Demo Website Mockup */}
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+        <div className="bg-white rounded-xl border overflow-hidden">
           {/* Mockup Browser Bar */}
           <div className="bg-gray-100 border-b border-gray-300 px-4 py-3">
             <div className="flex items-center space-x-2">
@@ -212,7 +212,7 @@ const WidgetPlayground = () => {
                 ].map((feature, idx) => (
                   <div
                     key={idx}
-                    className="bg-white rounded-xl p-6 shadow-md border border-gray-200"
+                    className="bg-white rounded-xl p-6 border border border-gray-200"
                   >
                     <div className="text-4xl mb-3">{feature.icon}</div>
                     <h3 className="font-semibold text-gray-900 mb-2">
@@ -267,7 +267,7 @@ const WidgetPlayground = () => {
 
         {/* Features Info */}
         <div className="mt-6 grid md:grid-cols-2 gap-6">
-          <div className="bg-white rounded-xl p-6 shadow-lg">
+          <div className="bg-white rounded-xl p-6 border">
             <h3 className="font-semibold text-gray-900 mb-3 flex items-center space-x-2">
               <span className="text-2xl">✨</span>
               <span>Widget Features</span>
@@ -296,7 +296,7 @@ const WidgetPlayground = () => {
             </ul>
           </div>
 
-          <div className="bg-white rounded-xl p-6 shadow-lg">
+          <div className="bg-white rounded-xl p-6 border">
             <h3 className="font-semibold text-gray-900 mb-3 flex items-center space-x-2">
               <span className="text-2xl">🎨</span>
               <span>Customization Options</span>

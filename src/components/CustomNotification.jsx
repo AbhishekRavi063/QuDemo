@@ -64,7 +64,7 @@ const CustomNotification = ({ message, type = 'info', duration = 4000, onClose }
 
   return (
     <div
-      className={`fixed top-4 right-4 max-w-sm w-full bg-white border rounded-lg shadow-lg z-50 transform transition-all duration-300 ${
+      className={`fixed top-4 right-4 max-w-sm w-full bg-white border rounded-lg border z-50 transform transition-all duration-300 ${
         isLeaving ? 'translate-x-full opacity-0' : 'translate-x-0 opacity-100'
       }`}
     >

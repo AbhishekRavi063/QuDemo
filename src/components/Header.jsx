@@ -101,7 +101,7 @@ export default function Header({ onMenuClick }) {
   //   };
   // }, []);
   return (
-    <div className="sticky top-0 z-40 flex items-center justify-between px-4 sm:px-6 lg:px-8 py-4 bg-white border-b border-strokedark/10 shadow-none">
+    <div className="sticky top-0 z-20 flex items-center justify-between px-4 sm:px-6 lg:px-8 py-4 bg-white border-b border-strokedark/10 border">
       {/* Left - Sidebar Toggle Button + Search Bar */}
       <div className="flex items-center gap-4 flex-1">
         {/* Sidebar Toggle Button */}
@@ -286,7 +286,7 @@ export default function Header({ onMenuClick }) {
 
       {/* Logout Confirmation Modal */}
       {showLogoutModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-default">
             <div className="flex items-center mb-4">
               <svg

@@ -120,7 +120,7 @@ const OverviewPage = () => {
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         {/* Total Demo Views */}
-        <div className="bg-white rounded-lg shadow-none border border-strokedark/10 p-6 transition-shadow duration-200">
+        <div className="bg-white rounded-lg border border border-strokedark/10 p-6 transition-shadow duration-200">
           <div className="flex items-center justify-between">
             <div className="flex-1 text-left">
               <h3 className="text-sm font-medium text-bodydark mb-2 text-left">
@@ -137,7 +137,7 @@ const OverviewPage = () => {
         </div>
 
         {/* Questions Asked */}
-        <div className="bg-white rounded-lg shadow-none border border-strokedark/10 p-6 transition-shadow duration-200">
+        <div className="bg-white rounded-lg border border border-strokedark/10 p-6 transition-shadow duration-200">
           <div className="flex items-center justify-between">
             <div className="flex-1 text-left">
               <h3 className="text-sm font-medium text-bodydark mb-2 text-left">
@@ -154,7 +154,7 @@ const OverviewPage = () => {
         </div>
 
         {/* Avg. Engagement */}
-        <div className="bg-white rounded-lg shadow-none border border-strokedark/10 p-6 transition-shadow duration-200">
+        <div className="bg-white rounded-lg border border border-strokedark/10 p-6 transition-shadow duration-200">
           <div className="flex items-center justify-between">
             <div className="flex-1 text-left">
               <h3 className="text-sm font-medium text-bodydark mb-2 text-left">
@@ -185,7 +185,7 @@ const OverviewPage = () => {
           </button>
         </div>
 
-        <div className="bg-white rounded-lg shadow-none border border-strokedark/10 overflow-hidden">
+        <div className="bg-white rounded-lg border border border-strokedark/10 overflow-hidden">
           {recentInteractions.length > 0 ? (
             <div className="divide-y divide-strokedark/10">
               {recentInteractions.map((interaction, index) => (

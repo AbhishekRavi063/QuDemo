@@ -210,7 +210,7 @@ const BulkUploadsPage = () => {
           View all your customer bulk uploads and their details.
         </p>
       </div>
-      <div className="bg-white rounded-lg shadow-none border border-strokedark/10">
+      <div className="bg-white rounded-lg border border border-strokedark/10">
         <div className="overflow-x-auto">
           {bulkUploads.length > 0 ? (
             <>
