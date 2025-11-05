@@ -52,6 +52,14 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   const isPro = ["pro", "enterprise"].includes(subscriptionPlan) && isActive;
   const isEnterprise = subscriptionPlan === "enterprise" && isActive;
 
+  // Helper function to close sidebar only on mobile
+  const handleMobileClose = () => {
+    // Close sidebar only on mobile (< 768px which is Tailwind's md breakpoint)
+    if (window.innerWidth < 768) {
+      setIsOpen(false);
+    }
+  };
+
   const handlePlanClick = async (e) => {
     e.preventDefault();
     setIsOpen(false);
@@ -120,7 +128,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             <Link
               to="/overview"
               className="cursor-pointer"
-              onClick={() => setIsOpen(false)}
+              onClick={handleMobileClose}
             >
               <img
                 src="/Qudemo.svg"
@@ -166,7 +174,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                   <NavLink
                     key={name}
                     to={path}
-                    onClick={() => setIsOpen(false)} // Close menu on mobile after click
+                    onClick={handleMobileClose}
                     className={({ isActive }) => {
                       const baseClasses =
                         "flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all duration-200 relative group";
@@ -208,12 +216,12 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           <div className="flex flex-col space-y-0.5 px-4">
             <Link
               to="/profile"
+              onClick={handleMobileClose}
               className={`group flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
                 location.pathname === "/profile"
                   ? "bg-primary/10 text-primary"
                   : "text-graydark hover:bg-whiten"
               }`}
-              onClick={() => setIsOpen(false)}
             >
               <svg
                 className="h-5 w-5 flex-shrink-0"
@@ -233,12 +241,12 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
 
             <Link
               to="/bulk-uploads"
+              onClick={handleMobileClose}
               className={`group flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
                 location.pathname === "/bulk-uploads"
                   ? "bg-primary/10 text-primary"
                   : "text-graydark hover:bg-whiten"
               }`}
-              onClick={() => setIsOpen(false)}
             >
               <DocumentArrowUpIcon className="h-5 w-5 flex-shrink-0" />
               Bulk Upload
@@ -247,7 +255,6 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             <a
               href="mailto:mail@qudemo.com?subject=Help%20Request&body=Hi%20Qudemo%20Support%20Team,%0A%0AI%20need%20help%20with:%0A%0A"
               className="group flex items-center w-full gap-3 px-4 py-3 text-sm font-medium text-graydark hover:bg-whiten rounded-lg transition-all duration-200"
-              onClick={() => setIsOpen(false)}
             >
               <QuestionMarkCircleIcon className="h-5 w-5 flex-shrink-0" />
               Help and Support
