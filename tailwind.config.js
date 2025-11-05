@@ -37,7 +37,7 @@ module.exports = {
         bodydark2: "#8A99AF",
         strokedark: "#2E3A47",
         whiten: "#F1F5F9",
-        whiter: "#F5F7FD",
+        whiter: "#f9fafb",
         boxdark: "#24303F",
         "boxdark-2": "#1A222C",
         graydark: "#333A48",

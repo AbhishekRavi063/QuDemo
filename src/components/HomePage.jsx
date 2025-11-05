@@ -17,7 +17,7 @@ import {
 } from "react-icons/fa";
 import { StarBorder } from "./ui/star-border";
 import FadeInSection from "./FadeInSection";
-import InfiniteScroll from "./InfiniteScroll";
+import InfiniteScroll from "./ui/InfiniteScroll";
 import TestimonialCard from "./ui/TestimonialCard";
 import PricingCard from "./ui/PricingCard";
 import IntegrationCard from "./ui/IntegrationCard";

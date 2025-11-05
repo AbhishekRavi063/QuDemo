@@ -135,7 +135,7 @@ export default function Header({ onMenuClick }) {
               />
             </svg>
             <kbd className="absolute right-3 top-1/2 -translate-y-1/2 px-2 py-0.5 text-xs font-semibold text-bodydark2 bg-white border border-strokedark/10 rounded">
-              ⌘K
+              ⌘ K
             </kbd>
           </div>
         </div>
