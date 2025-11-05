@@ -112,7 +112,7 @@ const ProtectedRoute = ({ children }) => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div>
       </div>
     );
   }
@@ -127,7 +127,7 @@ const CompanyCheck = ({ children }) => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div>
       </div>
     );
   }
@@ -211,9 +211,7 @@ const DashboardLayout = ({ children }) => {
 
           {/* Main Content - Scrollable */}
           <main className="flex-1 overflow-x-hidden overflow-y-auto bg-whiter">
-            <div className="mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
-              {children}
-            </div>
+            <div className="mx-auto p-8">{children}</div>
           </main>
         </div>
       </div>

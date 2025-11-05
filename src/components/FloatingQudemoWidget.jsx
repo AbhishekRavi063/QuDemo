@@ -1557,7 +1557,7 @@ const FloatingQudemoWidget = ({
           >
             {loading ? (
               <div className="w-full p-8 flex flex-col items-center justify-center bg-white">
-                <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
+                <div className="animate-spin rounded-full h-10 w-10 border-4 border-blue-500 border-t-transparent"></div>
                 <p className="mt-4 text-gray-600">Loading demo...</p>
               </div>
             ) : (videoFlow &&
@@ -1650,7 +1650,7 @@ const FloatingQudemoWidget = ({
                   }}
                 >
                   {/* Chat header */}
-                  <div className="bg-blue-600 text-white px-3 py-2 md:px-4 md:py-3 flex items-center gap-2 flex-shrink-0">
+                  <div className="bg-blue-600 text-white px-3 h-10 md:px-4 md:py-3 flex items-center gap-2 flex-shrink-0">
                     <svg
                       className="w-5 h-5"
                       fill="none"

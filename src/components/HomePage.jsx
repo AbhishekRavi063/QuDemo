@@ -383,7 +383,7 @@ const HomePage = () => {
 
         {/* Why Choose Us Section */}
         <FadeInSection delay={0.1}>
-          <div className="py-20 px-6 min-h-[80vh] relative" id="benefits">
+          <div className="h-100 px-6 min-h-[80vh] relative" id="benefits">
             <div className="max-w-7xl mx-auto text-center flex flex-col">
               <div
                 style={{
@@ -506,7 +506,7 @@ const HomePage = () => {
             </div>
           </div>
 
-          <div className="py-20 px-6 min-h-[80vh]" id="why">
+          <div className="h-100 px-6 min-h-[80vh]" id="why">
             <div className="max-w-7xl mx-auto text-center flex flex-col">
               <div className="flex justify-center mb-8">
                 <StarBorder
@@ -608,7 +608,7 @@ const HomePage = () => {
         {/* Testimonials Section */}
         <FadeInSection delay={0.1}>
           <div
-            className="py-20 px-6 min-h-[80vh] flex flex-col justify-center"
+            className="h-100 px-6 min-h-[80vh] flex flex-col justify-center"
             id="testimonials"
           >
             <div className="max-w-7xl mx-auto text-center flex flex-col">
@@ -681,7 +681,7 @@ const HomePage = () => {
         {/* Pricing Section */}
         <FadeInSection delay={0.1}>
           <div
-            className="py-20 px-6 min-h-[80vh] w-full flex flex-col justify-center"
+            className="h-100 px-6 min-h-[80vh] w-full flex flex-col justify-center"
             id="pricing"
           >
             <div className="max-w-7xl mx-auto w-full text-center">
@@ -764,7 +764,7 @@ const HomePage = () => {
         {/* Quote Section */}
         <FadeInSection delay={0.1}>
           <div
-            className="py-20 px-6 bg-black"
+            className="h-100 px-6 bg-black"
             style={{
               borderColor: "rgba(138, 165, 255, 0.3)",
               boxShadow: "0 4px 24px rgba(41, 52, 255, 0.1)",
@@ -811,7 +811,7 @@ const HomePage = () => {
 
         {/* Seamless Integrations Section */}
         <FadeInSection delay={0.1}>
-          <div className="py-20 px-6 relative min-h-[100vh] flex items-center justify-center overflow-hidden">
+          <div className="h-100 px-6 relative min-h-[100vh] flex items-center justify-center overflow-hidden">
             <div className="max-w-7xl mx-auto text-center relative w-full">
               {/* Badge */}
               <div className="flex justify-center mb-8">
@@ -1228,7 +1228,7 @@ const HomePage = () => {
         {/* Integrations Section */}
         <FadeInSection delay={0.1}>
           <div
-            className="py-20 px-6 flex min-h-[80vh] flex-col justify-center"
+            className="h-100 px-6 flex min-h-[80vh] flex-col justify-center"
             id="integrations"
           >
             <div className="max-w-7xl mx-auto text-center w-full">
@@ -1262,7 +1262,7 @@ const HomePage = () => {
         {/* Comparison Section */}
         <FadeInSection delay={0.1}>
           <div
-            className="py-20 px-6 min-h-[80vh] flex flex-col justify-center"
+            className="h-100 px-6 min-h-[80vh] flex flex-col justify-center"
             id="comparison"
           >
             <div className="max-w-7xl mx-auto text-center">
@@ -1750,7 +1750,7 @@ const HomePage = () => {
 
         {/* Final Call-to-Action Section */}
         <FadeInSection delay={0.1}>
-          <div className="py-20 px-6 relative min-h-[80vh] flex flex-col justify-center">
+          <div className="h-100 px-6 relative min-h-[80vh] flex flex-col justify-center">
             <div className="max-w-4xl mx-auto text-center relative">
               <div
                 className="absolute inset-0 rounded-3xl"

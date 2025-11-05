@@ -114,7 +114,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         `}
       >
         {/* Logo Section */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-strokedark/10">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-strokedark/10">
           <Link
             to="/overview"
             className="cursor-pointer"
@@ -123,7 +123,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             <img
               src="/Qudemo.svg"
               alt="Qudemo Logo"
-              className="h-12 ml-2.5 scale-[2] w-auto hover:opacity-80 transition-opacity"
+              className="h-10 ml-5 scale-[2.5] w-auto hover:opacity-80 transition-opacity"
             />
           </Link>
           {/* Close button (mobile only) */}
@@ -170,12 +170,12 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                       "flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all duration-200 relative group";
 
                     if (isActive) {
-                      return `${baseClasses} bg-primary/10 text-primary`;
+                      return `${baseClasses} bg-blue-500/10 text-primary`;
                     } else {
                       if (showLock) {
-                        return `${baseClasses} text-graydark hover:bg-whiten`;
+                        return `${baseClasses} text-graydark hover:bg-blue-500/10`;
                       } else {
-                        return `${baseClasses} text-graydark hover:bg-whiten`;
+                        return `${baseClasses} text-graydark hover:bg-blue-500/10`;
                       }
                     }
                   }}
@@ -183,7 +183,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                   {Icon && <Icon className="h-5 w-5 flex-shrink-0" />}
                   {/* COMMENTED OUT FOR TESTING - No lock icons shown */}
                   {/* {showLock && <LockClosedIcon className="h-3 w-3" />} */}
-                  <span className="text-base">{name}</span>
+                  <span className="text-sm">{name}</span>
                   {isBeta && (
                     <span className="ml-auto px-2 py-0.5 text-xs font-semibold text-white bg-success rounded">
                       NEW
@@ -206,7 +206,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         <div className="flex flex-col space-y-0.5 px-4">
           <Link
             to="/profile"
-            className={`group flex items-center gap-3 px-4 py-3 text-base font-medium rounded-lg transition-all duration-200 ${
+            className={`group flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
               location.pathname === "/profile"
                 ? "bg-primary/10 text-primary"
                 : "text-graydark hover:bg-whiten"
@@ -231,7 +231,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
 
           <Link
             to="/bulk-uploads"
-            className={`group flex items-center gap-3 px-4 py-3 text-base font-medium rounded-lg transition-all duration-200 ${
+            className={`group flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
               location.pathname === "/bulk-uploads"
                 ? "bg-primary/10 text-primary"
                 : "text-graydark hover:bg-whiten"
@@ -244,7 +244,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
 
           <a
             href="mailto:mail@qudemo.com?subject=Help%20Request&body=Hi%20Qudemo%20Support%20Team,%0A%0AI%20need%20help%20with:%0A%0A"
-            className="group flex items-center w-full gap-3 px-4 py-3 text-base font-medium text-graydark hover:bg-whiten rounded-lg transition-all duration-200"
+            className="group flex items-center w-full gap-3 px-4 py-3 text-sm font-medium text-graydark hover:bg-whiten rounded-lg transition-all duration-200"
             onClick={() => setIsOpen(false)}
           >
             <QuestionMarkCircleIcon className="h-5 w-5 flex-shrink-0" />

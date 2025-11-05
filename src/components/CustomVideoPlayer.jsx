@@ -1,11 +1,16 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { SpeakerWaveIcon, SpeakerXMarkIcon, PlayIcon, PauseIcon } from '@heroicons/react/24/outline';
+import React, { useState, useRef, useEffect } from "react";
+import {
+  SpeakerWaveIcon,
+  SpeakerXMarkIcon,
+  PlayIcon,
+  PauseIcon,
+} from "@heroicons/react/24/outline";
 
-const CustomVideoPlayer = ({ 
-  url, 
-  width = '100%', 
-  height = '100%', 
-  controls = true, 
+const CustomVideoPlayer = ({
+  url,
+  width = "100%",
+  height = "100%",
+  controls = true,
   playing = true,
   startTime = 0,
   onReady,
@@ -13,7 +18,7 @@ const CustomVideoPlayer = ({
   onPause,
   onEnded,
   style = {},
-  className = ''
+  className = "",
 }) => {
   const videoRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(playing);
@@ -27,13 +32,11 @@ const CustomVideoPlayer = ({
   // Handle startTime changes
   useEffect(() => {
     if (videoRef.current && startTime > 0 && videoRef.current.readyState >= 2) {
-
       videoRef.current.currentTime = startTime;
-      
+
       // Force play when timestamp changes (even if user manually paused)
       if (playing) {
-
-        videoRef.current.play().catch(e => {});
+        videoRef.current.play().catch((e) => {});
         setIsPlaying(true);
         if (onPlay) onPlay();
       }
@@ -44,13 +47,12 @@ const CustomVideoPlayer = ({
   const handleLoadedMetadata = () => {
     if (videoRef.current) {
       setDuration(videoRef.current.duration);
-      
+
       // Set start time if provided
       if (startTime > 0) {
-
         videoRef.current.currentTime = startTime;
       }
-      
+
       // Try to enable audio immediately
       enableAudioImmediately();
       if (onReady) onReady();
@@ -66,20 +68,17 @@ const CustomVideoPlayer = ({
         setIsMuted(false);
         setVolume(1.0);
         setHasUserInteracted(true);
-        
+
         // Try to play with audio
         if (playing) {
-          videoRef.current.play().catch(e => {
-
+          videoRef.current.play().catch((e) => {
             // Fallback to muted autoplay
             videoRef.current.muted = true;
             setIsMuted(true);
-            videoRef.current.play().catch(e2 => {});
+            videoRef.current.play().catch((e2) => {});
           });
         }
-      } catch (error) {
-
-      }
+      } catch (error) {}
     }
   };
 
@@ -111,7 +110,7 @@ const CustomVideoPlayer = ({
       const newMutedState = !isMuted;
       videoRef.current.muted = newMutedState;
       setIsMuted(newMutedState);
-      
+
       // If unmuting, set volume to previous level
       if (!newMutedState && volume === 0) {
         setVolume(1.0);
@@ -153,10 +152,10 @@ const CustomVideoPlayer = ({
         videoRef.current.volume = 1.0;
         setIsMuted(false);
         setVolume(1.0);
-        
+
         // Try to play if not already playing
         if (!isPlaying) {
-          videoRef.current.play().catch(e => {});
+          videoRef.current.play().catch((e) => {});
         }
       }
     }
@@ -166,7 +165,7 @@ const CustomVideoPlayer = ({
   const formatTime = (time) => {
     const minutes = Math.floor(time / 60);
     const seconds = Math.floor(time % 60);
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
   };
 
   // Auto-hide controls
@@ -190,7 +189,7 @@ const CustomVideoPlayer = ({
   };
 
   return (
-    <div 
+    <div
       className={`relative bg-black ${className}`}
       style={{ width, height, ...style }}
       onMouseMove={handleMouseMove}
@@ -201,7 +200,7 @@ const CustomVideoPlayer = ({
       <video
         ref={videoRef}
         src={url}
-        style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+        style={{ width: "100%", height: "100%", objectFit: "contain" }}
         onLoadedMetadata={handleLoadedMetadata}
         onTimeUpdate={handleTimeUpdate}
         onEnded={handleEnded}
@@ -216,7 +215,9 @@ const CustomVideoPlayer = ({
 
       {/* Custom Controls */}
       {controls && (
-        <div className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0'}`}>
+        <div
+          className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 transition-opacity duration-300 ${showControls ? "opacity-100" : "opacity-0"}`}
+        >
           {/* Progress Bar */}
           <div className="mb-2">
             <input
@@ -227,7 +228,7 @@ const CustomVideoPlayer = ({
               onChange={handleSeek}
               className="w-full h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer slider"
               style={{
-                background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${(currentTime / duration) * 100}%, #6b7280 ${(currentTime / duration) * 100}%, #6b7280 100%)`
+                background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${(currentTime / duration) * 100}%, #6b7280 ${(currentTime / duration) * 100}%, #6b7280 100%)`,
               }}
             />
           </div>
@@ -288,7 +289,7 @@ const CustomVideoPlayer = ({
             onClick={togglePlay}
             className="bg-white/20 backdrop-blur-sm rounded-full p-4 hover:bg-white/30 transition-colors"
           >
-            <PlayIcon className="h-12 w-12 text-white" />
+            <PlayIcon className="h-10 w-10 text-white" />
           </button>
         </div>
       )}
@@ -315,4 +316,4 @@ const CustomVideoPlayer = ({
   );
 };
 
-export default CustomVideoPlayer; 
+export default CustomVideoPlayer;

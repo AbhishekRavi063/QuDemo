@@ -49,7 +49,7 @@ const WidgetGeneratorModal = ({ isOpen, onClose, widgetData, qudemo }) => {
           <div className="flex space-x-2 bg-gray-100 rounded-lg p-1">
             <button
               onClick={() => setSelectedTab("script")}
-              className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
+              className={`flex-1 h-10 px-4 rounded-md font-medium transition-colors ${
                 selectedTab === "script"
                   ? "bg-white text-purple-600 shadow-sm"
                   : "text-gray-600 hover:text-gray-900"
@@ -59,7 +59,7 @@ const WidgetGeneratorModal = ({ isOpen, onClose, widgetData, qudemo }) => {
             </button>
             <button
               onClick={() => setSelectedTab("iframe")}
-              className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
+              className={`flex-1 h-10 px-4 rounded-md font-medium transition-colors ${
                 selectedTab === "iframe"
                   ? "bg-white text-purple-600 shadow-sm"
                   : "text-gray-600 hover:text-gray-900"

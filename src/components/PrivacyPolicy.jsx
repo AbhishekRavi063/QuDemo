@@ -210,7 +210,7 @@ const PrivacyPolicy = () => {
                 <div className="mt-12 text-center">
                   <button
                     onClick={() => navigate("/")}
-                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition-all duration-200"
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold h-10 px-8 rounded-lg transition-all duration-200"
                   >
                     Back to Home
                   </button>

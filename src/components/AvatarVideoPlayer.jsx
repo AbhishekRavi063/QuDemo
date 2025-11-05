@@ -1,8 +1,8 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from "react";
 
 /**
  * AvatarVideoPlayer Component
- * 
+ *
  * Displays HeyGen-generated AI avatar videos for document-based answers.
  * Provides a modern video player with playback controls.
  */
@@ -20,11 +20,14 @@ const AvatarVideoPlayer = ({ avatarVideoUrl, answer, isVisible }) => {
 
     // Auto-play when visible
     if (isVisible && video.paused) {
-      video.play().then(() => {
-        setIsPlaying(true);
-      }).catch(err => {
-        console.error('Autoplay failed:', err);
-      });
+      video
+        .play()
+        .then(() => {
+          setIsPlaying(true);
+        })
+        .catch((err) => {
+          console.error("Autoplay failed:", err);
+        });
     }
 
     const handleTimeUpdate = () => {
@@ -49,30 +52,32 @@ const AvatarVideoPlayer = ({ avatarVideoUrl, answer, isVisible }) => {
     };
 
     const handleError = (e) => {
-      console.error('🎬 Avatar Video Error:', {
+      console.error("🎬 Avatar Video Error:", {
         error: e,
         videoUrl: avatarVideoUrl,
-        encodedUrl: avatarVideoUrl?.replace(/ /g, '%20'),
-        videoElement: videoRef.current
+        encodedUrl: avatarVideoUrl?.replace(/ /g, "%20"),
+        videoElement: videoRef.current,
       });
-      setError('Failed to load avatar video. Please check if the video is accessible.');
+      setError(
+        "Failed to load avatar video. Please check if the video is accessible.",
+      );
       setIsLoading(false);
     };
 
-    video.addEventListener('timeupdate', handleTimeUpdate);
-    video.addEventListener('loadedmetadata', handleLoadedMetadata);
-    video.addEventListener('play', handlePlay);
-    video.addEventListener('pause', handlePause);
-    video.addEventListener('ended', handleEnded);
-    video.addEventListener('error', handleError);
+    video.addEventListener("timeupdate", handleTimeUpdate);
+    video.addEventListener("loadedmetadata", handleLoadedMetadata);
+    video.addEventListener("play", handlePlay);
+    video.addEventListener("pause", handlePause);
+    video.addEventListener("ended", handleEnded);
+    video.addEventListener("error", handleError);
 
     return () => {
-      video.removeEventListener('timeupdate', handleTimeUpdate);
-      video.removeEventListener('loadedmetadata', handleLoadedMetadata);
-      video.removeEventListener('play', handlePlay);
-      video.removeEventListener('pause', handlePause);
-      video.removeEventListener('ended', handleEnded);
-      video.removeEventListener('error', handleError);
+      video.removeEventListener("timeupdate", handleTimeUpdate);
+      video.removeEventListener("loadedmetadata", handleLoadedMetadata);
+      video.removeEventListener("play", handlePlay);
+      video.removeEventListener("pause", handlePause);
+      video.removeEventListener("ended", handleEnded);
+      video.removeEventListener("error", handleError);
     };
   }, [isVisible]);
 
@@ -97,10 +102,10 @@ const AvatarVideoPlayer = ({ avatarVideoUrl, answer, isVisible }) => {
   };
 
   const formatTime = (seconds) => {
-    if (isNaN(seconds)) return '0:00';
+    if (isNaN(seconds)) return "0:00";
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
   if (error) {
@@ -118,7 +123,7 @@ const AvatarVideoPlayer = ({ avatarVideoUrl, answer, isVisible }) => {
         {isLoading && (
           <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 z-10">
             <div className="flex flex-col items-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-white"></div>
               <p className="text-white mt-2 text-sm">Loading avatar video...</p>
             </div>
           </div>
@@ -127,7 +132,7 @@ const AvatarVideoPlayer = ({ avatarVideoUrl, answer, isVisible }) => {
         <video
           ref={videoRef}
           className="w-full h-full object-cover"
-          src={avatarVideoUrl.replace(/ /g, '%20')}
+          src={avatarVideoUrl.replace(/ /g, "%20")}
           autoPlay
           muted={false}
           preload="auto"
@@ -177,12 +182,28 @@ const AvatarVideoPlayer = ({ avatarVideoUrl, answer, isVisible }) => {
                   className="hover:scale-110 transition-transform"
                 >
                   {isPlaying ? (
-                    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                    <svg
+                      className="w-6 h-6"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z"
+                        clipRule="evenodd"
+                      />
                     </svg>
                   ) : (
-                    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+                    <svg
+                      className="w-6 h-6"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"
+                        clipRule="evenodd"
+                      />
                     </svg>
                   )}
                 </button>
@@ -204,4 +225,3 @@ const AvatarVideoPlayer = ({ avatarVideoUrl, answer, isVisible }) => {
 };
 
 export default AvatarVideoPlayer;
-

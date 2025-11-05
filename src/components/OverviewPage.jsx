@@ -90,7 +90,7 @@ const OverviewPage = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -98,7 +98,7 @@ const OverviewPage = () => {
   return (
     <div className="bg-whiter min-h-screen">
       {/* Header */}
-      <div className="flex justify-between items-start mb-6 pt-6 px-6">
+      <div className="flex justify-between items-start mb-6">
         <div className="text-left">
           <h1 className="text-3xl font-bold text-graydark text-left">
             Overview
@@ -110,7 +110,7 @@ const OverviewPage = () => {
 
         <button
           onClick={handleCreateQudemo}
-          className="bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-lg font-medium flex items-center gap-2 transition-all duration-200 shadow-card"
+          className="bg-primary hover:bg-primary/90 text-white px-6 h-10 rounded-lg font-medium flex items-center gap-2 transition-all duration-200"
         >
           <PlusIcon className="w-5 h-5" />
           Create Qudemo
@@ -118,7 +118,7 @@ const OverviewPage = () => {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 px-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         {/* Total Demo Views */}
         <div className="bg-white rounded-lg shadow-none border border-strokedark/10 p-6 transition-shadow duration-200">
           <div className="flex items-center justify-between">
@@ -172,14 +172,14 @@ const OverviewPage = () => {
       </div>
 
       {/* Recent Interactions Section */}
-      <div className="px-6 mt-8">
+      <div className="mt-8">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-graydark text-left">
             Recent Interactions
           </h2>
           <button
             onClick={() => navigate("/customer-interactions")}
-            className="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
+            className="bg-primary hover:bg-primary/90 text-white px-6 h-10 rounded-lg text-sm font-medium transition-colors duration-200"
           >
             View in Detail
           </button>
@@ -225,7 +225,7 @@ const OverviewPage = () => {
             </div>
           ) : (
             <div className="p-8 text-center">
-              <ChatBubbleLeftRightIcon className="w-12 h-12 text-bodydark mx-auto mb-4" />
+              <ChatBubbleLeftRightIcon className="w-12 h-10 text-bodydark mx-auto mb-4" />
               <p className="text-bodydark text-sm">
                 No recent interactions found
               </p>

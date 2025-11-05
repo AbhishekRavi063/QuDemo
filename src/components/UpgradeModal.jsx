@@ -132,7 +132,7 @@ const UpgradeModal = ({ isOpen, onClose, errorDetails }) => {
           <div className="space-y-3">
             <button
               onClick={handleUpgrade}
-              className={`w-full py-2.5 px-6 text-white rounded-lg font-semibold transition-all transform hover:scale-105 ${
+              className={`w-full h-10 px-6 text-white rounded-lg font-semibold transition-all transform hover:scale-105 ${
                 isCancelled
                   ? "bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700"
                   : "bg-blue-600 hover:bg-blue-700"
@@ -142,7 +142,7 @@ const UpgradeModal = ({ isOpen, onClose, errorDetails }) => {
             </button>
             <button
               onClick={onClose}
-              className="w-full py-2.5 px-6 bg-gray-100 text-gray-700 rounded-lg font-semibold hover:bg-gray-200 transition-colors"
+              className="w-full h-10 px-6 bg-gray-100 text-gray-700 rounded-lg font-semibold hover:bg-gray-200 transition-colors"
             >
               {isCancelled ? "Continue with Free Plan" : "Maybe Later"}
             </button>

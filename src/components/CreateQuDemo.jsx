@@ -1,7 +1,5 @@
 import React, { useState, useRef } from "react";
-import {
-  XMarkIcon,
-} from "@heroicons/react/24/outline";
+import { XMarkIcon } from "@heroicons/react/24/outline";
 import { useCompany } from "../context/CompanyContext";
 import { getNodeApiUrl } from "../config/api";
 import { useNavigate } from "react-router-dom";
@@ -25,7 +23,7 @@ const CreateQuDemo = () => {
   // Error popup state
   const [showErrorPopup, setShowErrorPopup] = useState(false);
   const [errorPopupData, setErrorPopupData] = useState(null);
-  
+
   // Avatar video feature states
   const [presenterPhoto, setPresenterPhoto] = useState(null);
   const [presenterPhotoPreview, setPresenterPhotoPreview] = useState(null);
@@ -48,7 +46,7 @@ const CreateQuDemo = () => {
     setPresenterName("");
     // Navigate to qudemos page after closing popup
     setTimeout(() => {
-      navigate('/qudemos');
+      navigate("/qudemos");
     }, 100);
   };
 
@@ -57,7 +55,7 @@ const CreateQuDemo = () => {
     const file = e.target.files[0];
     if (file) {
       // Validate file type
-      if (!file.type.startsWith('image/')) {
+      if (!file.type.startsWith("image/")) {
         setError("Please upload an image file (JPG, PNG, etc.)");
         return;
       }
@@ -66,9 +64,9 @@ const CreateQuDemo = () => {
         setError("Image size must be less than 5MB");
         return;
       }
-      
+
       setPresenterPhoto(file);
-      
+
       // Create preview
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -104,14 +102,14 @@ const CreateQuDemo = () => {
     // Real-time validation
     if (value.trim()) {
       const validation = validateVideoUrl(value);
-      setUrlValidationErrors(prev => ({
+      setUrlValidationErrors((prev) => ({
         ...prev,
-        [index]: validation.isValid ? null : validation.error
+        [index]: validation.isValid ? null : validation.error,
       }));
     } else {
-      setUrlValidationErrors(prev => ({
+      setUrlValidationErrors((prev) => ({
         ...prev,
-        [index]: null
+        [index]: null,
       }));
     }
   };
@@ -122,14 +120,14 @@ const CreateQuDemo = () => {
     // Real-time validation
     if (value.trim()) {
       const validation = validateWebsiteUrl(value);
-      setUrlValidationErrors(prev => ({
+      setUrlValidationErrors((prev) => ({
         ...prev,
-        [`website_${index}`]: validation.isValid ? null : validation.error
+        [`website_${index}`]: validation.isValid ? null : validation.error,
       }));
     } else {
-      setUrlValidationErrors(prev => ({
+      setUrlValidationErrors((prev) => ({
         ...prev,
-        [`website_${index}`]: null
+        [`website_${index}`]: null,
       }));
     }
   };
@@ -146,17 +144,18 @@ const CreateQuDemo = () => {
       return { isValid: false, error: "Please enter a valid URL" };
     }
     // Check if it's YouTube
-    if (trimmedUrl.includes('youtube.com') || trimmedUrl.includes('youtu.be')) {
-      return { isValid: true, type: 'youtube' };
+    if (trimmedUrl.includes("youtube.com") || trimmedUrl.includes("youtu.be")) {
+      return { isValid: true, type: "youtube" };
     }
     // Check if it's Loom
-    if (trimmedUrl.includes('loom.com')) {
-      return { isValid: true, type: 'loom' };
+    if (trimmedUrl.includes("loom.com")) {
+      return { isValid: true, type: "loom" };
     }
     // If it's neither YouTube nor Loom
-    return { 
-      isValid: false, 
-      error: "Only YouTube and Loom video links are supported. Please provide a valid YouTube or Loom URL." 
+    return {
+      isValid: false,
+      error:
+        "Only YouTube and Loom video links are supported. Please provide a valid YouTube or Loom URL.",
     };
   };
   // Website URL validation function
@@ -172,10 +171,16 @@ const CreateQuDemo = () => {
       return { isValid: false, error: "Please enter a valid URL" };
     }
     // Check if it's HTTP or HTTPS
-    if (!trimmedUrl.startsWith('http://') && !trimmedUrl.startsWith('https://')) {
-      return { isValid: false, error: "URL must start with http:// or https://" };
+    if (
+      !trimmedUrl.startsWith("http://") &&
+      !trimmedUrl.startsWith("https://")
+    ) {
+      return {
+        isValid: false,
+        error: "URL must start with http:// or https://",
+      };
     }
-    return { isValid: true, type: 'website' };
+    return { isValid: true, type: "website" };
   };
 
   // Calendly URL validation function
@@ -185,7 +190,7 @@ const CreateQuDemo = () => {
     }
 
     const trimmedUrl = url.trim();
-    
+
     // Check if it's a valid URL format
     try {
       new URL(trimmedUrl);
@@ -194,8 +199,12 @@ const CreateQuDemo = () => {
     }
 
     // Check if it's a Calendly URL
-    if (!trimmedUrl.includes('calendly.com')) {
-      return { isValid: false, error: "Please enter a valid Calendly URL (should contain calendly.com)" };
+    if (!trimmedUrl.includes("calendly.com")) {
+      return {
+        isValid: false,
+        error:
+          "Please enter a valid Calendly URL (should contain calendly.com)",
+      };
     }
 
     return { isValid: true };
@@ -208,8 +217,12 @@ const CreateQuDemo = () => {
       return true;
     }
     // Check if we have any valid content (videos or websites)
-    const hasValidVideos = videoUrls.some(url => url.trim() && validateVideoUrl(url.trim()).isValid);
-    const hasValidWebsites = websiteUrls.some(url => url.trim() && validateWebsiteUrl(url.trim()).isValid);
+    const hasValidVideos = videoUrls.some(
+      (url) => url.trim() && validateVideoUrl(url.trim()).isValid,
+    );
+    const hasValidWebsites = websiteUrls.some(
+      (url) => url.trim() && validateWebsiteUrl(url.trim()).isValid,
+    );
     if (!hasValidVideos && !hasValidWebsites) {
       return false;
     }
@@ -225,10 +238,10 @@ const CreateQuDemo = () => {
       const validation = validateWebsiteUrl(url);
       return validation.isValid;
     });
-    
+
     // Check Calendly URL (optional but must be valid if provided)
     const calendlyUrlValid = validateCalendlyUrl(calendlyLink).isValid;
-    
+
     const isValid = videoUrlsValid && websiteUrlsValid && calendlyUrlValid;
     return isValid;
   };
@@ -239,12 +252,12 @@ const CreateQuDemo = () => {
     const updated = videoUrls.filter((_, i) => i !== index);
     setVideoUrls(updated);
     // Clean up validation errors for removed field
-    setUrlValidationErrors(prev => {
+    setUrlValidationErrors((prev) => {
       const newErrors = { ...prev };
       delete newErrors[index];
       // Shift remaining errors down
       const shiftedErrors = {};
-      Object.keys(newErrors).forEach(key => {
+      Object.keys(newErrors).forEach((key) => {
         const keyIndex = parseInt(key);
         if (keyIndex > index) {
           shiftedErrors[keyIndex - 1] = newErrors[key];
@@ -262,20 +275,20 @@ const CreateQuDemo = () => {
     const updated = websiteUrls.filter((_, i) => i !== index);
     setWebsiteUrls(updated);
     // Clean up validation errors for removed field
-    setUrlValidationErrors(prev => {
+    setUrlValidationErrors((prev) => {
       const newErrors = { ...prev };
       delete newErrors[`website_${index}`];
       // Shift remaining errors down
       const shiftedErrors = {};
-      Object.keys(newErrors).forEach(key => {
-        if (key.startsWith('website_')) {
-          const keyIndex = parseInt(key.replace('website_', ''));
+      Object.keys(newErrors).forEach((key) => {
+        if (key.startsWith("website_")) {
+          const keyIndex = parseInt(key.replace("website_", ""));
           if (keyIndex > index) {
             shiftedErrors[`website_${keyIndex - 1}`] = newErrors[key];
           } else if (keyIndex < index) {
             shiftedErrors[`website_${keyIndex}`] = newErrors[key];
           }
-      } else {
+        } else {
           shiftedErrors[key] = newErrors[key];
         }
       });
@@ -305,7 +318,7 @@ const CreateQuDemo = () => {
   //         }
   //       }
   //     } catch (err) {
-  //       
+  //
   //     }
   //   }, 5000);
   //   setProgressInterval(interval);
@@ -336,7 +349,7 @@ const CreateQuDemo = () => {
   //       }
   //     }
   //   } catch (err) {
-  //     
+  //
   //   }
   // };
   // Load knowledge sources on component mount - COMMENTED OUT (not used)
@@ -377,17 +390,26 @@ const CreateQuDemo = () => {
     try {
       // Validate required fields
       if (!company || !company.id) {
-        setError("Company information is required. Please refresh the page and try again.");
+        setError(
+          "Company information is required. Please refresh the page and try again.",
+        );
         return;
       }
       // Validate video URLs and website URLs
-      const validVideoUrls = videoUrls.filter(url => url.trim());
-      const validWebsiteUrls = websiteUrls.filter(url => url.trim());
+      const validVideoUrls = videoUrls.filter((url) => url.trim());
+      const validWebsiteUrls = websiteUrls.filter((url) => url.trim());
       // Check if we have either videos, websites, or documents/files
       const hasDocuments = documents.length > 0;
       const hasSelectedFiles = selectedFiles.length > 0;
-      if (validVideoUrls.length === 0 && validWebsiteUrls.length === 0 && !hasDocuments && !hasSelectedFiles) {
-        setError("Please provide at least one video URL, website URL, or upload documents to create a QuDemo.");
+      if (
+        validVideoUrls.length === 0 &&
+        validWebsiteUrls.length === 0 &&
+        !hasDocuments &&
+        !hasSelectedFiles
+      ) {
+        setError(
+          "Please provide at least one video URL, website URL, or upload documents to create a QuDemo.",
+        );
         return;
       }
       // Validate each video URL
@@ -416,10 +438,10 @@ const CreateQuDemo = () => {
         videos: validVideoUrls.map((url, index) => {
           const validation = validateVideoUrl(url);
           return {
-          url: url.trim(),
+            url: url.trim(),
             type: validation.type,
-          title: `Video ${index + 1}`,
-          order: index + 1
+            title: `Video ${index + 1}`,
+            order: index + 1,
           };
         }),
         websites: validWebsiteUrls.map((url, index) => {
@@ -428,155 +450,201 @@ const CreateQuDemo = () => {
             url: url.trim(),
             type: validation.type,
             title: `Website ${index + 1}`,
-            order: index + 1
+            order: index + 1,
           };
         }),
-        knowledgeSources: sources.filter(source => source.trim()).map(source => ({
-          url: source.trim(),
-          type: 'website'
-        }))
+        knowledgeSources: sources
+          .filter((source) => source.trim())
+          .map((source) => ({
+            url: source.trim(),
+            type: "website",
+          })),
       };
-      const token = localStorage.getItem('accessToken');
-      const createResponse = await fetch(getNodeApiUrl('/api/qudemos'), {
-        method: 'POST',
+      const token = localStorage.getItem("accessToken");
+      const createResponse = await fetch(getNodeApiUrl("/api/qudemos"), {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(qudemoData)
+        body: JSON.stringify(qudemoData),
       });
       const createResult = await createResponse.json();
       if (!createResult.success) {
-        throw new Error(createResult.error || 'Failed to create qudemo');
+        throw new Error(createResult.error || "Failed to create qudemo");
       }
       const qudemoId = createResult.data.id;
       setCreatedQudemoId(qudemoId); // Set the created QuDemo ID
-      
+
       // Upload presenter photo if provided
       if (presenterPhoto) {
         try {
           const formData = new FormData();
-          formData.append('presenterPhoto', presenterPhoto);
-          formData.append('qudemoId', qudemoId);
-          formData.append('companyName', company.name);
-          
-          const photoResponse = await fetch(getNodeApiUrl('/api/qudemos/upload-presenter-photo'), {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${token}`
+          formData.append("presenterPhoto", presenterPhoto);
+          formData.append("qudemoId", qudemoId);
+          formData.append("companyName", company.name);
+
+          const photoResponse = await fetch(
+            getNodeApiUrl("/api/qudemos/upload-presenter-photo"),
+            {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+              body: formData,
             },
-            body: formData
-          });
-          
+          );
+
           const photoResult = await photoResponse.json();
           if (!photoResult.success) {
-            console.error('Failed to upload presenter photo:', photoResult.error);
+            console.error(
+              "Failed to upload presenter photo:",
+              photoResult.error,
+            );
             // Don't fail the entire process, just log the error
           } else {
-            console.log('✓ Presenter photo uploaded successfully');
+            console.log("✓ Presenter photo uploaded successfully");
           }
         } catch (photoError) {
-          console.error('Error uploading presenter photo:', photoError);
+          console.error("Error uploading presenter photo:", photoError);
           // Don't fail the entire process
         }
       }
-      
+
       if (validVideoUrls.length > 0 || validWebsiteUrls.length > 0) {
-        setSuccess("Please wait, your content is now processing. This may take a few minutes. Once it's ready, you'll be redirected to your Qudemos page.");
+        setSuccess(
+          "Please wait, your content is now processing. This may take a few minutes. Once it's ready, you'll be redirected to your Qudemos page.",
+        );
       } else {
-        setSuccess("QuDemo created successfully! Documents will be processed automatically.");
+        setSuccess(
+          "QuDemo created successfully! Documents will be processed automatically.",
+        );
       }
-      
+
       // Show avatar video generation message if presenter photo was provided
       if (presenterPhoto) {
         if (documents.length > 0 || selectedFiles.length > 0) {
-          setSuccess(prev => prev + "\n\n🤖 AI Avatar videos will be generated for your FAQs + fallback messages (this may take 10-15 minutes).");
+          setSuccess(
+            (prev) =>
+              prev +
+              "\n\n🤖 AI Avatar videos will be generated for your FAQs + fallback messages (this may take 10-15 minutes).",
+          );
         } else {
-          setSuccess(prev => prev + "\n\n🤖 AI Avatar videos will be generated for fallback messages like 'no answer' and 'sales inquiry' (this may take 5-10 minutes).");
+          setSuccess(
+            (prev) =>
+              prev +
+              "\n\n🤖 AI Avatar videos will be generated for fallback messages like 'no answer' and 'sales inquiry' (this may take 5-10 minutes).",
+          );
         }
       }
       // Process all content automatically using the new endpoint
       if (validVideoUrls.length > 0 || validWebsiteUrls.length > 0) {
         try {
-          const contentResponse = await fetch(getNodeApiUrl(`/api/qudemos/process-content/${company.name}/${qudemoId}`), {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
+          const contentResponse = await fetch(
+            getNodeApiUrl(
+              `/api/qudemos/process-content/${company.name}/${qudemoId}`,
+            ),
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({
+                video_urls: validVideoUrls,
+                website_urls: validWebsiteUrls,
+              }),
             },
-            body: JSON.stringify({
-              video_urls: validVideoUrls,
-              website_urls: validWebsiteUrls
-            })
-          });
+          );
           const contentResult = await contentResponse.json();
           // Check for processing errors first, regardless of success status
-          if (contentResult.processing_errors && contentResult.processing_errors.length > 0) {
+          if (
+            contentResult.processing_errors &&
+            contentResult.processing_errors.length > 0
+          ) {
             // Handle processing errors with popup
-            const { processing_errors, has_anti_bot_protection } = contentResult;
+            const { processing_errors, has_anti_bot_protection } =
+              contentResult;
             let errorMessage = "❌ Some content failed to process!\n\n";
             // Show specific failed content with detailed reasons
-              errorMessage += "📋 Failed Content Details:\n\n";
-              processing_errors.forEach((error, index) => {
-                if (error.type === 'website') {
-                  errorMessage += `🌐 WEBSITE FAILED:\n`;
-                  errorMessage += `   URL: ${error.url}\n`;
-                  errorMessage += `   Reason: ${error.error}\n`;
-                if (error.error_type === 'crm_bot_detection') {
+            errorMessage += "📋 Failed Content Details:\n\n";
+            processing_errors.forEach((error, index) => {
+              if (error.type === "website") {
+                errorMessage += `🌐 WEBSITE FAILED:\n`;
+                errorMessage += `   URL: ${error.url}\n`;
+                errorMessage += `   Reason: ${error.error}\n`;
+                if (error.error_type === "crm_bot_detection") {
                   errorMessage += `   🏢 CRM Site with Bot Protection\n`;
                   errorMessage += `   💡 Suggestion: Upload documents instead of scraping\n`;
                 } else if (error.error_type) {
-                    errorMessage += `   Error Type: ${error.error_type.toUpperCase()}\n`;
-                  }
-                  if (error.protection_detected) {
-                    errorMessage += `   🛡️ Anti-Bot Protection: YES\n`;
-                  }
-                  errorMessage += `\n`;
-                } else if (error.type === 'video') {
-                  errorMessage += `📹 VIDEO FAILED:\n`;
-                  errorMessage += `   URL: ${error.url}\n`;
-                  errorMessage += `   Reason: ${error.error}\n`;
-                  if (error.error_type) {
-                    errorMessage += `   Error Type: ${error.error_type.toUpperCase()}\n`;
-                  }
-                  errorMessage += `\n`;
+                  errorMessage += `   Error Type: ${error.error_type.toUpperCase()}\n`;
                 }
-              });
+                if (error.protection_detected) {
+                  errorMessage += `   🛡️ Anti-Bot Protection: YES\n`;
+                }
+                errorMessage += `\n`;
+              } else if (error.type === "video") {
+                errorMessage += `📹 VIDEO FAILED:\n`;
+                errorMessage += `   URL: ${error.url}\n`;
+                errorMessage += `   Reason: ${error.error}\n`;
+                if (error.error_type) {
+                  errorMessage += `   Error Type: ${error.error_type.toUpperCase()}\n`;
+                }
+                errorMessage += `\n`;
+              }
+            });
             // Add suggestions based on error types
-            const hasWebsiteErrors = processing_errors?.some(e => e.type === 'website');
-            const hasVideoErrors = processing_errors?.some(e => e.type === 'video');
+            const hasWebsiteErrors = processing_errors?.some(
+              (e) => e.type === "website",
+            );
+            const hasVideoErrors = processing_errors?.some(
+              (e) => e.type === "video",
+            );
             errorMessage += "💡 What you can do:\n";
             if (hasWebsiteErrors && !hasVideoErrors) {
-              const hasCrmErrors = processing_errors?.some(e => e.type === 'website' && e.error_type === 'crm_bot_detection');
+              const hasCrmErrors = processing_errors?.some(
+                (e) =>
+                  e.type === "website" && e.error_type === "crm_bot_detection",
+              );
               if (hasCrmErrors) {
-                errorMessage += "• Upload documents instead of scraping CRM sites\n";
-                errorMessage += "• CRM sites (Salesforce, SurveySparrow, Zendesk) often block scraping\n";
-                errorMessage += "• Try regular help/documentation sites instead\n";
+                errorMessage +=
+                  "• Upload documents instead of scraping CRM sites\n";
+                errorMessage +=
+                  "• CRM sites (Salesforce, SurveySparrow, Zendesk) often block scraping\n";
+                errorMessage +=
+                  "• Try regular help/documentation sites instead\n";
               } else {
-              errorMessage += "• Try a different website URL (avoid sites with anti-bot protection)\n";
-              errorMessage += "• Use only video content for this QuDemo\n";
-              errorMessage += "• Contact the website owner for API access\n";
+                errorMessage +=
+                  "• Try a different website URL (avoid sites with anti-bot protection)\n";
+                errorMessage += "• Use only video content for this QuDemo\n";
+                errorMessage += "• Contact the website owner for API access\n";
               }
             } else if (hasVideoErrors && !hasWebsiteErrors) {
-              errorMessage += "• Check that your video URLs are valid and accessible\n";
-              errorMessage += "• Try different video URLs (YouTube, Loom, Vimeo)\n";
+              errorMessage +=
+                "• Check that your video URLs are valid and accessible\n";
+              errorMessage +=
+                "• Try different video URLs (YouTube, Loom, Vimeo)\n";
               errorMessage += "• Use only website content for this QuDemo\n";
             } else if (hasWebsiteErrors && hasVideoErrors) {
-              errorMessage += "• Try different content sources (both videos and websites failed)\n";
-              errorMessage += "• Check that all URLs are valid and accessible\n";
+              errorMessage +=
+                "• Try different content sources (both videos and websites failed)\n";
+              errorMessage +=
+                "• Check that all URLs are valid and accessible\n";
               errorMessage += "• Contact support for assistance\n";
             } else {
               errorMessage += "• Try different content sources\n";
-              errorMessage += "• Check that all URLs are valid and accessible\n";
+              errorMessage +=
+                "• Check that all URLs are valid and accessible\n";
               errorMessage += "• Contact support if you need assistance\n";
             }
-            errorMessage += "\n⚠️ QuDemo was created but some content failed to process.";
+            errorMessage +=
+              "\n⚠️ QuDemo was created but some content failed to process.";
             // Show error popup instead of inline error
             setErrorPopupData({
               title: "Content Processing Issues",
               message: errorMessage,
               processingErrors: processing_errors,
-              hasAntiBotProtection: has_anti_bot_protection
+              hasAntiBotProtection: has_anti_bot_protection,
             });
             setShowErrorPopup(true);
             // Exit early to prevent success flow from executing
@@ -584,7 +652,12 @@ const CreateQuDemo = () => {
           }
           // If no processing errors, proceed with success flow
           if (contentResult.success) {
-            const { videos_processed, website_processed, total_chunks, processing_order } = contentResult;
+            const {
+              videos_processed,
+              website_processed,
+              total_chunks,
+              processing_order,
+            } = contentResult;
             let successMessage = "🎉 All content processed successfully!";
             if (videos_processed > 0) {
               successMessage += `\n📹 ${videos_processed} video(s) processed`;
@@ -593,13 +666,15 @@ const CreateQuDemo = () => {
               successMessage += `\n🌐 Website processed (${total_chunks} chunks created)`;
             }
             if (processing_order.length > 0) {
-              successMessage += `\n⏱️ Processing order: ${processing_order.join(' → ')}`;
+              successMessage += `\n⏱️ Processing order: ${processing_order.join(" → ")}`;
             }
             // Hide the processing message and show completion
             setSuccess("");
           }
         } catch (contentError) {
-          setError(`Content processing failed: ${contentError.message}. The qudemo was created but content processing needs to be retried.`);
+          setError(
+            `Content processing failed: ${contentError.message}. The qudemo was created but content processing needs to be retried.`,
+          );
           return; // Exit early to prevent success flow from executing
         }
       }
@@ -619,7 +694,7 @@ const CreateQuDemo = () => {
       setPresenterName("");
       // Navigate to qudemos page after a short delay to show success message
       setTimeout(() => {
-        navigate('/qudemos');
+        navigate("/qudemos");
       }, 2000);
     } catch (error) {
       setError(error.message || "Failed to create qudemo. Please try again.");
@@ -630,7 +705,7 @@ const CreateQuDemo = () => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div>
       </div>
     );
   }
@@ -655,7 +730,8 @@ const CreateQuDemo = () => {
             Create New Qudemo
           </h1>
           <p className="text-lg text-bodydark">
-            Create an interactive demo that allows prospects to learn about your product at their own pace.
+            Create an interactive demo that allows prospects to learn about your
+            product at their own pace.
           </p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-6 mt-16">
@@ -667,12 +743,12 @@ const CreateQuDemo = () => {
             <input
               type="text"
               value={title}
-              onChange={e => setTitle(e.target.value)}
+              onChange={(e) => setTitle(e.target.value)}
               placeholder="Enter qudemo title"
               required
               className="w-full border border-strokedark/20 px-4 py-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
-        </div>
+          </div>
           {/* Video URL */}
           <div>
             <label className="block text-sm font-bold text-graydark mb-2 text-left">
@@ -687,24 +763,26 @@ const CreateQuDemo = () => {
                   <input
                     type="text"
                     value={url}
-                    onChange={e => handleVideoUrlChange(index, e.target.value)}
+                    onChange={(e) =>
+                      handleVideoUrlChange(index, e.target.value)
+                    }
                     placeholder="https://www.loom.com/share/your-video-id or https://youtube.com/watch?v="
                     className={`flex-1 border px-4 py-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                      urlValidationErrors[index] 
-                        ? 'border-red-500 bg-red-50' 
-                        : url.trim() && !urlValidationErrors[index] 
-                          ? 'border-green-500 bg-green-50' 
-                          : 'border-strokedark/20'
+                      urlValidationErrors[index]
+                        ? "border-red-500 bg-red-50"
+                        : url.trim() && !urlValidationErrors[index]
+                          ? "border-green-500 bg-green-50"
+                          : "border-strokedark/20"
                     }`}
                   />
-                {videoUrls.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => removeVideoUrlField(index)}
+                  {videoUrls.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeVideoUrlField(index)}
                       className="text-red-500 hover:text-red-700 p-2"
-                  >
-                    <XMarkIcon className="h-5 w-5" />
-                  </button>
+                    >
+                      <XMarkIcon className="h-5 w-5" />
+                    </button>
                   )}
                 </div>
                 {urlValidationErrors[index] && (
@@ -714,23 +792,24 @@ const CreateQuDemo = () => {
                 )}
                 {url.trim() && !urlValidationErrors[index] && (
                   <p className="text-green-600 text-sm mt-1 ml-1">
-                    ✓ Valid {url.includes('loom.com') ? 'Loom' : 'YouTube'} URL
+                    ✓ Valid {url.includes("loom.com") ? "Loom" : "YouTube"} URL
                   </p>
                 )}
               </div>
             ))}
             <div className="text-center mt-2">
-            <button
-              type="button"
-              onClick={addVideoUrlField}
+              <button
+                type="button"
+                onClick={addVideoUrlField}
                 className="text-primary hover:underline text-sm font-medium flex items-center justify-center gap-1"
-            >
-                <span className="text-primary font-bold">+</span> Add another video
-            </button>
+              >
+                <span className="text-primary font-bold">+</span> Add another
+                video
+              </button>
+            </div>
           </div>
-        </div>
-        {/* Website URL - COMMENTED OUT */}
-        {/* 
+          {/* Website URL - COMMENTED OUT */}
+          {/*
         <div className="mt-6">
             <label className="block text-sm font-bold text-graydark mb-2 text-left">
                 Website URLs to scrape
@@ -751,7 +830,7 @@ const CreateQuDemo = () => {
                         </h3>
                         <div className="mt-1 text-sm text-yellow-700">
                             <p>
-                                <strong>CRM websites</strong> (like Salesforce, SurveySparrow, Zendesk) often have bot detection that prevents scraping. 
+                                <strong>CRM websites</strong> (like Salesforce, SurveySparrow, Zendesk) often have bot detection that prevents scraping.
                                 If a website fails to scrape, try uploading documents instead.
                             </p>
                         </div>
@@ -767,10 +846,10 @@ const CreateQuDemo = () => {
                     onChange={e => handleWebsiteUrlChange(index, e.target.value)}
                     placeholder="https://example.com/help or https://docs.example.com"
                     className={`flex-1 border px-4 py-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                      urlValidationErrors[`website_${index}`] 
-                        ? 'border-red-500 bg-red-50' 
-                        : url.trim() && !urlValidationErrors[`website_${index}`] 
-                          ? 'border-green-500 bg-green-50' 
+                      urlValidationErrors[`website_${index}`]
+                        ? 'border-red-500 bg-red-50'
+                        : url.trim() && !urlValidationErrors[`website_${index}`]
+                          ? 'border-green-500 bg-green-50'
                           : 'border-strokedark/20'
                     }`}
                   />
@@ -807,44 +886,50 @@ const CreateQuDemo = () => {
             </div>
         </div>
         */}
-        {/* Document Upload Section */}
-        <div className="mt-6">
-          <label className="block text-sm font-bold text-graydark mb-2 text-left">
-            Product Document
-          </label>
-          <p className="text-xs text-gray-500 mb-3 text-left">
-            Upload your product knowledge documents here
-          </p>
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">
-            <div className="flex items-start">
-              <div className="flex-shrink-0">
-                <span className="text-lg">💡</span>
-              </div>
-              <div className="ml-3">
-                <p className="text-sm text-primary text-left">
-                  Add any product knowledge doc and Qudemo AI will use them to pull out only the relevant information to answer your customer's questions
-                </p>
+          {/* Document Upload Section */}
+          <div className="mt-6">
+            <label className="block text-sm font-bold text-graydark mb-2 text-left">
+              Product Document
+            </label>
+            <p className="text-xs text-gray-500 mb-3 text-left">
+              Upload your product knowledge documents here
+            </p>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">
+              <div className="flex items-start">
+                <div className="flex-shrink-0">
+                  <span className="text-lg">💡</span>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm text-primary text-left">
+                    Add any product knowledge doc and Qudemo AI will use them to
+                    pull out only the relevant information to answer your
+                    customer's questions
+                  </p>
+                </div>
               </div>
             </div>
+            <div className="mb-6 p-4 border border-strokedark/10 rounded-lg">
+              <DocumentUpload
+                qudemoId={createdQudemoId}
+                companyName={company?.name}
+                onDocumentsChange={setDocuments}
+                onSelectedFilesChange={setSelectedFiles}
+              />
+            </div>
           </div>
-          <div className="mb-6 p-4 border border-strokedark/10 rounded-lg">
-            <DocumentUpload 
-              qudemoId={createdQudemoId}
-              companyName={company?.name}
-              onDocumentsChange={setDocuments}
-              onSelectedFilesChange={setSelectedFiles}
-            />
-          </div>
-        </div>
 
-        {/* Presenter Photo Upload Section - Always visible */}
-        <div className="mt-6">
-          <label className="block text-sm font-bold text-graydark mb-2 text-left">
-            Presenter Photo 🎬 <span className="text-xs text-green-600 font-normal">(New Feature!)</span>
-          </label>
-          <p className="text-xs text-gray-500 mb-3 text-left">
-            Upload a presenter photo to create AI avatar videos for all responses (including fallback messages)
-          </p>
+          {/* Presenter Photo Upload Section - Always visible */}
+          <div className="mt-6">
+            <label className="block text-sm font-bold text-graydark mb-2 text-left">
+              Presenter Photo 🎬{" "}
+              <span className="text-xs text-green-600 font-normal">
+                (New Feature!)
+              </span>
+            </label>
+            <p className="text-xs text-gray-500 mb-3 text-left">
+              Upload a presenter photo to create AI avatar videos for all
+              responses (including fallback messages)
+            </p>
             <div className="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-lg p-4 mb-3">
               <div className="flex items-start">
                 <div className="flex-shrink-0">
@@ -855,12 +940,15 @@ const CreateQuDemo = () => {
                     AI Avatar Videos for Document Answers
                   </p>
                   <p className="text-xs text-purple-700 text-left">
-                    When customers ask questions about your documents, they'll see an AI-generated video of your presenter speaking the answer - making document-based responses as engaging as video demos!
+                    When customers ask questions about your documents, they'll
+                    see an AI-generated video of your presenter speaking the
+                    answer - making document-based responses as engaging as
+                    video demos!
                   </p>
                 </div>
               </div>
             </div>
-            
+
             {!presenterPhotoPreview ? (
               <div className="border-2 border-dashed border-strokedark/20 rounded-lg p-6 text-center hover:border-purple-400 transition-colors">
                 <input
@@ -870,8 +958,8 @@ const CreateQuDemo = () => {
                   onChange={handlePresenterPhotoChange}
                   className="hidden"
                 />
-                <label 
-                  htmlFor="presenter-photo" 
+                <label
+                  htmlFor="presenter-photo"
                   className="cursor-pointer flex flex-col items-center"
                 >
                   <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mb-3">
@@ -892,15 +980,17 @@ const CreateQuDemo = () => {
               <div className="border border-strokedark/20 rounded-lg p-4 bg-white">
                 <div className="flex items-start gap-4">
                   <div className="flex-shrink-0">
-                    <img 
-                      src={presenterPhotoPreview} 
-                      alt="Presenter preview" 
+                    <img
+                      src={presenterPhotoPreview}
+                      alt="Presenter preview"
                       className="w-24 h-24 rounded-lg object-cover border-2 border-purple-300"
                     />
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center justify-between mb-2">
-                      <p className="text-sm font-semibold text-graydark">Presenter Photo Uploaded</p>
+                      <p className="text-sm font-semibold text-graydark">
+                        Presenter Photo Uploaded
+                      </p>
                       <button
                         type="button"
                         onClick={removePresenterPhoto}
@@ -917,58 +1007,67 @@ const CreateQuDemo = () => {
                       className="w-full border border-strokedark/20 px-3 py-2 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                     />
                     <p className="text-xs text-gray-500 mt-2">
-                      ✓ This photo will be used to generate AI avatar videos for FAQ answers
+                      ✓ This photo will be used to generate AI avatar videos for
+                      FAQ answers
                     </p>
                   </div>
                 </div>
               </div>
             )}
-        </div>
+          </div>
 
-        {/* Calendly Link Section */}
-        <div className="mt-6">
-          <label className="block text-sm font-bold text-graydark mb-2 text-left">
-            Add Calendly Link <span className="text-bodydark2 text-xs font-normal">(Optional)</span>
-          </label>
-          <p className="text-xs text-gray-500 mb-3 text-left">
-            Add a Calendly link to let prospects book meetings directly from your Qudemo
-          </p>
-          <input
-            type="text"
-            value={calendlyLink}
-            onChange={(e) => setCalendlyLink(e.target.value)}
-            placeholder="https://calendly.com/your-username/meeting"
-            className={`w-full border px-4 py-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-              calendlyLink.trim() && !validateCalendlyUrl(calendlyLink).isValid
-                ? 'border-red-500 bg-red-50'
-                : calendlyLink.trim() && validateCalendlyUrl(calendlyLink).isValid
-                  ? 'border-green-500 bg-green-50'
-                  : 'border-strokedark/20'
-            }`}
-          />
-          {calendlyLink.trim() && !validateCalendlyUrl(calendlyLink).isValid && (
-            <p className="text-red-500 text-sm mt-1 ml-1">
-              {validateCalendlyUrl(calendlyLink).error}
+          {/* Calendly Link Section */}
+          <div className="mt-6">
+            <label className="block text-sm font-bold text-graydark mb-2 text-left">
+              Add Calendly Link{" "}
+              <span className="text-bodydark2 text-xs font-normal">
+                (Optional)
+              </span>
+            </label>
+            <p className="text-xs text-gray-500 mb-3 text-left">
+              Add a Calendly link to let prospects book meetings directly from
+              your Qudemo
             </p>
-          )}
-          {calendlyLink.trim() && validateCalendlyUrl(calendlyLink).isValid && (
-            <p className="text-green-600 text-sm mt-1 ml-1">
-              ✓ Valid Calendly URL
-            </p>
-          )}
-        </div>
+            <input
+              type="text"
+              value={calendlyLink}
+              onChange={(e) => setCalendlyLink(e.target.value)}
+              placeholder="https://calendly.com/your-username/meeting"
+              className={`w-full border px-4 py-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                calendlyLink.trim() &&
+                !validateCalendlyUrl(calendlyLink).isValid
+                  ? "border-red-500 bg-red-50"
+                  : calendlyLink.trim() &&
+                      validateCalendlyUrl(calendlyLink).isValid
+                    ? "border-green-500 bg-green-50"
+                    : "border-strokedark/20"
+              }`}
+            />
+            {calendlyLink.trim() &&
+              !validateCalendlyUrl(calendlyLink).isValid && (
+                <p className="text-red-500 text-sm mt-1 ml-1">
+                  {validateCalendlyUrl(calendlyLink).error}
+                </p>
+              )}
+            {calendlyLink.trim() &&
+              validateCalendlyUrl(calendlyLink).isValid && (
+                <p className="text-green-600 text-sm mt-1 ml-1">
+                  ✓ Valid Calendly URL
+                </p>
+              )}
+          </div>
 
           {/* Submit Button */}
           <button
             type="submit"
             disabled={isSubmitting || !areAllUrlsValid()}
-            className={`w-full font-bold py-3 px-6 rounded-lg transition-colors duration-200 ${
+            className={`w-full font-bold h-10 px-6 rounded-lg transition-colors duration-200 ${
               isSubmitting || !areAllUrlsValid()
-                ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
-                : 'bg-primary hover:bg-primary/90 text-white'
+                ? "bg-gray-400 text-gray-200 cursor-not-allowed"
+                : "bg-primary hover:bg-primary/90 text-white"
             }`}
           >
-            {isSubmitting ? 'Processing Content...' : 'Create Qudemo'}
+            {isSubmitting ? "Processing Content..." : "Create Qudemo"}
           </button>
         </form>
         {/* Error Message */}
@@ -976,13 +1075,25 @@ const CreateQuDemo = () => {
           <div className="mt-6 bg-red-50 border border-red-200 rounded-lg p-4">
             <div className="flex items-start">
               <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                <svg
+                  className="h-5 w-5 text-red-400"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                    clipRule="evenodd"
+                  />
                 </svg>
               </div>
               <div className="ml-3">
-                <h3 className="text-sm font-medium text-red-800">Processing Failed</h3>
-                <div className="mt-2 text-sm text-red-700 whitespace-pre-line">{error}</div>
+                <h3 className="text-sm font-medium text-red-800">
+                  Processing Failed
+                </h3>
+                <div className="mt-2 text-sm text-red-700 whitespace-pre-line">
+                  {error}
+                </div>
                 <div className="mt-4">
                   <button
                     type="button"
@@ -1002,19 +1113,29 @@ const CreateQuDemo = () => {
             <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
               <div className="flex items-center mb-4">
                 <div className="flex-shrink-0">
-                  <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
-                    <svg className="h-6 w-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <div className="w-12 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+                    <svg
+                      className="h-6 w-6 text-primary"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
                     </svg>
                   </div>
                 </div>
-                <h3 className="ml-3 text-lg font-semibold text-graydark text-left">Processing Your Qudemo</h3>
+                <h3 className="ml-3 text-lg font-semibold text-graydark text-left">
+                  Processing Your Qudemo
+                </h3>
               </div>
-              
-              <p className="text-bodydark mb-6 text-left">
-                {success}
-              </p>
-              
+
+              <p className="text-bodydark mb-6 text-left">{success}</p>
+
               <div className="flex justify-end">
                 <button
                   onClick={() => setSuccess("")}
@@ -1034,79 +1155,142 @@ const CreateQuDemo = () => {
             {/* Header */}
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-graydark flex items-center">
-                <svg className="w-6 h-6 text-yellow-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                <svg
+                  className="w-6 h-6 text-yellow-500 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                  />
                 </svg>
                 {errorPopupData.title}
-            </h3>
+              </h3>
               <button
                 onClick={handleErrorPopupClose}
                 className="text-bodydark2 hover:text-bodydark focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-full p-1"
               >
                 <XMarkIcon className="w-6 h-6" />
               </button>
-          </div>
+            </div>
             {/* Content */}
             <div className="mb-6">
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
                 <div className="flex">
                   <div className="flex-shrink-0">
-                    <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    <svg
+                      className="h-5 w-5 text-yellow-400"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                        clipRule="evenodd"
+                      />
                     </svg>
-              </div>
+                  </div>
                   <div className="ml-3">
                     <h4 className="text-sm font-medium text-yellow-800">
                       Processing Issues Detected
                     </h4>
                     <div className="mt-2 text-sm text-yellow-700">
-                      <p>Some content failed to process, but your QuDemo was created successfully with the content that did work.</p>
-              </div>
-            </div>
+                      <p>
+                        Some content failed to process, but your QuDemo was
+                        created successfully with the content that did work.
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
               {/* Error Details */}
               <div className="bg-whiter rounded-lg p-4">
-                <h4 className="text-sm font-medium text-graydark mb-3">Failed Content Details:</h4>
+                <h4 className="text-sm font-medium text-graydark mb-3">
+                  Failed Content Details:
+                </h4>
                 <div className="space-y-3">
                   {errorPopupData.processingErrors?.map((error, index) => (
-                    <div key={index} className="border border-strokedark/10 rounded-lg p-3">
-                      {error.type === 'website' && (
+                    <div
+                      key={index}
+                      className="border border-strokedark/10 rounded-lg p-3"
+                    >
+                      {error.type === "website" && (
                         <div>
                           <div className="flex items-center mb-2">
-                            <svg className="w-4 h-4 text-blue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9v-9m0-9v9" />
+                            <svg
+                              className="w-4 h-4 text-blue-500 mr-2"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9v-9m0-9v9"
+                              />
                             </svg>
-                            <span className="font-medium text-graydark">Website Failed</span>
-              </div>
+                            <span className="font-medium text-graydark">
+                              Website Failed
+                            </span>
+                          </div>
                           <div className="text-sm text-bodydark mb-2">
                             <strong>URL:</strong> {error.url}
-              </div>
+                          </div>
                           <div className="text-sm text-bodydark mb-2">
                             <strong>Reason:</strong> {error.error}
                           </div>
-                          {error.error_type === 'crm_bot_detection' && (
+                          {error.error_type === "crm_bot_detection" && (
                             <div className="bg-red-50 border border-red-200 rounded p-2">
                               <div className="flex items-center">
-                                <svg className="w-4 h-4 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                                <svg
+                                  className="w-4 h-4 text-red-500 mr-2"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                                  />
                                 </svg>
-                                <span className="text-sm font-medium text-red-800">CRM Site with Bot Protection</span>
+                                <span className="text-sm font-medium text-red-800">
+                                  CRM Site with Bot Protection
+                                </span>
                               </div>
                               <p className="text-sm text-red-700 mt-1">
-                                💡 <strong>Suggestion:</strong> Upload documents instead of scraping this website
+                                💡 <strong>Suggestion:</strong> Upload documents
+                                instead of scraping this website
                               </p>
-            </div>
-          )}
-            </div>
-          )}
-                      {error.type === 'video' && (
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      {error.type === "video" && (
                         <div>
                           <div className="flex items-center mb-2">
-                            <svg className="w-4 h-4 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                            <svg
+                              className="w-4 h-4 text-red-500 mr-2"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+                              />
                             </svg>
-                            <span className="font-medium text-graydark">Video Failed</span>
+                            <span className="font-medium text-graydark">
+                              Video Failed
+                            </span>
                           </div>
                           <div className="text-sm text-bodydark mb-2">
                             <strong>URL:</strong> {error.url}
@@ -1123,12 +1307,12 @@ const CreateQuDemo = () => {
             </div>
             {/* Footer */}
             <div className="flex justify-end">
-            <button
+              <button
                 onClick={handleErrorPopupClose}
                 className="bg-primary text-white px-6 py-2 rounded-lg hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
-            >
+              >
                 Continue to QuDemos
-            </button>
+              </button>
             </div>
           </div>
         </div>

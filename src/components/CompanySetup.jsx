@@ -1,29 +1,29 @@
-import React, { useState } from 'react';
-import { useCompany } from '../context/CompanyContext';
-import { getNodeApiUrl } from '../config/api';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from "react";
+import { useCompany } from "../context/CompanyContext";
+import { getNodeApiUrl } from "../config/api";
+import { useNavigate } from "react-router-dom";
 const CompanySetup = () => {
   const { refreshCompany } = useCompany();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    name: '',
-    website: ''
+    name: "",
+    website: "",
   });
   const [formErrors, setFormErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const validateForm = () => {
     const errors = {};
     // Name is required
     if (!formData.name.trim()) {
-      errors.name = 'Organization name is required';
+      errors.name = "Organization name is required";
     } else if (formData.name.trim().length < 2) {
-      errors.name = 'Organization name must be at least 2 characters';
+      errors.name = "Organization name must be at least 2 characters";
     }
     // Website is optional, but if provided, must be valid URL
     if (formData.website && !isValidUrl(formData.website)) {
-      errors.website = 'Please enter a valid website URL';
+      errors.website = "Please enter a valid website URL";
     }
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
@@ -38,15 +38,15 @@ const CompanySetup = () => {
   };
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
     // Clear error when user starts typing
     if (formErrors[name]) {
-      setFormErrors(prev => ({
+      setFormErrors((prev) => ({
         ...prev,
-        [name]: ''
+        [name]: "",
       }));
     }
   };
@@ -60,53 +60,57 @@ const CompanySetup = () => {
       return;
     }
     setIsSubmitting(true);
-    setError('');
-    setSuccess('');
+    setError("");
+    setSuccess("");
     try {
-      const token = localStorage.getItem('accessToken');
+      const token = localStorage.getItem("accessToken");
       // Validate authentication before proceeding
       if (!token) {
-        setError('Authentication required. Please log in again.');
+        setError("Authentication required. Please log in again.");
         return;
       }
-      const response = await fetch(getNodeApiUrl('/api/companies'), {
-        method: 'POST',
+      const response = await fetch(getNodeApiUrl("/api/companies"), {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           name: formData.name.trim(),
-          description: 'No description provided',
+          description: "No description provided",
           website: formData.website.trim() || null,
-          logo: null
-        })
+          logo: null,
+        }),
       });
       const data = await response.json();
       if (data.success) {
-        setSuccess('🎉 Organization created successfully! Redirecting...');
+        setSuccess("🎉 Organization created successfully! Redirecting...");
         // Refresh company context
         await refreshCompany();
-        
+
         // Set flag to show welcome preview after redirect
-        localStorage.setItem('show_welcome_preview', 'true');
-        
+        localStorage.setItem("show_welcome_preview", "true");
+
         // Redirect to create page after a short delay
         setTimeout(() => {
-          navigate('/create');
+          navigate("/create");
         }, 1000);
       } else {
         if (response.status === 409) {
-          setError('You already have an organization! Redirecting to create page...');
+          setError(
+            "You already have an organization! Redirecting to create page...",
+          );
           setTimeout(() => {
-            navigate('/create');
+            navigate("/create");
           }, 2000);
         } else {
-          setError(data.error || 'Failed to create organization. Please try again.');
+          setError(
+            data.error || "Failed to create organization. Please try again.",
+          );
         }
       }
     } catch (error) {
-      setError('Network error. Please try again.');
+      setError("Network error. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -129,7 +133,10 @@ const CompanySetup = () => {
           <form className="space-y-6" onSubmit={handleSubmit}>
             {/* Company Name */}
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="name"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Organization Name *
               </label>
               <div className="mt-1">
@@ -141,7 +148,7 @@ const CompanySetup = () => {
                   value={formData.name}
                   onChange={handleInputChange}
                   className={`appearance-none block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm ${
-                    formErrors.name ? 'border-red-300' : 'border-gray-300'
+                    formErrors.name ? "border-red-300" : "border-gray-300"
                   }`}
                   placeholder="Enter your organization name"
                 />
@@ -152,7 +159,10 @@ const CompanySetup = () => {
             </div>
             {/* Website */}
             <div>
-              <label htmlFor="website" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="website"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Website (Optional)
               </label>
               <div className="mt-1">
@@ -163,12 +173,14 @@ const CompanySetup = () => {
                   value={formData.website}
                   onChange={handleInputChange}
                   className={`appearance-none block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm ${
-                    formErrors.website ? 'border-red-300' : 'border-gray-300'
+                    formErrors.website ? "border-red-300" : "border-gray-300"
                   }`}
                   placeholder="https://yourorganization.com (optional)"
                 />
                 {formErrors.website && (
-                  <p className="mt-1 text-sm text-red-600">{formErrors.website}</p>
+                  <p className="mt-1 text-sm text-red-600">
+                    {formErrors.website}
+                  </p>
                 )}
               </div>
             </div>
@@ -189,9 +201,11 @@ const CompanySetup = () => {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full flex justify-center h-10 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isSubmitting ? 'Creating Organization...' : 'Create Organization & Continue'}
+                {isSubmitting
+                  ? "Creating Organization..."
+                  : "Create Organization & Continue"}
               </button>
             </div>
           </form>

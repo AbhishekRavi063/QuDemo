@@ -41,7 +41,7 @@ export function StarBorder({
       />
       <div
         className={cn(
-          "relative z-1 text-white text-center text-base py-2 px-4 rounded-xl",
+          "relative z-1 text-white text-center text-base h-10 px-4 rounded-xl",
           "bg-gradient-to-b from-gray-900/90 to-gray-800/90",
           "hover:from-gray-800/90 hover:to-gray-700/90 transition-all duration-200",
         )}

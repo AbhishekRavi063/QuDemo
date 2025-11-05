@@ -16,7 +16,7 @@ import { NavLink } from "react-router-dom";
 const DemoHomePage = () => {
   // COMPONENT DISABLED - RETURN NULL
   return null;
-  
+
   /*
   const [showHeroDropdown, setShowHeroDropdown] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -231,7 +231,7 @@ const DemoHomePage = () => {
       </section>
 
       {/* Benefits Section */}
-      <section className="py-20 px-4 sm:px-6 text-center">
+      <section className="h-100 px-4 sm:px-6 text-center">
         <p className="text-blue-600 font-semibold uppercase tracking-wide mb-2">Benefits</p>
         <h2 className="text-3xl sm:text-4xl font-extrabold mb-10">
           A better way to showcase your product
@@ -278,4 +278,3 @@ const BenefitItem = ({ icon: Icon, title, description }) => (
 
 export default DemoHomePage;
 */
-

@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { useCompany } from '../context/CompanyContext';
-import { getNodeApiUrl } from '../config/api';
-import { ClipboardDocumentIcon, CheckIcon } from '@heroicons/react/24/outline';
+import React, { useState, useEffect } from "react";
+import { useCompany } from "../context/CompanyContext";
+import { getNodeApiUrl } from "../config/api";
+import { ClipboardDocumentIcon, CheckIcon } from "@heroicons/react/24/outline";
 
 const WidgetTokenHelper = () => {
   const { selectedCompany } = useCompany();
@@ -18,16 +18,18 @@ const WidgetTokenHelper = () => {
   const fetchQudemos = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('accessToken');
-      
+      const token = localStorage.getItem("accessToken");
+
       const response = await fetch(
-        getNodeApiUrl(`/api/qudemos?company_name=${encodeURIComponent(selectedCompany.name)}`),
+        getNodeApiUrl(
+          `/api/qudemos?company_name=${encodeURIComponent(selectedCompany.name)}`,
+        ),
         {
           headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        }
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        },
       );
 
       if (response.ok) {
@@ -37,7 +39,7 @@ const WidgetTokenHelper = () => {
         }
       }
     } catch (error) {
-      console.error('Error fetching QuDemos:', error);
+      console.error("Error fetching QuDemos:", error);
     } finally {
       setLoading(false);
     }
@@ -49,7 +51,7 @@ const WidgetTokenHelper = () => {
       setCopiedToken(token);
       setTimeout(() => setCopiedToken(null), 2000);
     } catch (error) {
-      console.error('Failed to copy:', error);
+      console.error("Failed to copy:", error);
     }
   };
 
@@ -60,14 +62,14 @@ const WidgetTokenHelper = () => {
       setCopiedToken(`env_${token}`);
       setTimeout(() => setCopiedToken(null), 2000);
     } catch (error) {
-      console.error('Failed to copy:', error);
+      console.error("Failed to copy:", error);
     }
   };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
+        <div className="animate-spin rounded-full h-10 w-10 border-4 border-blue-500 border-t-transparent"></div>
       </div>
     );
   }
@@ -91,9 +93,19 @@ const WidgetTokenHelper = () => {
         </h3>
         <ol className="list-decimal list-inside space-y-2 text-blue-800">
           <li>Choose a QuDemo from the list below</li>
-          <li>Click <strong>"Copy Token"</strong> or <strong>"Copy .env Format"</strong></li>
-          <li>Paste in <code className="bg-blue-100 px-2 py-1 rounded">frontend/.env</code> file</li>
-          <li>Restart your dev server: <code className="bg-blue-100 px-2 py-1 rounded">npm start</code></li>
+          <li>
+            Click <strong>"Copy Token"</strong> or{" "}
+            <strong>"Copy .env Format"</strong>
+          </li>
+          <li>
+            Paste in{" "}
+            <code className="bg-blue-100 px-2 py-1 rounded">frontend/.env</code>{" "}
+            file
+          </li>
+          <li>
+            Restart your dev server:{" "}
+            <code className="bg-blue-100 px-2 py-1 rounded">npm start</code>
+          </li>
           <li>Widget will appear on all pages except home!</li>
         </ol>
       </div>
@@ -126,22 +138,25 @@ const WidgetTokenHelper = () => {
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
                     <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                      {qudemo.title || 'Untitled QuDemo'}
+                      {qudemo.title || "Untitled QuDemo"}
                     </h3>
-                    
+
                     {/* Status Badge */}
                     <div className="flex items-center gap-3 mb-3">
-                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                        qudemo.status === 'active' 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-gray-100 text-gray-800'
-                      }`}>
-                        {qudemo.status || 'active'}
+                      <span
+                        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                          qudemo.status === "active"
+                            ? "bg-green-100 text-green-800"
+                            : "bg-gray-100 text-gray-800"
+                        }`}
+                      >
+                        {qudemo.status || "active"}
                       </span>
-                      
+
                       {qudemo.videos && (
                         <span className="text-sm text-gray-600">
-                          📹 {qudemo.videos.length} video{qudemo.videos.length !== 1 ? 's' : ''}
+                          📹 {qudemo.videos.length} video
+                          {qudemo.videos.length !== 1 ? "s" : ""}
                         </span>
                       )}
                     </div>
@@ -167,7 +182,9 @@ const WidgetTokenHelper = () => {
                     <div className="flex flex-wrap gap-3">
                       {/* Copy Token Button */}
                       <button
-                        onClick={() => copyToClipboard(qudemo.share_token, qudemo.title)}
+                        onClick={() =>
+                          copyToClipboard(qudemo.share_token, qudemo.title)
+                        }
                         className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
                       >
                         {copiedToken === qudemo.share_token ? (
@@ -235,19 +252,26 @@ const WidgetTokenHelper = () => {
           </h4>
           <div className="text-yellow-800 space-y-2">
             <p>
-              <strong>1.</strong> Click "Copy .env Format" for your chosen QuDemo
+              <strong>1.</strong> Click "Copy .env Format" for your chosen
+              QuDemo
             </p>
             <p>
-              <strong>2.</strong> Create/edit <code className="bg-yellow-100 px-2 py-1 rounded">frontend/.env</code> file
+              <strong>2.</strong> Create/edit{" "}
+              <code className="bg-yellow-100 px-2 py-1 rounded">
+                frontend/.env
+              </code>{" "}
+              file
             </p>
             <p>
               <strong>3.</strong> Paste the line you copied
             </p>
             <p>
-              <strong>4.</strong> Restart your dev server: <code className="bg-yellow-100 px-2 py-1 rounded">npm start</code>
+              <strong>4.</strong> Restart your dev server:{" "}
+              <code className="bg-yellow-100 px-2 py-1 rounded">npm start</code>
             </p>
             <p>
-              <strong>5.</strong> Go to any page (except home) and see the widget! 🎉
+              <strong>5.</strong> Go to any page (except home) and see the
+              widget! 🎉
             </p>
           </div>
         </div>
@@ -257,4 +281,3 @@ const WidgetTokenHelper = () => {
 };
 
 export default WidgetTokenHelper;
-

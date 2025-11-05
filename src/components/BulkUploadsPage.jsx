@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { useCompany } from '../context/CompanyContext';
-import { getNodeApiUrl, getApiUrl } from '../config/api';
-import { 
-  DocumentArrowDownIcon, 
-  DocumentIcon, 
-  CalendarIcon, 
-  UserIcon 
-} from '@heroicons/react/24/outline';
+import React, { useState, useEffect } from "react";
+import { useCompany } from "../context/CompanyContext";
+import { getNodeApiUrl, getApiUrl } from "../config/api";
+import {
+  DocumentArrowDownIcon,
+  DocumentIcon,
+  CalendarIcon,
+  UserIcon,
+} from "@heroicons/react/24/outline";
 const BulkUploadsPage = () => {
   const { company } = useCompany();
   const [bulkUploads, setBulkUploads] = useState([]);
@@ -14,33 +14,37 @@ const BulkUploadsPage = () => {
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
-  
+
   // Check subscription status
-  const subscriptionPlan = company?.subscription_plan || 'free';
-  const subscriptionStatus = company?.subscription_status || 'active';
-  const isActive = ['active', 'trialing', 'on_trial'].includes(subscriptionStatus);
-  const isPro = ['pro', 'enterprise'].includes(subscriptionPlan) && isActive;
+  const subscriptionPlan = company?.subscription_plan || "free";
+  const subscriptionStatus = company?.subscription_status || "active";
+  const isActive = ["active", "trialing", "on_trial"].includes(
+    subscriptionStatus,
+  );
+  const isPro = ["pro", "enterprise"].includes(subscriptionPlan) && isActive;
   useEffect(() => {
     fetchBulkUploads();
   }, []);
   const fetchBulkUploads = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('accessToken');
-      const apiUrl = getNodeApiUrl('/api/qudemos/bulk-uploads');
+      const token = localStorage.getItem("accessToken");
+      const apiUrl = getNodeApiUrl("/api/qudemos/bulk-uploads");
       const response = await fetch(apiUrl, {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
       });
       if (response.ok) {
         const data = await response.json();
         setBulkUploads(data.data || []);
       } else {
         const errorText = await response.text();
-        setError(`Failed to fetch bulk uploads (${response.status}): ${errorText}`);
+        setError(
+          `Failed to fetch bulk uploads (${response.status}): ${errorText}`,
+        );
       }
     } catch (error) {
       setError(`Network error occurred: ${error.message}`);
@@ -50,23 +54,26 @@ const BulkUploadsPage = () => {
   };
   const handleDownload = async (uploadId, fileName) => {
     try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch(getNodeApiUrl(`/api/qudemos/bulk-uploads/${uploadId}/download`), {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        }
-      });
+      const token = localStorage.getItem("accessToken");
+      const response = await fetch(
+        getNodeApiUrl(`/api/qudemos/bulk-uploads/${uploadId}/download`),
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
       if (response.ok) {
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
+        const a = document.createElement("a");
         a.href = url;
         // Always use .csv extension for download
-        let downloadFileName = fileName || 'bulk-links.csv';
+        let downloadFileName = fileName || "bulk-links.csv";
         if (downloadFileName) {
           // Remove existing extension and add .csv
-          downloadFileName = downloadFileName.replace(/\.[^/.]+$/, '') + '.csv';
+          downloadFileName = downloadFileName.replace(/\.[^/.]+$/, "") + ".csv";
         }
         a.download = downloadFileName;
         document.body.appendChild(a);
@@ -75,24 +82,26 @@ const BulkUploadsPage = () => {
         document.body.removeChild(a);
       } else {
       }
-    } catch (error) {
-    }
+    } catch (error) {}
   };
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
+    return new Date(dateString).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
     });
   };
-  const totalCustomers = bulkUploads.reduce((sum, upload) => sum + (upload.customer_count || 0), 0);
-  
+  const totalCustomers = bulkUploads.reduce(
+    (sum, upload) => sum + (upload.customer_count || 0),
+    0,
+  );
+
   // Pagination logic
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentUploads = bulkUploads.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(bulkUploads.length / itemsPerPage);
-  
+
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
   if (loading) {
     return (
@@ -105,7 +114,7 @@ const BulkUploadsPage = () => {
     return (
       <div className="text-center py-8">
         <p className="text-red-600">{error}</p>
-        <button 
+        <button
           onClick={fetchBulkUploads}
           className="mt-4 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90"
         >
@@ -114,7 +123,7 @@ const BulkUploadsPage = () => {
       </div>
     );
   }
-  
+
   // Show upgrade message for free users
   // COMMENTED OUT FOR TESTING - Allow free users to access bulk uploads
   // if (!isPro) {
@@ -142,7 +151,7 @@ const BulkUploadsPage = () => {
   //               </div>
   //             </div>
   //             <div className="flex gap-4">
-  //               <button 
+  //               <button
   //                 onClick={async () => {
   //                   try {
   //                     const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
@@ -177,7 +186,7 @@ const BulkUploadsPage = () => {
   //               >
   //                 Upgrade to Pro
   //               </button>
-  //               <button 
+  //               <button
   //                 onClick={() => window.location.href = '/qudemos'}
   //                 className="px-6 py-3 bg-white text-primary border border-blue-300 rounded-lg hover:bg-primary/10 font-medium"
   //               >
@@ -190,12 +199,16 @@ const BulkUploadsPage = () => {
   //     </div>
   //   );
   // }
-  
+
   return (
     <div className="p-6">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-graydark mb-2 text-left">Bulk Uploads</h1>
-        <p className="text-bodydark text-left">View all your customer bulk uploads and their details.</p>
+        <h1 className="text-3xl font-bold text-graydark mb-2 text-left">
+          Bulk Uploads
+        </h1>
+        <p className="text-bodydark text-left">
+          View all your customer bulk uploads and their details.
+        </p>
       </div>
       <div className="bg-white rounded-lg shadow-none border border-strokedark/10">
         <div className="overflow-x-auto">
@@ -229,20 +242,27 @@ const BulkUploadsPage = () => {
                           <DocumentIcon className="h-5 w-5 text-bodydark2 mr-3" />
                           <div className="text-sm font-medium text-graydark">
                             {(() => {
-                              const filename = upload.original_filename || upload.file_name || 'bulk-links.csv';
+                              const filename =
+                                upload.original_filename ||
+                                upload.file_name ||
+                                "bulk-links.csv";
                               // Always show .csv extension
-                              return filename.replace(/\.[^/.]+$/, '') + '.csv';
+                              return filename.replace(/\.[^/.]+$/, "") + ".csv";
                             })()}
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-left">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          upload.operation_type === 'few_links' 
-                            ? 'bg-purple-100 text-purple-800' 
-                            : 'bg-primary/10 text-primary'
-                        }`}>
-                          {upload.operation_type === 'few_links' ? 'Few Links' : 'Bulk Upload'}
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            upload.operation_type === "few_links"
+                              ? "bg-purple-100 text-purple-800"
+                              : "bg-primary/10 text-primary"
+                          }`}
+                        >
+                          {upload.operation_type === "few_links"
+                            ? "Few Links"
+                            : "Bulk Upload"}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -264,7 +284,12 @@ const BulkUploadsPage = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex space-x-2">
                           <button
-                            onClick={() => handleDownload(upload.id, upload.original_filename || 'bulk-links.xlsx')}
+                            onClick={() =>
+                              handleDownload(
+                                upload.id,
+                                upload.original_filename || "bulk-links.xlsx",
+                              )
+                            }
                             className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                           >
                             <DocumentArrowDownIcon className="h-4 w-4 mr-2" />
@@ -278,9 +303,10 @@ const BulkUploadsPage = () => {
               </table>
               <div className="px-6 py-4 bg-whiter border-t border-strokedark/10 flex items-center justify-between">
                 <p className="text-sm text-bodydark text-left">
-                  Total uploads: {bulkUploads.length} batches • Total customers: {totalCustomers}
+                  Total uploads: {bulkUploads.length} batches • Total customers:{" "}
+                  {totalCustomers}
                 </p>
-                
+
                 {/* Pagination */}
                 {totalPages > 1 && (
                   <div className="flex items-center space-x-2">
@@ -289,13 +315,13 @@ const BulkUploadsPage = () => {
                       disabled={currentPage === 1}
                       className={`px-3 py-1 rounded-md text-sm font-medium ${
                         currentPage === 1
-                          ? 'bg-whiten text-bodydark2 cursor-not-allowed'
-                          : 'bg-white text-bodydark hover:bg-whiter border border-strokedark/20'
+                          ? "bg-whiten text-bodydark2 cursor-not-allowed"
+                          : "bg-white text-bodydark hover:bg-whiter border border-strokedark/20"
                       }`}
                     >
                       Previous
                     </button>
-                    
+
                     <div className="flex items-center space-x-1">
                       {[...Array(totalPages)].map((_, index) => {
                         const pageNumber = index + 1;
@@ -303,7 +329,8 @@ const BulkUploadsPage = () => {
                         if (
                           pageNumber === 1 ||
                           pageNumber === totalPages ||
-                          (pageNumber >= currentPage - 1 && pageNumber <= currentPage + 1)
+                          (pageNumber >= currentPage - 1 &&
+                            pageNumber <= currentPage + 1)
                         ) {
                           return (
                             <button
@@ -311,8 +338,8 @@ const BulkUploadsPage = () => {
                               onClick={() => paginate(pageNumber)}
                               className={`px-3 py-1 rounded-md text-sm font-medium ${
                                 currentPage === pageNumber
-                                  ? 'bg-primary text-white'
-                                  : 'bg-white text-bodydark hover:bg-whiter border border-strokedark/20'
+                                  ? "bg-primary text-white"
+                                  : "bg-white text-bodydark hover:bg-whiter border border-strokedark/20"
                               }`}
                             >
                               {pageNumber}
@@ -322,19 +349,23 @@ const BulkUploadsPage = () => {
                           pageNumber === currentPage - 2 ||
                           pageNumber === currentPage + 2
                         ) {
-                          return <span key={pageNumber} className="text-bodydark2">...</span>;
+                          return (
+                            <span key={pageNumber} className="text-bodydark2">
+                              ...
+                            </span>
+                          );
                         }
                         return null;
                       })}
                     </div>
-                    
+
                     <button
                       onClick={() => paginate(currentPage + 1)}
                       disabled={currentPage === totalPages}
                       className={`px-3 py-1 rounded-md text-sm font-medium ${
                         currentPage === totalPages
-                          ? 'bg-whiten text-bodydark2 cursor-not-allowed'
-                          : 'bg-white text-bodydark hover:bg-whiter border border-strokedark/20'
+                          ? "bg-whiten text-bodydark2 cursor-not-allowed"
+                          : "bg-white text-bodydark hover:bg-whiter border border-strokedark/20"
                       }`}
                     >
                       Next
@@ -345,10 +376,13 @@ const BulkUploadsPage = () => {
             </>
           ) : (
             <div className="text-center py-12">
-              <DocumentIcon className="mx-auto h-12 w-12 text-bodydark2" />
-              <h3 className="mt-2 text-sm font-medium text-graydark">No bulk uploads</h3>
+              <DocumentIcon className="mx-auto h-10 w-10 text-bodydark2" />
+              <h3 className="mt-2 text-sm font-medium text-graydark">
+                No bulk uploads
+              </h3>
               <p className="mt-1 text-sm text-gray-500">
-                You haven't created any bulk uploads yet. Start by creating a QuDemo and using the bulk share feature.
+                You haven't created any bulk uploads yet. Start by creating a
+                QuDemo and using the bulk share feature.
               </p>
             </div>
           )}

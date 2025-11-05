@@ -305,7 +305,7 @@ const PricingPage = () => {
                         currentBillingCycle === billingCycle) ||
                       (key === "free" && currentPlan === "free")
                     }
-                    className={`w-full py-3 px-6 rounded-lg font-semibold transition-all mb-6 ${
+                    className={`w-full h-10 px-6 rounded-lg font-semibold transition-all mb-6 ${
                       plan.isCurrent && currentBillingCycle === billingCycle
                         ? "bg-green-600 text-white opacity-60 cursor-not-allowed"
                         : plan.isCancelled

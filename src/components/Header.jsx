@@ -107,7 +107,7 @@ export default function Header({ onMenuClick }) {
         {/* Sidebar Toggle Button */}
         <button
           onClick={onMenuClick}
-          className="p-2 rounded-md h-10 text-bodydark hover:text-graydark hover:bg-whiten focus:outline-none focus:ring-2 focus:ring-primary transition-colors border"
+          className="flex items-center justify-center w-10 h-10 rounded-md text-bodydark hover:text-graydark hover:bg-whiten focus:outline-none focus:ring-2 focus:ring-primary transition-colors border border-strokedark/10"
           title="Toggle sidebar"
         >
           <Bars3CenterLeftIcon className="h-6 w-6" />
@@ -119,7 +119,7 @@ export default function Header({ onMenuClick }) {
             <input
               type="text"
               placeholder="Search or type command..."
-              className="w-full pl-10 h-10 pr-16 py-2 text-sm border border-strokedark/10 rounded-lg bg-whiter focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+              className="w-full pl-10 h-10 pr-16 text-sm border border-strokedark/10 rounded-lg bg-whiter focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
             />
             <svg
               className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-bodydark2"
@@ -179,7 +179,7 @@ export default function Header({ onMenuClick }) {
       <div className="flex items-center gap-3">
         {/* Notifications */}
         <button
-          className="relative flex border items-center justify-center w-10 h-10 rounded-full hover:bg-whiten transition-colors"
+          className="relative flex border border-strokedark/10 items-center justify-center w-10 h-10 rounded-full hover:bg-whiten transition-colors"
           title="Notifications"
         >
           <svg
@@ -203,11 +203,11 @@ export default function Header({ onMenuClick }) {
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
-            className="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors"
+            className="flex items-center gap-3 h-10 px-3 rounded-lg hover:bg-whiten transition-colors"
             title="User Profile"
           >
             {/* Avatar */}
-            <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
+            <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 border border-strokedark/10">
               {userProfileImage ? (
                 <img
                   src={userProfileImage}
