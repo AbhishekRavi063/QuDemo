@@ -240,19 +240,15 @@ function App() {
   const FloatingWidgetWrapper = () => {
     const location = useLocation();
     
-    // Don't show universal widget on widget playground/embed pages
-    const isWidgetPage = location.pathname.includes('/widget-playground') || 
-                         location.pathname.includes('/widget-embed');
-    
-    const shouldShowWidget = !isWidgetPage;
+    // Show widget ONLY on homepage
+    const isHomePage = location.pathname === '/';
     
     console.log('🔍 FloatingWidgetWrapper:', {
       pathname: location.pathname,
-      isWidgetPage,
-      shouldShowWidget
+      isHomePage
     });
     
-    return shouldShowWidget ? (
+    return isHomePage ? (
       <FloatingQudemoWidget 
         position="bottom-right"
         previewImage="/round.png"  // Fallback image if video thumbnail fails to load
@@ -490,9 +486,8 @@ function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
           
-          {/* Floating Widget - Shows on all pages except home */}
-          {/* TEMPORARILY DISABLED FOR TESTING WIDGET GENERATOR */}
-          {/* <FloatingWidgetWrapper /> */}
+          {/* Floating Widget - Shows ONLY on homepage */}
+          <FloatingWidgetWrapper />
           </div>
         </NotificationProvider>
       </BackendProvider>

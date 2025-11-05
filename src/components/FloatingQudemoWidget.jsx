@@ -1200,6 +1200,7 @@ const FloatingQudemoWidget = ({
   const handleClose = () => {
     setIsExpanded(false);
     setIsMinimized(false);
+    setIsMaximized(false); // Reset maximized state when closing
     
     // Mute the video when closing
     if (videoPlayerRef.current) {
