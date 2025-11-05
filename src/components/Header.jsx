@@ -101,7 +101,7 @@ export default function Header({ onMenuClick }) {
   //   };
   // }, []);
   return (
-    <div className="sticky top-0 z-20 flex items-center justify-between px-4 sm:px-6 lg:px-8 py-4 bg-white border-b border-strokedark/10 border">
+    <div className="sticky top-0 z-20 flex items-center justify-between px-4 sm:px-6 lg:px-8 py-4 bg-white border-b border-strokedark/10">
       {/* Left - Sidebar Toggle Button + Search Bar */}
       <div className="flex items-center gap-4 flex-1">
         {/* Sidebar Toggle Button */}
@@ -203,7 +203,7 @@ export default function Header({ onMenuClick }) {
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
-            className="flex items-center gap-3 h-10 px-3 rounded-lg hover:bg-whiten transition-colors"
+            className="flex items-center gap-3 h-10 px-3 rounded-lg transition-colors"
             title="User Profile"
           >
             {/* Avatar */}

@@ -30,7 +30,7 @@ const TestimonialCard = ({
       {/* User Info */}
       <div className="flex items-center gap-3 mt-auto text-left">
         <div
-          className="w-12 h-10 rounded-full overflow-hidden border-2"
+          className="w-10 h-10 rounded-full overflow-hidden border-2"
           style={{
             borderColor: "rgba(138, 165, 255, 0.4)",
           }}

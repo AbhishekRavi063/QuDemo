@@ -231,7 +231,7 @@ const HomePage = () => {
             <div className="flex items-center gap-2 md:gap-4">
               <div
                 onClick={() => navigate("/profile")}
-                className="text-white font-medium px-3 md:px-6 py-2 rounded-[20px] border text-xs md:text-sm hover:border transition-all duration-300 cursor-pointer"
+                className="text-white font-medium px-3 md:px-6 py-2 rounded-[20px] border text-xs md:text-sm hover:shadow-lg transition-all duration-300 cursor-pointer"
                 style={{
                   background: "rgba(18, 20, 38, 0.6)",
                   backdropFilter: "blur(16px)",
@@ -260,7 +260,7 @@ const HomePage = () => {
           ) : (
             <div
               onClick={() => navigate("/login", { state: { from: "/" } })}
-              className="text-white font-medium px-4 md:px-8 py-2 rounded-[20px] border hover:border transition-all duration-300 cursor-pointer text-sm md:text-base"
+              className="text-white font-medium px-4 md:px-8 py-2 rounded-[20px] border hover:shadow-lg transition-all duration-300 cursor-pointer text-sm md:text-base"
               style={{
                 background: "rgba(18, 20, 38, 0.6)",
                 backdropFilter: "blur(16px)",
@@ -279,7 +279,7 @@ const HomePage = () => {
         style={{ overflowX: "clip" }}
       >
         {/* Hero Section */}
-        <FadeInSection delay={0}>
+        <FadeInSection delay={0} className="flex flex-col">
           <div className="flex justify-center items-start mt-60 px-6 h-[60vh] ">
             <div className="max-w-5xl text-center">
               {/* User Avatars Badge */}
@@ -382,8 +382,11 @@ const HomePage = () => {
         </FadeInSection>
 
         {/* Why Choose Us Section */}
-        <FadeInSection delay={0.1}>
-          <div className="h-100 px-6 min-h-[80vh] relative" id="benefits">
+        <FadeInSection delay={0.1} className="flex flex-col">
+          <div
+            className="px-6 min-h-[100vh] relative my-auto flex flex-col justify-center"
+            id="benefits"
+          >
             <div className="max-w-7xl mx-auto text-center flex flex-col">
               <div
                 style={{
@@ -606,9 +609,9 @@ const HomePage = () => {
         </FadeInSection>
 
         {/* Testimonials Section */}
-        <FadeInSection delay={0.1}>
+        <FadeInSection delay={0.1} className="flex flex-col">
           <div
-            className="h-100 px-6 min-h-[80vh] flex flex-col justify-center"
+            className="px-6 min-h-[100vh] flex flex-col my-auto justify-center"
             id="testimonials"
           >
             <div className="max-w-7xl mx-auto text-center flex flex-col">
@@ -679,9 +682,9 @@ const HomePage = () => {
         </FadeInSection>
 
         {/* Pricing Section */}
-        <FadeInSection delay={0.1}>
+        <FadeInSection delay={0.1} className="flex flex-col">
           <div
-            className="h-100 px-6 min-h-[80vh] w-full flex flex-col justify-center"
+            className="px-6 min-h-[80vh] w-full flex flex-col my-auto justify-center"
             id="pricing"
           >
             <div className="max-w-7xl mx-auto w-full text-center">
@@ -762,9 +765,9 @@ const HomePage = () => {
         </FadeInSection>
 
         {/* Quote Section */}
-        <FadeInSection delay={0.1}>
+        <FadeInSection delay={0.1} className="flex flex-col">
           <div
-            className="h-100 px-6 bg-black"
+            className="px-6 bg-black min-h-[40vh] my-auto flex flex-col justify-center"
             style={{
               borderColor: "rgba(138, 165, 255, 0.3)",
               boxShadow: "0 4px 24px rgba(41, 52, 255, 0.1)",
@@ -811,21 +814,16 @@ const HomePage = () => {
 
         {/* Seamless Integrations Section */}
         <FadeInSection delay={0.1}>
-          <div className="h-100 px-6 relative min-h-[100vh] flex items-center justify-center overflow-hidden">
+          <div className="px-6 relative min-h-[80vh] flex items-center justify-center overflow-hidden">
             <div className="max-w-7xl mx-auto text-center relative w-full">
               {/* Badge */}
               <div className="flex justify-center mb-8">
-                <div
-                  className="px-6 py-2 rounded-full text-xs font-semibold uppercase tracking-wide text-blue-200 border"
-                  style={{
-                    background: "rgba(41, 52, 255, 0.2)",
-                    backdropFilter: "blur(16px)",
-                    borderColor: "rgba(138, 165, 255, 0.3)",
-                    boxShadow: "0 4px 24px rgba(41, 52, 255, 0.2)",
-                  }}
+                <StarBorder
+                  color="#2934ff"
+                  className="text-blue-100 text-sm font-medium"
                 >
                   INTEGRATIONS
-                </div>
+                </StarBorder>
               </div>
 
               <h2 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight">
@@ -1237,7 +1235,7 @@ const HomePage = () => {
                   color="#2934ff"
                   className="text-white text-sm font-semibold uppercase tracking-wide"
                 >
-                  INTEGRATIONS
+                  CONNECTIONS
                 </StarBorder>
               </div>
 
