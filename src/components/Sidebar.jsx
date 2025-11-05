@@ -1,7 +1,7 @@
-import React from 'react';
-import { NavLink, Link, useLocation, useNavigate } from 'react-router-dom';
-import { useCompany } from '../context/CompanyContext';
-import { getApiUrl } from '../config/api';
+import React from "react";
+import { NavLink, Link, useLocation, useNavigate } from "react-router-dom";
+import { useCompany } from "../context/CompanyContext";
+import { getApiUrl } from "../config/api";
 import {
   ClockIcon,
   Cog6ToothIcon,
@@ -22,62 +22,70 @@ import {
   HomeIcon,
   QuestionMarkCircleIcon,
   SparklesIcon,
-} from '@heroicons/react/24/outline';
+} from "@heroicons/react/24/outline";
 
 // Base menu items (available to all users)
 const baseMenuItems = [
-    { name: 'Overview', icon: Squares2X2Icon, path: '/overview' },
-    { name: 'Create Qudemo', icon: PlusIcon, path: '/create' },
-    { name: 'Qudemos', icon: PlayIcon, path: '/qudemos' },
-    { name: 'Interactions', icon: UserGroupIcon, path: '/customer-interactions', requiresPro: true },
-    // { name: 'Beta Version', icon: SparklesIcon, path: '/beta-version', isBeta: true },
+  { name: "Overview", icon: Squares2X2Icon, path: "/overview" },
+  { name: "Create Qudemo", icon: PlusIcon, path: "/create" },
+  { name: "Qudemos", icon: PlayIcon, path: "/qudemos" },
+  {
+    name: "Interactions",
+    icon: UserGroupIcon,
+    path: "/customer-interactions",
+    requiresPro: true,
+  },
+  // { name: 'Beta Version', icon: SparklesIcon, path: '/beta-version', isBeta: true },
 ];
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { company } = useCompany();
-  
+
   // Check subscription status
-  const subscriptionPlan = company?.subscription_plan || 'free';
-  const subscriptionStatus = company?.subscription_status || 'active';
-  const isActive = ['active', 'trialing', 'on_trial'].includes(subscriptionStatus);
-  const isPro = ['pro', 'enterprise'].includes(subscriptionPlan) && isActive;
-  const isEnterprise = subscriptionPlan === 'enterprise' && isActive;
+  const subscriptionPlan = company?.subscription_plan || "free";
+  const subscriptionStatus = company?.subscription_status || "active";
+  const isActive = ["active", "trialing", "on_trial"].includes(
+    subscriptionStatus,
+  );
+  const isPro = ["pro", "enterprise"].includes(subscriptionPlan) && isActive;
+  const isEnterprise = subscriptionPlan === "enterprise" && isActive;
 
   const handlePlanClick = async (e) => {
     e.preventDefault();
     setIsOpen(false);
 
     // For Pro users, navigate to profile subscription tab
-    if (subscriptionPlan === 'pro' || subscriptionPlan === 'enterprise') {
-      navigate('/profile', { state: { activeTab: 'subscription' } });
+    if (subscriptionPlan === "pro" || subscriptionPlan === "enterprise") {
+      navigate("/profile", { state: { activeTab: "subscription" } });
     } else {
       // For Free users, redirect to checkout
       try {
-        const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
+        const token =
+          localStorage.getItem("accessToken") || localStorage.getItem("token");
         if (!token) {
-          navigate('/login');
+          navigate("/login");
           return;
         }
-        const baseUrl = getApiUrl('node');
+        const baseUrl = getApiUrl("node");
         const checkoutUrl = `${baseUrl}/api/subscription/checkout`;
         const response = await fetch(checkoutUrl, {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
-            plan: 'pro',
-            billingCycle: 'monthly'
-          })
+            plan: "pro",
+            billingCycle: "monthly",
+          }),
         });
         const data = await response.json();
         if (data.success && data.checkoutUrl) {
           window.location.href = data.checkoutUrl;
         } else {
-          alert(`Failed to start checkout: ${data.error || 'Unknown error'}`);
+          alert(`Failed to start checkout: ${data.error || "Unknown error"}`);
         }
       } catch (error) {
         alert(`Failed to start checkout: ${error.message}`);
@@ -89,183 +97,193 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     <>
       {/* Sidebar Overlay for mobile */}
       {isOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-30 z-40 md:hidden" onClick={() => setIsOpen(false)}></div>
+        <div
+          className="fixed inset-0 bg-black bg-opacity-30 z-40 md:hidden"
+          onClick={() => setIsOpen(false)}
+        ></div>
       )}
 
       {/* Sidebar */}
       <div
         className={`
-          fixed top-0 left-0 h-screen w-64 bg-white border-r border-gray-200 z-50 transform
+          fixed top-0 left-0 h-screen w-64 bg-white border-r border-strokedark/10 z-50 transform
           transition-transform duration-300 ease-in-out
-          overflow-y-auto scroll-smooth
-          ${isOpen ? 'translate-x-0' : '-translate-x-full'}
-          md:translate-x-0 md:static md:block
+          overflow-y-auto scroll-smooth flex flex-col
+          ${isOpen ? "translate-x-0" : "-translate-x-full"}
+          md:static
         `}
       >
-        {/* Close button (mobile only) */}
-        <div className="flex items-center justify-between md:hidden p-4 border-b">
-          <h2 className="text-lg font-semibold text-gray-800">Menu</h2>
-          <button 
+        {/* Logo Section */}
+        <div className="flex items-center justify-between px-6 py-5 border-b border-strokedark/10">
+          <Link
+            to="/overview"
+            className="cursor-pointer"
             onClick={() => setIsOpen(false)}
-            className="p-1 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <img
+              src="/Qudemo.svg"
+              alt="Qudemo Logo"
+              className="h-12 ml-2.5 scale-[2] w-auto hover:opacity-80 transition-opacity"
+            />
+          </Link>
+          {/* Close button (mobile only) */}
+          <button
+            onClick={() => setIsOpen(false)}
+            className="md:hidden p-1 rounded-md text-bodydark hover:text-graydark hover:bg-whiten focus:outline-none focus:ring-2 focus:ring-primary"
           >
             <XMarkIcon className="h-6 w-6" />
           </button>
         </div>
 
+        {/* MENU Section */}
+        <div className="px-4 py-4 text-left">
+          <h3 className="text-xs font-semibold text-bodydark2 uppercase tracking-wider">
+            MENU
+          </h3>
+        </div>
+
         {/* Menu Links */}
-        <nav className="flex flex-col mt-12 md:mt-24 space-y-6 px-4 pb-80 text-gray-600">
+        <nav className="flex flex-col space-y-0.5 px-4 flex-1">
           {/* Base menu items (available to all users) */}
-          {baseMenuItems.map(({ name, icon: Icon, path, requiresEnterprise, requiresPro, isBeta }) => {
-            // COMMENTED OUT FOR TESTING - Allow free users to access Pro features
-            // const showLock = (requiresEnterprise && !isEnterprise) || (requiresPro && !isPro);
-            const showLock = false; // TEST MODE: No locks for any features
-            const isAnalytics = name === 'Analytics';
-            const isBulkShare = name === 'Bulk Share';
-            
-            return (
-              <NavLink
-                key={name}
-                to={path}
-                onClick={() => setIsOpen(false)} // Close menu on mobile after click
-                className={({ isActive }) => {
-                  const baseClasses = "flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors duration-200 relative";
-                  
-                  if (isActive) {
-                    if ((isAnalytics || isBulkShare) && isPro) {
-                      return `${baseClasses} bg-blue-50 font-semibold text-blue-700 border-l-4 border-blue-600`;
+          {baseMenuItems.map(
+            ({
+              name,
+              icon: Icon,
+              path,
+              requiresEnterprise,
+              requiresPro,
+              isBeta,
+            }) => {
+              // COMMENTED OUT FOR TESTING - Allow free users to access Pro features
+              // const showLock = (requiresEnterprise && !isEnterprise) || (requiresPro && !isPro);
+              const showLock = false; // TEST MODE: No locks for any features
+              const isAnalytics = name === "Analytics";
+              const isBulkShare = name === "Bulk Share";
+
+              return (
+                <NavLink
+                  key={name}
+                  to={path}
+                  onClick={() => setIsOpen(false)} // Close menu on mobile after click
+                  className={({ isActive }) => {
+                    const baseClasses =
+                      "flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all duration-200 relative group";
+
+                    if (isActive) {
+                      return `${baseClasses} bg-primary/10 text-primary`;
                     } else {
-                      return `${baseClasses} bg-blue-50 font-semibold text-blue-700 border-l-4 border-blue-600`;
+                      if (showLock) {
+                        return `${baseClasses} text-graydark hover:bg-whiten`;
+                      } else {
+                        return `${baseClasses} text-graydark hover:bg-whiten`;
+                      }
                     }
-                  } else {
-                    if (showLock) {
-                      return `${baseClasses} text-gray-400 hover:bg-gray-100`;
-                    } else {
-                      return `${baseClasses} hover:bg-gray-100 text-gray-700 hover:text-gray-900`;
-                    }
-                  }
-                }}
-              >
-                {Icon && <Icon className="h-5 w-5" />}
-                {/* COMMENTED OUT FOR TESTING - No lock icons shown */}
-                {/* {showLock && <LockClosedIcon className="h-3 w-3" />} */}
-                <span>{name}</span>
-                {isBeta && (
-                  <span className="ml-2 px-2 py-0.5 text-xs font-semibold text-purple-700 bg-purple-100 rounded-full">
-                    BETA
-                  </span>
-                )}
-              </NavLink>
-            );
-          })}
+                  }}
+                >
+                  {Icon && <Icon className="h-5 w-5 flex-shrink-0" />}
+                  {/* COMMENTED OUT FOR TESTING - No lock icons shown */}
+                  {/* {showLock && <LockClosedIcon className="h-3 w-3" />} */}
+                  <span className="text-base">{name}</span>
+                  {isBeta && (
+                    <span className="ml-auto px-2 py-0.5 text-xs font-semibold text-white bg-success rounded">
+                      NEW
+                    </span>
+                  )}
+                </NavLink>
+              );
+            },
+          )}
         </nav>
 
-        {/* Bottom section with profile and settings */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200 bg-white">
-          {/* Current Plan Container */}
-          <div className="mb-4">
-            <div 
-              className="block bg-gray-50 rounded-lg p-4 border border-gray-200 hover:bg-gray-100 transition-colors duration-200 cursor-pointer"
-              onClick={handlePlanClick}
+        {/* SUPPORT Section */}
+        <div className="px-4 py-4 text-left mt-auto">
+          <h3 className="text-xs font-semibold text-bodydark2 uppercase tracking-wider">
+            SUPPORT
+          </h3>
+        </div>
+
+        {/* Support Links */}
+        <div className="flex flex-col space-y-0.5 px-4">
+          <Link
+            to="/profile"
+            className={`group flex items-center gap-3 px-4 py-3 text-base font-medium rounded-lg transition-all duration-200 ${
+              location.pathname === "/profile"
+                ? "bg-primary/10 text-primary"
+                : "text-graydark hover:bg-whiten"
+            }`}
+            onClick={() => setIsOpen(false)}
+          >
+            <svg
+              className="h-5 w-5 flex-shrink-0"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
             >
-              <div className="flex items-center justify-between">
-                <div className="flex flex-col space-y-1 text-left">
-                  <p className="text-sm font-medium text-gray-900 text-left">
-                    {subscriptionPlan === 'pro' ? 'Pro Plan' : 'Free Plan'}
-                  </p>
-                  <p className="text-xs text-blue-600 font-medium text-left">
-                    {subscriptionPlan === 'pro' ? 'Manage Plan' : 'Upgrade'}
-                  </p>
-                </div>
-                <div className="flex-shrink-0">
-                  <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                  </svg>
-                </div>
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+              />
+            </svg>
+            User Profile
+          </Link>
+
+          <Link
+            to="/bulk-uploads"
+            className={`group flex items-center gap-3 px-4 py-3 text-base font-medium rounded-lg transition-all duration-200 ${
+              location.pathname === "/bulk-uploads"
+                ? "bg-primary/10 text-primary"
+                : "text-graydark hover:bg-whiten"
+            }`}
+            onClick={() => setIsOpen(false)}
+          >
+            <DocumentArrowUpIcon className="h-5 w-5 flex-shrink-0" />
+            Bulk Upload
+          </Link>
+
+          <a
+            href="mailto:mail@qudemo.com?subject=Help%20Request&body=Hi%20Qudemo%20Support%20Team,%0A%0AI%20need%20help%20with:%0A%0A"
+            className="group flex items-center w-full gap-3 px-4 py-3 text-base font-medium text-graydark hover:bg-whiten rounded-lg transition-all duration-200"
+            onClick={() => setIsOpen(false)}
+          >
+            <QuestionMarkCircleIcon className="h-5 w-5 flex-shrink-0" />
+            Help and Support
+          </a>
+        </div>
+
+        {/* Bottom section with plan */}
+        <div className="p-4 border-t border-strokedark/10 bg-white">
+          {/* Current Plan Container */}
+          <div
+            className="block bg-whiten rounded-lg p-3.5 border border-strokedark/10 hover:bg-primary/5 hover:border-primary/30 transition-all duration-200 cursor-pointer"
+            onClick={handlePlanClick}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex flex-col space-y-0.5 text-left">
+                <p className="text-sm font-semibold text-graydark text-left">
+                  {subscriptionPlan === "pro" ? "Pro Plan" : "Free Plan"}
+                </p>
+                <p className="text-xs text-primary font-medium text-left">
+                  {subscriptionPlan === "pro" ? "Manage Plan" : "Upgrade"}
+                </p>
+              </div>
+              <div className="flex-shrink-0">
+                <svg
+                  className="w-4 h-4 text-primary"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 7l5 5m0 0l-5 5m5-5H6"
+                  />
+                </svg>
               </div>
             </div>
-          </div>
-          
-          <div className="space-y-2">
-            <Link
-              to="/profile"
-              className={`group flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors duration-200 ${
-                location.pathname === '/profile'
-                  ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600'
-                  : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
-              }`}
-              onClick={() => setIsOpen(false)}
-            >
-              <svg
-                className={`mr-3 h-5 w-5 flex-shrink-0 ${
-                  location.pathname === '/profile' ? 'text-indigo-700' : 'text-gray-400 group-hover:text-gray-500'
-                }`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-              Profile
-            </Link>
-            
-            <Link
-              to="/bulk-uploads"
-              className={`group flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors duration-200 ${
-                location.pathname === '/bulk-uploads'
-                  ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600'
-                  // COMMENTED OUT FOR TESTING - Allow free users to access
-                  // : !isPro 
-                  //   ? 'text-gray-400'
-                  : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
-              }`}
-              onClick={() => setIsOpen(false)}
-            >
-              {/* COMMENTED OUT FOR TESTING - No lock icon shown */}
-              {/* {!isPro ? (
-                <LockClosedIcon className={`mr-3 h-5 w-5 flex-shrink-0 ${
-                  location.pathname === '/bulk-uploads' ? 'text-indigo-700' : 'text-gray-400'
-                }`} />
-              ) : ( */}
-                <DocumentArrowUpIcon className={`mr-3 h-5 w-5 flex-shrink-0 ${
-                  location.pathname === '/bulk-uploads' ? 'text-indigo-700' : 'text-gray-400 group-hover:text-gray-500'
-                }`} />
-              {/* )} */}
-              Bulk Upload
-            </Link>
-            
-            {/* SETTINGS MENU - TEMPORARILY COMMENTED OUT */}
-            {/* <Link
-              to="/settings"
-              className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 ${
-                location.pathname === '/settings'
-                  ? 'bg-indigo-100 text-indigo-700'
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-              }`}
-              onClick={() => setIsOpen(false)}
-            >
-              <svg
-                className={`mr-3 h-5 w-5 flex-shrink-0 ${
-                  location.pathname === '/settings' ? 'text-indigo-700' : 'text-gray-400 group-hover:text-gray-500'
-                }`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-              Settings
-            </Link> */}
-            
-            <a
-              href="mailto:mail@qudemo.com?subject=Help%20Request&body=Hi%20Qudemo%20Support%20Team,%0A%0AI%20need%20help%20with:%0A%0A"
-              className="group flex items-center w-full px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 rounded-lg transition-colors duration-200"
-              onClick={() => setIsOpen(false)}
-            >
-              <QuestionMarkCircleIcon className="mr-3 h-5 w-5 flex-shrink-0 text-gray-400 group-hover:text-gray-500" />
-              Help and Support
-            </a>
           </div>
         </div>
       </div>

@@ -140,7 +140,7 @@ const CompanyCheck = ({ children }) => {
 };
 // Dashboard Layout Component
 const DashboardLayout = ({ children }) => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true); // Default to open on desktop
   const [showWelcomePreview, setShowWelcomePreview] = useState(false);
   const [demoQudemo, setDemoQudemo] = useState(null);
 
@@ -200,12 +200,18 @@ const DashboardLayout = ({ children }) => {
         </React.Suspense>
       )}
 
-      <div className="flex h-screen bg-gray-100">
+      <div className="flex h-screen bg-whiter overflow-hidden">
+        {/* Sidebar - Full height, separate from content */}
         <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
+
+        {/* Main Content Area */}
         <div className="flex-1 flex flex-col overflow-hidden">
-          <Header onMenuClick={() => setSidebarOpen(true)} />
-          <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 mt-16">
-            <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-8">
+          {/* Content Header - Inside content area, not fixed */}
+          <Header onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
+
+          {/* Main Content - Scrollable */}
+          <main className="flex-1 overflow-x-hidden overflow-y-auto bg-whiter">
+            <div className="mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
               {children}
             </div>
           </main>

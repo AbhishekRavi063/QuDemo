@@ -1,9 +1,14 @@
-import React, { useState } from 'react';
-import { XMarkIcon, ClipboardDocumentIcon, CheckIcon, EyeIcon } from '@heroicons/react/24/outline';
+import React, { useState } from "react";
+import {
+  XMarkIcon,
+  ClipboardDocumentIcon,
+  CheckIcon,
+  EyeIcon,
+} from "@heroicons/react/24/outline";
 
 const WidgetGeneratorModal = ({ isOpen, onClose, widgetData, qudemo }) => {
   const [copied, setCopied] = useState(false);
-  const [selectedTab, setSelectedTab] = useState('script'); // 'script' or 'iframe'
+  const [selectedTab, setSelectedTab] = useState("script"); // 'script' or 'iframe'
 
   if (!isOpen || !widgetData) return null;
 
@@ -14,18 +19,20 @@ const WidgetGeneratorModal = ({ isOpen, onClose, widgetData, qudemo }) => {
   };
 
   const handleOpenPlayground = () => {
-    window.open(widgetData.playgroundUrl, '_blank');
+    window.open(widgetData.playgroundUrl, "_blank");
   };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="sticky top-0 bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-6 rounded-t-2xl">
           <div className="flex justify-between items-start">
             <div>
               <h2 className="text-2xl font-bold mb-2">Widget Generator</h2>
-              <p className="text-purple-100">Embed {qudemo?.name} on your website</p>
+              <p className="text-purple-100">
+                Embed {qudemo?.name} on your website
+              </p>
             </div>
             <button
               onClick={onClose}
@@ -41,21 +48,21 @@ const WidgetGeneratorModal = ({ isOpen, onClose, widgetData, qudemo }) => {
           {/* Tab Selection */}
           <div className="flex space-x-2 bg-gray-100 rounded-lg p-1">
             <button
-              onClick={() => setSelectedTab('script')}
+              onClick={() => setSelectedTab("script")}
               className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
-                selectedTab === 'script'
-                  ? 'bg-white text-purple-600 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
+                selectedTab === "script"
+                  ? "bg-white text-purple-600 shadow-sm"
+                  : "text-gray-600 hover:text-gray-900"
               }`}
             >
               Script Tag (Recommended)
             </button>
             <button
-              onClick={() => setSelectedTab('iframe')}
+              onClick={() => setSelectedTab("iframe")}
               className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
-                selectedTab === 'iframe'
-                  ? 'bg-white text-purple-600 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
+                selectedTab === "iframe"
+                  ? "bg-white text-purple-600 shadow-sm"
+                  : "text-gray-600 hover:text-gray-900"
               }`}
             >
               iFrame (Alternative)
@@ -66,10 +73,16 @@ const WidgetGeneratorModal = ({ isOpen, onClose, widgetData, qudemo }) => {
           <div className="space-y-3">
             <div className="flex justify-between items-center">
               <h3 className="font-semibold text-gray-900">
-                {selectedTab === 'script' ? 'Embed Code' : 'iFrame Code'}
+                {selectedTab === "script" ? "Embed Code" : "iFrame Code"}
               </h3>
               <button
-                onClick={() => handleCopyCode(selectedTab === 'script' ? widgetData.widgetCode : widgetData.iframeCode)}
+                onClick={() =>
+                  handleCopyCode(
+                    selectedTab === "script"
+                      ? widgetData.widgetCode
+                      : widgetData.iframeCode,
+                  )
+                }
                 className="flex items-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
               >
                 {copied ? (
@@ -89,7 +102,9 @@ const WidgetGeneratorModal = ({ isOpen, onClose, widgetData, qudemo }) => {
             <div className="relative">
               <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto text-sm">
                 <code>
-                  {selectedTab === 'script' ? widgetData.widgetCode : widgetData.iframeCode}
+                  {selectedTab === "script"
+                    ? widgetData.widgetCode
+                    : widgetData.iframeCode}
                 </code>
               </pre>
             </div>
@@ -103,8 +118,13 @@ const WidgetGeneratorModal = ({ isOpen, onClose, widgetData, qudemo }) => {
             </h4>
             <ol className="list-decimal list-inside space-y-2 text-sm text-blue-800">
               <li>Copy the code above using the "Copy Code" button</li>
-              <li>Paste it into your website's HTML, just before the closing <code>&lt;/body&gt;</code> tag</li>
-              <li>The widget will appear at the bottom-right corner of your page</li>
+              <li>
+                Paste it into your website's HTML, just before the closing{" "}
+                <code>&lt;/body&gt;</code> tag
+              </li>
+              <li>
+                The widget will appear at the bottom-right corner of your page
+              </li>
               <li>Users can click it to interact with your QuDemo</li>
             </ol>
           </div>
@@ -113,15 +133,21 @@ const WidgetGeneratorModal = ({ isOpen, onClose, widgetData, qudemo }) => {
           <div className="grid grid-cols-3 gap-4">
             <div className="bg-gray-50 rounded-lg p-3 text-center">
               <div className="text-xs text-gray-600 mb-1">Theme</div>
-              <div className="font-semibold text-gray-900 capitalize">{widgetData.widgetConfig.theme}</div>
+              <div className="font-semibold text-gray-900 capitalize">
+                {widgetData.widgetConfig.theme}
+              </div>
             </div>
             <div className="bg-gray-50 rounded-lg p-3 text-center">
               <div className="text-xs text-gray-600 mb-1">Position</div>
-              <div className="font-semibold text-gray-900 capitalize">{widgetData.widgetConfig.position}</div>
+              <div className="font-semibold text-gray-900 capitalize">
+                {widgetData.widgetConfig.position}
+              </div>
             </div>
             <div className="bg-gray-50 rounded-lg p-3 text-center">
               <div className="text-xs text-gray-600 mb-1">Size</div>
-              <div className="font-semibold text-gray-900 capitalize">{widgetData.widgetConfig.size}</div>
+              <div className="font-semibold text-gray-900 capitalize">
+                {widgetData.widgetConfig.size}
+              </div>
             </div>
           </div>
 
@@ -179,4 +205,3 @@ const WidgetGeneratorModal = ({ isOpen, onClose, widgetData, qudemo }) => {
 };
 
 export default WidgetGeneratorModal;
-

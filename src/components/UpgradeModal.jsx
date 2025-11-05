@@ -1,7 +1,12 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { XMarkIcon, SparklesIcon, ShareIcon, ChartBarIcon } from '@heroicons/react/24/outline';
-import { getApiUrl } from '../config/api';
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  XMarkIcon,
+  SparklesIcon,
+  ShareIcon,
+  ChartBarIcon,
+} from "@heroicons/react/24/outline";
+import { getApiUrl } from "../config/api";
 
 const UpgradeModal = ({ isOpen, onClose, errorDetails }) => {
   const navigate = useNavigate();
@@ -11,29 +16,30 @@ const UpgradeModal = ({ isOpen, onClose, errorDetails }) => {
   const handleUpgrade = async () => {
     onClose();
     try {
-      const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
+      const token =
+        localStorage.getItem("accessToken") || localStorage.getItem("token");
       if (!token) {
-        navigate('/login');
+        navigate("/login");
         return;
       }
-      const baseUrl = getApiUrl('node');
+      const baseUrl = getApiUrl("node");
       const checkoutUrl = `${baseUrl}/api/subscription/checkout`;
       const response = await fetch(checkoutUrl, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          plan: 'pro',
-          billingCycle: 'monthly'
-        })
+          plan: "pro",
+          billingCycle: "monthly",
+        }),
       });
       const data = await response.json();
       if (data.success && data.checkoutUrl) {
         window.location.href = data.checkoutUrl;
       } else {
-        alert(`Failed to start checkout: ${data.error || 'Unknown error'}`);
+        alert(`Failed to start checkout: ${data.error || "Unknown error"}`);
       }
     } catch (error) {
       alert(`Failed to start checkout: ${error.message}`);
@@ -43,20 +49,21 @@ const UpgradeModal = ({ isOpen, onClose, errorDetails }) => {
   // Determine if this is a cancelled subscription
   const isCancelled = errorDetails?.isCancelled;
   const currentPlan = errorDetails?.currentPlan;
-  const title = errorDetails?.title || 'Upgrade Required';
-  const message = errorDetails?.message || 'Unlock premium features with our Pro plan';
+  const title = errorDetails?.title || "Upgrade Required";
+  const message =
+    errorDetails?.message || "Unlock premium features with our Pro plan";
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Backdrop */}
-      <div 
+      <div
         className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
         onClick={onClose}
       ></div>
 
       {/* Modal */}
       <div className="flex min-h-full items-center justify-center p-4">
-        <div className="relative bg-white rounded-2xl shadow-2xl max-w-lg w-full min-h-[500px] p-10 transform transition-all">
+        <div className="relative bg-white rounded-xl shadow-2xl max-w-lg w-full min-h-[500px] p-10 transform transition-all">
           {/* Close Button */}
           <button
             onClick={onClose}
@@ -82,8 +89,12 @@ const UpgradeModal = ({ isOpen, onClose, errorDetails }) => {
                     <ShareIcon className="h-4 w-4 text-blue-600" />
                   </div>
                   <div className="text-left">
-                    <h3 className="font-semibold text-gray-900 text-sm text-left mb-1">Public Sharing</h3>
-                    <p className="text-xs text-gray-600 text-left leading-relaxed">Generate shareable links for your Qudemos</p>
+                    <h3 className="font-semibold text-gray-900 text-sm text-left mb-1">
+                      Public Sharing
+                    </h3>
+                    <p className="text-xs text-gray-600 text-left leading-relaxed">
+                      Generate shareable links for your Qudemos
+                    </p>
                   </div>
                 </div>
 
@@ -92,8 +103,12 @@ const UpgradeModal = ({ isOpen, onClose, errorDetails }) => {
                     <ChartBarIcon className="h-4 w-4 text-blue-600" />
                   </div>
                   <div className="text-left">
-                    <h3 className="font-semibold text-gray-900 text-sm text-left mb-1">Advanced Analytics</h3>
-                    <p className="text-xs text-gray-600 text-left leading-relaxed">Track views and engagement</p>
+                    <h3 className="font-semibold text-gray-900 text-sm text-left mb-1">
+                      Advanced Analytics
+                    </h3>
+                    <p className="text-xs text-gray-600 text-left leading-relaxed">
+                      Track views and engagement
+                    </p>
                   </div>
                 </div>
               </div>
@@ -118,18 +133,18 @@ const UpgradeModal = ({ isOpen, onClose, errorDetails }) => {
             <button
               onClick={handleUpgrade}
               className={`w-full py-2.5 px-6 text-white rounded-lg font-semibold transition-all transform hover:scale-105 ${
-                isCancelled 
-                  ? 'bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700'
-                  : 'bg-blue-600 hover:bg-blue-700'
+                isCancelled
+                  ? "bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700"
+                  : "bg-blue-600 hover:bg-blue-700"
               }`}
             >
-              {isCancelled ? 'Renew Subscription' : 'Upgrade now'}
+              {isCancelled ? "Renew Subscription" : "Upgrade now"}
             </button>
             <button
               onClick={onClose}
               className="w-full py-2.5 px-6 bg-gray-100 text-gray-700 rounded-lg font-semibold hover:bg-gray-200 transition-colors"
             >
-              {isCancelled ? 'Continue with Free Plan' : 'Maybe Later'}
+              {isCancelled ? "Continue with Free Plan" : "Maybe Later"}
             </button>
           </div>
 
@@ -146,4 +161,3 @@ const UpgradeModal = ({ isOpen, onClose, errorDetails }) => {
 };
 
 export default UpgradeModal;
-

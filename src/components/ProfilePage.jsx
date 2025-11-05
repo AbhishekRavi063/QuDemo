@@ -149,7 +149,7 @@ export default function ProfilePage() {
       type="button"
       onClick={onChange}
       className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
-        checked ? "bg-blue-600" : "bg-gray-200"
+        checked ? "bg-primary" : "bg-gray-200"
       }`}
     >
       <span
@@ -268,10 +268,10 @@ export default function ProfilePage() {
     );
   }
   return (
-    <div className="w-full min-h-screen bg-gray-50 flex flex-col py-4">
+    <div className="w-full min-h-screen bg-whiter flex flex-col py-4">
       {/* Tabs */}
       <div className="flex justify-center mb-8">
-        <div className="bg-gray-100 p-1.5 rounded-lg max-w-4xl w-full">
+        <div className="bg-whiten p-1.5 rounded-lg max-w-4xl w-full">
           <nav className="flex gap-1.5">
             {tabs.map((tab) => (
               <button
@@ -279,8 +279,8 @@ export default function ProfilePage() {
                 onClick={() => setActiveTab(tab.key)}
                 className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                   activeTab === tab.key
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'bg-gray-200 text-gray-600 hover:text-gray-900 hover:bg-gray-300'
+                    ? 'bg-white text-graydark shadow-sm'
+                    : 'bg-gray-200 text-bodydark hover:text-graydark hover:bg-gray-300'
                 }`}
               >
                 {tab.name}
@@ -297,32 +297,32 @@ export default function ProfilePage() {
             {/* Name Fields */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2 text-left">First Name</label>
+                <label className="block text-sm font-medium text-bodydark mb-2 text-left">First Name</label>
                 <input
                   type="text"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-strokedark/20 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2 text-left">Last Name</label>
+                <label className="block text-sm font-medium text-bodydark mb-2 text-left">Last Name</label>
                 <input
                   type="text"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-strokedark/20 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
             </div>
             {/* Email */}
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2 text-left">Email Address</label>
+              <label className="block text-sm font-medium text-bodydark mb-2 text-left">Email Address</label>
               <input
                 type="email"
                 value={email}
                 readOnly
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-100 text-gray-600 cursor-not-allowed"
+                className="w-full px-3 py-2 border border-strokedark/20 rounded-md shadow-sm bg-whiten text-bodydark cursor-not-allowed"
               />
               <p className="mt-1 text-xs text-gray-500 text-left">Email address cannot be changed</p>
             </div>
@@ -332,7 +332,7 @@ export default function ProfilePage() {
                 type="button"
                 onClick={handleSaveProfile}
                 disabled={isSavingProfile}
-                className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSavingProfile ? 'Saving...' : 'Save Changes'}
               </button>
@@ -340,7 +340,7 @@ export default function ProfilePage() {
                 type="button"
                 onClick={handleCancelProfile}
                 disabled={isSavingProfile}
-                className="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="inline-flex justify-center py-2 px-4 border border-strokedark/20 shadow-sm text-sm font-medium rounded-md text-bodydark bg-white hover:bg-whiter focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Cancel
               </button>
@@ -355,16 +355,16 @@ export default function ProfilePage() {
                  <div className="flex gap-6 justify-between">
                    {/* Company Logo - Left Side */}
                    <div className="flex-shrink-0">
-                     <label className="block text-sm font-medium text-gray-700 mb-2 text-left">Organization Logo</label>
+                     <label className="block text-sm font-medium text-bodydark mb-2 text-left">Organization Logo</label>
                      <div className="flex flex-col space-y-4">
                        {company.logo_url ? (
                          <img
                            src={company.logo_url}
                            alt="Organization Logo"
-                           className="w-32 h-32 rounded-full object-cover border border-gray-300"
+                           className="w-32 h-32 rounded-full object-cover border border-strokedark/20"
                          />
                        ) : (
-                         <div className="w-32 h-32 rounded-full flex items-center justify-center text-gray-400 font-semibold text-2xl border-2 border-dashed border-gray-300">
+                         <div className="w-32 h-32 rounded-full flex items-center justify-center text-bodydark2 font-semibold text-2xl border-2 border-dashed border-strokedark/20">
                            {company.name?.charAt(0) || 'C'}
                          </div>
                        )}
@@ -373,20 +373,20 @@ export default function ProfilePage() {
                    {/* Company Details - Right Side */}
                    <div className="space-y-6 w-[600px]">
                      <div className="text-left">
-                       <label className="block text-sm font-medium text-gray-700 mb-2 text-left">Organization Name</label>
-                       <div className="w-full px-3 py-2 border border-gray-200 rounded-md bg-gray-50 text-gray-900 text-left">
+                       <label className="block text-sm font-medium text-bodydark mb-2 text-left">Organization Name</label>
+                       <div className="w-full px-3 py-2 border border-strokedark/10 rounded-md bg-whiter text-graydark text-left">
                          {company.name || 'Not provided'}
                        </div>
                      </div>
                      <div className="text-left">
-                       <label className="block text-sm font-medium text-gray-700 mb-2 text-left">Website</label>
-                       <div className="w-full px-3 py-2 border border-gray-200 rounded-md bg-gray-50 text-gray-900 text-left">
+                       <label className="block text-sm font-medium text-bodydark mb-2 text-left">Website</label>
+                       <div className="w-full px-3 py-2 border border-strokedark/10 rounded-md bg-whiter text-graydark text-left">
                          {company.website ? (
                            <a 
                              href={company.website} 
                              target="_blank" 
                              rel="noopener noreferrer"
-                             className="text-blue-600 hover:text-blue-800 underline text-left"
+                             className="text-primary hover:text-primary underline text-left"
                            >
                              {company.website}
                            </a>
@@ -398,7 +398,7 @@ export default function ProfilePage() {
                    </div>
                  </div>
                 {/* Delete Company Button */}
-                <div className="pt-6 border-t border-gray-200">
+                <div className="pt-6 border-t border-strokedark/10">
                   <div className="flex justify-center">
                     <div className="bg-red-50 border border-red-200 rounded-lg p-4 max-w-md w-full">
                       <div className="flex items-start">
@@ -443,11 +443,11 @@ export default function ProfilePage() {
             ) : (
               <div className="text-center py-8">
                 <div className="text-gray-500 mb-4">
-                  <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="mx-auto h-12 w-12 text-bodydark2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                   </svg>
                 </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No Organization Found</h3>
+                <h3 className="text-lg font-medium text-graydark mb-2">No Organization Found</h3>
                 <p className="text-gray-500">You don't have an organization associated with your account.</p>
               </div>
             )}
@@ -469,7 +469,7 @@ export default function ProfilePage() {
                 </svg>
               </div>
               <div className="ml-3">
-                <h3 className="text-lg font-medium text-gray-900">
+                <h3 className="text-lg font-medium text-graydark">
                   Delete Organization
                 </h3>
               </div>
@@ -478,7 +478,7 @@ export default function ProfilePage() {
               <p className="text-sm text-gray-500 mb-4 text-left">
                 This action will permanently delete your organization and all associated data:
               </p>
-              <ul className="text-sm text-gray-600 list-disc list-inside space-y-1 mb-4 text-left">
+              <ul className="text-sm text-bodydark list-disc list-inside space-y-1 mb-4 text-left">
                 <li>All QuDemos and their videos</li>
                 <li>All transcript files and knowledge sources</li>
                 <li>All analytics and interaction data</li>
@@ -487,7 +487,7 @@ export default function ProfilePage() {
               <p className="text-sm text-gray-500 mb-4 text-left">
                 <strong>This action cannot be undone.</strong>
               </p>
-              <p className="text-sm text-gray-700 mb-2 text-left">
+              <p className="text-sm text-bodydark mb-2 text-left">
                 To confirm deletion, type <strong>DELETE</strong> in the box below:
               </p>
               <input
@@ -495,7 +495,7 @@ export default function ProfilePage() {
                 value={deleteConfirmText}
                 onChange={(e) => setDeleteConfirmText(e.target.value)}
                 placeholder="Type DELETE to confirm"
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-red-500 focus:border-red-500"
+                className="w-full border border-strokedark/20 rounded-md px-3 py-2 focus:ring-red-500 focus:border-red-500"
               />
             </div>
             <div className="flex justify-end space-x-3">
@@ -505,7 +505,7 @@ export default function ProfilePage() {
                   setShowDeleteModal(false);
                   setDeleteConfirmText("");
                 }}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+                className="px-4 py-2 text-sm font-medium text-bodydark bg-whiten hover:bg-gray-200 rounded-md transition-colors"
                 disabled={isDeleting}
               >
                 Cancel

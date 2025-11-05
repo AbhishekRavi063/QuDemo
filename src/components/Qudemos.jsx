@@ -937,10 +937,10 @@ const Qudemos = () => {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
           </svg>
         </div>
-        <h3 className="text-lg font-medium text-gray-900 mb-2">
+        <h3 className="text-lg font-medium text-graydark mb-2">
           {isNoCompanyError ? 'No Company Found' : 'Error Loading Qudemos'}
         </h3>
-        <p className="text-gray-600 mb-6">
+        <p className="text-bodydark mb-6">
           {isNoCompanyError 
             ? 'You need to create a company first before you can create qudemos.'
             : error
@@ -949,14 +949,14 @@ const Qudemos = () => {
         {isNoCompanyError ? (
           <button
             onClick={() => navigate('/company-management')}
-            className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+            className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90"
           >
             Create Company
           </button>
         ) : (
           <button
             onClick={fetchQudemos}
-            className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+            className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90"
           >
             Try Again
           </button>
@@ -971,7 +971,7 @@ const Qudemos = () => {
         <div className="flex items-center space-x-2">
           <button
             onClick={fetchQudemos}
-            className="flex items-center space-x-2 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+            className="flex items-center space-x-2 px-3 py-2 bg-whiten text-bodydark rounded-lg hover:bg-bodydark1 transition-colors"
             title="Refresh qudemos"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -984,23 +984,23 @@ const Qudemos = () => {
       {/* Qudemos Grid */}
       {qudemos.length === 0 ? (
         <div className="text-center py-12">
-          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <PlayIcon className="w-8 h-8 text-gray-400" />
+          <div className="w-16 h-16 bg-whiten rounded-full flex items-center justify-center mx-auto mb-4">
+            <PlayIcon className="w-8 h-8 text-bodydark2" />
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No qudemos created yet</h3>
-          <p className="text-gray-600">Get started by creating your first Qudemo!</p>
+          <h3 className="text-lg font-medium text-graydark mb-2">No qudemos created yet</h3>
+          <p className="text-bodydark">Get started by creating your first Qudemo!</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {qudemos.map((qudemo) => (
             <div
               key={qudemo.id}
-              className={`bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow border border-gray-200 ${
+              className={`bg-white rounded-lg shadow-none hover:shadow-none transition-shadow border border-strokedark/10 ${
                 deletingQudemoId === qudemo.id ? 'opacity-50 pointer-events-none' : ''
               }`}
             >
               {/* Video Thumbnail */}
-              <div className="relative h-48 bg-gray-100 rounded-t-lg overflow-hidden">
+              <div className="relative h-48 bg-whiten rounded-t-lg overflow-hidden">
                 {/* Delete Loading Overlay */}
                 {deletingQudemoId === qudemo.id && (
                   <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-10 rounded-t-lg">
@@ -1127,7 +1127,7 @@ const Qudemos = () => {
                             e.stopPropagation();
                               setPreviewingQudemo(qudemo);
                           }}
-                          className="w-16 h-16 bg-black bg-opacity-60 rounded-full flex items-center justify-center hover:bg-opacity-80 hover:scale-110 transition-all duration-300 shadow-lg"
+                          className="w-16 h-16 bg-black bg-opacity-60 rounded-full flex items-center justify-center hover:bg-opacity-80 hover:scale-110 transition-all duration-300 shadow-none"
                         >
                           <PlayIcon className="w-8 h-8 text-white ml-1" />
                         </button>
@@ -1143,7 +1143,7 @@ const Qudemos = () => {
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
                     <div className="text-center">
-                      <VideoCameraIcon className="w-12 h-12 text-gray-400 mx-auto mb-2" />
+                      <VideoCameraIcon className="w-12 h-12 text-bodydark2 mx-auto mb-2" />
                       <p className="text-gray-500 text-sm">No video</p>
                     </div>
                   </div>
@@ -1154,11 +1154,11 @@ const Qudemos = () => {
                 <div className={qudemo.isDemo ? "flex justify-between items-start" : "flex justify-between items-start mb-2"}>
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      <h3 className="font-semibold text-gray-900 truncate">
+                      <h3 className="font-semibold text-graydark truncate">
                         {qudemo.title}
                       </h3>
                       {qudemo.isDemo && (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 whitespace-nowrap">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary whitespace-nowrap">
                           Demo
                         </span>
                       )}
@@ -1171,19 +1171,19 @@ const Qudemos = () => {
                           e.stopPropagation();
                           setDropdownOpen(dropdownOpen === qudemo.id ? null : qudemo.id);
                         }}
-                        className="p-1 hover:bg-gray-100 rounded"
+                        className="p-1 hover:bg-whiten rounded"
                       >
                         <EllipsisVerticalIcon className="w-5 h-5 text-gray-500" />
                       </button>
                       {dropdownOpen === qudemo.id && (
-                        <div className="absolute right-0 top-8 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-[160px]">
+                        <div className="absolute right-0 top-8 bg-white border border-strokedark/10 rounded-lg shadow-none z-10 min-w-[160px]">
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                                 setPreviewingQudemo(qudemo);
                                 setDropdownOpen(null);
                             }}
-                            className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center space-x-2"
+                            className="w-full px-4 py-2 text-left hover:bg-whiter flex items-center space-x-2"
                           >
                               <PlayIcon className="w-4 h-4" />
                               <span>Preview</span>
@@ -1193,7 +1193,7 @@ const Qudemos = () => {
                               e.stopPropagation();
                               handleDropdownAction('edit', qudemo);
                             }}
-                            className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center space-x-2"
+                            className="w-full px-4 py-2 text-left hover:bg-whiter flex items-center space-x-2"
                           >
                             <PencilIcon className="w-4 h-4" />
                             <span>View</span>
@@ -1218,7 +1218,7 @@ const Qudemos = () => {
                               handleDropdownAction('interactions', qudemo);
                             // }
                           }}
-                          className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center space-x-2 text-gray-700"
+                          className="w-full px-4 py-2 text-left hover:bg-whiter flex items-center space-x-2 text-bodydark"
                         >
                           {/* COMMENTED OUT FOR TESTING - Always show ChartBar icon */}
                           {/* {!isPro ? <LockClosedIcon className="w-4 h-4" /> : <ChartBarIcon className="w-4 h-4" />} */}
@@ -1245,7 +1245,7 @@ const Qudemos = () => {
                               handleDropdownAction('share', qudemo);
                             // }
                           }}
-                          className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center space-x-2 text-gray-700"
+                          className="w-full px-4 py-2 text-left hover:bg-whiter flex items-center space-x-2 text-bodydark"
                         >
                           <ShareIcon className="w-4 h-4" />
                           {/* COMMENTED OUT FOR TESTING - No lock icon shown */}
@@ -1257,7 +1257,7 @@ const Qudemos = () => {
                             e.stopPropagation();
                             handleDropdownAction('generate-widget', qudemo);
                           }}
-                          className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center space-x-2 text-purple-600"
+                          className="w-full px-4 py-2 text-left hover:bg-whiter flex items-center space-x-2 text-purple-600"
                         >
                           <CodeBracketIcon className="w-4 h-4" />
                           <span>Generate Widget</span>
@@ -1294,7 +1294,7 @@ const Qudemos = () => {
                         e.stopPropagation();
                         setPreviewingQudemo(qudemo);
                       }}
-                      className="w-full flex items-center justify-center space-x-2 transition-colors duration-200 py-2 px-3 rounded-lg border text-blue-600 hover:text-blue-800 hover:bg-blue-50 border-blue-200"
+                      className="w-full flex items-center justify-center space-x-2 transition-colors duration-200 py-2 px-3 rounded-lg border text-primary hover:text-primary hover:bg-primary/10 border-primary/30"
                     >
                       <PlayIcon className="w-4 h-4" />
                       <span className="text-sm font-medium">Preview Qudemo</span>
@@ -1334,7 +1334,7 @@ const Qudemos = () => {
                         handleViewQudemoInteractions(qudemo);
                       // }
                     }}
-                    className="w-full flex items-center justify-center space-x-2 transition-colors duration-200 py-2 px-3 rounded-lg border text-blue-600 hover:text-blue-800 hover:bg-blue-50 border-blue-200"
+                    className="w-full flex items-center justify-center space-x-2 transition-colors duration-200 py-2 px-3 rounded-lg border text-primary hover:text-primary hover:bg-primary/10 border-primary/30"
                   >
                       {/* COMMENTED OUT FOR TESTING - Always show Eye icon */}
                       {/* {!isPro ? <LockClosedIcon className="w-4 h-4" /> : <EyeIcon className="w-4 h-4" />} */}
@@ -1416,7 +1416,7 @@ const Qudemos = () => {
       {/* Share Modal */}
       {showShareModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4">
+          <div className="bg-white rounded-lg shadow-none max-w-2xl w-full mx-4">
             <div className="p-8">
               <div className="flex items-center justify-between mb-6">
                 <button
@@ -1424,17 +1424,17 @@ const Qudemos = () => {
                     setShowShareModal(false);
                     setShowShareOptionsModal(true);
                   }}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-bodydark2 hover:text-bodydark"
                   title="Back"
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                   </svg>
                 </button>
-                <h3 className="text-lg font-semibold text-gray-900 text-left flex-1 ml-3">Share Qudemo</h3>
+                <h3 className="text-lg font-semibold text-graydark text-left flex-1 ml-3">Share Qudemo</h3>
                 <button
                   onClick={() => setShowShareModal(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-bodydark2 hover:text-bodydark"
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1442,7 +1442,7 @@ const Qudemos = () => {
                 </button>
               </div>
               <div className="mb-6">
-                <p className="text-sm text-gray-600 mb-2 text-left">
+                <p className="text-sm text-bodydark mb-2 text-left">
                   Share this Qudemo with anyone using the link below:
                 </p>
                 <div className="flex items-center space-x-2">
@@ -1450,11 +1450,11 @@ const Qudemos = () => {
                     type="text"
                     value={shareLink}
                     readOnly
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm bg-gray-50"
+                    className="flex-1 px-3 py-2 border border-strokedark/20 rounded-lg text-sm bg-whiter"
                   />
                   <button
                     onClick={copyShareLink}
-                    className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
+                    className="px-3 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 flex items-center gap-2"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
@@ -1464,7 +1464,7 @@ const Qudemos = () => {
                 </div>
               </div>
               <div className="bg-blue-50 p-4 rounded-lg mb-6">
-                <p className="text-sm text-blue-800">
+                <p className="text-sm text-primary">
                   <strong>Note:</strong> This link is public and can be accessed by anyone without authentication. 
                   The shared page will show your company name and the Qudemo content.
                 </p>
@@ -1475,7 +1475,7 @@ const Qudemos = () => {
                     setShowShareModal(false);
                     setShowShareOptionsModal(true);
                   }}
-                  className="px-6 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 font-medium"
+                  className="px-6 py-2 bg-white text-bodydark border border-strokedark/20 rounded-lg hover:bg-whiter font-medium"
                 >
                   Back
                 </button>
@@ -1487,13 +1487,13 @@ const Qudemos = () => {
        {/* Share Options Modal */}
        {showShareOptionsModal && qudemoToShare && (
          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-           <div className="bg-white rounded-lg shadow-xl max-w-lg w-full mx-4">
+           <div className="bg-white rounded-lg shadow-none max-w-lg w-full mx-4">
              <div className="p-6">
                <div className="relative mb-4">
-                 <h3 className="text-lg font-semibold text-gray-900 text-center">Share Qudemo</h3>
+                 <h3 className="text-lg font-semibold text-graydark text-center">Share Qudemo</h3>
                  <button
                    onClick={() => setShowShareOptionsModal(false)}
-                   className="absolute right-0 top-0 text-gray-400 hover:text-gray-600"
+                   className="absolute right-0 top-0 text-bodydark2 hover:text-bodydark"
                  >
                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1501,38 +1501,38 @@ const Qudemos = () => {
                  </button>
                </div>
               <div className="mb-6">
-                <p className="text-sm text-gray-600 mb-6 text-center">
+                <p className="text-sm text-bodydark mb-6 text-center">
                   Choose how you'd like to share <strong>"{qudemoToShare.title}"</strong>
                 </p>
                 <div className="space-y-4">
                   {/* Single Link Option */}
                   <button
                     onClick={() => handleShareOption('single')}
-                    className="w-full p-6 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
+                    className="w-full p-6 border border-strokedark/10 rounded-lg hover:border-blue-300 hover:bg-primary/10 transition-colors"
                   >
                     <div className="text-center">
                       <div className="flex items-center justify-center space-x-3 mb-3">
-                        <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                         </svg>
-                        <h4 className="font-medium text-gray-900 text-lg">Single Link</h4>
+                        <h4 className="font-medium text-graydark text-lg">Single Link</h4>
                       </div>
-                      <p className="text-sm text-gray-600">Generate one shareable link that can be used by anyone</p>
+                      <p className="text-sm text-bodydark">Generate one shareable link that can be used by anyone</p>
                     </div>
                   </button>
                   {/* Unique Links Option */}
                   <button
                     onClick={() => handleShareOption('unique')}
-                    className="w-full p-6 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
+                    className="w-full p-6 border border-strokedark/10 rounded-lg hover:border-blue-300 hover:bg-primary/10 transition-colors"
                   >
                     <div className="text-center">
                       <div className="flex items-center justify-center space-x-3 mb-3">
-                        <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                         </svg>
-                        <h4 className="font-medium text-gray-900 text-lg">Unique Links</h4>
+                        <h4 className="font-medium text-graydark text-lg">Unique Links</h4>
                       </div>
-                      <p className="text-sm text-gray-600">Generate personalized links for specific customers with tracking</p>
+                      <p className="text-sm text-bodydark">Generate personalized links for specific customers with tracking</p>
                     </div>
                   </button>
                 </div>
@@ -1544,13 +1544,13 @@ const Qudemos = () => {
        {/* Generate Unique Links Modal */}
        {showUniqueLinksModal && qudemoToShare && (
          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-           <div className="bg-white rounded-lg shadow-xl max-w-lg w-full mx-4">
+           <div className="bg-white rounded-lg shadow-none max-w-lg w-full mx-4">
              <div className="p-6">
                <div className="relative mb-4">
-                 <h3 className="text-lg font-semibold text-gray-900 text-left">Generate Unique Links</h3>
+                 <h3 className="text-lg font-semibold text-graydark text-left">Generate Unique Links</h3>
                  <button
                    onClick={() => setShowUniqueLinksModal(false)}
-                   className="absolute right-0 top-0 text-gray-400 hover:text-gray-600"
+                   className="absolute right-0 top-0 text-bodydark2 hover:text-bodydark"
                  >
                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1558,38 +1558,38 @@ const Qudemos = () => {
                  </button>
                </div>
                <div className="mb-6">
-                 <p className="text-sm text-gray-600 mb-6 text-left">
+                 <p className="text-sm text-bodydark mb-6 text-left">
                    Choose how you'd like to create unique customer links
                  </p>
                  <div className="space-y-4">
                    {/* Few Unique Links Option */}
                    <button
                      onClick={() => handleUniqueLinksOption('few')}
-                     className="w-full p-6 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
+                     className="w-full p-6 border border-strokedark/10 rounded-lg hover:border-blue-300 hover:bg-primary/10 transition-colors"
                    >
                      <div className="text-center">
                        <div className="flex items-center justify-center space-x-3 mb-3">
-                         <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                         <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                          </svg>
-                         <h4 className="font-medium text-gray-900 text-lg">Few Unique Links</h4>
+                         <h4 className="font-medium text-graydark text-lg">Few Unique Links</h4>
                        </div>
-                       <p className="text-sm text-gray-600">Manually add customer details for a few personalized links</p>
+                       <p className="text-sm text-bodydark">Manually add customer details for a few personalized links</p>
                      </div>
                    </button>
                    {/* Bulk Unique Links Option */}
                    <button
                      onClick={() => handleUniqueLinksOption('bulk')}
-                     className="w-full p-6 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
+                     className="w-full p-6 border border-strokedark/10 rounded-lg hover:border-blue-300 hover:bg-primary/10 transition-colors"
                    >
                      <div className="text-center">
                        <div className="flex items-center justify-center space-x-3 mb-3">
-                         <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                         <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                          </svg>
-                         <h4 className="font-medium text-gray-900 text-lg">Bulk Unique Links</h4>
+                         <h4 className="font-medium text-graydark text-lg">Bulk Unique Links</h4>
                        </div>
-                       <p className="text-sm text-gray-600">Upload a CSV file with customer data to generate multiple links</p>
+                       <p className="text-sm text-bodydark">Upload a CSV file with customer data to generate multiple links</p>
                      </div>
                    </button>
                  </div>
@@ -1600,7 +1600,7 @@ const Qudemos = () => {
                      setShowUniqueLinksModal(false);
                      setShowShareOptionsModal(true);
                    }}
-                   className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                   className="px-4 py-2 text-bodydark hover:text-gray-800"
                  >
                    Back
                  </button>
@@ -1612,13 +1612,13 @@ const Qudemos = () => {
        {/* Bulk Upload Modal */}
        {showBulkUploadModal && qudemoToShare && (
          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-           <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4">
+           <div className="bg-white rounded-lg shadow-none max-w-4xl w-full mx-4">
              <div className="p-6">
                <div className="relative mb-4">
-                 <h3 className="text-lg font-semibold text-gray-900 text-left">Bulk Generate Unique Links</h3>
+                 <h3 className="text-lg font-semibold text-graydark text-left">Bulk Generate Unique Links</h3>
                  <button
                    onClick={handleBulkUploadModalClose}
-                   className="absolute right-0 top-0 text-gray-400 hover:text-gray-600"
+                   className="absolute right-0 top-0 text-bodydark2 hover:text-bodydark"
                  >
                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1626,13 +1626,13 @@ const Qudemos = () => {
                  </button>
                </div>
                <div className="mb-6">
-                 <p className="text-sm text-gray-600 mb-6 text-left">
+                 <p className="text-sm text-bodydark mb-6 text-left">
                    Upload customer data in CSV or Excel format to generate multiple personalized links. The system will create a "Shared Qudemo" column with the generated links.
                  </p>
                  <div className="space-y-4">
                    {/* Upload CSV File Section */}
                    <div>
-                     <h4 className="font-medium text-gray-900 mb-3 text-left">Upload File (CSV/XLSX)</h4>
+                     <h4 className="font-medium text-graydark mb-3 text-left">Upload File (CSV/XLSX)</h4>
                      <div className="space-y-3">
                        <input
                          type="file"
@@ -1644,12 +1644,12 @@ const Qudemos = () => {
                        />
                        <label
                          htmlFor="file-input"
-                         className="flex items-center justify-center space-x-2 w-full p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-400 hover:bg-blue-50 cursor-pointer transition-colors"
+                         className="flex items-center justify-center space-x-2 w-full p-4 border-2 border-dashed border-strokedark/20 rounded-lg hover:border-blue-400 hover:bg-primary/10 cursor-pointer transition-colors"
                        >
-                         <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                         <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                          </svg>
-                         <span className="text-blue-600 font-medium">
+                         <span className="text-primary font-medium">
                            {selectedFile ? 'Change File' : 'Choose File (CSV/XLSX)'}
                          </span>
                        </label>
@@ -1673,28 +1673,28 @@ const Qudemos = () => {
                    </div>
                    {/* File Format Example */}
                    <div>
-                     <h4 className="font-medium text-gray-900 mb-3 text-left">File Format Example (CSV/Excel):</h4>
-                     <div className="bg-gray-100 p-3 rounded-lg overflow-x-auto">
-                       <table className="w-full text-xs text-blue-600 border-collapse">
+                     <h4 className="font-medium text-graydark mb-3 text-left">File Format Example (CSV/Excel):</h4>
+                     <div className="bg-whiten p-3 rounded-lg overflow-x-auto">
+                       <table className="w-full text-xs text-primary border-collapse">
                          <thead>
-                           <tr className="border-b border-gray-300">
-                             <th className="text-center py-2 px-3 text-sm font-bold border-r border-gray-300">SL No</th>
-                             <th className="text-center py-2 px-3 text-sm font-bold border-r border-gray-300">name</th>
-                             <th className="text-center py-2 px-3 text-sm font-bold border-r border-gray-300">email</th>
+                           <tr className="border-b border-strokedark/20">
+                             <th className="text-center py-2 px-3 text-sm font-bold border-r border-strokedark/20">SL No</th>
+                             <th className="text-center py-2 px-3 text-sm font-bold border-r border-strokedark/20">name</th>
+                             <th className="text-center py-2 px-3 text-sm font-bold border-r border-strokedark/20">email</th>
                              <th className="text-center py-2 px-3 text-sm font-bold">company</th>
                            </tr>
                          </thead>
                          <tbody>
                            <tr>
-                             <td className="py-2 px-3 border-r border-gray-300">1</td>
-                             <td className="py-2 px-3 border-r border-gray-300">John Doe</td>
-                             <td className="py-2 px-3 border-r border-gray-300">john@example.com</td>
+                             <td className="py-2 px-3 border-r border-strokedark/20">1</td>
+                             <td className="py-2 px-3 border-r border-strokedark/20">John Doe</td>
+                             <td className="py-2 px-3 border-r border-strokedark/20">john@example.com</td>
                              <td className="py-2 px-3">Acme Inc</td>
                            </tr>
                            <tr>
-                             <td className="py-2 px-3 border-r border-gray-300">2</td>
-                             <td className="py-2 px-3 border-r border-gray-300">Jane Smith</td>
-                             <td className="py-2 px-3 border-r border-gray-300">jane@example.com</td>
+                             <td className="py-2 px-3 border-r border-strokedark/20">2</td>
+                             <td className="py-2 px-3 border-r border-strokedark/20">Jane Smith</td>
+                             <td className="py-2 px-3 border-r border-strokedark/20">jane@example.com</td>
                              <td className="py-2 px-3">Tech Corp</td>
                            </tr>
                          </tbody>
@@ -1709,7 +1709,7 @@ const Qudemos = () => {
                      setShowBulkUploadModal(false);
                      setShowShareOptionsModal(true);
                    }}
-                   className="px-4 py-2 text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                   className="px-4 py-2 text-bodydark hover:text-gray-800 border border-strokedark/20 rounded-lg hover:bg-whiter transition-colors"
                  >
                    Back
                  </button>
@@ -1718,7 +1718,7 @@ const Qudemos = () => {
                    disabled={!selectedFile}
                    className={`px-4 py-2 rounded-lg transition-colors ${
                      selectedFile 
-                      ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                      ? 'bg-primary text-white hover:bg-primary/90' 
                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                    }`}
                  >
@@ -1732,7 +1732,7 @@ const Qudemos = () => {
        {/* Generate Few Unique Links Modal */}
        {showFewUniqueLinksModal && qudemoToShare && (
          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-           <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4">
+           <div className="bg-white rounded-lg shadow-none max-w-4xl w-full mx-4">
              <div className="p-6">
                <div className="flex items-center justify-between mb-4">
                  <button
@@ -1740,17 +1740,17 @@ const Qudemos = () => {
                      setShowFewUniqueLinksModal(false);
                      setShowUniqueLinksModal(true);
                    }}
-                   className="text-gray-400 hover:text-gray-600"
+                   className="text-bodydark2 hover:text-bodydark"
                    title="Back"
                  >
                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                    </svg>
                  </button>
-                 <h3 className="text-lg font-semibold text-gray-900 text-left flex-1 ml-3">Generate Few Unique Links</h3>
+                 <h3 className="text-lg font-semibold text-graydark text-left flex-1 ml-3">Generate Few Unique Links</h3>
                  <button
                    onClick={() => setShowFewUniqueLinksModal(false)}
-                   className="text-gray-400 hover:text-gray-600"
+                   className="text-bodydark2 hover:text-bodydark"
                  >
                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1758,15 +1758,15 @@ const Qudemos = () => {
                  </button>
                </div>
                <div className="mb-6">
-                 <p className="text-sm text-gray-600 mb-6 text-left">
+                 <p className="text-sm text-bodydark mb-6 text-left">
                    Add customer details to generate personalized tracking links.
                  </p>
                  <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
                    {/* Customer Input Fields */}
                    {customers.map((customer, index) => (
-                     <div key={index} className="border border-gray-200 rounded-lg p-4">
+                     <div key={index} className="border border-strokedark/10 rounded-lg p-4">
                        <div className="flex items-center justify-between mb-3">
-                         <h4 className="font-medium text-gray-900">Customer {index + 1}</h4>
+                         <h4 className="font-medium text-graydark">Customer {index + 1}</h4>
                          {customers.length > 1 && (
                            <button
                              onClick={() => removeCustomer(index)}
@@ -1778,7 +1778,7 @@ const Qudemos = () => {
                        </div>
                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                          <div>
-                           <label className="block text-sm font-medium text-gray-700 mb-1 text-left">
+                           <label className="block text-sm font-medium text-bodydark mb-1 text-left">
                              Customer Name *
                            </label>
                            <input
@@ -1786,11 +1786,11 @@ const Qudemos = () => {
                              value={customer.name}
                              onChange={(e) => handleCustomerChange(index, 'name', e.target.value)}
                              placeholder="John Doe"
-                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                             className="w-full px-3 py-2 border border-strokedark/20 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                            />
                          </div>
                          <div>
-                           <label className="block text-sm font-medium text-gray-700 mb-1 text-left">
+                           <label className="block text-sm font-medium text-bodydark mb-1 text-left">
                              Email *
                            </label>
                            <input
@@ -1798,11 +1798,11 @@ const Qudemos = () => {
                              value={customer.email}
                              onChange={(e) => handleCustomerChange(index, 'email', e.target.value)}
                              placeholder="john@example.com"
-                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                             className="w-full px-3 py-2 border border-strokedark/20 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                            />
                          </div>
                          <div>
-                           <label className="block text-sm font-medium text-gray-700 mb-1 text-left">
+                           <label className="block text-sm font-medium text-bodydark mb-1 text-left">
                              Company
                            </label>
                            <input
@@ -1810,7 +1810,7 @@ const Qudemos = () => {
                              value={customer.company}
                              onChange={(e) => handleCustomerChange(index, 'company', e.target.value)}
                              placeholder="Acme Inc"
-                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                             className="w-full px-3 py-2 border border-strokedark/20 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                            />
                          </div>
                        </div>
@@ -1822,14 +1822,14 @@ const Qudemos = () => {
                      disabled={customers.length >= 5}
                      className={`w-full flex items-center justify-center space-x-2 py-3 border-2 border-dashed rounded-lg transition-colors ${
                        customers.length >= 5
-                         ? 'border-gray-200 bg-gray-50 cursor-not-allowed opacity-50'
-                         : 'border-gray-300 hover:border-blue-400 hover:bg-blue-50'
+                         ? 'border-strokedark/10 bg-whiter cursor-not-allowed opacity-50'
+                         : 'border-strokedark/20 hover:border-blue-400 hover:bg-primary/10'
                      }`}
                    >
-                     <svg className={`w-5 h-5 ${customers.length >= 5 ? 'text-gray-400' : 'text-blue-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                     <svg className={`w-5 h-5 ${customers.length >= 5 ? 'text-bodydark2' : 'text-primary'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                      </svg>
-                     <span className={`font-medium ${customers.length >= 5 ? 'text-gray-400' : 'text-blue-600'}`}>
+                     <span className={`font-medium ${customers.length >= 5 ? 'text-bodydark2' : 'text-primary'}`}>
                        {customers.length >= 5 ? '+ Maximum 5 Customers Reached' : '+ Add Another Customer'}
                      </span>
                    </button>
@@ -1841,13 +1841,13 @@ const Qudemos = () => {
                      setShowFewUniqueLinksModal(false);
                      setShowShareOptionsModal(true);
                    }}
-                   className="px-4 py-2 text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                   className="px-4 py-2 text-bodydark hover:text-gray-800 border border-strokedark/20 rounded-lg hover:bg-whiter transition-colors"
                  >
                    Back
                  </button>
                  <button
                    onClick={handleGenerateFewLinks}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
                  >
                    Generate Links
                  </button>
@@ -1859,15 +1859,15 @@ const Qudemos = () => {
        {/* Generated Links Results Modal */}
        {showGeneratedLinksModal && generatedLinks.length > 0 && (
          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-           <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+           <div className="bg-white rounded-lg shadow-none max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
              <div className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900 text-left flex-1">
+                <h3 className="text-lg font-semibold text-graydark text-left flex-1">
                   Generated Links
                 </h3>
                 <button
                   onClick={() => setShowGeneratedLinksModal(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-bodydark2 hover:text-bodydark"
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1875,21 +1875,21 @@ const Qudemos = () => {
                 </button>
               </div>
                <div className="mb-6">
-                 <p className="text-sm text-gray-600 mb-6 text-left">
+                 <p className="text-sm text-bodydark mb-6 text-left">
                    Successfully generated {generatedLinks.length} unique tracking links for "{qudemoToShare?.title}".
                  </p>
                  <div className="space-y-4">
                    {generatedLinks.map((link, index) => (
-                     <div key={index} className="border border-gray-200 rounded-lg p-4">
+                     <div key={index} className="border border-strokedark/10 rounded-lg p-4">
                        <div className="mb-3 text-left">
-                         <div className="flex items-center gap-3 text-sm text-gray-700">
+                         <div className="flex items-center gap-3 text-sm text-bodydark">
                            <div className="flex items-center gap-1.5">
                              <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                              </svg>
                              <span className="font-medium">{link.name}</span>
                            </div>
-                           <span className="text-gray-400">•</span>
+                           <span className="text-bodydark2">•</span>
                            <div className="flex items-center gap-1.5">
                              <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -1898,7 +1898,7 @@ const Qudemos = () => {
                            </div>
                          {link.company && (
                              <>
-                               <span className="text-gray-400">•</span>
+                               <span className="text-bodydark2">•</span>
                                <div className="flex items-center gap-1.5">
                                  <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
@@ -1917,11 +1917,11 @@ const Qudemos = () => {
                            type="text"
                            value={link.shareUrl}
                            readOnly
-                           className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm bg-gray-50 text-center"
+                           className="flex-1 px-3 py-2 border border-strokedark/20 rounded-lg text-sm bg-whiter text-center"
                          />
                          <button
                            onClick={() => copyLinkToClipboard(link.shareUrl)}
-                           className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2 text-sm"
+                           className="px-3 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 flex items-center gap-2 text-sm"
                          >
                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
@@ -1934,11 +1934,11 @@ const Qudemos = () => {
                  </div>
                 <div className="mt-6 bg-blue-50 p-4 rounded-lg">
                   <div className="flex items-start">
-                    <svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 text-primary flex-shrink-0 mt-0.5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                      </svg>
                     <div className="text-left flex-1">
-                      <h4 className="text-sm font-medium text-blue-800 mb-2">Important Notes:</h4>
+                      <h4 className="text-sm font-medium text-primary mb-2">Important Notes:</h4>
                        <ul className="text-sm text-blue-700 space-y-1">
                         <li className="flex items-start">
                           <span className="mr-2 flex-shrink-0">•</span>
@@ -1963,7 +1963,7 @@ const Qudemos = () => {
                 <div className="mt-6 flex justify-end">
                   <button
                     onClick={() => setShowGeneratedLinksModal(false)}
-                    className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:text-gray-900 hover:border-gray-400 transition-colors"
+                    className="px-6 py-2 border border-strokedark/20 text-bodydark rounded-lg hover:text-graydark hover:border-gray-400 transition-colors"
                   >
                     Close
                   </button>
@@ -1976,13 +1976,13 @@ const Qudemos = () => {
       {/* Custom Delete Confirmation Modal */}
       {showDeleteModal && qudemoToDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+          <div className="bg-white rounded-lg shadow-none max-w-md w-full mx-4">
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">Delete Qudemo</h3>
+                <h3 className="text-lg font-semibold text-graydark">Delete Qudemo</h3>
                 <button
                   onClick={handleCancelDelete}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-bodydark2 hover:text-bodydark"
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1990,7 +1990,7 @@ const Qudemos = () => {
                 </button>
               </div>
               <div className="mb-6">
-                <p className="text-sm text-gray-600 mb-4 text-left">
+                <p className="text-sm text-bodydark mb-4 text-left">
                   Are you sure you want to delete <strong>"{qudemoToDelete.title}"</strong>?
                 </p>
                 <div className="bg-red-50 border border-red-200 rounded-lg p-4">
@@ -2015,7 +2015,7 @@ const Qudemos = () => {
               <div className="flex justify-end space-x-3">
                 <button
                   onClick={handleCancelDelete}
-                  className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200"
+                  className="px-4 py-2 text-bodydark bg-whiten hover:bg-bodydark1 rounded-lg transition-colors duration-200"
                 >
                   Cancel
                 </button>
@@ -2038,10 +2038,10 @@ const Qudemos = () => {
               <svg className="h-8 w-8 text-orange-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 15.5c-.77.833.192 2.5 1.732 2.5z" />
               </svg>
-              <h3 className="text-lg font-semibold text-gray-900 text-left">{errorDetails?.title || 'Upgrade Required'}</h3>
+              <h3 className="text-lg font-semibold text-graydark text-left">{errorDetails?.title || 'Upgrade Required'}</h3>
             </div>
             
-            <p className="text-gray-600 mb-6 text-left">
+            <p className="text-bodydark mb-6 text-left">
               {errorDetails?.message || 'Upgrade to Pro to access premium features including share functionality and advanced analytics.'}
             </p>
             
@@ -2051,7 +2051,7 @@ const Qudemos = () => {
                   setShowUpgradeModal(false);
                   setErrorDetails(null);
                 }}
-                className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+                className="flex-1 px-4 py-2 text-sm font-medium text-bodydark bg-whiten hover:bg-bodydark1 rounded-md transition-colors"
               >
                 Cancel
               </button>
@@ -2088,7 +2088,7 @@ const Qudemos = () => {
                     showError(`Failed to start checkout: ${error.message}`);
                   }
                 }}
-                className="flex-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors"
+                className="flex-1 px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary/90 rounded-md transition-colors"
               >
                 Upgrade to Pro
               </button>
@@ -2099,7 +2099,7 @@ const Qudemos = () => {
       {/* Download Generated File Modal */}
       {showDownloadModal && downloadData && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+          <div className="bg-white rounded-lg shadow-none max-w-md w-full mx-4">
             <div className="p-6">
               <div className="text-left mb-6">
                 <div className="flex items-center justify-start h-12 w-12 rounded-full bg-green-100 mb-4">
@@ -2107,22 +2107,22 @@ const Qudemos = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2 text-left">
+                <h3 className="text-lg font-semibold text-graydark mb-2 text-left">
                   Bulk Links Generated Successfully!
                 </h3>
-                <p className="text-sm text-gray-600 mb-4 text-left">
+                <p className="text-sm text-bodydark mb-4 text-left">
                   Successfully generated <strong>{downloadData.length}</strong> unique share links for "{qudemoToShare?.title}".
                 </p>
-                <p className="text-sm text-gray-600 text-left">
+                <p className="text-sm text-bodydark text-left">
                   Download the CSV file with all generated links and client information.
                 </p>
               </div>
               <div className="bg-blue-50 p-4 rounded-lg mb-6">
                 <div className="flex items-start">
-                  <svg className="w-5 h-5 text-blue-600 mt-0.5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-primary mt-0.5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  <div className="text-sm text-blue-800 text-left">
+                  <div className="text-sm text-primary text-left">
                     <p className="font-medium mb-1">File includes:</p>
                     <ul className="list-disc list-inside space-y-1">
                       <li>SL No, Client Name, Email, Company</li>
@@ -2134,13 +2134,13 @@ const Qudemos = () => {
               <div className="flex justify-start space-x-3">
                 <button
                   onClick={() => setShowDownloadModal(false)}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="px-4 py-2 border border-strokedark/20 text-bodydark rounded-lg hover:bg-whiter transition-colors"
                 >
                   Close
                 </button>
                 <button
                   onClick={handleDownloadFile}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                  className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors flex items-center gap-2"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -2155,19 +2155,19 @@ const Qudemos = () => {
       {/* People List Modal */}
       {showPeopleListModal && qudemoPeople.length > 0 && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-hidden">
+          <div className="bg-white rounded-lg shadow-none max-w-2xl w-full mx-4 max-h-[80vh] overflow-hidden">
             {/* Modal Header */}
-            <div className="px-6 py-4 border-b border-gray-200">
+            <div className="px-6 py-4 border-b border-strokedark/10">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900">QuDemo Interactions</h3>
+                  <h3 className="text-lg font-semibold text-graydark">QuDemo Interactions</h3>
                   <p className="text-sm text-gray-500">
                     {qudemoPeople[0]?.qudemo_title} - {qudemoPeople.length} people have interacted
                   </p>
                 </div>
                 <button
                   onClick={() => setShowPeopleListModal(false)}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  className="text-bodydark2 hover:text-bodydark transition-colors"
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -2181,7 +2181,7 @@ const Qudemos = () => {
                 {qudemoPeople.map((person, index) => (
                   <div 
                     key={index}
-                    className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+                    className="flex items-center justify-between p-4 bg-whiter rounded-lg hover:bg-whiten transition-colors cursor-pointer"
                     onClick={() => handleViewDetails(person)}
                   >
                     <div className="flex items-center space-x-4">
@@ -2189,7 +2189,7 @@ const Qudemos = () => {
                         {person.client_name ? person.client_name.charAt(0).toUpperCase() : 'U'}
                       </div>
                       <div>
-                        <h4 className="font-medium text-gray-900">
+                        <h4 className="font-medium text-graydark">
                           {person.client_name || 'Anonymous User'}
                         </h4>
                         <p className="text-sm text-gray-500">
@@ -2197,7 +2197,7 @@ const Qudemos = () => {
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-6 text-sm text-gray-600">
+                    <div className="flex items-center space-x-6 text-sm text-bodydark">
                       <div className="text-center">
                         <p className="font-medium">{person.question_count}</p>
                         <p className="text-xs">Questions</p>
@@ -2216,7 +2216,7 @@ const Qudemos = () => {
                         </p>
                         <p className="text-xs text-gray-500">Last Active</p>
                       </div>
-                      <button className="px-3 py-1 bg-white border border-blue-600 text-blue-600 text-xs rounded-md hover:bg-blue-600 hover:text-white transition-colors">
+                      <button className="px-3 py-1 bg-white border border-blue-600 text-primary text-xs rounded-md hover:bg-primary hover:text-white transition-colors">
                         View Details
                       </button>
                     </div>
@@ -2230,9 +2230,9 @@ const Qudemos = () => {
       {/* Interaction Details Modal */}
       {showDetailsModal && selectedInteraction && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[95vh] overflow-hidden">
+          <div className="bg-white rounded-lg shadow-none max-w-4xl w-full mx-4 max-h-[95vh] overflow-hidden">
             {/* Modal Header */}
-            <div className="px-6 py-4 border-b border-gray-200">
+            <div className="px-6 py-4 border-b border-strokedark/10">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
                   <button
@@ -2240,7 +2240,7 @@ const Qudemos = () => {
                       setShowDetailsModal(false);
                       setShowInteractionsListModal(true);
                     }}
-                    className="text-gray-400 hover:text-gray-600 transition-colors mr-2"
+                    className="text-bodydark2 hover:text-bodydark transition-colors mr-2"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -2250,14 +2250,14 @@ const Qudemos = () => {
                     {selectedInteraction.client_name ? selectedInteraction.client_name.charAt(0).toUpperCase() : 'I'}
                   </div>
                   <div className="text-left">
-                    <h3 className="text-lg font-semibold text-gray-900 text-left">
+                    <h3 className="text-lg font-semibold text-graydark text-left">
                       {selectedInteraction.client_name || 'Interactions Overview'}
                     </h3>
                     {/* User Details Section */}
-                    <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-gray-600">
+                    <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-bodydark">
                       {selectedInteraction.client_email && (
                         <div className="flex items-center space-x-2">
-                          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-4 h-4 text-bodydark2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                           </svg>
                           <span>{selectedInteraction.client_email}</span>
@@ -2265,7 +2265,7 @@ const Qudemos = () => {
                       )}
                       {selectedInteraction.client_company && (
                         <div className="flex items-center space-x-2">
-                          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-4 h-4 text-bodydark2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                           </svg>
                           <span>{selectedInteraction.client_company}</span>
@@ -2273,7 +2273,7 @@ const Qudemos = () => {
                       )}
                       {selectedInteraction.last_interaction && (
                         <div className="flex items-center space-x-2">
-                          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-4 h-4 text-bodydark2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                           </svg>
                           <span>Last interaction: {new Date(selectedInteraction.last_interaction).toLocaleDateString()} at {new Date(selectedInteraction.last_interaction).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
@@ -2287,7 +2287,7 @@ const Qudemos = () => {
                     setShowDetailsModal(false);
                     setShowInteractionsListModal(true);
                   }}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  className="text-bodydark2 hover:text-bodydark transition-colors"
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -2298,14 +2298,14 @@ const Qudemos = () => {
             {/* Modal Content */}
             <div className="flex-1 overflow-hidden">
               {/* Tabs */}
-              <div className="bg-gray-100 p-1.5">
+              <div className="bg-whiten p-1.5">
                 <nav className="flex gap-1.5">
                   <button 
                     onClick={() => handleTabClick('overview')}
                     className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                       activeTab === 'overview'
-                        ? 'bg-white text-gray-900 shadow-sm'
-                        : 'bg-transparent text-gray-600 hover:text-gray-900'
+                        ? 'bg-white text-graydark shadow-sm'
+                        : 'bg-transparent text-bodydark hover:text-graydark'
                     }`}
                   >
                     Overview
@@ -2314,8 +2314,8 @@ const Qudemos = () => {
                     onClick={() => handleTabClick('questions')}
                     className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                       activeTab === 'questions'
-                        ? 'bg-white text-gray-900 shadow-sm'
-                        : 'bg-transparent text-gray-600 hover:text-gray-900'
+                        ? 'bg-white text-graydark shadow-sm'
+                        : 'bg-transparent text-bodydark hover:text-graydark'
                     }`}
                   >
                     Questions asked
@@ -2324,8 +2324,8 @@ const Qudemos = () => {
                     onClick={() => handleTabClick('past-interactions')}
                     className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                       activeTab === 'past-interactions'
-                        ? 'bg-white text-gray-900 shadow-sm'
-                        : 'bg-transparent text-gray-600 hover:text-gray-900'
+                        ? 'bg-white text-graydark shadow-sm'
+                        : 'bg-transparent text-bodydark hover:text-graydark'
                     }`}
                   >
                     Past interactions
@@ -2337,9 +2337,9 @@ const Qudemos = () => {
                 {activeTab === 'overview' && (
                   <div className="min-h-96">
                     {/* AI Insight Summary - HIDDEN */}
-                    {/* <div className="border border-blue-200 rounded-lg p-4 bg-blue-50 mb-6">
+                    {/* <div className="border border-primary/30 rounded-lg p-4 bg-blue-50 mb-6">
                       <div className="flex items-center space-x-2 mb-2">
-                        <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                         </svg>
                         <span className="font-medium text-blue-900">AI Insight Summary</span>
@@ -2350,7 +2350,7 @@ const Qudemos = () => {
                           <span className="text-sm">Analyzing customer questions...</span>
                     </div>
                       ) : (
-                        <p className="text-blue-800 leading-relaxed">
+                        <p className="text-primary leading-relaxed">
                           {aiInsightSummary || 'Generating AI insight summary...'}
                         </p>
                       )}
@@ -2358,15 +2358,15 @@ const Qudemos = () => {
                     {/* Interaction Metrics */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                       {/* Demo Watched */}
-                      <div className="bg-white border border-gray-200 rounded-lg p-4">
+                      <div className="bg-white border border-strokedark/10 rounded-lg p-4">
                         <div className="flex items-center justify-between">
                           <div className="text-left">
-                            <p className="text-sm font-medium text-gray-600 text-left">Demo Watched</p>
-                            <p className="text-lg font-semibold text-gray-900 text-left">{selectedInteraction.qudemo_title || 'Unknown Demo'}</p>
+                            <p className="text-sm font-medium text-bodydark text-left">Demo Watched</p>
+                            <p className="text-lg font-semibold text-graydark text-left">{selectedInteraction.qudemo_title || 'Unknown Demo'}</p>
                           </div>
                           <div className="flex-shrink-0">
-                          <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                            <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                            <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M19 10a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                           </div>
@@ -2374,11 +2374,11 @@ const Qudemos = () => {
                         </div>
                       </div>
                       {/* Time Spent */}
-                      <div className="bg-white border border-gray-200 rounded-lg p-4">
+                      <div className="bg-white border border-strokedark/10 rounded-lg p-4">
                         <div className="flex items-center justify-between">
                           <div className="text-left">
-                            <p className="text-sm font-medium text-gray-600 text-left">Time Spent</p>
-                            <p className="text-lg font-semibold text-gray-900 text-left">{formatDuration(selectedInteraction.total_duration)}</p>
+                            <p className="text-sm font-medium text-bodydark text-left">Time Spent</p>
+                            <p className="text-lg font-semibold text-graydark text-left">{formatDuration(selectedInteraction.total_duration)}</p>
                           </div>
                           <div className="flex-shrink-0">
                           <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
@@ -2390,11 +2390,11 @@ const Qudemos = () => {
                         </div>
                       </div>
                       {/* Questions Asked */}
-                      <div className="bg-white border border-gray-200 rounded-lg p-4">
+                      <div className="bg-white border border-strokedark/10 rounded-lg p-4">
                         <div className="flex items-center justify-between">
                           <div className="text-left">
-                            <p className="text-sm font-medium text-gray-600 text-left">Questions Asked</p>
-                            <p className="text-lg font-semibold text-gray-900 text-left">{selectedInteraction.question_count || 0}</p>
+                            <p className="text-sm font-medium text-bodydark text-left">Questions Asked</p>
+                            <p className="text-lg font-semibold text-graydark text-left">{selectedInteraction.question_count || 0}</p>
                           </div>
                           <div className="flex-shrink-0">
                           <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
@@ -2407,23 +2407,23 @@ const Qudemos = () => {
                       </div>
                     </div>
                     {/* Unique Link Details */}
-                    <div className="border border-blue-200 rounded-lg p-4 bg-blue-50">
+                    <div className="border border-primary/30 rounded-lg p-4 bg-blue-50">
                       <div className="flex items-center space-x-2 mb-3">
-                        <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                         </svg>
                         <span className="font-medium text-blue-900">Unique Link Details</span>
                       </div>
                       <div className="space-y-3 text-left">
                         <div className="flex items-center justify-between text-left">
-                          <span className="text-sm text-blue-800 font-medium">Link Type:</span>
-                          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                          <span className="text-sm text-primary font-medium">Link Type:</span>
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-primary/10 text-primary">
                             Unique Customer Link
                           </span>
                         </div>
                         <div className="flex items-start space-x-2 text-left">
-                          <span className="text-sm text-blue-800 font-medium whitespace-nowrap">URL:</span>
-                          <code className="flex-1 bg-white border border-blue-200 rounded px-2 py-1 text-sm text-blue-900 text-left break-all">
+                          <span className="text-sm text-primary font-medium whitespace-nowrap">URL:</span>
+                          <code className="flex-1 bg-white border border-primary/30 rounded px-2 py-1 text-sm text-blue-900 text-left break-all">
                             {window.location.origin}/share/{selectedInteraction.share_token}
                           </code>
                           <button
@@ -2431,7 +2431,7 @@ const Qudemos = () => {
                               navigator.clipboard.writeText(`${window.location.origin}/share/${selectedInteraction.share_token}`);
                               // You could add a toast notification here
                             }}
-                            className="flex items-center space-x-2 px-3 py-1 bg-white border border-blue-300 text-blue-600 text-sm rounded hover:bg-blue-50"
+                            className="flex items-center space-x-2 px-3 py-1 bg-white border border-blue-300 text-primary text-sm rounded hover:bg-primary/10"
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
@@ -2440,7 +2440,7 @@ const Qudemos = () => {
                           </button>
                         </div>
                         <div>
-                          <span className="text-sm text-blue-800">
+                          <span className="text-sm text-primary">
                             <span className="font-medium">Generated on:</span> {
                               selectedInteraction.last_accessed_at 
                                 ? new Date(selectedInteraction.last_accessed_at).toLocaleDateString('en-US', {
@@ -2457,40 +2457,40 @@ const Qudemos = () => {
                   </div>
                 )}
                 {activeTab === 'questions' && (
-                  <div className="bg-gray-50 rounded-lg p-4 min-h-96">
-                    <h4 className="font-medium text-gray-900 mb-4">Questions & Responses</h4>
+                  <div className="bg-whiter rounded-lg p-4 min-h-96">
+                    <h4 className="font-medium text-graydark mb-4">Questions & Responses</h4>
                     <div className="space-y-6 max-h-96 overflow-y-auto">
                       {selectedInteraction.questions && selectedInteraction.questions.length > 0 ? (
                         selectedInteraction.questions.map((qa, index) => {
                           return (
                           <div key={index} className="space-y-3">
                             {/* Question */}
-                            <div className="flex items-start space-x-3 bg-gray-100 rounded-lg p-3">
+                            <div className="flex items-start space-x-3 bg-whiten rounded-lg p-3">
                               <div className="flex-shrink-0">
                                 <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
                                   {selectedInteraction.client_name ? selectedInteraction.client_name.charAt(0).toUpperCase() : 'C'}
                                 </div>
                               </div>
                               <div className="flex-1 text-left">
-                                <p className="text-sm font-semibold text-gray-900 text-left">{qa.question}</p>
+                                <p className="text-sm font-semibold text-graydark text-left">{qa.question}</p>
                                 <p className="text-xs text-gray-500 mt-1 text-left">Asked during session</p>
                               </div>
                             </div>
                             {/* Answer */}
                             <div className="flex items-start space-x-3 bg-white rounded-lg p-3">
                               <div className="flex-shrink-0">
-                                <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-gray-600 text-xs font-medium">
+                                <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-bodydark text-xs font-medium">
                                   AI
                                 </div>
                               </div>
                               <div className="flex-1 text-left">
-                                <div className="text-sm text-gray-700 whitespace-pre-wrap text-left">{qa.answer.replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1').replace(/`(.*?)`/g, '$1')}</div>
+                                <div className="text-sm text-bodydark whitespace-pre-wrap text-left">{qa.answer.replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1').replace(/`(.*?)`/g, '$1')}</div>
                                 {qa.formatted_timestamp && (
                                   <div className="mt-2 flex items-center space-x-2">
                                     <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                                     </svg>
-                                    <span className="text-xs text-blue-600 font-medium">
+                                    <span className="text-xs text-primary font-medium">
                                       Video timestamp: {qa.formatted_timestamp}
                                       {qa.start_timestamp && (
                                         <span className="text-gray-500 ml-1">
@@ -2507,10 +2507,10 @@ const Qudemos = () => {
                         })
                       ) : (
                         <div className="text-center py-8">
-                          <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="mx-auto h-12 w-12 text-bodydark2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                           </svg>
-                          <h3 className="mt-2 text-sm font-medium text-gray-900">No questions asked</h3>
+                          <h3 className="mt-2 text-sm font-medium text-graydark">No questions asked</h3>
                           <p className="mt-1 text-sm text-gray-500">This customer hasn't asked any questions yet.</p>
                         </div>
                       )}
@@ -2519,21 +2519,21 @@ const Qudemos = () => {
                 )}
                 {activeTab === 'past-interactions' && (
                   <div className="min-h-96">
-                    <h4 className="font-medium text-gray-900 mb-4">Past Interactions History</h4>
-                    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                    <h4 className="font-medium text-graydark mb-4">Past Interactions History</h4>
+                    <div className="bg-white rounded-lg border border-strokedark/10 overflow-hidden">
                       <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
+                        <thead className="bg-whiter">
                           <tr>
-                            <th className="px-6 py-3 text-left text-sm font-bold text-gray-700 tracking-wider">
+                            <th className="px-6 py-3 text-left text-sm font-bold text-bodydark tracking-wider">
                               Date
                             </th>
-                            <th className="px-6 py-3 text-left text-sm font-bold text-gray-700 tracking-wider">
+                            <th className="px-6 py-3 text-left text-sm font-bold text-bodydark tracking-wider">
                               Demo
                             </th>
-                            <th className="px-6 py-3 text-left text-sm font-bold text-gray-700 tracking-wider">
+                            <th className="px-6 py-3 text-left text-sm font-bold text-bodydark tracking-wider">
                               Questions
                             </th>
-                            <th className="px-6 py-3 text-left text-sm font-bold text-gray-700 tracking-wider">
+                            <th className="px-6 py-3 text-left text-sm font-bold text-bodydark tracking-wider">
                               Time spent
                             </th>
                           </tr>
@@ -2589,17 +2589,17 @@ const Qudemos = () => {
                                 const demoTime = sessionIndex === 0 ? Math.min(sessionDuration * 0.3, 300) : 0;
                                 const totalSessionTime = Math.max(sessionDuration + questionTime + demoTime, session.questions.length * 30);
                                 return (
-                                  <tr key={sessionIndex} className="hover:bg-gray-50">
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-left">
+                                  <tr key={sessionIndex} className="hover:bg-whiter">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-graydark text-left">
                                       {dateDisplay}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-left">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-graydark text-left">
                                       {selectedInteraction.qudemo_title || 'Product Demo'}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-left">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-graydark text-left">
                                       {session.questions.length}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-left">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-graydark text-left">
                                       {formatDuration(Math.min(totalSessionTime, 1800))}
                                     </td>
                                   </tr>
@@ -2626,22 +2626,22 @@ const Qudemos = () => {
       {/* Interactions List Modal */}
       {showInteractionsListModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-5xl w-full mx-4 max-h-[90vh] overflow-hidden">
+          <div className="bg-white rounded-lg shadow-none max-w-5xl w-full mx-4 max-h-[90vh] overflow-hidden">
             <div className="p-6">
               {/* Header */}
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                    <span className="text-blue-600 font-bold text-lg">P</span>
+                  <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+                    <span className="text-primary font-bold text-lg">P</span>
                   </div>
                   <div className="text-left">
-                    <h3 className="text-2xl font-bold text-gray-900 text-left">Product Overview - Customer Interactions</h3>
-                    <p className="text-gray-600 mt-1 text-left">View detailed buyer interactions with this QuDemo</p>
+                    <h3 className="text-2xl font-bold text-graydark text-left">Product Overview - Customer Interactions</h3>
+                    <p className="text-bodydark mt-1 text-left">View detailed buyer interactions with this QuDemo</p>
                   </div>
                 </div>
                 <button
                   onClick={() => setShowInteractionsListModal(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-bodydark2 hover:text-bodydark"
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -2650,15 +2650,15 @@ const Qudemos = () => {
               </div>
               {/* Stats Cards */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                <div className="bg-white border border-gray-200 rounded-lg p-6">
+                <div className="bg-white border border-strokedark/10 rounded-lg p-6">
                   <div className="flex items-center justify-between">
                     <div className="text-left">
                       <p className="text-sm font-medium text-gray-500 text-left">Total Interactions</p>
-                      <p className="text-2xl font-semibold text-gray-900 text-left">{filteredInteractions.length}</p>
+                      <p className="text-2xl font-semibold text-graydark text-left">{filteredInteractions.length}</p>
                     </div>
                     <div className="flex-shrink-0">
-                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                        <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                        <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                         </svg>
@@ -2666,11 +2666,11 @@ const Qudemos = () => {
                     </div>
                     </div>
                   </div>
-                <div className="bg-white border border-gray-200 rounded-lg p-6">
+                <div className="bg-white border border-strokedark/10 rounded-lg p-6">
                   <div className="flex items-center justify-between">
                     <div className="text-left">
                       <p className="text-sm font-medium text-gray-500 text-left">Total Questions</p>
-                      <p className="text-2xl font-semibold text-gray-900 text-left">
+                      <p className="text-2xl font-semibold text-graydark text-left">
                         {filteredInteractions.reduce((total, interaction) => total + (interaction.questions ? interaction.questions.length : 0), 0)}
                       </p>
                     </div>
@@ -2683,11 +2683,11 @@ const Qudemos = () => {
                     </div>
                     </div>
                   </div>
-                <div className="bg-white border border-gray-200 rounded-lg p-6">
+                <div className="bg-white border border-strokedark/10 rounded-lg p-6">
                   <div className="flex items-center justify-between">
                     <div className="text-left">
                       <p className="text-sm font-medium text-gray-500 text-left">Avg. Time Spent</p>
-                      <p className="text-2xl font-semibold text-gray-900 text-left">
+                      <p className="text-2xl font-semibold text-graydark text-left">
                         {filteredInteractions.length > 0 
                           ? formatDuration(Math.floor(filteredInteractions.reduce((total, interaction) => total + (interaction.total_duration || 0), 0) / filteredInteractions.length))
                           : '0:00'
@@ -2708,7 +2708,7 @@ const Qudemos = () => {
               <div className="mb-6">
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="h-5 w-5 text-bodydark2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                   </div>
@@ -2717,34 +2717,34 @@ const Qudemos = () => {
                     placeholder="Search by name, email, or company..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                    className="block w-full pl-10 pr-3 py-2 border border-strokedark/20 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
               </div>
               {/* Interactions Table */}
-              <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+              <div className="bg-white border border-strokedark/10 rounded-lg overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
+                    <thead className="bg-whiter">
                       <tr>
-                        <th className="px-6 py-3 text-left text-sm font-bold text-gray-700 tracking-wider">
+                        <th className="px-6 py-3 text-left text-sm font-bold text-bodydark tracking-wider">
                           Customer
                         </th>
-                        <th className="px-6 py-3 text-center text-sm font-bold text-gray-700 tracking-wider">
+                        <th className="px-6 py-3 text-center text-sm font-bold text-bodydark tracking-wider">
                           <div className="flex justify-center">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                             </svg>
                           </div>
                         </th>
-                        <th className="px-6 py-3 text-center text-sm font-bold text-gray-700 tracking-wider">
+                        <th className="px-6 py-3 text-center text-sm font-bold text-bodydark tracking-wider">
                           <div className="flex justify-center">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                           </div>
                         </th>
-                        <th className="px-6 py-3 text-right text-sm font-bold text-gray-700 tracking-wider">
+                        <th className="px-6 py-3 text-right text-sm font-bold text-bodydark tracking-wider">
                           Actions
                         </th>
                       </tr>
@@ -2752,10 +2752,10 @@ const Qudemos = () => {
                     <tbody className="bg-white divide-y divide-gray-200">
                       {filteredInteractions.length > 0 ? (
                         filteredInteractions.map((interaction, index) => (
-                          <tr key={index} className="hover:bg-gray-50">
+                          <tr key={index} className="hover:bg-whiter">
                             <td className="px-6 py-4 whitespace-nowrap text-left">
                               <div>
-                                <div className="text-sm font-medium text-gray-900">
+                                <div className="text-sm font-medium text-graydark">
                                   {interaction.client_name || 'Unknown Customer'}
                                 </div>
                                 <div className="text-sm text-gray-500">
@@ -2764,19 +2764,19 @@ const Qudemos = () => {
                               </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-center">
-                              <span className="text-sm text-gray-900">
+                              <span className="text-sm text-graydark">
                                 {interaction.questions ? interaction.questions.length : 0}
                               </span>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-center">
-                              <span className="text-sm text-gray-900">
+                              <span className="text-sm text-graydark">
                                 {interaction.total_duration ? formatDuration(interaction.total_duration) : '0:00'}
                               </span>
                             </td>
                             <td className="pl-6 pr-6 py-4 whitespace-nowrap text-sm font-medium text-right">
                               <button
                                 onClick={() => handleViewDetails(interaction)}
-                                className="inline-flex items-center px-3 py-1 border border-gray-300 text-sm font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                className="inline-flex items-center px-3 py-1 border border-strokedark/20 text-sm font-medium rounded text-bodydark bg-white hover:bg-whiter focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                               >
                                 View Details
                               </button>
@@ -2786,10 +2786,10 @@ const Qudemos = () => {
                       ) : (
                         <tr>
                           <td colSpan="4" className="px-6 py-12 text-center">
-                            <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="mx-auto h-12 w-12 text-bodydark2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                             </svg>
-                            <h3 className="mt-2 text-sm font-medium text-gray-900">
+                            <h3 className="mt-2 text-sm font-medium text-graydark">
                               {searchTerm ? 'No matching interactions found' : 'No interactions found'}
                             </h3>
                             <p className="mt-1 text-sm text-gray-500">
@@ -2812,13 +2812,13 @@ const Qudemos = () => {
       {/* Loading Interactions Modal */}
       {loadingInteractions && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-sm w-full mx-4 p-6">
+          <div className="bg-white rounded-lg shadow-none max-w-sm w-full mx-4 p-6">
             <div className="flex flex-col items-center space-y-4">
               {/* Spinner */}
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
               {/* Loading Text */}
               <div className="text-center">
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Loading Interactions</h3>
+                <h3 className="text-lg font-medium text-graydark mb-2">Loading Interactions</h3>
                 <p className="text-sm text-gray-500">
                   Please wait while we fetch the interaction data...
                 </p>

@@ -107,7 +107,7 @@ const BulkUploadsPage = () => {
         <p className="text-red-600">{error}</p>
         <button 
           onClick={fetchBulkUploads}
-          className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          className="mt-4 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90"
         >
           Retry
         </button>
@@ -124,21 +124,21 @@ const BulkUploadsPage = () => {
   //         <div className="bg-blue-50 border border-blue-200 rounded-lg p-8">
   //           <div className="text-left">
   //             <h2 className="text-2xl font-bold text-blue-900 mb-4">Bulk Upload requires Pro plan</h2>
-  //             <p className="text-blue-800 text-lg mb-6">
+  //             <p className="text-primary text-lg mb-6">
   //               Upgrade to Pro to access bulk upload functionality for generating multiple customer links at once.
   //             </p>
   //             <div className="space-y-4 mb-6">
   //               <div className="flex items-center">
-  //                 <div className="w-2 h-2 bg-blue-600 rounded-full mr-3"></div>
-  //                 <span className="text-blue-800">Upload CSV/Excel files with customer data</span>
+  //                 <div className="w-2 h-2 bg-primary rounded-full mr-3"></div>
+  //                 <span className="text-primary">Upload CSV/Excel files with customer data</span>
   //               </div>
   //               <div className="flex items-center">
-  //                 <div className="w-2 h-2 bg-blue-600 rounded-full mr-3"></div>
-  //                 <span className="text-blue-800">Generate multiple personalized links automatically</span>
+  //                 <div className="w-2 h-2 bg-primary rounded-full mr-3"></div>
+  //                 <span className="text-primary">Generate multiple personalized links automatically</span>
   //               </div>
   //               <div className="flex items-center">
-  //                 <div className="w-2 h-2 bg-blue-600 rounded-full mr-3"></div>
-  //                 <span className="text-blue-800">Download files with generated links</span>
+  //                 <div className="w-2 h-2 bg-primary rounded-full mr-3"></div>
+  //                 <span className="text-primary">Download files with generated links</span>
   //               </div>
   //             </div>
   //             <div className="flex gap-4">
@@ -173,13 +173,13 @@ const BulkUploadsPage = () => {
   //                     alert(`Failed to start checkout: ${error.message}`);
   //                   }
   //                 }}
-  //                 className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+  //                 className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 font-medium"
   //               >
   //                 Upgrade to Pro
   //               </button>
   //               <button 
   //                 onClick={() => window.location.href = '/qudemos'}
-  //                 className="px-6 py-3 bg-white text-blue-600 border border-blue-300 rounded-lg hover:bg-blue-50 font-medium"
+  //                 className="px-6 py-3 bg-white text-primary border border-blue-300 rounded-lg hover:bg-primary/10 font-medium"
   //               >
   //                 Back to Qudemos
   //               </button>
@@ -194,40 +194,40 @@ const BulkUploadsPage = () => {
   return (
     <div className="p-6">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2 text-left">Bulk Uploads</h1>
-        <p className="text-gray-600 text-left">View all your customer bulk uploads and their details.</p>
+        <h1 className="text-3xl font-bold text-graydark mb-2 text-left">Bulk Uploads</h1>
+        <p className="text-bodydark text-left">View all your customer bulk uploads and their details.</p>
       </div>
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+      <div className="bg-white rounded-lg shadow-none border border-strokedark/10">
         <div className="overflow-x-auto">
           {bulkUploads.length > 0 ? (
             <>
               <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+                <thead className="bg-whiter">
                   <tr>
-                    <th className="px-6 py-3 text-left text-sm font-bold text-gray-700 tracking-wider">
+                    <th className="px-6 py-3 text-left text-sm font-bold text-bodydark tracking-wider">
                       Upload name
                     </th>
-                    <th className="px-6 py-3 text-left text-sm font-bold text-gray-700 tracking-wider">
+                    <th className="px-6 py-3 text-left text-sm font-bold text-bodydark tracking-wider">
                       Type
                     </th>
-                    <th className="px-6 py-3 text-left text-sm font-bold text-gray-700 tracking-wider">
+                    <th className="px-6 py-3 text-left text-sm font-bold text-bodydark tracking-wider">
                       Upload date
                     </th>
-                    <th className="px-6 py-3 text-left text-sm font-bold text-gray-700 tracking-wider">
+                    <th className="px-6 py-3 text-left text-sm font-bold text-bodydark tracking-wider">
                       Customers
                     </th>
-                    <th className="px-6 py-3 text-left text-sm font-bold text-gray-700 tracking-wider">
+                    <th className="px-6 py-3 text-left text-sm font-bold text-bodydark tracking-wider">
                       Actions
                     </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {currentUploads.map((upload) => (
-                    <tr key={upload.id} className="hover:bg-gray-50">
+                    <tr key={upload.id} className="hover:bg-whiter">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
-                          <DocumentIcon className="h-5 w-5 text-gray-400 mr-3" />
-                          <div className="text-sm font-medium text-gray-900">
+                          <DocumentIcon className="h-5 w-5 text-bodydark2 mr-3" />
+                          <div className="text-sm font-medium text-graydark">
                             {(() => {
                               const filename = upload.original_filename || upload.file_name || 'bulk-links.csv';
                               // Always show .csv extension
@@ -240,23 +240,23 @@ const BulkUploadsPage = () => {
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                           upload.operation_type === 'few_links' 
                             ? 'bg-purple-100 text-purple-800' 
-                            : 'bg-blue-100 text-blue-800'
+                            : 'bg-primary/10 text-primary'
                         }`}>
                           {upload.operation_type === 'few_links' ? 'Few Links' : 'Bulk Upload'}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
-                          <CalendarIcon className="h-5 w-5 text-gray-400 mr-3" />
-                          <div className="text-sm text-gray-900">
+                          <CalendarIcon className="h-5 w-5 text-bodydark2 mr-3" />
+                          <div className="text-sm text-graydark">
                             {formatDate(upload.created_at)}
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
-                          <UserIcon className="h-5 w-5 text-gray-400 mr-3" />
-                          <div className="text-sm text-gray-900">
+                          <UserIcon className="h-5 w-5 text-bodydark2 mr-3" />
+                          <div className="text-sm text-graydark">
                             {upload.customer_count || 0}
                           </div>
                         </div>
@@ -265,7 +265,7 @@ const BulkUploadsPage = () => {
                         <div className="flex space-x-2">
                           <button
                             onClick={() => handleDownload(upload.id, upload.original_filename || 'bulk-links.xlsx')}
-                            className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                            className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                           >
                             <DocumentArrowDownIcon className="h-4 w-4 mr-2" />
                             Download
@@ -276,8 +276,8 @@ const BulkUploadsPage = () => {
                   ))}
                 </tbody>
               </table>
-              <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
-                <p className="text-sm text-gray-600 text-left">
+              <div className="px-6 py-4 bg-whiter border-t border-strokedark/10 flex items-center justify-between">
+                <p className="text-sm text-bodydark text-left">
                   Total uploads: {bulkUploads.length} batches • Total customers: {totalCustomers}
                 </p>
                 
@@ -289,8 +289,8 @@ const BulkUploadsPage = () => {
                       disabled={currentPage === 1}
                       className={`px-3 py-1 rounded-md text-sm font-medium ${
                         currentPage === 1
-                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                          : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
+                          ? 'bg-whiten text-bodydark2 cursor-not-allowed'
+                          : 'bg-white text-bodydark hover:bg-whiter border border-strokedark/20'
                       }`}
                     >
                       Previous
@@ -311,8 +311,8 @@ const BulkUploadsPage = () => {
                               onClick={() => paginate(pageNumber)}
                               className={`px-3 py-1 rounded-md text-sm font-medium ${
                                 currentPage === pageNumber
-                                  ? 'bg-blue-600 text-white'
-                                  : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
+                                  ? 'bg-primary text-white'
+                                  : 'bg-white text-bodydark hover:bg-whiter border border-strokedark/20'
                               }`}
                             >
                               {pageNumber}
@@ -322,7 +322,7 @@ const BulkUploadsPage = () => {
                           pageNumber === currentPage - 2 ||
                           pageNumber === currentPage + 2
                         ) {
-                          return <span key={pageNumber} className="text-gray-400">...</span>;
+                          return <span key={pageNumber} className="text-bodydark2">...</span>;
                         }
                         return null;
                       })}
@@ -333,8 +333,8 @@ const BulkUploadsPage = () => {
                       disabled={currentPage === totalPages}
                       className={`px-3 py-1 rounded-md text-sm font-medium ${
                         currentPage === totalPages
-                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                          : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
+                          ? 'bg-whiten text-bodydark2 cursor-not-allowed'
+                          : 'bg-white text-bodydark hover:bg-whiter border border-strokedark/20'
                       }`}
                     >
                       Next
@@ -345,8 +345,8 @@ const BulkUploadsPage = () => {
             </>
           ) : (
             <div className="text-center py-12">
-              <DocumentIcon className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-2 text-sm font-medium text-gray-900">No bulk uploads</h3>
+              <DocumentIcon className="mx-auto h-12 w-12 text-bodydark2" />
+              <h3 className="mt-2 text-sm font-medium text-graydark">No bulk uploads</h3>
               <p className="mt-1 text-sm text-gray-500">
                 You haven't created any bulk uploads yet. Start by creating a QuDemo and using the bulk share feature.
               </p>

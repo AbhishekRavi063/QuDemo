@@ -9,7 +9,7 @@ const IntegrationCard = ({
 }) => {
   return (
     <SpotlightCard
-      className={`rounded-2xl p-6 transition-all duration-300 relative ${
+      className={`rounded-xl p-6 transition-all duration-300 relative ${
         comingSoon ? "opacity-60" : "hover:scale-[1.05] cursor-pointer"
       }`}
     >
@@ -29,7 +29,7 @@ const IntegrationCard = ({
       <div className="flex flex-col items-center text-center">
         {/* Icon */}
         <div
-          className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4"
+          className="w-16 h-16 rounded-xl flex items-center justify-center mb-4"
           style={{
             background: comingSoon
               ? "rgba(100, 100, 100, 0.4)"

@@ -15,7 +15,7 @@ const PricingCard = ({
 }) => {
   return (
     <SpotlightCard
-      className={`rounded-2xl p-8 border transition-all duration-300 h-full flex flex-col relative ${
+      className={`rounded-xl p-8 border transition-all duration-300 h-full flex flex-col relative ${
         isPopular ? "hover:scale-[1.05] scale-[1.02]" : "hover:scale-[1.02]"
       } ${className}`}
       style={{

@@ -636,32 +636,32 @@ const CreateQuDemo = () => {
   }
   if (!company) {
     return (
-      <div className="text-center py-12 px-4 sm:px-6 lg:px-8 bg-white rounded-lg shadow-lg">
-        <h3 className="mt-2 text-lg font-medium text-gray-900">
+      <div className="text-center py-12 px-4 sm:px-6 lg:px-8 bg-white rounded-lg shadow-none">
+        <h3 className="mt-2 text-lg font-medium text-graydark">
           No Company Found
         </h3>
-        <p className="mt-1 text-sm text-gray-600">
+        <p className="mt-1 text-sm text-bodydark">
           You need to create a company before you can create a QuDemo.
         </p>
       </div>
     );
   }
   return (
-    <div className="min-h-screen bg-gray-50 flex items-start justify-center pt-8">
+    <div className="min-h-screen bg-whiter flex items-start justify-center pt-8">
       <div className="w-full max-w-2xl mx-auto px-4">
         {/* Main Heading and Subheading */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-3">
+          <h1 className="text-3xl font-bold text-graydark mb-3">
             Create New Qudemo
           </h1>
-          <p className="text-lg text-gray-600">
+          <p className="text-lg text-bodydark">
             Create an interactive demo that allows prospects to learn about your product at their own pace.
           </p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-6 mt-16">
           {/* Qudemo Title */}
           <div>
-            <label className="block text-sm font-bold text-gray-900 mb-2 text-left">
+            <label className="block text-sm font-bold text-graydark mb-2 text-left">
               Qudemo Title <span className="text-red-500">*</span>
             </label>
             <input
@@ -670,12 +670,12 @@ const CreateQuDemo = () => {
               onChange={e => setTitle(e.target.value)}
               placeholder="Enter qudemo title"
               required
-              className="w-full border border-gray-300 px-4 py-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full border border-strokedark/20 px-4 py-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
         </div>
           {/* Video URL */}
           <div>
-            <label className="block text-sm font-bold text-gray-900 mb-2 text-left">
+            <label className="block text-sm font-bold text-graydark mb-2 text-left">
               Link to Loom or YouTube demo videos
             </label>
             <p className="text-xs text-gray-500 mb-3 text-left">
@@ -694,7 +694,7 @@ const CreateQuDemo = () => {
                         ? 'border-red-500 bg-red-50' 
                         : url.trim() && !urlValidationErrors[index] 
                           ? 'border-green-500 bg-green-50' 
-                          : 'border-gray-300'
+                          : 'border-strokedark/20'
                     }`}
                   />
                 {videoUrls.length > 1 && (
@@ -723,16 +723,16 @@ const CreateQuDemo = () => {
             <button
               type="button"
               onClick={addVideoUrlField}
-                className="text-blue-600 hover:underline text-sm font-medium flex items-center justify-center gap-1"
+                className="text-primary hover:underline text-sm font-medium flex items-center justify-center gap-1"
             >
-                <span className="text-blue-600 font-bold">+</span> Add another video
+                <span className="text-primary font-bold">+</span> Add another video
             </button>
           </div>
         </div>
         {/* Website URL - COMMENTED OUT */}
         {/* 
         <div className="mt-6">
-            <label className="block text-sm font-bold text-gray-900 mb-2 text-left">
+            <label className="block text-sm font-bold text-graydark mb-2 text-left">
                 Website URLs to scrape
           </label>
             <p className="text-xs text-gray-500 mb-3 text-left">
@@ -771,7 +771,7 @@ const CreateQuDemo = () => {
                         ? 'border-red-500 bg-red-50' 
                         : url.trim() && !urlValidationErrors[`website_${index}`] 
                           ? 'border-green-500 bg-green-50' 
-                          : 'border-gray-300'
+                          : 'border-strokedark/20'
                     }`}
                   />
                   {websiteUrls.length > 1 && (
@@ -800,16 +800,16 @@ const CreateQuDemo = () => {
               <button
                 type="button"
                 onClick={addWebsiteUrlField}
-                className="text-blue-600 hover:underline text-sm font-medium flex items-center justify-center gap-1"
+                className="text-primary hover:underline text-sm font-medium flex items-center justify-center gap-1"
               >
-                <span className="text-blue-600 font-bold">+</span> Add another website
+                <span className="text-primary font-bold">+</span> Add another website
               </button>
             </div>
         </div>
         */}
         {/* Document Upload Section */}
         <div className="mt-6">
-          <label className="block text-sm font-bold text-gray-900 mb-2 text-left">
+          <label className="block text-sm font-bold text-graydark mb-2 text-left">
             Product Document
           </label>
           <p className="text-xs text-gray-500 mb-3 text-left">
@@ -821,13 +821,13 @@ const CreateQuDemo = () => {
                 <span className="text-lg">💡</span>
               </div>
               <div className="ml-3">
-                <p className="text-sm text-blue-800 text-left">
+                <p className="text-sm text-primary text-left">
                   Add any product knowledge doc and Qudemo AI will use them to pull out only the relevant information to answer your customer's questions
                 </p>
               </div>
             </div>
           </div>
-          <div className="mb-6 p-4 border border-gray-200 rounded-lg">
+          <div className="mb-6 p-4 border border-strokedark/10 rounded-lg">
             <DocumentUpload 
               qudemoId={createdQudemoId}
               companyName={company?.name}
@@ -839,7 +839,7 @@ const CreateQuDemo = () => {
 
         {/* Presenter Photo Upload Section - Always visible */}
         <div className="mt-6">
-          <label className="block text-sm font-bold text-gray-900 mb-2 text-left">
+          <label className="block text-sm font-bold text-graydark mb-2 text-left">
             Presenter Photo 🎬 <span className="text-xs text-green-600 font-normal">(New Feature!)</span>
           </label>
           <p className="text-xs text-gray-500 mb-3 text-left">
@@ -862,7 +862,7 @@ const CreateQuDemo = () => {
             </div>
             
             {!presenterPhotoPreview ? (
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-purple-400 transition-colors">
+              <div className="border-2 border-dashed border-strokedark/20 rounded-lg p-6 text-center hover:border-purple-400 transition-colors">
                 <input
                   type="file"
                   id="presenter-photo"
@@ -877,7 +877,7 @@ const CreateQuDemo = () => {
                   <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mb-3">
                     <span className="text-3xl">👤</span>
                   </div>
-                  <p className="text-sm font-medium text-gray-700 mb-1">
+                  <p className="text-sm font-medium text-bodydark mb-1">
                     Upload Presenter Photo
                   </p>
                   <p className="text-xs text-gray-500 mb-3">
@@ -889,7 +889,7 @@ const CreateQuDemo = () => {
                 </label>
               </div>
             ) : (
-              <div className="border border-gray-300 rounded-lg p-4 bg-white">
+              <div className="border border-strokedark/20 rounded-lg p-4 bg-white">
                 <div className="flex items-start gap-4">
                   <div className="flex-shrink-0">
                     <img 
@@ -900,7 +900,7 @@ const CreateQuDemo = () => {
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center justify-between mb-2">
-                      <p className="text-sm font-semibold text-gray-900">Presenter Photo Uploaded</p>
+                      <p className="text-sm font-semibold text-graydark">Presenter Photo Uploaded</p>
                       <button
                         type="button"
                         onClick={removePresenterPhoto}
@@ -914,7 +914,7 @@ const CreateQuDemo = () => {
                       value={presenterName}
                       onChange={(e) => setPresenterName(e.target.value)}
                       placeholder="Presenter Name (Optional)"
-                      className="w-full border border-gray-300 px-3 py-2 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                      className="w-full border border-strokedark/20 px-3 py-2 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                     />
                     <p className="text-xs text-gray-500 mt-2">
                       ✓ This photo will be used to generate AI avatar videos for FAQ answers
@@ -927,8 +927,8 @@ const CreateQuDemo = () => {
 
         {/* Calendly Link Section */}
         <div className="mt-6">
-          <label className="block text-sm font-bold text-gray-900 mb-2 text-left">
-            Add Calendly Link <span className="text-gray-400 text-xs font-normal">(Optional)</span>
+          <label className="block text-sm font-bold text-graydark mb-2 text-left">
+            Add Calendly Link <span className="text-bodydark2 text-xs font-normal">(Optional)</span>
           </label>
           <p className="text-xs text-gray-500 mb-3 text-left">
             Add a Calendly link to let prospects book meetings directly from your Qudemo
@@ -943,7 +943,7 @@ const CreateQuDemo = () => {
                 ? 'border-red-500 bg-red-50'
                 : calendlyLink.trim() && validateCalendlyUrl(calendlyLink).isValid
                   ? 'border-green-500 bg-green-50'
-                  : 'border-gray-300'
+                  : 'border-strokedark/20'
             }`}
           />
           {calendlyLink.trim() && !validateCalendlyUrl(calendlyLink).isValid && (
@@ -965,7 +965,7 @@ const CreateQuDemo = () => {
             className={`w-full font-bold py-3 px-6 rounded-lg transition-colors duration-200 ${
               isSubmitting || !areAllUrlsValid()
                 ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
-                : 'bg-blue-600 hover:bg-blue-700 text-white'
+                : 'bg-primary hover:bg-primary/90 text-white'
             }`}
           >
             {isSubmitting ? 'Processing Content...' : 'Create Qudemo'}
@@ -1002,23 +1002,23 @@ const CreateQuDemo = () => {
             <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
               <div className="flex items-center mb-4">
                 <div className="flex-shrink-0">
-                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                    <svg className="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+                    <svg className="h-6 w-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
                 </div>
-                <h3 className="ml-3 text-lg font-semibold text-gray-900 text-left">Processing Your Qudemo</h3>
+                <h3 className="ml-3 text-lg font-semibold text-graydark text-left">Processing Your Qudemo</h3>
               </div>
               
-              <p className="text-gray-600 mb-6 text-left">
+              <p className="text-bodydark mb-6 text-left">
                 {success}
               </p>
               
               <div className="flex justify-end">
                 <button
                   onClick={() => setSuccess("")}
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors"
+                  className="px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary/90 rounded-md transition-colors"
                 >
                   Close
                 </button>
@@ -1033,7 +1033,7 @@ const CreateQuDemo = () => {
           <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
             {/* Header */}
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+              <h3 className="text-lg font-semibold text-graydark flex items-center">
                 <svg className="w-6 h-6 text-yellow-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
                 </svg>
@@ -1041,7 +1041,7 @@ const CreateQuDemo = () => {
             </h3>
               <button
                 onClick={handleErrorPopupClose}
-                className="text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-full p-1"
+                className="text-bodydark2 hover:text-bodydark focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-full p-1"
               >
                 <XMarkIcon className="w-6 h-6" />
               </button>
@@ -1066,23 +1066,23 @@ const CreateQuDemo = () => {
                 </div>
               </div>
               {/* Error Details */}
-              <div className="bg-gray-50 rounded-lg p-4">
-                <h4 className="text-sm font-medium text-gray-900 mb-3">Failed Content Details:</h4>
+              <div className="bg-whiter rounded-lg p-4">
+                <h4 className="text-sm font-medium text-graydark mb-3">Failed Content Details:</h4>
                 <div className="space-y-3">
                   {errorPopupData.processingErrors?.map((error, index) => (
-                    <div key={index} className="border border-gray-200 rounded-lg p-3">
+                    <div key={index} className="border border-strokedark/10 rounded-lg p-3">
                       {error.type === 'website' && (
                         <div>
                           <div className="flex items-center mb-2">
                             <svg className="w-4 h-4 text-blue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9v-9m0-9v9" />
                             </svg>
-                            <span className="font-medium text-gray-900">Website Failed</span>
+                            <span className="font-medium text-graydark">Website Failed</span>
               </div>
-                          <div className="text-sm text-gray-600 mb-2">
+                          <div className="text-sm text-bodydark mb-2">
                             <strong>URL:</strong> {error.url}
               </div>
-                          <div className="text-sm text-gray-600 mb-2">
+                          <div className="text-sm text-bodydark mb-2">
                             <strong>Reason:</strong> {error.error}
                           </div>
                           {error.error_type === 'crm_bot_detection' && (
@@ -1106,12 +1106,12 @@ const CreateQuDemo = () => {
                             <svg className="w-4 h-4 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                             </svg>
-                            <span className="font-medium text-gray-900">Video Failed</span>
+                            <span className="font-medium text-graydark">Video Failed</span>
                           </div>
-                          <div className="text-sm text-gray-600 mb-2">
+                          <div className="text-sm text-bodydark mb-2">
                             <strong>URL:</strong> {error.url}
                           </div>
-                          <div className="text-sm text-gray-600">
+                          <div className="text-sm text-bodydark">
                             <strong>Reason:</strong> {error.error}
                           </div>
                         </div>
@@ -1125,7 +1125,7 @@ const CreateQuDemo = () => {
             <div className="flex justify-end">
             <button
                 onClick={handleErrorPopupClose}
-                className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+                className="bg-primary text-white px-6 py-2 rounded-lg hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
             >
                 Continue to QuDemos
             </button>
