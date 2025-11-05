@@ -47,7 +47,7 @@ import { NotificationProvider } from "./context/NotificationContext";
 // Protected Route Component
 //test
 const ProtectedRoute = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   useEffect(() => {
     const checkAuth = async () => {
@@ -116,9 +116,9 @@ const ProtectedRoute = ({ children }) => {
       </div>
     );
   }
-  // if (!isAuthenticated) {
-  //   return <Navigate to="/login" replace />;
-  // }
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
   return children;
 };
 // Company Check Component
@@ -132,9 +132,9 @@ const CompanyCheck = ({ children }) => {
     );
   }
   // If no company exists, show company setup
-  // if (!company) {
-  //   return <CompanySetup />;
-  // }
+  if (!company) {
+    return <CompanySetup />;
+  }
   // If company exists, show the dashboard
   return children;
 };

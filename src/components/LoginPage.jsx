@@ -140,7 +140,7 @@ const LoginPage = () => {
         </div>
         {/* Email/Password form hidden */}
         <div style={{ display: "none" }}>
-          <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          <form className="mt-8 space-y-6 text-left" onSubmit={handleSubmit}>
             {loginError && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
                 {loginError}
@@ -214,7 +214,7 @@ const LoginPage = () => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="group relative w-full flex justify-center h-10 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? (
                   <svg
@@ -261,7 +261,7 @@ const LoginPage = () => {
           type="button"
           onClick={handleGoogleSignIn}
           disabled={isGoogleLoading}
-          className="w-full flex justify-center h-10 px-4 border border-gray-300 rounded-md bg-white text-gray-700 hover:bg-gray-50 font-medium mt-4 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md bg-white text-gray-700 hover:bg-gray-50 font-medium mt-4 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isGoogleLoading ? (
             <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-600 mr-2"></div>
