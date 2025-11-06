@@ -9,22 +9,24 @@ const WidgetPlayground = () => {
   const navigate = useNavigate();
   const [qudemoData, setQudemoData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // Check if user is logged in
+  useEffect(() => {
+    const token = localStorage.getItem("accessToken");
+    setIsLoggedIn(!!token);
+  }, []);
 
   useEffect(() => {
     const fetchQudemoData = async () => {
       try {
-        const token = localStorage.getItem("accessToken");
+        // Use public endpoint - no authentication required
         const response = await fetch(
-          getNodeApiUrl(`/api/qudemos/${qudemoId}`),
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          },
+          getNodeApiUrl(`/api/qudemos/public/${qudemoId}`)
         );
         const data = await response.json();
 
-        console.log("📊 Widget Playground - Fetched QuDemo data:", data);
+        console.log("📊 Widget Playground - Fetched QuDemo data (public):", data);
 
         if (data.success) {
           setQudemoData(data.qudemo);
@@ -59,14 +61,18 @@ const WidgetPlayground = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <button
-                onClick={() => navigate("/qudemos")}
-                className="flex items-center space-x-2 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <ArrowLeftIcon className="w-5 h-5" />
-                <span>Back to QuDemos</span>
-              </button>
-              <div className="h-6 w-px bg-gray-300"></div>
+              {isLoggedIn && (
+                <>
+                  <button
+                    onClick={() => navigate("/qudemos")}
+                    className="flex items-center space-x-2 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                  >
+                    <ArrowLeftIcon className="w-5 h-5" />
+                    <span>Back to QuDemos</span>
+                  </button>
+                  <div className="h-6 w-px bg-gray-300"></div>
+                </>
+              )}
               <div>
                 <h1 className="text-xl font-bold text-gray-900">
                   Widget Playground
