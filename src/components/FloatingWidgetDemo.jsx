@@ -1,31 +1,45 @@
-import React from "react";
-import FloatingQudemoWidget from "./FloatingQudemoWidget";
+import React from 'react';
+import FloatingQudemoWidget from './FloatingQudemoWidget';
 
 /**
  * Demo page showing how to embed the Floating QuDemo Widget
- *
- * Usage Example:
- *
- * 1. Simple embed (bottom-right corner):
- *    <FloatingQudemoWidget qudemoShareToken="your-share-token-here" />
- *
- * 2. Custom position:
- *    <FloatingQudemoWidget
- *      qudemoShareToken="your-share-token-here"
+ * 
+ * NEW: Chat is now always enabled in expanded view!
+ * The widget shows video on the left and chat on the right.
+ * Context-aware question matching improves answer accuracy.
+ * 
+ * Usage Examples:
+ * 
+ * 1. Simple embed (uses Universal Demo):
+ *    <FloatingQudemoWidget />
+ * 
+ * 2. With specific QuDemo:
+ *    <FloatingQudemoWidget 
+ *      qudemoId="your-qudemo-id" 
+ *      companyName="your-company-name"
+ *    />
+ * 
+ * 3. Custom position:
+ *    <FloatingQudemoWidget 
+ *      qudemoId="your-qudemo-id"
+ *      companyName="your-company-name"
  *      position="bottom-left"  // Options: bottom-right, bottom-left, top-right, top-left
  *    />
- *
- * 3. Custom preview:
- *    <FloatingQudemoWidget
- *      qudemoShareToken="your-share-token-here"
+ * 
+ * 4. Custom preview:
+ *    <FloatingQudemoWidget 
+ *      qudemoId="your-qudemo-id"
+ *      companyName="your-company-name"
  *      previewImage="/path/to/thumbnail.jpg"
  *      previewText="Watch Our Demo"
  *    />
  */
 
 const FloatingWidgetDemo = () => {
-  // Replace this with your actual QuDemo share token
-  const DEMO_SHARE_TOKEN = "your-qudemo-share-token-here";
+  // Using Universal Demo token - replace with your actual QuDemo ID and company name for testing
+  // For playground/testing: provide qudemoId and companyName as props
+  const DEMO_QUDEMO_ID = null; // Set to your QuDemo ID for testing
+  const DEMO_COMPANY_NAME = null; // Set to your company name for testing
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -41,26 +55,32 @@ const FloatingWidgetDemo = () => {
         </div>
 
         {/* Demo Content */}
-        <div className="bg-white rounded-lg border p-8 mb-8">
+        <div className="bg-white rounded-lg shadow-lg p-8 mb-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">
             How to Use the Floating Widget
           </h2>
-
+          
           <div className="space-y-6">
             <div>
               <h3 className="text-lg font-semibold text-gray-800 mb-2">
                 1. Basic Usage
               </h3>
               <pre className="bg-gray-100 p-4 rounded-lg overflow-x-auto text-sm">
-                {`import FloatingQudemoWidget from './components/FloatingQudemoWidget';
+{`import FloatingQudemoWidget from './components/FloatingQudemoWidget';
 
 function App() {
   return (
     <div>
       {/* Your page content */}
-
-      {/* Floating widget */}
-      <FloatingQudemoWidget qudemoShareToken="your-share-token" />
+      
+      {/* Floating widget - uses Universal Demo by default */}
+      <FloatingQudemoWidget />
+      
+      {/* OR with specific QuDemo */}
+      <FloatingQudemoWidget 
+        qudemoId="your-qudemo-id"
+        companyName="your-company-name"
+      />
     </div>
   );
 }`}
@@ -72,8 +92,9 @@ function App() {
                 2. Custom Position
               </h3>
               <pre className="bg-gray-100 p-4 rounded-lg overflow-x-auto text-sm">
-                {`<FloatingQudemoWidget
-  qudemoShareToken="your-share-token"
+{`<FloatingQudemoWidget 
+  qudemoId="your-qudemo-id"
+  companyName="your-company-name"
   position="bottom-left"
   // Options: "bottom-right", "bottom-left", "top-right", "top-left"
 />`}
@@ -85,8 +106,9 @@ function App() {
                 3. Custom Preview
               </h3>
               <pre className="bg-gray-100 p-4 rounded-lg overflow-x-auto text-sm">
-                {`<FloatingQudemoWidget
-  qudemoShareToken="your-share-token"
+{`<FloatingQudemoWidget 
+  qudemoId="your-qudemo-id"
+  companyName="your-company-name"
   previewImage="/path/to/thumbnail.jpg"
   previewText="Watch Our Demo"
 />`}
@@ -99,12 +121,14 @@ function App() {
               </h3>
               <ul className="list-disc list-inside space-y-2 text-gray-700">
                 <li>🎯 Floating circular widget in corner</li>
-                <li>🎥 Expands to show video player</li>
-                <li>💬 Interactive suggested questions</li>
+                <li>🎥 Expands to show video player with chat</li>
+                <li>💬 AI-powered chat with context-aware question matching</li>
+                <li>❓ Interactive suggested questions overlay</li>
+                <li>🎤 Voice input support</li>
                 <li>📍 Video timestamp seeking</li>
-                <li>➖ Minimizable and closeable</li>
-                <li>📱 Responsive and animated</li>
-                <li>🎨 Beautiful gradient design</li>
+                <li>🔄 Maximizable for split-screen view</li>
+                <li>📱 Fully responsive and animated</li>
+                <li>🎨 Professional blue gradient design</li>
               </ul>
             </div>
           </div>
@@ -118,10 +142,10 @@ function App() {
                 Section {i}
               </h3>
               <p className="text-gray-600">
-                This is placeholder content to demonstrate how the floating
-                widget stays fixed in position while you scroll through the
-                page. The widget appears in the bottom-right corner and can be
-                clicked to expand and show the interactive demo.
+                This is placeholder content to demonstrate how the floating widget
+                stays fixed in position while you scroll through the page.
+                The widget appears in the bottom-right corner and can be clicked
+                to expand and show the interactive demo.
               </p>
             </div>
           ))}
@@ -129,13 +153,15 @@ function App() {
       </div>
 
       {/* Floating Widget - This is what you want to embed on any page! */}
-      <FloatingQudemoWidget
-        qudemoShareToken={DEMO_SHARE_TOKEN}
+      <FloatingQudemoWidget 
+        qudemoId={DEMO_QUDEMO_ID}
+        companyName={DEMO_COMPANY_NAME}
         position="bottom-right"
-        previewText="Watch Demo"
+        previewText="Ask me anything!"
       />
     </div>
   );
 };
 
 export default FloatingWidgetDemo;
+

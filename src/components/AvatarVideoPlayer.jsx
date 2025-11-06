@@ -6,7 +6,7 @@ import React, { useState, useRef, useEffect } from "react";
  * Displays HeyGen-generated AI avatar videos for document-based answers.
  * Provides a modern video player with playback controls.
  */
-const AvatarVideoPlayer = ({ avatarVideoUrl, answer, isVisible }) => {
+const AvatarVideoPlayer = ({ avatarVideoUrl, answer, isVisible, faqId, avatarVideoCache, isMaximized = false }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -131,12 +131,13 @@ const AvatarVideoPlayer = ({ avatarVideoUrl, answer, isVisible }) => {
 
         <video
           ref={videoRef}
-          className="w-full h-full object-cover"
+          className={`w-full h-full ${isMaximized ? 'object-contain' : 'object-cover'}`}
           src={avatarVideoUrl.replace(/ /g, "%20")}
           autoPlay
           muted={false}
           preload="auto"
           playsInline
+          crossOrigin="anonymous"
         >
           Your browser does not support the video tag.
         </video>

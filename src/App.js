@@ -265,16 +265,11 @@ function App() {
   const FloatingWidgetWrapper = () => {
     const location = useLocation();
 
-    // Don't show universal widget on widget playground/embed pages
-    const isWidgetPage =
-      location.pathname.includes("/widget-playground") ||
-      location.pathname.includes("/widget-embed");
-
-    const shouldShowWidget = !isWidgetPage;
+    // Only show the static demo widget on the home page
+    const shouldShowWidget = location.pathname === "/";
 
     console.log("🔍 FloatingWidgetWrapper:", {
       pathname: location.pathname,
-      isWidgetPage,
       shouldShowWidget,
     });
 
@@ -522,9 +517,8 @@ function App() {
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
 
-            {/* Floating Widget - Shows on all pages except home */}
-            {/* TEMPORARILY DISABLED FOR TESTING WIDGET GENERATOR */}
-            {/* <FloatingWidgetWrapper /> */}
+            {/* Floating Widget - Shows only on home page */}
+            <FloatingWidgetWrapper />
           </div>
         </NotificationProvider>
       </BackendProvider>
