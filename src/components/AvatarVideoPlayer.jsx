@@ -137,6 +137,7 @@ const AvatarVideoPlayer = ({ avatarVideoUrl, answer, isVisible, faqId, avatarVid
           muted={false}
           preload="auto"
           playsInline
+          crossOrigin="anonymous"
         >
           Your browser does not support the video tag.
         </video>

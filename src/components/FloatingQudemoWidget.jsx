@@ -24,8 +24,9 @@ const FloatingQudemoWidget = ({
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [currentTimestamp, setCurrentTimestamp] = useState(0);
   const [suggestedQuestions, setSuggestedQuestions] = useState([]);
-  const [overlayQuestions, setOverlayQuestions] = useState([]); // 3 random questions for video overlay
-  const [clickedQuestions, setClickedQuestions] = useState([]); // Track clicked questions to exclude them
+  const videoPreloadRef = useRef({}); // For preloading videos
+  const [overlayQuestions, setOverlayQuestions] = useState([]); // 3 questions for video overlay
+  const [overlayQuestionOffset, setOverlayQuestionOffset] = useState(0); // Track which set of 3 questions to show
   const [showAllQuestions, setShowAllQuestions] = useState(false); // State for "More..." button
   const [chatMessages, setChatMessages] = useState([]);
   const [isTyping, setIsTyping] = useState(false);
@@ -176,26 +177,21 @@ const FloatingQudemoWidget = ({
     }
   }, [qudemoId, companyName, qudemoData, introVideoPreview]);
 
-  // Randomly select 3 questions for video overlay - triggers on suggestedQuestions change and after each bot message
+  // Select 3 questions for video overlay based on offset - triggers on suggestedQuestions change and offset change
   useEffect(() => {
     if (!suggestedQuestions || suggestedQuestions.length === 0) return;
     
-    // Filter out clicked questions
-    const availableQuestions = suggestedQuestions.filter(q => !clickedQuestions.includes(q));
+    // Calculate which 3 questions to show based on offset
+    const startIndex = overlayQuestionOffset % suggestedQuestions.length;
+    const selected = [];
     
-    // If less than 3 questions remain, reset clicked questions (but only if not already empty to avoid infinite loop)
-    if (availableQuestions.length < 3 && clickedQuestions.length > 0) {
-      setClickedQuestions([]);
-      // Don't update overlayQuestions here, let the next render handle it
-      return;
+    for (let i = 0; i < 3 && i < suggestedQuestions.length; i++) {
+      const index = (startIndex + i) % suggestedQuestions.length;
+      selected.push(suggestedQuestions[index]);
     }
     
-    // Pick questions from available ones
-    const questionsPool = availableQuestions.length >= 3 ? availableQuestions : suggestedQuestions;
-    const shuffled = [...questionsPool].sort(() => 0.5 - Math.random());
-    const selected = shuffled.slice(0, Math.min(3, questionsPool.length));
     setOverlayQuestions(selected);
-  }, [suggestedQuestions, chatMessages, clickedQuestions]);
+  }, [suggestedQuestions, overlayQuestionOffset]);
 
   // Aggressive video preloading - actually load videos into memory for instant playback
   useEffect(() => {
@@ -355,6 +351,81 @@ const FloatingQudemoWidget = ({
     video.addEventListener('error', () => {
       video.remove();
     });
+  };
+
+  // Proactively cache ALL videos when page loads
+  const preloadAllVideos = async () => {
+    try {
+      console.log('🎬 Starting proactive video caching for QuDemo...');
+      
+      // Get FAQ version/timestamp to check if cache is valid
+      const cacheKey = `qudemo_${companyName}_${qudemoId}`;
+      const cachedVersion = localStorage.getItem(`${cacheKey}_version`);
+      
+      // Fetch all FAQs to get video URLs directly
+      const apiUrl = getVideoApiUrl(
+        `/faqs/${encodeURIComponent(companyName)}/${qudemoId}`
+      );
+      
+      const response = await fetch(apiUrl);
+      const data = await response.json();
+      
+      if (data && data.faqs) {
+        const currentVersion = data.version || data.updated_at || Date.now();
+        
+        // Check if we need to refresh cache
+        if (cachedVersion !== String(currentVersion)) {
+          console.log('🔄 FAQ version changed, refreshing video cache...');
+          localStorage.setItem(`${cacheKey}_version`, String(currentVersion));
+        }
+        
+        console.log(`📦 Found ${data.faqs.length} FAQs, caching videos...`);
+        
+        // Preload ALL videos in background
+        let cachedCount = 0;
+        for (const faq of data.faqs) {
+          if (faq.video_url && faq.video_status === 'completed') {
+            try {
+              // Create hidden video element to trigger browser cache
+              const video = document.createElement('video');
+              video.preload = 'auto';
+              video.src = faq.video_url.replace(/ /g, '%20');
+              video.style.display = 'none';
+              document.body.appendChild(video);
+              
+              // Store in memory cache
+              videoPreloadRef.current[faq.question] = faq.video_url;
+              
+              // Remove from DOM after loaded
+              video.addEventListener('loadeddata', () => {
+                document.body.removeChild(video);
+              });
+              
+              video.addEventListener('error', () => {
+                document.body.removeChild(video);
+              });
+              
+              cachedCount++;
+              console.log(`✅ Cached ${cachedCount}/${data.faqs.length}: ${faq.question.substring(0, 40)}...`);
+            } catch (err) {
+              console.log('⚠️ Could not cache video for:', faq.question);
+            }
+          }
+        }
+        
+        console.log(`✅ Video caching complete! ${cachedCount} videos cached.`);
+        console.log('⚡ All questions will now play INSTANTLY!');
+      }
+    } catch (error) {
+      console.error('❌ Error in proactive video caching:', error);
+    }
+  };
+  
+  // Legacy function for backward compatibility
+  const preloadVideosForQuestions = async (questions) => {
+    // This is now handled by preloadAllVideos()
+    // Kept for backward compatibility
+    console.log('ℹ️ Using new proactive caching strategy...');
   };
 
   const loadBetaVersionData = async () => {
@@ -520,6 +591,9 @@ const FloatingQudemoWidget = ({
       console.log('📌 Final questions to display (max 10):', questionsToSet);
       setSuggestedQuestions(questionsToSet);
       console.log('✅ Suggested questions state updated with', questionsToSet.length, 'questions');
+      
+      // Proactively cache ALL videos in background
+      preloadAllVideos();
       
     } catch (error) {
       console.error('❌❌❌ CRITICAL ERROR in loadBetaVersionData:', error);
@@ -999,8 +1073,6 @@ const FloatingQudemoWidget = ({
   };
 
   const handleSuggestedQuestionClick = (question) => {
-    // Track the clicked question to exclude it from future overlay selections
-    setClickedQuestions(prev => [...prev, question]);
     handleSendMessage(question);
   };
 
@@ -1433,6 +1505,19 @@ const FloatingQudemoWidget = ({
                         </span>
                       </button>
                     ))}
+                    
+                    {/* More... button to cycle through questions */}
+                    {suggestedQuestions.length > 3 && (
+                      <button
+                        onClick={() => setOverlayQuestionOffset(prev => prev + 3)}
+                        className="text-center bg-white/80 backdrop-blur-sm hover:bg-blue-500 text-gray-700 hover:text-white px-3 py-1.5 rounded-lg text-xs font-medium border border-white/40 hover:border-blue-500 transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center gap-1"
+                      >
+                        More... ({suggestedQuestions.length - 3} more)
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+                    )}
                   </div>
                 )}
                  </div>
@@ -1638,22 +1723,46 @@ const FloatingQudemoWidget = ({
                                  </svg>
                                  Related:
                                </p>
-                               {(showAllQuestions ? suggestedQuestions : suggestedQuestions.slice(0, 3)).map((question, qIndex) => (
-                                 <button
-                                   key={qIndex}
-                                   onClick={() => handleSuggestedQuestionClick(question)}
-                                   disabled={isTyping}
-                                   className="group relative text-left bg-white hover:bg-gradient-to-r hover:from-blue-50 hover:to-blue-100/50 text-gray-700 hover:text-blue-700 px-3 py-2 rounded-xl text-xs border border-gray-200 hover:border-blue-400 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
-                                 >
-                                   <span className="flex items-center gap-2">
-                                     <svg className="w-3 h-3 text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                                     </svg>
-                                     {question}
-                                   </span>
-                                 </button>
-                               ))}
-               </div>
+                              {(showAllQuestions ? suggestedQuestions : suggestedQuestions.slice(0, 3)).map((question, qIndex) => (
+                                <button
+                                  key={qIndex}
+                                  onClick={() => handleSuggestedQuestionClick(question)}
+                                  disabled={isTyping}
+                                  className="group relative text-left bg-white hover:bg-gradient-to-r hover:from-blue-50 hover:to-blue-100/50 text-gray-700 hover:text-blue-700 px-3 py-2 rounded-xl text-xs border border-gray-200 hover:border-blue-400 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
+                                >
+                                  <span className="flex items-center gap-2">
+                                    <svg className="w-3 h-3 text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                    </svg>
+                                    {question}
+                                  </span>
+                                </button>
+                              ))}
+                              
+                              {/* Show More/Less Button - Small and unobtrusive */}
+                              {suggestedQuestions.length > 3 && (
+                                <button
+                                  onClick={() => setShowAllQuestions(!showAllQuestions)}
+                                  className="text-xs text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-blue-50 transition-all duration-200 mt-1"
+                                >
+                                  {showAllQuestions ? (
+                                    <>
+                                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                                      </svg>
+                                      Show less
+                                    </>
+                                  ) : (
+                                    <>
+                                      More... ({suggestedQuestions.length - 3} more)
+                                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                      </svg>
+                                    </>
+                                  )}
+                                </button>
+                              )}
+              </div>
                            )}
                          </React.Fragment>
                        ))}
