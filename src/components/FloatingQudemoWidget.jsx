@@ -12,13 +12,8 @@ const FloatingQudemoWidget = ({
   companyName = null,
   isPreview = false
 }) => {
-  // Debug: Log props on component mount
-  console.log('🔍 FloatingQudemoWidget PROPS:', {
-    qudemoId,
-    companyName,
-    isPreview,
-    position
-  });
+  // Debug: Log props on component mount (commented out to prevent spam)
+  // console.log('🔍 FloatingQudemoWidget PROPS:', { qudemoId, companyName, isPreview, position });
 
   const [isExpanded, setIsExpanded] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
@@ -47,6 +42,7 @@ const FloatingQudemoWidget = ({
   const previewVideoRef = useRef(null);
   const chatMessagesRef = useRef(null);
   const videoPreloadCacheRef = useRef({}); // Cache of preloaded video elements
+  const avatarVideoCacheRef = useRef({}); // Cache for avatar videos
   const recognitionRef = useRef(null);
   const loomIframeRef = useRef(null);
   const hasLoadedDataRef = useRef(false); // Track if we've already loaded data
@@ -187,19 +183,18 @@ const FloatingQudemoWidget = ({
     // Filter out clicked questions
     const availableQuestions = suggestedQuestions.filter(q => !clickedQuestions.includes(q));
     
-    // If less than 3 questions remain, reset clicked questions
-    if (availableQuestions.length < 3) {
+    // If less than 3 questions remain, reset clicked questions (but only if not already empty to avoid infinite loop)
+    if (availableQuestions.length < 3 && clickedQuestions.length > 0) {
       setClickedQuestions([]);
-      // Use all suggested questions
-      const shuffled = [...suggestedQuestions].sort(() => 0.5 - Math.random());
-      const selected = shuffled.slice(0, Math.min(3, suggestedQuestions.length));
-      setOverlayQuestions(selected);
-    } else {
-      // Shuffle and pick 3 random questions from available ones
-      const shuffled = [...availableQuestions].sort(() => 0.5 - Math.random());
-      const selected = shuffled.slice(0, 3);
-      setOverlayQuestions(selected);
+      // Don't update overlayQuestions here, let the next render handle it
+      return;
     }
+    
+    // Pick questions from available ones
+    const questionsPool = availableQuestions.length >= 3 ? availableQuestions : suggestedQuestions;
+    const shuffled = [...questionsPool].sort(() => 0.5 - Math.random());
+    const selected = shuffled.slice(0, Math.min(3, questionsPool.length));
+    setOverlayQuestions(selected);
   }, [suggestedQuestions, chatMessages, clickedQuestions]);
 
   // Aggressive video preloading - actually load videos into memory for instant playback
@@ -1257,6 +1252,7 @@ const FloatingQudemoWidget = ({
                 muted
                 playsInline
                 className="w-full h-full object-cover"
+                style={{ objectPosition: 'center 0%' }}
               />
             ) : !qudemoId && videoFlow && videoFlow.videos && videoFlow.videos[0] && videoFlow.videos[0].src ? (
               <video 
@@ -1266,12 +1262,14 @@ const FloatingQudemoWidget = ({
                 muted
                 playsInline
                 className="w-full h-full object-cover"
+                style={{ objectPosition: 'center 0%' }}
               />
             ) : !qudemoId && (videoThumbnail || previewImage) ? (
               <img 
                 src={videoThumbnail || previewImage} 
                 alt="Demo" 
                 className="w-full h-full object-cover"
+                style={{ objectPosition: 'center 0%' }}
               />
             ) : (
               <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
@@ -1383,11 +1381,14 @@ const FloatingQudemoWidget = ({
                  >
                 {/* Show avatar video if available */}
                 {currentAvatarVideo ? (
-                   <div className="w-full h-full flex items-center justify-center">
+                   <div className="w-full h-full flex items-center justify-center bg-black">
                      <AvatarVideoPlayer
                        avatarVideoUrl={currentAvatarVideo.videoUrl}
                        answer={currentAvatarVideo.answer}
                        isVisible={isExpanded}
+                       faqId={currentAvatarVideo.faqId}
+                       avatarVideoCache={avatarVideoCacheRef.current}
+                       isMaximized={isMaximized}
                      />
                    </div>
                  ) : videoFlow && videoFlow.videos && videoFlow.videos[currentVideoIndex] ? (
@@ -1400,7 +1401,7 @@ const FloatingQudemoWidget = ({
                      controls={false}
                      playing={isPlaying}
                      startTime={currentTimestamp}
-                    style={{ width: '100%', height: '100%' }}
+                    style={{ width: '100%', height: '100%', objectFit: isMaximized ? 'contain' : 'cover' }}
                     onReady={() => {
                       if (isExpanded) {
                         setIsPlaying(true);
@@ -1410,6 +1411,7 @@ const FloatingQudemoWidget = ({
                        setIsPlaying(true);
                      }}
                      iframeRef={loomIframeRef}
+                     isMaximized={isMaximized}
                    />
                  ) : null}
                 
