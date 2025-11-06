@@ -22,7 +22,21 @@ const InfiniteBadges = ({ right = false }) => {
 
   return (
     <div className="flex flex-col gap-10">
-      <div className="carousel-container max-w-5xl mx-auto w-full overflow-x-hidden">
+      <div className="carousel-container max-w-5xl mx-auto w-full overflow-x-hidden relative">
+        {/* Left fade overlay */}
+        <div
+          className="absolute left-0 top-0 bottom-0 w-32 z-10 pointer-events-none"
+          style={{
+            background: "linear-gradient(90deg, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0.8) 40%, transparent 100%)",
+          }}
+        />
+        {/* Right fade overlay */}
+        <div
+          className="absolute right-0 top-0 bottom-0 w-32 z-10 pointer-events-none"
+          style={{
+            background: "linear-gradient(-90deg, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0.8) 40%, transparent 100%)",
+          }}
+        />
         {/* Scrolling container with opacity mask */}
         <div className="carousel-group">
           {logos.map((logo, index) => (
@@ -34,7 +48,21 @@ const InfiniteBadges = ({ right = false }) => {
           ))}
         </div>
       </div>
-      <div className="carousel-container max-w-5xl mx-auto w-full overflow-x-hidden">
+      <div className="carousel-container max-w-5xl mx-auto w-full overflow-x-hidden relative">
+        {/* Left fade overlay */}
+        <div
+          className="absolute left-0 top-0 bottom-0 w-32 z-10 pointer-events-none"
+          style={{
+            background: "linear-gradient(90deg, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0.8) 40%, transparent 100%)",
+          }}
+        />
+        {/* Right fade overlay */}
+        <div
+          className="absolute right-0 top-0 bottom-0 w-32 z-10 pointer-events-none"
+          style={{
+            background: "linear-gradient(-90deg, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0.8) 40%, transparent 100%)",
+          }}
+        />
         {/* Scrolling container with opacity mask */}
         <div className="carousel-group-right">
           {logos.map((logo, index) => (
