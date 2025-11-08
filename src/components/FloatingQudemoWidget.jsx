@@ -39,6 +39,7 @@ const FloatingQudemoWidget = ({
   const [videoRefreshKey, setVideoRefreshKey] = useState(0);
   const [currentAvatarVideo, setCurrentAvatarVideo] = useState(null); // State for avatar video
   const [introVideoPreview, setIntroVideoPreview] = useState(null); // State for intro video preview URL
+  const [isLoadingPreview, setIsLoadingPreview] = useState(true); // Loading state for preview
   const videoPlayerRef = useRef(null);
   const previewVideoRef = useRef(null);
   const chatMessagesRef = useRef(null);
@@ -48,6 +49,48 @@ const FloatingQudemoWidget = ({
   const loomIframeRef = useRef(null);
   const hasLoadedDataRef = useRef(false); // Track if we've already loaded data
   const hasShownIntroRef = useRef(false); // Track if intro video has been shown
+  
+  // User data collection states
+  const [collectionPhase, setCollectionPhase] = useState(null); // 'name', 'email', 'company', or null
+  const collectionPhaseRef = useRef(null); // Ref to track phase without re-renders
+  const collectionHasStartedRef = useRef(false); // CRITICAL: Track if collection has EVER started
+  
+  // Debug: Log when collectionPhase changes and update ref
+  useEffect(() => {
+    console.log('🔄 Collection phase changed to:', collectionPhase);
+    collectionPhaseRef.current = collectionPhase; // Always keep ref in sync
+  }, [collectionPhase]);
+  const [collectedUserData, setCollectedUserData] = useState({
+    name: null,
+    email: null,
+    company: null
+  });
+  const [collectionSettings, setCollectionSettings] = useState({
+    enabled: false,
+    collectName: false,
+    collectEmail: false,
+    collectCompany: false
+  });
+  const [collectionVideos, setCollectionVideos] = useState({
+    name: null,
+    email: null,
+    company: null,
+    complete: null
+  });
+  const [isCollectionComplete, setIsCollectionComplete] = useState(false);
+  
+  // Generate a unique session ID for each widget instance (each visitor)
+  const [sessionId] = useState(() => {
+    // Always generate a fresh UUID - don't reuse from sessionStorage
+    // This ensures each visitor gets their own unique session
+    const id = crypto.randomUUID();
+    console.log('🆔 Generated new session ID for this visitor:', id);
+    return id;
+  });
+  
+  // Track session start time for calculating time spent
+  const sessionStartTime = useRef(Date.now());
+  
   const introPreviewRef = useRef(null); // Ref for intro video preview element
   
   // Universal Demo share token
@@ -156,6 +199,7 @@ const FloatingQudemoWidget = ({
       // Fetch intro video directly
       const fetchDirectIntroVideo = async () => {
         try {
+          setIsLoadingPreview(true);
           const response = await fetch(
             getVideoApiUrl(`/ask/${encodeURIComponent(companyName)}/${qudemoId}`),
             {
@@ -171,6 +215,8 @@ const FloatingQudemoWidget = ({
           }
         } catch (error) {
           console.error('❌ Error fetching intro video preview (from props):', error);
+        } finally {
+          setIsLoadingPreview(false);
         }
       };
       fetchDirectIntroVideo();
@@ -510,6 +556,17 @@ const FloatingQudemoWidget = ({
             videos: qudemo.videos?.length || 0,
             knowledge_sources: qudemo.knowledge_sources?.length || 0
           });
+          
+          // Extract user data collection settings
+          if (qudemo.collect_user_info) {
+            console.log('👤 User data collection enabled for this QuDemo');
+            setCollectionSettings({
+              enabled: qudemo.collect_user_info || false,
+              collectName: qudemo.collect_name || false,
+              collectEmail: qudemo.collect_email || false,
+              collectCompany: qudemo.collect_company || false
+            });
+          }
         }
       } catch (qudemoError) {
         console.error('❌ Widget: Failed to load qudemo:', qudemoError);
@@ -591,6 +648,39 @@ const FloatingQudemoWidget = ({
       console.log('📌 Final questions to display (max 10):', questionsToSet);
       setSuggestedQuestions(questionsToSet);
       console.log('✅ Suggested questions state updated with', questionsToSet.length, 'questions');
+      
+      // Identify collection videos from FAQs (if collection is enabled)
+      if (loadedQudemo && loadedQudemo.id && loadedQudemo.company_name && loadedQudemo.collect_user_info) {
+        try {
+          console.log('👤 Identifying user collection videos from FAQs...');
+          const faqsUrl = getVideoApiUrl(`/faqs/${encodeURIComponent(loadedQudemo.company_name)}/${loadedQudemo.id}`);
+          const faqsResponse = await fetch(faqsUrl);
+          const faqsData = await faqsResponse.json();
+          
+          if (faqsData && faqsData.faqs) {
+            const nameVideo = faqsData.faqs.find(f => f.question === 'NAME_REQUEST');
+            const emailVideo = faqsData.faqs.find(f => f.question === 'EMAIL_REQUEST');
+            const companyVideo = faqsData.faqs.find(f => f.question === 'COMPANY_REQUEST');
+            const completeVideo = faqsData.faqs.find(f => f.question === 'COLLECTION_COMPLETE');
+            
+            setCollectionVideos({
+              name: nameVideo,
+              email: emailVideo,
+              company: companyVideo,
+              complete: completeVideo
+            });
+            
+            console.log('✅ Collection videos identified:', {
+              name: !!nameVideo,
+              email: !!emailVideo,
+              company: !!companyVideo,
+              complete: !!completeVideo
+            });
+          }
+        } catch (faqError) {
+          console.error('❌ Error loading collection videos:', faqError);
+        }
+      }
       
       // Proactively cache ALL videos in background
       preloadAllVideos();
@@ -709,6 +799,19 @@ const FloatingQudemoWidget = ({
     const userQuestion = messageText || inputMessage.trim();
     if (!userQuestion || isTyping) return;
     
+    // INTERCEPT: If collection phase is active, capture this as user data
+    if (collectionPhase) {
+      console.log(`✅ CAPTURED ${collectionPhase} via chat:`, userQuestion);
+      
+      // Add user message to chat
+      setChatMessages(prev => [...prev, { type: 'user', text: userQuestion }]);
+      setInputMessage('');
+      
+      // Store the collected data
+      handleUserDataSubmit(collectionPhase, userQuestion);
+      return; // Don't send to /ask endpoint
+    }
+    
     // Add user message
     setChatMessages(prev => [...prev, { type: 'user', text: userQuestion }]);
     setInputMessage('');
@@ -742,6 +845,9 @@ const FloatingQudemoWidget = ({
             answer: data.answer,
             faqId: 'faq_fallback_sales'
           });
+          
+          // Submit interaction to backend
+          submitInteraction(userQuestion, data.answer, 'faq_fallback_sales');
           
           setIsPlaying(false);
           setShowBookingPrompt(true);
@@ -855,6 +961,9 @@ const FloatingQudemoWidget = ({
           
           console.log('✅ Avatar video state set, pausing regular video');
           
+          // Submit interaction to backend
+          submitInteraction(userQuestion, data.answer, data.faq_id);
+          
           // Pause any playing video
           setIsPlaying(false);
           setIsTyping(false);
@@ -962,11 +1071,20 @@ const FloatingQudemoWidget = ({
             }, 100);
           }
         }
+        
+        // Submit interaction for video-based answers
+        if (data && data.answer) {
+          submitInteraction(userQuestion, data.answer, data.faq_id || null);
+        }
       } else {
+        const noAnswerText = "I couldn't find a relevant answer. You can ask me about Qudemo, pricing, security, or other features!";
         setChatMessages(prev => [...prev, { 
           type: 'bot', 
-          text: "I couldn't find a relevant answer. You can ask me about Qudemo, pricing, security, or other features!"
+          text: noAnswerText
         }]);
+        
+        // Submit interaction for no-answer case
+        submitInteraction(userQuestion, noAnswerText, null);
       }
       
       setIsTyping(false);
@@ -979,6 +1097,377 @@ const FloatingQudemoWidget = ({
         setIsTyping(false);
       }, 300);
     }
+  };
+
+  // Submit visitor interaction to backend
+  const submitInteraction = async (question, answer, faqId) => {
+    if (!qudemoData || !qudemoData.id) {
+      console.log('⚠️ Cannot submit interaction - no qudemoData');
+      return;
+    }
+    
+    // Simple rule: If we have user's name OR email, save the interaction
+    const hasUserData = collectedUserData.name || collectedUserData.email;
+    
+    // If collection is enabled but user hasn't provided data yet, skip
+    if (!hasUserData && collectionSettings.enabled) {
+      console.log('⚠️ Skipping interaction - user data collection enabled but not completed yet');
+      return;
+    }
+    
+    // Calculate time spent (in seconds)
+    const timeSpentSeconds = Math.floor((Date.now() - sessionStartTime.current) / 1000);
+    
+    // Determine if this is anonymous or identified
+    const isAnonymous = !collectionSettings.enabled;
+    
+    console.log('💾 Saving interaction to database...', {
+      mode: isAnonymous ? 'ANONYMOUS' : 'IDENTIFIED',
+      collection_enabled: collectionSettings.enabled,
+      question,
+      visitor_name: collectedUserData.name || null,
+      visitor_email: collectedUserData.email || null,
+      time_spent: timeSpentSeconds
+    });
+    
+    try {
+      const pythonApiUrl = getVideoApiUrl('');
+      const response = await fetch(`${pythonApiUrl}/visitor-interaction`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          qudemo_id: qudemoData.id,
+          session_id: sessionId,
+          visitor_name: collectedUserData.name,
+          visitor_email: collectedUserData.email,
+          visitor_company: collectedUserData.company,
+          question,
+          answer,
+          faq_id: faqId,
+          source: 'widget',
+          time_spent: timeSpentSeconds
+        })
+      });
+      
+      if (response.ok) {
+        console.log('✅ Interaction saved to database successfully');
+      } else {
+        console.error('❌ Failed to save interaction:', response.status);
+      }
+    } catch (error) {
+      console.error('❌ Error submitting interaction:', error);
+    }
+  };
+
+  // Submit initial user profile data when collection completes
+  const submitUserProfile = async (userData) => {
+    if (!qudemoData || !qudemoData.id) {
+      console.error('❌ Cannot submit user profile - missing qudemoData or id');
+      return;
+    }
+    
+    console.log('💾 Submitting user profile to database...');
+    console.log('   QuDemo ID:', qudemoData.id);
+    console.log('   Session ID:', sessionId);
+    console.log('   Name:', userData.name);
+    console.log('   Email:', userData.email);
+    console.log('   Company:', userData.company);
+    
+    try {
+      const pythonApiUrl = getVideoApiUrl('');
+      console.log('   API URL:', `${pythonApiUrl}/visitor-interaction`);
+      
+      const payload = {
+        qudemo_id: qudemoData.id,
+        session_id: sessionId,
+        visitor_name: userData.name,
+        visitor_email: userData.email,
+        visitor_company: userData.company,
+        question: '👤 User profile created',
+        answer: 'Welcome! Feel free to ask me any questions.',
+        faq_id: 'faq_user_collection_complete',
+        source: 'widget'
+      };
+      
+      console.log('   Payload:', payload);
+      
+      const response = await fetch(`${pythonApiUrl}/visitor-interaction`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      
+      const responseData = await response.json();
+      console.log('   Response:', responseData);
+      
+      if (response.ok) {
+        console.log('✅ User profile saved to database successfully');
+        console.log('   Interaction ID:', responseData.interaction_id);
+      } else {
+        console.error('❌ Failed to save user profile:', response.statusText);
+        console.error('   Error details:', responseData);
+      }
+    } catch (error) {
+      console.error('❌ Error submitting user profile:', error);
+    }
+  };
+
+  // Handle user data form submission
+  const handleUserDataSubmit = (field, value) => {
+    console.log(`✅ USER DATA SUBMITTED!`);
+    console.log(`   Field: ${field}`);
+    console.log(`   Value: ${value}`);
+    console.log(`   Current collectionPhase: ${collectionPhase}`);
+    console.log(`   Collected data so far:`, collectedUserData);
+    
+    // Build complete user data with the new value
+    const updatedUserData = { ...collectedUserData, [field]: value };
+    
+    // Store the data
+    setCollectedUserData(updatedUserData);
+    
+    // Check if this is the last field - if so, save to database
+    const isLastField = 
+      (field === 'company') || 
+      (field === 'email' && !collectionSettings.collectCompany) ||
+      (field === 'name' && !collectionSettings.collectEmail && !collectionSettings.collectCompany);
+    
+    if (isLastField) {
+      console.log('🎯 This is the last collection field - saving to database');
+      // Wait a bit for state to update, then submit to database
+      setTimeout(() => {
+        submitUserProfile(updatedUserData);
+      }, 500);
+    }
+    
+    // Move to next phase
+    proceedToNextCollectionPhase();
+  };
+
+  // Handle user data form skip
+  const handleUserDataSkip = () => {
+    console.log('⏭️ User skipped data collection');
+    proceedToNextCollectionPhase();
+  };
+
+  // Proceed to next phase of collection  
+  const proceedToNextCollectionPhase = () => {
+    console.log('╔═══════════════════════════════════════════════════╗');
+    console.log('║ proceedToNextCollectionPhase CALLED               ║');
+    console.log('╚═══════════════════════════════════════════════════╝');
+    console.log('   Current phase (state):', collectionPhase);
+    console.log('   Current phase (ref):', collectionPhaseRef.current);
+    console.log('   Collected data:', collectedUserData);
+    console.log('   Settings:', { 
+      collectEmail: collectionSettings.collectEmail, 
+      collectCompany: collectionSettings.collectCompany 
+    });
+    
+    // CRITICAL GUARD: Prevent duplicate execution (React Strict Mode causes double calls)
+    if (collectionPhaseRef.current === null) {
+      console.log('⚠️⚠️⚠️ DUPLICATE CALL DETECTED - REF ALREADY NULL ⚠️⚠️⚠️');
+      console.log('   This function was already executed, skipping duplicate');
+      console.log('   EXITING to prevent restart');
+      console.log('╚═══════════════════════════════════════════════════╝');
+      return;
+    }
+    
+    // Use functional updates to avoid stale state
+    setCollectionPhase(currentPhase => {
+      console.log('   Phase transition from:', currentPhase);
+      console.log('   Phase from ref:', collectionPhaseRef.current);
+      
+      // Update ref immediately
+      let nextPhase = null;
+      
+      // Determine what comes next based on CURRENT phase
+      if (currentPhase === 'name') {
+        // Coming from NAME - check if EMAIL is next
+        if (collectionSettings.collectEmail && collectionVideos.email) {
+          console.log('   ➡️ NAME → EMAIL');
+          nextPhase = 'email';
+          collectionPhaseRef.current = 'email'; // Update ref immediately!
+          setTimeout(() => {
+            console.log('   🎬 Setting EMAIL video');
+            setCurrentAvatarVideo({
+              videoUrl: collectionVideos.email.video_url,
+              answer: collectionVideos.email.answer,
+              faqId: collectionVideos.email.id
+            });
+          }, 200);
+          return nextPhase;
+        } else if (collectionSettings.collectCompany && collectionVideos.company) {
+          console.log('   ➡️ NAME → COMPANY (skipped email)');
+          nextPhase = 'company';
+          collectionPhaseRef.current = 'company'; // Update ref immediately!
+          setTimeout(() => {
+            console.log('   🎬 Setting COMPANY video');
+            setCurrentAvatarVideo({
+              videoUrl: collectionVideos.company.video_url,
+              answer: collectionVideos.company.answer,
+              faqId: collectionVideos.company.id
+            });
+          }, 200);
+          return nextPhase;
+        }
+      } else if (currentPhase === 'email') {
+        // Coming from EMAIL - check if COMPANY is next
+        if (collectionSettings.collectCompany && collectionVideos.company) {
+          console.log('   ➡️ EMAIL → COMPANY');
+          nextPhase = 'company';
+          collectionPhaseRef.current = 'company'; // Update ref immediately!
+          setTimeout(() => {
+            console.log('   🎬 Setting COMPANY video');
+            setCurrentAvatarVideo({
+              videoUrl: collectionVideos.company.video_url,
+              answer: collectionVideos.company.answer,
+              faqId: collectionVideos.company.id
+            });
+          }, 200);
+          return nextPhase;
+        }
+      } else if (currentPhase === 'company') {
+        // Coming from COMPANY - go to completion
+        console.log('   ➡️ COMPANY → COMPLETION');
+      }
+      
+      // If we got here, no more fields to collect - go to completion
+      if (collectionVideos.complete) {
+        console.log('   ➡️ Going to COMPLETION video');
+        collectionPhaseRef.current = null; // Clear ref immediately!
+        
+        // Mark collection as complete IMMEDIATELY - don't wait for video to end
+        // This allows users to ask questions while completion video is playing
+        console.log('   ✅ Marking collection as COMPLETE (before video ends)');
+        setIsCollectionComplete(true);
+        
+        setTimeout(() => {
+          console.log('   🎬 Setting COMPLETION video');
+          setCurrentAvatarVideo({
+            videoUrl: collectionVideos.complete.video_url,
+            answer: collectionVideos.complete.answer,
+            faqId: collectionVideos.complete.id
+          });
+        }, 200);
+        return null; // Clear phase
+      } else {
+        console.log('   ✅ Collection complete (no completion video)');
+        collectionPhaseRef.current = null; // Clear ref immediately!
+        setIsCollectionComplete(true);
+        return null;
+      }
+    });
+    
+    console.log('╚═══════════════════════════════════════════════════╝');
+  };
+
+  // Handle avatar video end - triggers collection flow
+  const handleAvatarVideoEnd = (faqId) => {
+    console.log('═══════════════════════════════════════════════════');
+    console.log('🎬 handleAvatarVideoEnd CALLED');
+    console.log('   Video that ended:', faqId);
+    console.log('   Current collection phase (state):', collectionPhase);
+    console.log('   Current collection phase (ref):', collectionPhaseRef.current);
+    console.log('   Collection complete?:', isCollectionComplete);
+    console.log('   Collection settings:', collectionSettings);
+    console.log('═══════════════════════════════════════════════════');
+    
+    // CRITICAL GUARD: Use REF to check phase (more reliable than state)
+    const currentPhase = collectionPhaseRef.current;
+    
+    if (currentPhase === 'name' || currentPhase === 'email' || currentPhase === 'company') {
+      console.log('🛑🛑🛑 GUARD TRIGGERED 🛑🛑🛑');
+      console.log('   Already collecting data for:', currentPhase);
+      console.log('   Form is visible, waiting for user to submit');
+      console.log('   Video that ended:', faqId);
+      console.log('   ⚠️ IGNORING this video end event');
+      console.log('   EXITING handleAvatarVideoEnd immediately');
+      console.log('═══════════════════════════════════════════════════');
+      return; // ABSOLUTELY DO NOT PROCEED
+    }
+    
+    // Additional guard: Check if this is a collection video
+    if (faqId === 'faq_user_name_request' || 
+        faqId === 'faq_user_email_request' || 
+        faqId === 'faq_user_company_request') {
+      console.log('⚠️ Collection video ended but phase is:', currentPhase);
+      console.log('   This should not happen - phase should be active');
+      console.log('   EXITING as safety measure');
+      console.log('═══════════════════════════════════════════════════');
+      return;
+    }
+    
+    // If completion video ended, mark collection as complete
+    if (faqId === 'faq_user_collection_complete') {
+      console.log('🎯 Completion video ended - setting isCollectionComplete to TRUE');
+      setIsCollectionComplete(true);
+      console.log('✅ User data collection flow complete');
+      console.log('   Future questions will now be saved to database');
+      return;
+    }
+    
+    // CRITICAL: If intro video ended but collection has EVER been started, ignore it!
+    // This prevents late intro video endings from restarting the flow
+    // Using REF not state because state updates are async and unreliable here
+    if (faqId === 'faq_intro' && collectionHasStartedRef.current) {
+      console.log('⚠️⚠️⚠️ IGNORING LATE INTRO VIDEO END ⚠️⚠️⚠️');
+      console.log('   Collection has already started (ref confirms)');
+      console.log('   collectionHasStartedRef:', collectionHasStartedRef.current);
+      console.log('   Current phase:', currentPhase);
+      console.log('   This is likely a stale video element');
+      console.log('   EXITING to prevent restart');
+      console.log('═══════════════════════════════════════════════════');
+      return;
+    }
+    
+    // Only start collection if intro ended AND collection has never started
+    if (faqId === 'faq_intro' && collectionSettings.enabled && !collectionHasStartedRef.current) {
+      console.log('🎯 INTRO ENDED - Starting collection flow');
+      console.log('   Setting collectionHasStartedRef to TRUE');
+      collectionHasStartedRef.current = true; // Mark that collection has started
+      
+      // Start collection sequence
+      if (collectionSettings.collectName && collectionVideos.name) {
+        console.log('   → Starting with NAME collection');
+        collectionPhaseRef.current = 'name'; // Set ref first!
+        setCollectionPhase('name');
+        setCurrentAvatarVideo({
+          videoUrl: collectionVideos.name.video_url,
+          answer: collectionVideos.name.answer,
+          faqId: collectionVideos.name.id
+        });
+      } else if (collectionSettings.collectEmail && collectionVideos.email) {
+        console.log('   → Starting with EMAIL collection');
+        collectionPhaseRef.current = 'email'; // Set ref first!
+        setCollectionPhase('email');
+        setCurrentAvatarVideo({
+          videoUrl: collectionVideos.email.video_url,
+          answer: collectionVideos.email.answer,
+          faqId: collectionVideos.email.id
+        });
+      } else if (collectionSettings.collectCompany && collectionVideos.company) {
+        console.log('   → Starting with COMPANY collection');
+        collectionPhaseRef.current = 'company'; // Set ref first!
+        setCollectionPhase('company');
+        setCurrentAvatarVideo({
+          videoUrl: collectionVideos.company.video_url,
+          answer: collectionVideos.company.answer,
+          faqId: collectionVideos.company.id
+        });
+      } else if (collectionVideos.complete) {
+        console.log('   → No collection needed, playing completion');
+        setCurrentAvatarVideo({
+          videoUrl: collectionVideos.complete.video_url,
+          answer: collectionVideos.complete.answer,
+          faqId: collectionVideos.complete.id
+        });
+      }
+      console.log('═══════════════════════════════════════════════════');
+      return;
+    }
+    
+    console.log('ℹ️ No action taken in handleAvatarVideoEnd');
+    console.log('═══════════════════════════════════════════════════');
   };
 
   const loadIntroVideo = async () => {
@@ -1034,9 +1523,11 @@ const FloatingQudemoWidget = ({
   const fetchIntroVideoPreview = async () => {
     try {
       console.log('🎬 Fetching intro video for collapsed preview...');
+      setIsLoadingPreview(true);
       
       if (!qudemoData || !qudemoData.id) {
         console.log('❌ No QuDemo data available for preview');
+        setIsLoadingPreview(false);
         return;
       }
       
@@ -1044,6 +1535,7 @@ const FloatingQudemoWidget = ({
       
       if (!companyName) {
         console.log('❌ No company name available for preview');
+        setIsLoadingPreview(false);
         return;
       }
       
@@ -1069,6 +1561,8 @@ const FloatingQudemoWidget = ({
       }
     } catch (error) {
       console.error('❌ Error fetching intro video preview:', error);
+    } finally {
+      setIsLoadingPreview(false);
     }
   };
 
@@ -1315,7 +1809,11 @@ const FloatingQudemoWidget = ({
         >
           {/* Circular video preview with pulse animation */}
           <div className="relative w-20 h-20 md:w-36 md:h-36 rounded-full overflow-hidden shadow-2xl border-4 border-white hover:border-blue-500 transition-all duration-300">
-            {introVideoPreview ? (
+            {isLoadingPreview && !introVideoPreview ? (
+              <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-white"></div>
+              </div>
+            ) : introVideoPreview ? (
               <video 
                 ref={introPreviewRef}
                 src={introVideoPreview.replace(/ /g, '%20')}
@@ -1348,13 +1846,6 @@ const FloatingQudemoWidget = ({
                 <ChatBubbleLeftRightIcon className="w-16 h-16 text-white" />
               </div>
             )}
-            
-            {/* Play icon overlay */}
-            <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center group-hover:bg-opacity-50 transition-all">
-              <svg className="w-8 h-8 md:w-16 md:h-16 text-white" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
-              </svg>
-            </div>
 
             {/* Pulse ring animation */}
             <div className="absolute inset-0 rounded-full border-4 border-blue-500 animate-ping opacity-75"></div>
@@ -1461,6 +1952,7 @@ const FloatingQudemoWidget = ({
                        faqId={currentAvatarVideo.faqId}
                        avatarVideoCache={avatarVideoCacheRef.current}
                        isMaximized={isMaximized}
+                       onVideoEnd={handleAvatarVideoEnd}
                      />
                    </div>
                  ) : videoFlow && videoFlow.videos && videoFlow.videos[currentVideoIndex] ? (
@@ -1530,15 +2022,21 @@ const FloatingQudemoWidget = ({
                        value={inputMessage} 
                        onChange={handleInputChange} 
                        onKeyDown={handleKeyPress} 
-                       placeholder={isListening ? '🎙️ Listening...' : 'Type your message...'} 
+                       placeholder={
+                         collectionPhase && collectionPhase !== 'complete' 
+                           ? '👆 Please use the form above' 
+                           : isListening ? '🎙️ Listening...' : 'Type your message...'
+                       } 
                        rows="1" 
-                       className={`flex-1 px-3 py-2 bg-transparent border-0 text-sm resize-none overflow-hidden min-h-[2.5rem] max-h-[5rem] focus:outline-none placeholder:text-gray-400 text-gray-900`}
+                       disabled={collectionPhase && collectionPhase !== 'complete'}
+                       className={`flex-1 px-3 py-2 bg-transparent border-0 text-sm resize-none overflow-hidden min-h-[2.5rem] max-h-[5rem] focus:outline-none placeholder:text-gray-400 text-gray-900 ${collectionPhase && collectionPhase !== 'complete' ? 'opacity-50 cursor-not-allowed' : ''}`}
                      />
                      
                      {/* Voice input button */}
                      <button 
-                       onClick={handleVoiceInput} 
-                       className={`min-w-[2.5rem] h-10 flex items-center justify-center rounded-xl text-white transition-all duration-200 shadow-md ${isListening ? 'bg-gradient-to-br from-green-500 to-emerald-600 animate-pulse ring-2 ring-green-300' : 'bg-gradient-to-br from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700'}`}
+                       onClick={handleVoiceInput}
+                       disabled={collectionPhase && collectionPhase !== 'complete'}
+                       className={`min-w-[2.5rem] h-10 flex items-center justify-center rounded-xl text-white transition-all duration-200 shadow-md ${collectionPhase && collectionPhase !== 'complete' ? 'opacity-50 cursor-not-allowed bg-gray-400' : isListening ? 'bg-gradient-to-br from-green-500 to-emerald-600 animate-pulse ring-2 ring-green-300' : 'bg-gradient-to-br from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700'}`}
                        title={isListening ? "Stop recording" : "Voice input"}
                      >
                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
@@ -1550,7 +2048,7 @@ const FloatingQudemoWidget = ({
                      {/* Send button */}
                      <button 
                        onClick={() => handleSendMessage()} 
-                       disabled={!inputMessage.trim() || isTyping} 
+                       disabled={!inputMessage.trim() || isTyping || (collectionPhase && collectionPhase !== 'complete')} 
                        className="relative min-w-[2.5rem] h-10 flex items-center justify-center bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed group overflow-hidden"
                        title="Send message"
                      >
@@ -1780,9 +2278,14 @@ const FloatingQudemoWidget = ({
                         value={inputMessage} 
                         onChange={handleInputChange} 
                         onKeyDown={handleKeyPress} 
-                        placeholder={isListening ? '🎙️ Listening...' : 'Type your message...'} 
-                        rows="1" 
-                        className={`w-full px-4 py-3 pr-12 bg-white/80 backdrop-blur-sm border-2 ${isListening ? 'border-green-400 shadow-green-100' : 'border-gray-200 focus:border-blue-400'} rounded-2xl text-sm resize-none overflow-hidden min-h-[2.75rem] max-h-[7.5rem] focus:outline-none focus:ring-2 focus:ring-blue-100 shadow-sm placeholder:text-gray-400 transition-all duration-200 text-left`}
+                        placeholder={
+                          collectionPhase && collectionPhase !== 'complete' 
+                            ? '👆 Please use the form above' 
+                            : isListening ? '🎙️ Listening...' : 'Type your message...'
+                        } 
+                        rows="1"
+                        disabled={collectionPhase && collectionPhase !== 'complete'}
+                        className={`w-full px-4 py-3 pr-12 bg-white/80 backdrop-blur-sm border-2 ${isListening ? 'border-green-400 shadow-green-100' : 'border-gray-200 focus:border-blue-400'} rounded-2xl text-sm resize-none overflow-hidden min-h-[2.75rem] max-h-[7.5rem] focus:outline-none focus:ring-2 focus:ring-blue-100 shadow-sm placeholder:text-gray-400 transition-all duration-200 text-left ${collectionPhase && collectionPhase !== 'complete' ? 'opacity-50 cursor-not-allowed' : ''}`}
                       />
                        {/* Character/typing indicator */}
                        {inputMessage && (
@@ -1794,8 +2297,9 @@ const FloatingQudemoWidget = ({
                      
                      {/* Voice input button - Modern glassmorphism */}
                      <button 
-                       onClick={handleVoiceInput} 
-                       className={`min-w-[2.75rem] h-11 flex items-center justify-center rounded-2xl text-white transition-all duration-200 shadow-lg ${isListening ? 'bg-gradient-to-br from-green-500 to-emerald-600 animate-pulse ring-4 ring-green-200' : 'bg-gradient-to-br from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 hover:shadow-xl hover:-translate-y-0.5'}`}
+                       onClick={handleVoiceInput}
+                       disabled={collectionPhase && collectionPhase !== 'complete'}
+                       className={`min-w-[2.75rem] h-11 flex items-center justify-center rounded-2xl text-white transition-all duration-200 shadow-lg ${collectionPhase && collectionPhase !== 'complete' ? 'opacity-50 cursor-not-allowed bg-gray-400' : isListening ? 'bg-gradient-to-br from-green-500 to-emerald-600 animate-pulse ring-4 ring-green-200' : 'bg-gradient-to-br from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 hover:shadow-xl hover:-translate-y-0.5'}`}
                        title={isListening ? "Stop recording" : "Voice input"}
                      >
                        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
@@ -1807,7 +2311,7 @@ const FloatingQudemoWidget = ({
                      {/* Send button - Professional Blue gradient */}
                      <button 
                        onClick={() => handleSendMessage()} 
-                       disabled={!inputMessage.trim() || isTyping} 
+                       disabled={!inputMessage.trim() || isTyping || (collectionPhase && collectionPhase !== 'complete')} 
                        className="relative min-w-[2.75rem] h-11 flex items-center justify-center bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-2xl hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 group overflow-hidden"
                        title="Send message"
                      >
@@ -1889,8 +2393,91 @@ const FloatingQudemoWidget = ({
            )}
          </div>
       )}
-    </div>
-    </>
+   </div>
+
+   {/* User Data Collection Form Overlay */}
+   {collectionPhase && collectionPhase !== 'complete' && isExpanded && (
+     <div 
+       className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[10000] p-4"
+       onClick={(e) => {
+         // Prevent closing by clicking outside
+         e.stopPropagation();
+         console.log('🚫 Clicked outside form - prevented closing');
+       }}
+     >
+       <div 
+         className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 transform animate-fadeIn"
+         onClick={(e) => e.stopPropagation()}
+       >
+         <div className="text-center mb-6">
+           <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+             <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+             </svg>
+           </div>
+           <h3 className="text-xl font-bold text-gray-900 mb-2">
+             {collectionPhase === 'name' && "What's your name?"}
+             {collectionPhase === 'email' && "What's your email?"}
+             {collectionPhase === 'company' && "Which company are you with?"}
+           </h3>
+           <p className="text-sm text-gray-600">
+             {collectionPhase === 'name' && "Help us personalize your experience"}
+             {collectionPhase === 'email' && "We'll send you helpful resources"}
+             {collectionPhase === 'company' && "Let us know where you're from"}
+           </p>
+         </div>
+
+         <div className="mb-6">
+           <input
+             type={collectionPhase === 'email' ? 'email' : 'text'}
+             value={inputMessage}
+             onChange={(e) => setInputMessage(e.target.value)}
+             onKeyPress={(e) => {
+               if (e.key === 'Enter' && inputMessage.trim()) {
+                 handleUserDataSubmit(collectionPhase, inputMessage.trim());
+                 setInputMessage('');
+               }
+             }}
+             placeholder={
+               collectionPhase === 'name' ? 'Enter your name...' :
+               collectionPhase === 'email' ? 'Enter your email...' :
+               'Enter your company name...'
+             }
+             className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-gray-900"
+             autoFocus
+           />
+         </div>
+
+         <div className="flex gap-3">
+           <button
+             onClick={() => {
+               handleUserDataSubmit(collectionPhase, inputMessage.trim());
+               setInputMessage('');
+             }}
+             disabled={!inputMessage.trim()}
+             className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+           >
+             Continue
+           </button>
+           
+           <button
+             onClick={handleUserDataSkip}
+             className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-3 px-6 rounded-xl transition-all duration-200"
+           >
+             Skip
+           </button>
+         </div>
+
+         <p className="text-xs text-gray-500 text-center mt-4">
+           <svg className="w-3 h-3 inline-block mr-1" fill="currentColor" viewBox="0 0 20 20">
+             <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+           </svg>
+           Your information is secure and will not be shared
+         </p>
+       </div>
+     </div>
+   )}
+   </>
   );
 };
 

@@ -6,7 +6,7 @@ import React, { useState, useRef, useEffect } from "react";
  * Displays HeyGen-generated AI avatar videos for document-based answers.
  * Provides a modern video player with playback controls.
  */
-const AvatarVideoPlayer = ({ avatarVideoUrl, answer, isVisible, faqId, avatarVideoCache, isMaximized = false }) => {
+const AvatarVideoPlayer = ({ avatarVideoUrl, answer, isVisible, faqId, avatarVideoCache, isMaximized = false, onVideoEnd }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -49,6 +49,10 @@ const AvatarVideoPlayer = ({ avatarVideoUrl, answer, isVisible, faqId, avatarVid
 
     const handleEnded = () => {
       setIsPlaying(false);
+      // Call onVideoEnd callback if provided
+      if (onVideoEnd && typeof onVideoEnd === 'function') {
+        onVideoEnd(faqId);
+      }
     };
 
     const handleError = (e) => {
@@ -80,17 +84,6 @@ const AvatarVideoPlayer = ({ avatarVideoUrl, answer, isVisible, faqId, avatarVid
       video.removeEventListener("error", handleError);
     };
   }, [isVisible]);
-
-  const togglePlayPause = () => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    if (video.paused) {
-      video.play();
-    } else {
-      video.pause();
-    }
-  };
 
   const handleSeek = (e) => {
     const video = videoRef.current;
@@ -142,23 +135,6 @@ const AvatarVideoPlayer = ({ avatarVideoUrl, answer, isVisible, faqId, avatarVid
           Your browser does not support the video tag.
         </video>
 
-        {/* Play/Pause Overlay - Center */}
-        {!isLoading && !isPlaying && (
-          <div
-            className="absolute inset-0 flex items-center justify-center cursor-pointer"
-            onClick={togglePlayPause}
-          >
-            <div className="w-20 h-20 bg-white bg-opacity-90 rounded-full flex items-center justify-center shadow-xl hover:scale-110 transition-transform">
-              <svg
-                className="w-10 h-10 text-blue-600 ml-1"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
-              </svg>
-            </div>
-          </div>
-        )}
 
         {/* Minimal Overlay Controls - Bottom */}
         {!isLoading && (
@@ -176,44 +152,10 @@ const AvatarVideoPlayer = ({ avatarVideoUrl, answer, isVisible, faqId, avatarVid
 
             {/* Controls Row */}
             <div className="flex items-center justify-between text-white text-sm">
-              <div className="flex items-center space-x-2">
-                {/* Play/Pause Button */}
-                <button
-                  onClick={togglePlayPause}
-                  className="hover:scale-110 transition-transform"
-                >
-                  {isPlaying ? (
-                    <svg
-                      className="w-6 h-6"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  ) : (
-                    <svg
-                      className="w-6 h-6"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  )}
-                </button>
-
-                {/* Time */}
-                <span className="font-mono text-xs">
-                  {formatTime(currentTime)} / {formatTime(duration)}
-                </span>
-              </div>
+              {/* Time */}
+              <span className="font-mono text-xs">
+                {formatTime(currentTime)} / {formatTime(duration)}
+              </span>
 
               {/* AI Badge */}
               <span className="text-xs opacity-70">AI Avatar</span>

@@ -19,6 +19,7 @@ import CreateQuDemo from "./components/CreateQuDemo";
 import Qudemos from "./components/Qudemos";
 import ViewQudemo from "./components/EditQudemo";
 import BuyerInteractions from "./components/BuyerInteractions";
+import ViewInteractions from "./components/ViewInteractions";
 import InsightsAnalytics from "./components/InsightsAnalytics";
 import ProfilePage from "./components/ProfilePage";
 import SettingsPage from "./components/SettingsPage";
@@ -367,6 +368,20 @@ function App() {
                       <CompanyCheck>
                         <DashboardLayout>
                           <ViewQudemo />
+                        </DashboardLayout>
+                      </CompanyCheck>
+                    </ProtectedRoute>
+                  </CompanyProvider>
+                }
+              />
+              <Route
+                path="/qudemos/:qudemoId/interactions"
+                element={
+                  <CompanyProvider>
+                    <ProtectedRoute>
+                      <CompanyCheck>
+                        <DashboardLayout>
+                          <ViewInteractions />
                         </DashboardLayout>
                       </CompanyCheck>
                     </ProtectedRoute>

@@ -78,15 +78,25 @@ const Qudemos = () => {
   const { showSuccess, showError, showInfo } = useNotification();
   // Filter interactions based on search term and exclude users with no engagement
   const filteredInteractions = qudemoInteractions.filter((interaction) => {
-    // First, exclude users who haven't asked questions and don't have time spent
+    // First, exclude users who haven't asked REAL questions (profile creation doesn't count)
     const hasQuestions =
-      interaction.question_count && interaction.question_count > 0;
-    const hasTimeSpent =
-      interaction.total_duration && interaction.total_duration > 0;
-    // Only show users who have asked questions OR spent time
-    if (!hasQuestions && !hasTimeSpent) {
+      interaction.questions && interaction.questions.length > 0;
+    
+    // Debug logging
+    if (qudemoInteractions.length > 0 && window.DEBUG_INTERACTIONS) {
+      console.log('🔍 Filtering interaction:', {
+        name: interaction.client_name,
+        hasQuestions,
+        questionCount: interaction.questions?.length || 0
+      });
+    }
+    
+    // Only show users who have asked real questions
+    // (Profile creation entries are already filtered out in the data transformation)
+    if (!hasQuestions) {
       return false;
     }
+    
     // Then apply search filter
     if (!searchTerm) return true;
     const searchLower = searchTerm.toLowerCase();
@@ -99,6 +109,15 @@ const Qudemos = () => {
       company.includes(searchLower)
     );
   });
+  
+  // Debug log filtered results
+  if (qudemoInteractions.length > 0 && window.DEBUG_INTERACTIONS) {
+    console.log('📊 Filtering results:', {
+      total: qudemoInteractions.length,
+      filtered: filteredInteractions.length,
+      searchTerm
+    });
+  }
   // Format duration helper
   const formatDuration = (seconds) => {
     if (!seconds) return "0:00";
@@ -154,7 +173,17 @@ const Qudemos = () => {
   };
   // Handle view details for interactions
   const handleViewDetails = (interaction) => {
+    console.log('🔍 View Details clicked!', interaction);
+    console.log('   Questions count:', interaction.questions?.length || 0);
+    console.log('   Time spent (total_duration):', interaction.total_duration || 0);
+    console.log('   Time spent formatted:', formatDuration(interaction.total_duration || 0));
+    console.log('   Questions with time_spent:', interaction.questions?.map(q => ({
+      question: q.question?.substring(0, 50),
+      time_spent: q.time_spent || 0
+    })));
+    
     if (interaction.questions && interaction.questions.length > 0) {
+      console.log('✅ Interaction has questions, proceeding...');
     }
     // Reset AI summary state
     setAiInsightSummary("");
@@ -163,6 +192,7 @@ const Qudemos = () => {
     setActiveTab("overview");
     setShowDetailsModal(true);
     setShowInteractionsListModal(false);
+    console.log('✅ Modal states updated - Details should show with total_duration:', interaction.total_duration);
     // Generate AI insight summary
     generateAiInsightSummary(interaction);
   };
@@ -202,8 +232,10 @@ const Qudemos = () => {
   const fetchQudemoInteractions = async (qudemoId) => {
     try {
       const token = localStorage.getItem("accessToken");
+      console.log('🔍 Fetching visitor interactions for QuDemo:', qudemoId);
+      
       const response = await fetch(
-        getNodeApiUrl(`/api/analytics/qudemo-interactions/${qudemoId}`),
+        getNodeApiUrl(`/api/qudemos/visitor-interactions/${qudemoId}`),
         {
           method: "GET",
           headers: {
@@ -212,13 +244,60 @@ const Qudemos = () => {
           },
         },
       );
-      if (response.ok) {
-        const data = await response.json();
-        return data.data || [];
+      
+      const data = await response.json();
+      console.log('📊 Visitor interactions response:', data);
+      
+      if (response.ok && data.success) {
+        console.log('✅ Successfully fetched visitor data');
+        console.log('   Total sessions:', data.data.total_sessions);
+        console.log('   Total interactions:', data.data.total_interactions);
+        
+        // Transform the sessions data to match the old modal format
+        const sessions = data.data.sessions || [];
+        console.log('📦 Raw sessions from backend:', sessions);
+        console.log('📦 Number of sessions:', sessions.length);
+        
+        const transformedData = sessions.map(session => {
+          // Filter out "User profile created" entries - they're not real questions
+          const realQuestions = session.interactions.filter(interaction => 
+            !interaction.question.includes('👤 User profile created')
+          );
+          
+          // Calculate total duration: take the maximum time_spent from all interactions in this session
+          // (since time_spent is cumulative from session start)
+          const maxTimeSpent = session.interactions.reduce((max, interaction) => {
+            const timeSpent = interaction.time_spent || 0;
+            return timeSpent > max ? timeSpent : max;
+          }, 0);
+          
+          console.log(`⏱️ Session ${session.visitor_name}:`, {
+            total_interactions: session.interactions.length,
+            real_questions: realQuestions.length,
+            time_spent_values: session.interactions.map(i => i.time_spent || 0),
+            max_time_spent: maxTimeSpent
+          });
+          
+          return {
+            client_name: session.visitor_name,
+            client_email: session.visitor_email,
+            client_company: session.visitor_company,
+            questions: realQuestions, // Only real questions, not profile creation entries
+            total_duration: maxTimeSpent, // Maximum time_spent from interactions
+            session_id: session.session_id,
+            first_interaction_at: session.first_interaction_at
+          };
+        });
+        
+        console.log('✅ Transformed data:', transformedData);
+        console.log('✅ Number of transformed records:', transformedData.length);
+        return transformedData;
       } else {
+        console.error('❌ Failed to fetch visitor data:', data);
         return [];
       }
     } catch (error) {
+      console.error('❌ Error fetching visitor interactions:', error);
       return [];
     }
   };
@@ -3022,7 +3101,7 @@ const Qudemos = () => {
                             </p>
                             <p className="text-lg font-semibold text-graydark text-left">
                               {formatDuration(
-                                selectedInteraction.total_duration,
+                                selectedInteraction.total_duration || 0,
                               )}
                             </p>
                           </div>
@@ -3053,7 +3132,7 @@ const Qudemos = () => {
                               Questions Asked
                             </p>
                             <p className="text-lg font-semibold text-graydark text-left">
-                              {selectedInteraction.question_count || 0}
+                              {selectedInteraction.questions?.length || 0}
                             </p>
                           </div>
                           <div className="flex-shrink-0">
@@ -3343,22 +3422,23 @@ const Qudemos = () => {
                                   dateDisplay =
                                     sessionDate.toLocaleDateString();
                                 }
-                                // Calculate session duration
-                                const sessionDuration = Math.floor(
-                                  (new Date(session.endTime) -
-                                    new Date(session.startTime)) /
-                                    1000,
-                                );
-                                const questionTime =
-                                  session.questions.length * 45;
-                                const demoTime =
-                                  sessionIndex === 0
-                                    ? Math.min(sessionDuration * 0.3, 300)
-                                    : 0;
-                                const totalSessionTime = Math.max(
-                                  sessionDuration + questionTime + demoTime,
-                                  session.questions.length * 30,
-                                );
+                                // Calculate session duration using actual time_spent from database
+                                // Get the maximum time_spent value from all questions in this session
+                                // (since time_spent is cumulative from session start)
+                                const maxTimeSpent = session.questions.reduce((max, q) => {
+                                  const timeSpent = q.time_spent || 0;
+                                  return timeSpent > max ? timeSpent : max;
+                                }, 0);
+                                
+                                // Use actual time_spent if available, otherwise fall back to estimate
+                                const totalSessionTime = maxTimeSpent > 0 
+                                  ? maxTimeSpent 
+                                  : Math.max(
+                                      Math.floor(
+                                        (new Date(session.endTime) - new Date(session.startTime)) / 1000
+                                      ),
+                                      session.questions.length * 30
+                                    );
                                 return (
                                   <tr
                                     key={sessionIndex}
@@ -3662,7 +3742,7 @@ const Qudemos = () => {
                             <td className="pl-6 pr-6 py-4 whitespace-nowrap text-sm font-medium text-right">
                               <button
                                 onClick={() => handleViewDetails(interaction)}
-                                className="inline-flex items-center px-3 py-1 border border-strokedark/20 text-sm font-medium rounded text-bodydark bg-white hover:bg-whiter focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                className="inline-flex items-center px-3 py-1 border border-strokedark/20 text-sm font-medium rounded text-black bg-white hover:bg-whiter focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                               >
                                 View Details
                               </button>

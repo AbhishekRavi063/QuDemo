@@ -23,14 +23,14 @@ const WidgetGeneratorModal = ({ isOpen, onClose, widgetData, qudemo }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", "Inter", sans-serif' }}>
         {/* Header */}
-        <div className="sticky top-0 bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-6 rounded-t-2xl">
+        <div className="bg-gradient-to-r from-blue-500 via-blue-600 to-blue-500 text-white px-6 py-5">
           <div className="flex justify-between items-start">
-            <div>
-              <h2 className="text-2xl font-bold mb-2">Widget Generator</h2>
-              <p className="text-purple-100">
+            <div className="text-left">
+              <h2 className="text-2xl font-semibold mb-1 tracking-tight">Widget Generator</h2>
+              <p className="text-blue-100 font-light text-sm">
                 Embed {qudemo?.name} on your website
               </p>
             </div>
@@ -44,25 +44,42 @@ const WidgetGeneratorModal = ({ isOpen, onClose, widgetData, qudemo }) => {
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-6">
+        <div className="p-6 space-y-5 overflow-y-auto max-h-[calc(90vh-5rem)]">
+          {/* Actions - Moved to Top */}
+          <div className="flex space-x-3">
+            <button
+              onClick={handleOpenPlayground}
+              className="flex-1 flex items-center justify-center space-x-2 px-6 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all font-medium shadow-md hover:shadow-lg"
+            >
+              <EyeIcon className="w-5 h-5" />
+              <span>Preview in Playground</span>
+            </button>
+            <button
+              onClick={onClose}
+              className="px-6 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+            >
+              Done
+            </button>
+          </div>
+
           {/* Tab Selection */}
-          <div className="flex space-x-2 bg-gray-100 rounded-lg p-1">
+          <div className="flex space-x-2 bg-gray-50 rounded-xl p-1 border border-gray-200">
             <button
               onClick={() => setSelectedTab("script")}
-              className={`flex-1 h-10 px-4 rounded-md font-medium transition-colors ${
+              className={`flex-1 py-2.5 px-4 rounded-lg font-medium transition-all text-sm ${
                 selectedTab === "script"
-                  ? "bg-white text-purple-600 shadow-sm"
-                  : "text-gray-600 hover:text-gray-900"
+                  ? "bg-white text-blue-600 shadow-md"
+                  : "text-gray-600 hover:text-gray-900 hover:bg-white/50"
               }`}
             >
               Script Tag (Recommended)
             </button>
             <button
               onClick={() => setSelectedTab("iframe")}
-              className={`flex-1 h-10 px-4 rounded-md font-medium transition-colors ${
+              className={`flex-1 py-2.5 px-4 rounded-lg font-medium transition-all text-sm ${
                 selectedTab === "iframe"
-                  ? "bg-white text-purple-600 shadow-sm"
-                  : "text-gray-600 hover:text-gray-900"
+                  ? "bg-white text-blue-600 shadow-md"
+                  : "text-gray-600 hover:text-gray-900 hover:bg-white/50"
               }`}
             >
               iFrame (Alternative)
@@ -72,7 +89,7 @@ const WidgetGeneratorModal = ({ isOpen, onClose, widgetData, qudemo }) => {
           {/* Code Display */}
           <div className="space-y-3">
             <div className="flex justify-between items-center">
-              <h3 className="font-semibold text-gray-900">
+              <h3 className="font-semibold text-gray-900 text-left tracking-tight">
                 {selectedTab === "script" ? "Embed Code" : "iFrame Code"}
               </h3>
               <button
@@ -83,16 +100,16 @@ const WidgetGeneratorModal = ({ isOpen, onClose, widgetData, qudemo }) => {
                       : widgetData.iframeCode,
                   )
                 }
-                className="flex items-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-md hover:shadow-lg text-sm font-medium"
               >
                 {copied ? (
                   <>
-                    <CheckIcon className="w-5 h-5" />
+                    <CheckIcon className="w-4 h-4" />
                     <span>Copied!</span>
                   </>
                 ) : (
                   <>
-                    <ClipboardDocumentIcon className="w-5 h-5" />
+                    <ClipboardDocumentIcon className="w-4 h-4" />
                     <span>Copy Code</span>
                   </>
                 )}
@@ -100,8 +117,8 @@ const WidgetGeneratorModal = ({ isOpen, onClose, widgetData, qudemo }) => {
             </div>
 
             <div className="relative">
-              <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto text-sm">
-                <code>
+              <pre className="bg-gradient-to-br from-gray-900 to-gray-800 text-gray-100 p-4 rounded-xl overflow-x-auto text-xs leading-relaxed max-h-[200px] overflow-y-auto border border-gray-700 shadow-inner">
+                <code className="text-left">
                   {selectedTab === "script"
                     ? widgetData.widgetCode
                     : widgetData.iframeCode}
@@ -111,92 +128,44 @@ const WidgetGeneratorModal = ({ isOpen, onClose, widgetData, qudemo }) => {
           </div>
 
           {/* Instructions */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
-            <h4 className="font-semibold text-blue-900 flex items-center space-x-2">
+          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 space-y-3 shadow-sm">
+            <h4 className="font-semibold text-blue-900 flex items-center space-x-2 text-left tracking-tight">
               <span>📝</span>
               <span>How to Use</span>
             </h4>
-            <ol className="list-decimal list-inside space-y-2 text-sm text-blue-800">
-              <li>Copy the code above using the "Copy Code" button</li>
-              <li>
+            <ol className="list-decimal list-inside space-y-2.5 text-sm text-blue-800 text-left font-light leading-relaxed">
+              <li className="text-left pl-1">Copy the code above using the "Copy Code" button</li>
+              <li className="text-left pl-1">
                 Paste it into your website's HTML, just before the closing{" "}
-                <code>&lt;/body&gt;</code> tag
+                <code className="bg-blue-100 px-1.5 py-0.5 rounded text-xs font-mono">&lt;/body&gt;</code> tag
               </li>
-              <li>
+              <li className="text-left pl-1">
                 The widget will appear at the bottom-right corner of your page
               </li>
-              <li>Users can click it to interact with your QuDemo</li>
+              <li className="text-left pl-1">Users can click it to interact with your QuDemo</li>
             </ol>
           </div>
 
           {/* Widget Config Info */}
-          <div className="grid grid-cols-3 gap-4">
-            <div className="bg-gray-50 rounded-lg p-3 text-center">
-              <div className="text-xs text-gray-600 mb-1">Theme</div>
-              <div className="font-semibold text-gray-900 capitalize">
+          <div className="grid grid-cols-3 gap-3">
+            <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-4 text-center border border-gray-200 shadow-sm">
+              <div className="text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">Theme</div>
+              <div className="font-semibold text-gray-900 capitalize text-sm">
                 {widgetData.widgetConfig.theme}
               </div>
             </div>
-            <div className="bg-gray-50 rounded-lg p-3 text-center">
-              <div className="text-xs text-gray-600 mb-1">Position</div>
-              <div className="font-semibold text-gray-900 capitalize">
+            <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-4 text-center border border-gray-200 shadow-sm">
+              <div className="text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">Position</div>
+              <div className="font-semibold text-gray-900 capitalize text-sm">
                 {widgetData.widgetConfig.position}
               </div>
             </div>
-            <div className="bg-gray-50 rounded-lg p-3 text-center">
-              <div className="text-xs text-gray-600 mb-1">Size</div>
-              <div className="font-semibold text-gray-900 capitalize">
+            <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-4 text-center border border-gray-200 shadow-sm">
+              <div className="text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wide">Size</div>
+              <div className="font-semibold text-gray-900 capitalize text-sm">
                 {widgetData.widgetConfig.size}
               </div>
             </div>
-          </div>
-
-          {/* Actions */}
-          <div className="flex space-x-3">
-            <button
-              onClick={handleOpenPlayground}
-              className="flex-1 flex items-center justify-center space-x-2 px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium"
-            >
-              <EyeIcon className="w-5 h-5" />
-              <span>Preview in Playground</span>
-            </button>
-            <button
-              onClick={onClose}
-              className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
-            >
-              Done
-            </button>
-          </div>
-
-          {/* Features */}
-          <div className="border-t pt-4 space-y-2">
-            <h4 className="font-semibold text-gray-900">Widget Features</h4>
-            <ul className="grid grid-cols-2 gap-2 text-sm text-gray-600">
-              <li className="flex items-center space-x-2">
-                <span className="text-green-500">✓</span>
-                <span>Auto-plays avatar videos</span>
-              </li>
-              <li className="flex items-center space-x-2">
-                <span className="text-green-500">✓</span>
-                <span>Mobile responsive</span>
-              </li>
-              <li className="flex items-center space-x-2">
-                <span className="text-green-500">✓</span>
-                <span>Real-time Q&A</span>
-              </li>
-              <li className="flex items-center space-x-2">
-                <span className="text-green-500">✓</span>
-                <span>Video playback</span>
-              </li>
-              <li className="flex items-center space-x-2">
-                <span className="text-green-500">✓</span>
-                <span>Document search</span>
-              </li>
-              <li className="flex items-center space-x-2">
-                <span className="text-green-500">✓</span>
-                <span>Suggested questions</span>
-              </li>
-            </ul>
           </div>
         </div>
       </div>

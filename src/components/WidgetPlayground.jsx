@@ -48,14 +48,14 @@ const WidgetPlayground = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-purple-600"></div>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", "Inter", "Roboto", "Helvetica Neue", Arial, sans-serif' }}>
       {/* Header */}
       <div className="bg-white border-b border-gray-200 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -74,10 +74,10 @@ const WidgetPlayground = () => {
                 </>
               )}
               <div>
-                <h1 className="text-xl font-bold text-gray-900">
+                <h1 className="text-xl font-semibold text-gray-900 tracking-tight">
                   Widget Playground
                 </h1>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-gray-600 font-light">
                   Test your widget before embedding
                 </p>
               </div>
@@ -92,68 +92,6 @@ const WidgetPlayground = () => {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Instructions Card */}
-        <div className="bg-white rounded-xl border p-6 mb-6">
-          <div className="flex items-start space-x-4">
-            <div className="bg-purple-100 rounded-full p-3">
-              <svg
-                className="w-6 h-6 text-purple-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </div>
-            <div className="flex-1">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                How to Use This Playground
-              </h3>
-              <ul className="space-y-2 text-gray-600">
-                <li className="flex items-start space-x-2">
-                  <span className="text-purple-600 font-semibold mt-0.5">
-                    1.
-                  </span>
-                  <span>
-                    Look at the bottom-right corner - you'll see the widget
-                    floating there
-                  </span>
-                </li>
-                <li className="flex items-start space-x-2">
-                  <span className="text-purple-600 font-semibold mt-0.5">
-                    2.
-                  </span>
-                  <span>
-                    Click on the widget to open it and interact with your QuDemo
-                  </span>
-                </li>
-                <li className="flex items-start space-x-2">
-                  <span className="text-purple-600 font-semibold mt-0.5">
-                    3.
-                  </span>
-                  <span>
-                    This is exactly how it will appear on your website
-                  </span>
-                </li>
-                <li className="flex items-start space-x-2">
-                  <span className="text-purple-600 font-semibold mt-0.5">
-                    4.
-                  </span>
-                  <span>
-                    Once satisfied, copy the embed code and paste it on your
-                    website
-                  </span>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
-
         {/* Demo Website Mockup */}
         <div className="bg-white rounded-xl border overflow-hidden">
           {/* Mockup Browser Bar */}
@@ -188,13 +126,13 @@ const WidgetPlayground = () => {
             <div className="max-w-4xl mx-auto">
               {/* Hero Section */}
               <div className="text-center mb-12">
-                <div className="inline-block bg-purple-100 text-purple-800 px-4 py-2 rounded-full text-sm font-medium mb-4">
+                <div className="inline-block bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-sm font-medium mb-4">
                   Demo Website
                 </div>
-                <h1 className="text-4xl font-bold text-gray-900 mb-4">
+                <h1 className="text-5xl font-bold text-gray-900 mb-4 tracking-tight leading-tight">
                   Welcome to Our Website
                 </h1>
-                <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+                <p className="text-xl text-gray-600 max-w-2xl mx-auto font-light leading-relaxed">
                   This is a preview of how your widget will appear on your
                   actual website. Notice the QuDemo widget in the bottom-right
                   corner!
@@ -221,25 +159,25 @@ const WidgetPlayground = () => {
                     className="bg-white rounded-xl p-6 border border border-gray-200"
                   >
                     <div className="text-4xl mb-3">{feature.icon}</div>
-                    <h3 className="font-semibold text-gray-900 mb-2">
+                    <h3 className="font-semibold text-gray-900 mb-2 tracking-tight">
                       {feature.title}
                     </h3>
-                    <p className="text-gray-600 text-sm">{feature.desc}</p>
+                    <p className="text-gray-600 text-sm font-light">{feature.desc}</p>
                   </div>
                 ))}
               </div>
 
               {/* CTA Section */}
-              <div className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl p-8 text-center text-white">
-                <h2 className="text-2xl font-bold mb-3">
+              <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-4 text-center text-white">
+                <h2 className="text-lg font-semibold mb-2 tracking-tight">
                   Ready to Get Started?
                 </h2>
-                <p className="text-purple-100 mb-6">
+                <p className="text-blue-100 text-sm mb-3 font-light">
                   Click the widget below to see it in action
                 </p>
-                <div className="flex items-center justify-center space-x-2 text-purple-100">
+                <div className="flex items-center justify-center space-x-2 text-blue-100 text-sm font-light">
                   <svg
-                    className="w-5 h-5 animate-bounce"
+                    className="w-4 h-4 animate-bounce"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -253,7 +191,7 @@ const WidgetPlayground = () => {
                   </svg>
                   <span>Look at the bottom-right corner</span>
                   <svg
-                    className="w-5 h-5 animate-bounce"
+                    className="w-4 h-4 animate-bounce"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -271,66 +209,6 @@ const WidgetPlayground = () => {
           </div>
         </div>
 
-        {/* Features Info */}
-        <div className="mt-6 grid md:grid-cols-2 gap-6">
-          <div className="bg-white rounded-xl p-6 border">
-            <h3 className="font-semibold text-gray-900 mb-3 flex items-center space-x-2">
-              <span className="text-2xl">✨</span>
-              <span>Widget Features</span>
-            </h3>
-            <ul className="space-y-2 text-sm text-gray-600">
-              <li className="flex items-center space-x-2">
-                <span className="text-green-500">✓</span>
-                <span>Auto-plays AI avatar videos</span>
-              </li>
-              <li className="flex items-center space-x-2">
-                <span className="text-green-500">✓</span>
-                <span>Real-time Q&A with your QuDemo</span>
-              </li>
-              <li className="flex items-center space-x-2">
-                <span className="text-green-500">✓</span>
-                <span>Video playback with timestamps</span>
-              </li>
-              <li className="flex items-center space-x-2">
-                <span className="text-green-500">✓</span>
-                <span>Document search</span>
-              </li>
-              <li className="flex items-center space-x-2">
-                <span className="text-green-500">✓</span>
-                <span>Mobile responsive design</span>
-              </li>
-            </ul>
-          </div>
-
-          <div className="bg-white rounded-xl p-6 border">
-            <h3 className="font-semibold text-gray-900 mb-3 flex items-center space-x-2">
-              <span className="text-2xl">🎨</span>
-              <span>Customization Options</span>
-            </h3>
-            <ul className="space-y-2 text-sm text-gray-600">
-              <li className="flex items-center space-x-2">
-                <span className="text-purple-500">•</span>
-                <span>Choose light or dark theme</span>
-              </li>
-              <li className="flex items-center space-x-2">
-                <span className="text-purple-500">•</span>
-                <span>Position (bottom-right, bottom-left)</span>
-              </li>
-              <li className="flex items-center space-x-2">
-                <span className="text-purple-500">•</span>
-                <span>Size options (small, medium, large)</span>
-              </li>
-              <li className="flex items-center space-x-2">
-                <span className="text-purple-500">•</span>
-                <span>Matches your website design</span>
-              </li>
-              <li className="flex items-center space-x-2">
-                <span className="text-purple-500">•</span>
-                <span>Easy to install & update</span>
-              </li>
-            </ul>
-          </div>
-        </div>
       </div>
 
       {/* Floating Widget - The actual widget being tested */}

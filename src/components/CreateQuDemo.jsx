@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { useCompany } from "../context/CompanyContext";
 import { getNodeApiUrl, getApiUrl } from "../config/api";
@@ -32,25 +32,15 @@ const CreateQuDemo = () => {
   // Voice selection states
   const [voices, setVoices] = useState([]);
   const [selectedVoice, setSelectedVoice] = useState(null);
-  const [isPlayingVoice, setIsPlayingVoice] = useState(null);
   const [visibleVoiceRows, setVisibleVoiceRows] = useState(3); // Show 3 rows initially (9 voices)
-  const speechSynthesisRef = React.useRef(null);
-  // Load browser voices for Web Speech API
-  useEffect(() => {
-    // Load voices immediately
-    window.speechSynthesis.getVoices();
-    
-    // Also load on voiceschanged event (for browsers that load async)
-    const loadVoices = () => {
-      window.speechSynthesis.getVoices();
-    };
-    
-    window.speechSynthesis.addEventListener('voiceschanged', loadVoices);
-    
-    return () => {
-      window.speechSynthesis.removeEventListener('voiceschanged', loadVoices);
-    };
-  }, []);
+  const [isPlayingVoice, setIsPlayingVoice] = useState(null);
+  const speechSynthesisRef = useRef(null);
+
+  // User data collection states
+  const [collectUserInfo, setCollectUserInfo] = useState(false);
+  const [collectName, setCollectName] = useState(true);
+  const [collectEmail, setCollectEmail] = useState(true);
+  const [collectCompany, setCollectCompany] = useState(false);
 
   // Fetch available voices from backend
   useEffect(() => {
@@ -132,7 +122,7 @@ const CreateQuDemo = () => {
     setPresenterPhotoPreview(null);
   };
 
-  // Handle voice preview (play audio)
+  // Handle voice preview with distinct characteristics
   const handleVoicePreview = (voiceId) => {
     // If already playing this voice, stop it
     if (isPlayingVoice === voiceId) {
@@ -156,23 +146,39 @@ const CreateQuDemo = () => {
     // Create speech synthesis utterance
     const utterance = new SpeechSynthesisUtterance(voice.sample_text);
     
-    // Configure voice characteristics based on gender
-    const availableVoices = window.speechSynthesis.getVoices();
-    let selectedBrowserVoice;
-    
-    if (voice.gender === "Female") {
-      selectedBrowserVoice = availableVoices.find(v => v.name.includes("Female") || v.name.includes("Samantha") || v.name.includes("Victoria"));
-    } else {
-      selectedBrowserVoice = availableVoices.find(v => v.name.includes("Male") || v.name.includes("Daniel") || v.name.includes("Alex"));
-    }
-    
-    if (selectedBrowserVoice) {
-      utterance.voice = selectedBrowserVoice;
-    }
-    
-    // Set rate and pitch from voice data
+    // Use rate and pitch from backend to make voices sound different
     utterance.rate = voice.rate || 1.0;
     utterance.pitch = voice.pitch || 1.0;
+    
+    // Try to find the best browser voice based on gender
+    const availableVoices = window.speechSynthesis.getVoices();
+    if (availableVoices.length > 0) {
+      let selectedBrowserVoice;
+      
+      if (voice.gender === "Female") {
+        // Try to find different female voices
+        selectedBrowserVoice = availableVoices.find(v => 
+          v.name.includes("Female") || 
+          v.name.includes("Samantha") || 
+          v.name.includes("Victoria") ||
+          v.name.includes("Karen") ||
+          v.name.includes("Moira")
+        );
+      } else {
+        // Try to find different male voices
+        selectedBrowserVoice = availableVoices.find(v => 
+          v.name.includes("Male") || 
+          v.name.includes("Daniel") || 
+          v.name.includes("Alex") ||
+          v.name.includes("Fred") ||
+          v.name.includes("Thomas")
+        );
+      }
+      
+      if (selectedBrowserVoice) {
+        utterance.voice = selectedBrowserVoice;
+      }
+    }
 
     // Handle speech events
     utterance.onstart = () => {
@@ -203,6 +209,7 @@ const CreateQuDemo = () => {
       }
     };
   }, []);
+
 
   // const handleSourceChange = (index, value) => { // Not used
   //   const updated = [...sources];
@@ -557,6 +564,10 @@ const CreateQuDemo = () => {
         calendlyLink: calendlyLink.trim() || null,
         presenterName: presenterName.trim() || null,
         voiceId: selectedVoice || null,
+        collectUserInfo: collectUserInfo,
+        collectName: collectUserInfo ? collectName : false,
+        collectEmail: collectUserInfo ? collectEmail : false,
+        collectCompany: collectUserInfo ? collectCompany : false,
         videos: validVideoUrls.map((url, index) => {
           const validation = validateVideoUrl(url);
           return {
@@ -1146,6 +1157,11 @@ const CreateQuDemo = () => {
                 (AI Avatar Video Feature)
               </span>
             </label>
+            <div className="mb-3 p-2 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-xs text-blue-800 text-left">
+                <strong>Note:</strong> Voice previews are approximate. The actual AI avatar video will use the authentic HeyGen voice for professional quality.
+              </p>
+            </div>
             <p className="text-xs text-gray-500 mb-3 text-left">
               Choose a voice for your AI avatar videos. Click preview to hear the voice.
             </p>
@@ -1191,39 +1207,41 @@ const CreateQuDemo = () => {
                             </span>
                           </div>
                         </div>
+                        
+                        {/* Preview Button */}
                         <button
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleVoicePreview(voice.id);
                           }}
-                          className={`w-full px-3 py-1.5 text-white text-xs rounded-md transition-colors flex items-center justify-center gap-1.5 font-medium ${
+                          className={`w-full px-3 py-2 text-white text-xs rounded-md transition-colors flex items-center justify-center gap-1.5 font-medium ${
                             isPlayingVoice === voice.id
                               ? "bg-red-500 hover:bg-red-600"
                               : "bg-blue-500 hover:bg-blue-600"
                           }`}
-                          title={isPlayingVoice === voice.id ? "Stop preview" : "Play voice preview"}
+                          title={isPlayingVoice === voice.id ? "Stop preview" : "Preview voice (approximate)"}
                         >
                           {isPlayingVoice === voice.id ? (
                             <>
                               <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
                                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h4a1 1 0 001-1V8a1 1 0 00-1-1H8z" clipRule="evenodd" />
                               </svg>
-                              Stop
+                              Stop Preview
                             </>
                           ) : (
                             <>
                               <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
                                 <path d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z" />
                               </svg>
-                              Play
+                              Preview Voice
                             </>
                           )}
                         </button>
                         
                         {/* Audio playing indicator */}
                         {isPlayingVoice === voice.id && (
-                          <div className="mt-3 p-2 bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg text-xs text-left">
+                          <div className="mt-2 p-2 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg text-xs text-left">
                             <div className="flex items-start gap-2">
                               <div className="flex items-center gap-1 mt-0.5">
                                 <span className="w-1 h-3 bg-blue-500 rounded animate-pulse"></span>
@@ -1231,7 +1249,7 @@ const CreateQuDemo = () => {
                                 <span className="w-1 h-3 bg-blue-500 rounded animate-pulse" style={{ animationDelay: '0.4s' }}></span>
                               </div>
                               <div className="flex-1">
-                                <p className="text-blue-900 font-semibold mb-1">🔊 Playing...</p>
+                                <p className="text-blue-900 font-semibold mb-1">🔊 Playing Preview...</p>
                                 <p className="italic text-blue-700 leading-relaxed text-xs">"{voice.sample_text}"</p>
                               </div>
                             </div>
@@ -1248,7 +1266,7 @@ const CreateQuDemo = () => {
                     <button
                       type="button"
                       onClick={() => setVisibleVoiceRows(prev => prev + 3)}
-                      className="px-6 py-2.5 bg-gradient-to-r from-purple-500 to-blue-500 text-white text-sm font-medium rounded-lg hover:from-purple-600 hover:to-blue-600 transition-all shadow-md hover:shadow-lg flex items-center gap-2 mx-auto"
+                      className="px-6 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-sm font-medium rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-md hover:shadow-lg flex items-center gap-2 mx-auto"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -1263,6 +1281,116 @@ const CreateQuDemo = () => {
                 <p className="text-sm text-gray-500">Loading voices...</p>
               </div>
             )}
+          </div>
+
+          {/* User Data Collection Section */}
+          <div className="mt-8 border-t border-gray-200 pt-6">
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-xl border border-blue-200">
+              <div className="flex items-center justify-between mb-4">
+                <div className="text-left">
+                  <h3 className="text-base font-semibold text-gray-900">
+                    Visitor Information Collection
+                  </h3>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Collect visitor details when they interact with your QuDemo
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setCollectUserInfo(!collectUserInfo)}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                    collectUserInfo ? 'bg-blue-600' : 'bg-gray-200'
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      collectUserInfo ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {/* Sub-toggles - Only show when main toggle is ON */}
+              {collectUserInfo && (
+                <div className="mt-4 space-y-3 bg-white p-4 rounded-lg border border-gray-200">
+                  <p className="text-sm font-medium text-gray-700 mb-3 text-left">
+                    Select which fields to collect:
+                  </p>
+
+                  {/* Name Toggle */}
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div className="text-left">
+                      <label className="text-sm font-medium text-gray-900">
+                        Visitor Name
+                      </label>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setCollectName(!collectName)}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                        collectName ? 'bg-blue-600' : 'bg-gray-300'
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          collectName ? 'translate-x-6' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  {/* Email Toggle */}
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div className="text-left">
+                      <label className="text-sm font-medium text-gray-900">
+                        Email Address
+                      </label>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setCollectEmail(!collectEmail)}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                        collectEmail ? 'bg-blue-600' : 'bg-gray-300'
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          collectEmail ? 'translate-x-6' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  {/* Company Toggle */}
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div className="text-left">
+                      <label className="text-sm font-medium text-gray-900">
+                        Company Name
+                      </label>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setCollectCompany(!collectCompany)}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                        collectCompany ? 'bg-blue-600' : 'bg-gray-300'
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          collectCompany ? 'translate-x-6' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <p className="text-xs text-blue-800">
+                      <strong>Note:</strong> All fields are optional for visitors. They can choose to skip and continue with the Q&A.
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Calendly Link Section */}
