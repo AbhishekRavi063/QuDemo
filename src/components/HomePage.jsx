@@ -22,11 +22,12 @@ import TestimonialCard from "./ui/TestimonialCard";
 import PricingCard from "./ui/PricingCard";
 import IntegrationCard from "./ui/IntegrationCard";
 import LightRays from "./ui/LightRays";
+import SimpleLightRays from "./ui/SimpleLightRays";
 import { navigateToCreate } from "../utils/navigation";
 import SpotlightCard from "./ui/SpotlightCard";
 import InfiniteBadges from "./ui/InfiniteBadges";
 import { Edit2, Eye, Pointer, Upload, User2 } from "lucide-react";
-import Orb from "./ui/orb";
+import RadarScanner from "./ui/RadarScanner";
 
 const HomePage = () => {
   const [openFAQ, setOpenFAQ] = useState(null);
@@ -169,8 +170,8 @@ const HomePage = () => {
 
   return (
     <div className="h-full w-full flex flex-col relative bg-black">
-      <div className="fixed top-0 left-0 right-0 w-full opacity-[0.3]">
-        <LightRays />
+      <div className="absolute top-0 left-0 right-0 w-full h-[100vh] bottom-0 opacity-[0.2] z-50">
+        <SimpleLightRays />
       </div>
 
       {/* Radial gradient overlays for depth */}
@@ -219,93 +220,72 @@ const HomePage = () => {
 
       {/* Enhanced Navigation Bar - Outside overflow container */}
       <nav
-        className="flex justify-between items-center px-4 md:px-6 w-full fixed top-0 z-50"
+        className="w-full fixed top-0 z-50"
         style={{
-          background: "rgba(18, 20, 38, 0.6)",
+          background:
+            "linear-gradient(180deg, var(--token-6d7bfc0f-867f-43f5-837b-f61a13bf9490, rgb(0, 0, 0)) -50%, rgba(0, 0, 0, 0) 170.00000000000003%)",
           backdropFilter: "blur(5px)",
         }}
       >
-        <div className="flex items-center">
-          <img
-            src="/Qudemo LP.svg"
-            alt="Qudemo Logo"
-            className="w-32 h-20 cursor-pointer"
-            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          />
-        </div>
+        <div className="flex justify-between items-center max-w-7xl w-full mx-auto p-4  md:px-6">
+          <div className="flex items-center">
+            <img
+              src={`https://framerusercontent.com/images/FbO4dnbdmZd5UO3ULm6CTPenvIo.png?width=470&height=160`}
+              alt="Qudemo Logo"
+              className="cursor-pointer w-auto h-8"
+              height={36}
+              onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+            />
+          </div>
 
-        {/* Navigation Links - Hidden on mobile */}
-        <div className="hidden md:flex items-center gap-8 text-white">
-          <button
-            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-            className="hover:text-blue-400 transition-colors duration-200 font-medium"
-          >
-            Home
-          </button>
-          <button
-            onClick={() => scrollToSection("pricing")}
-            className="hover:text-blue-400 transition-colors duration-200 font-medium"
-          >
-            Pricing
-          </button>
-          <button
-            onClick={() => scrollToSection("testimonials")}
-            className="hover:text-blue-400 transition-colors duration-200 font-medium"
-          >
-            Testimonials
-          </button>
-          <button
-            onClick={() => scrollToSection("faq")}
-            className="hover:text-blue-400 transition-colors duration-200 font-medium"
-          >
-            FAQ
-          </button>
-        </div>
-
-        {/* Auth Buttons */}
-        <div className="flex items-center gap-2 md:gap-6">
-          {isLoggedIn ? (
-            <div className="flex items-center gap-2 md:gap-4">
-              <div
-                onClick={() => navigate("/profile")}
-                className="text-white font-medium px-3 md:px-6 py-2 rounded-[20px] border text-xs md:text-sm hover:shadow-lg transition-all duration-300 cursor-pointer"
-                style={{
-                  background: "rgba(18, 20, 38, 0.6)",
-                  backdropFilter: "blur(16px)",
-                  borderColor: "rgba(138, 165, 255, 0.3)",
-                  boxShadow: "0 4px 24px rgba(41, 52, 255, 0.1)",
-                }}
-              >
-                <span className="hidden sm:inline">{userEmail}</span>
-                <span className="sm:hidden">{userEmail.split("@")[0]}</span>
-              </div>
-              <div
-                onClick={() => navigate("/overview")}
-                className="text-white font-medium px-4 md:px-8 py-2 rounded-[20px] border hover:shadow-2xl transition-all duration-300 cursor-pointer text-sm md:text-base"
-                style={{
-                  background: "rgba(41, 52, 255, 0.9)",
-                  backdropFilter: "blur(16px)",
-                  borderColor: "rgba(138, 165, 255, 0.5)",
-                  boxShadow:
-                    "0 8px 32px rgba(41, 52, 255, 0.4), inset 0 2px 4px rgba(138, 165, 255, 0.5)",
-                }}
-              >
-                <span className="hidden sm:inline">Dashboard</span>
-                <span className="sm:hidden">Dash</span>
-              </div>
-            </div>
-          ) : (
-            <div
-              onClick={() => navigate("/login", { state: { from: "/" } })}
-              className="text-white font-medium px-4 md:px-8 py-2 rounded-[20px] border hover:shadow-lg transition-all duration-300 cursor-pointer text-sm md:text-base"
-              style={{
-                background: "rgba(18, 20, 38, 0.6)",
-                backdropFilter: "blur(16px)",
-                borderColor: "rgba(138, 165, 255, 0.3)",
-                boxShadow: "0 4px 24px rgba(41, 52, 255, 0.1)",
-              }}
+          {/* Navigation Links - Hidden on mobile */}
+          <div className="hidden md:flex items-center gap-8 text-gray-500">
+            <button
+              onClick={() => scrollToSection("pricing")}
+              className="hover:text-blue-400 transition-colors duration-200 font-thin"
             >
-              Login
+              Pricing
+            </button>
+            <button
+              onClick={() => scrollToSection("testimonials")}
+              className="hover:text-blue-400 transition-colors duration-200 font-thin"
+            >
+              Contacts
+            </button>
+          </div>
+
+          {/* Auth Buttons */}
+          {isLoggedIn && (
+            <div className="flex items-center gap-2 md:gap-6">
+              <div className="flex items-center gap-2 md:gap-4">
+                <div
+                  onClick={() => navigate("/profile")}
+                  className="text-white font-medium px-3 md:px-6 py-2 rounded-[20px] border text-xs md:text-sm hover:shadow-lg transition-all duration-300 cursor-pointer"
+                  style={{
+                    background: "rgba(18, 20, 38, 0.6)",
+                    backdropFilter: "blur(16px)",
+                    borderColor: "rgba(138, 165, 255, 0.3)",
+                    boxShadow: "0 4px 24px rgba(41, 52, 255, 0.1)",
+                  }}
+                >
+                  <span className="hidden sm:inline">{userEmail}</span>
+                  <span className="sm:hidden">{userEmail.split("@")[0]}</span>
+                </div>
+                <div
+                  onClick={() => navigate("/overview")}
+                  className="text-white font-medium px-4 md:px-8 py-2 rounded-[20px] border hover:shadow-2xl transition-all duration-300 cursor-pointer text-sm md:text-base"
+                  style={{
+                    background: "rgba(41, 52, 255, 0.9)",
+                    backdropFilter: "blur(16px)",
+                    borderColor: "rgba(138, 165, 255, 0.5)",
+                    boxShadow:
+                      "0 8px 32px rgba(41, 52, 255, 0.4), inset 0 2px 4px rgba(138, 165, 255, 0.5)",
+                  }}
+                >
+                  <span className="hidden sm:inline">Dashboard</span>
+                  <span className="sm:hidden">Dash</span>
+                </div>
+              </div>
             </div>
           )}
         </div>
@@ -317,7 +297,31 @@ const HomePage = () => {
       >
         {/* Hero Section */}
         <FadeInSection delay={0} className="flex flex-col">
-          <div className="flex justify-center items-start mt-60 px-6 h-[60vh] relative">
+          <div
+            className="flex justify-center items-start pt-60 px-6 h-[60vh] relative"
+            style={{
+              background:
+                "radial-gradient(80% 25% at 50% 7.5%,var(--token-c6d9a740-f8af-44c7-ac7a-31b27a79b7f2,#000e47)0%,var(--token-6d7bfc0f-867f-43f5-837b-f61a13bf9490,#000)100%)",
+            }}
+          >
+            <img
+              decoding="auto"
+              width="513"
+              height="272"
+              sizes="100vw"
+              srcset="https://framerusercontent.com/images/eVPQSYBoVqwchmpN78sjyYtovY.svg?scale-down-to=512&amp;width=513&amp;height=272 512w,https://framerusercontent.com/images/eVPQSYBoVqwchmpN78sjyYtovY.svg?width=513&amp;height=272 513w"
+              src="https://framerusercontent.com/images/eVPQSYBoVqwchmpN78sjyYtovY.svg?width=513&amp;height=272"
+              alt="Grid"
+              className="absolute top-0"
+              style={{
+                display: "block",
+                width: "100%",
+                height: "100%",
+                borderRadius: "inherit",
+                objectPosition: "center center",
+                objectFit: "cover",
+              }}
+            />
             {/* Bottom right gradient overlay */}
             <div
               className="absolute inset-0 pointer-events-none z-0"
@@ -334,35 +338,35 @@ const HomePage = () => {
                   <div className="flex -space-x-2">
                     <div className="w-7 h-7 rounded-full overflow-hidden bg-gradient-to-br from-purple-500 to-pink-500">
                       <img
-                        src="https://i.pravatar.cc/150?img=1"
+                        src="https://framerusercontent.com/images/ETgoVdeITLLIYCHTFNeVuZDMyQY.png"
                         alt="User"
                         className="w-full h-full object-cover"
                       />
                     </div>
                     <div className="w-7 h-7 rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-cyan-500">
                       <img
-                        src="https://i.pravatar.cc/150?img=2"
+                        src="https://framerusercontent.com/images/bnJJiW5Vfixlrz7M2pzoeyHBU.png"
                         alt="User"
                         className="w-full h-full object-cover"
                       />
                     </div>
                     <div className="w-7 h-7 rounded-full overflow-hidden bg-gradient-to-br from-green-500 to-emerald-500">
                       <img
-                        src="https://i.pravatar.cc/150?img=3"
+                        src="https://framerusercontent.com/images/rlizSNVuxrrqd6I5hGaSxwqn0Os.png"
                         alt="User"
                         className="w-full h-full object-cover"
                       />
                     </div>
                     <div className="w-7 h-7 rounded-full overflow-hidden bg-gradient-to-br from-orange-500 to-red-500">
                       <img
-                        src="https://i.pravatar.cc/150?img=4"
+                        src="https://framerusercontent.com/images/X0pqhTmlK8gdYqPbljhuLXlyd0I.png"
                         alt="User"
                         className="w-full h-full object-cover"
                       />
                     </div>
                   </div>
                   {/* Join Text */}
-                  <span className="text-gray-400 text-md font-normal">
+                  <span className="text-gray-500 text-md font-normal">
                     Join <span className="text-white font-medium">200+</span>{" "}
                     other loving customers
                   </span>
@@ -384,7 +388,7 @@ const HomePage = () => {
               </h1>
 
               <p
-                className="text-base md:text-lg text-gray-400 my-8 max-w-2xl mx-auto leading-relaxed font-normal"
+                className="text-base md:text-lg text-gray-500 my-8 max-w-2xl mx-auto leading-relaxed font-normal"
                 style={{
                   animation: "fadeInUp 0.8s ease-out 0.4s both",
                   fontWeight: "400",
@@ -450,32 +454,39 @@ const HomePage = () => {
               }}
             />
           </div>
-          <div className="absolute top-0 left-0 right-0 w-full h-full bottom-0 opacity-[0.3]">
-            <LightRays
-              raysOrigin="top-center"
-              lightSpread={20}
-              rayLength={20}
-              pulsating
-              fadeDistance={10}
-            />
-          </div>
           <div
             className="px-6 min-h-[100vh] relative my-auto flex flex-col justify-center overflow-hidden"
             id="benefits"
           >
+            <div className="absolute top-0 left-0 right-0 w-full h-[100vh] bottom-0 opacity-[0.2] z-50">
+              <LightRays
+                lightSpread={200}
+                rayLength={20}
+                raysColor="8aa5ff"
+                rotationSpeed={0.02}
+                fadeDistance={20}
+                numRays={8}
+                raysSpeed={1.0}
+              />
+            </div>
             <div className="max-w-7xl mx-auto text-center flex flex-col">
               <div
                 style={{
                   width: "100%",
                   height: "600px",
                   position: "absolute",
-                  top: 0,
+                  top: "16%",
                   left: 0,
                   right: 0,
-                  opacity: 0.4,
+                  opacity: 0.6,
                 }}
               >
-                <Orb rotateOnHover={true} hue={0} forceHoverState={false} />
+                <RadarScanner
+                  gridColor={[0.3, 0.5, 1.0]}
+                  scanColor={[0, 0, 1.0]}
+                  glowColor={[0, 0.5, 1.0]}
+                  scanSpeed={0.6}
+                />
               </div>
 
               {/* Bottom glowing light effect - centered spreading mountain */}
@@ -501,7 +512,7 @@ const HomePage = () => {
                 Create Qudemo in Minutes
               </h2>
 
-              <p className="text-md text-gray-400 mb-8 max-w-4xl mx-auto">
+              <p className="text-md text-gray-500 mb-8 max-w-4xl mx-auto">
                 Three simple steps to launch your AI video agent
               </p>
 
@@ -635,7 +646,7 @@ const HomePage = () => {
                 Why Choose Us?
               </h2>
 
-              <p className="text-md text-gray-400 mb-8 max-w-4xl mx-auto">
+              <p className="text-md text-gray-500 mb-8 max-w-4xl mx-auto">
                 Transform passive viewers into engaged prospects with
                 intelligent video interactions
               </p>
@@ -731,14 +742,16 @@ const HomePage = () => {
             className="absolute top-0 -translate-y-1/2 left-0 right-0 h-px"
             style={{
               background:
-                "linear-gradient(90deg, transparent 0%, rgba(100, 150, 255, 0.2) 30%, rgba(150, 180, 255, 0.2) 50%, rgba(100, 150, 255, 0.2) 70%, transparent 100%)",
+                "radial-gradient(63.671876482476385% 63.671876482476385% at 50.000000948784894% 50.000000948784894%, var(--token-6da9d50d-e927-4dcf-93ed-bf3b8039528b, rgb(138, 165, 255)) 0%, var(--token-6d7bfc0f-867f-43f5-837b-f61a13bf9490, rgb(0, 0, 0)) 100%)",
+              opacity: 0.14,
             }}
           />
           <div
             className="absolute bottom-0 -translate-y-1/2 left-0 right-0 h-px"
             style={{
               background:
-                "linear-gradient(90deg, transparent 0%, rgba(100, 150, 255, 0.2) 30%, rgba(150, 180, 255, 0.2) 50%, rgba(100, 150, 255, 0.2) 70%, transparent 100%)",
+                "radial-gradient(63.671876482476385% 63.671876482476385% at 50.000000948784894% 50.000000948784894%, var(--token-6da9d50d-e927-4dcf-93ed-bf3b8039528b, rgb(138, 165, 255)) 0%, var(--token-6d7bfc0f-867f-43f5-837b-f61a13bf9490, rgb(0, 0, 0)) 100%)",
+              opacity: 0.14,
             }}
           />
           <div
@@ -780,7 +793,7 @@ const HomePage = () => {
                 Loved by thinkers
               </h2>
 
-              <p className="text-md text-gray-400 mb-8 max-w-4xl mx-auto">
+              <p className="text-md text-gray-500 mb-8 max-w-4xl mx-auto">
                 Real testimonials from people who have transformed their demos
                 with Qudemo
               </p>
@@ -796,35 +809,35 @@ const HomePage = () => {
                 <div className="flex -space-x-2">
                   <div className="w-7 h-7 rounded-full overflow-hidden bg-gradient-to-br from-purple-500 to-pink-500">
                     <img
-                      src="https://i.pravatar.cc/150?img=1"
+                      src="https://framerusercontent.com/images/ETgoVdeITLLIYCHTFNeVuZDMyQY.png"
                       alt="User"
                       className="w-full h-full object-cover"
                     />
                   </div>
                   <div className="w-7 h-7 rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-cyan-500">
                     <img
-                      src="https://i.pravatar.cc/150?img=2"
+                      src="https://framerusercontent.com/images/bnJJiW5Vfixlrz7M2pzoeyHBU.png"
                       alt="User"
                       className="w-full h-full object-cover"
                     />
                   </div>
                   <div className="w-7 h-7 rounded-full overflow-hidden bg-gradient-to-br from-green-500 to-emerald-500">
                     <img
-                      src="https://i.pravatar.cc/150?img=3"
+                      src="https://framerusercontent.com/images/rlizSNVuxrrqd6I5hGaSxwqn0Os.png"
                       alt="User"
                       className="w-full h-full object-cover"
                     />
                   </div>
                   <div className="w-7 h-7 rounded-full overflow-hidden bg-gradient-to-br from-orange-500 to-red-500">
                     <img
-                      src="https://i.pravatar.cc/150?img=4"
+                      src="https://framerusercontent.com/images/X0pqhTmlK8gdYqPbljhuLXlyd0I.png"
                       alt="User"
                       className="w-full h-full object-cover"
                     />
                   </div>
                 </div>
                 {/* Join Text */}
-                <span className="text-gray-400 text-md font-normal">
+                <span className="text-gray-500 text-md font-normal">
                   Join <span className="text-white font-medium">200+</span>{" "}
                   other loving customers
                 </span>
@@ -834,18 +847,29 @@ const HomePage = () => {
         </FadeInSection>
 
         {/* Pricing Section */}
-        <FadeInSection delay={0.1} className="flex flex-col py-20">
+        <FadeInSection delay={0.1} className="flex flex-col py-20 relative">
+          <div className="absolute top-0 left-0 right-0 w-full bottom-0 opacity-[0.2] z-50">
+            <LightRays
+              lightSpread={200}
+              rayLength={20}
+              raysColor="8aa5ff"
+              rotationSpeed={0.02}
+              fadeDistance={20}
+              numRays={8}
+              raysSpeed={1.0}
+            />
+          </div>
           <div
             className="px-6 w-full flex flex-col my-auto justify-center overflow-hidden"
             id="pricing"
           >
-            {/* Bottom glowing light effect - centered spreading mountain */}
             <div
-              className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full h-32"
+              className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/2 h-72 z-1"
               style={{
                 background:
-                  "radial-gradient(ellipse 800px 150px at center bottom, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.08) 25%, rgba(255, 255, 255, 0.03) 50%, transparent 70%)",
-                filter: "blur(40px)",
+                  "radial-gradient(50% 50% at 50% 50%, var(--token-e8bc8706-b247-48f0-95ed-879074c7f908, #121426) 0%, var(--token-6d7bfc0f-867f-43f5-837b-f61a13bf9490, #000) 100%)",
+                borderRadius: "10px",
+                rotate: "-13deg",
               }}
             />
             <div className="max-w-7xl mx-auto w-full text-center">
@@ -862,7 +886,7 @@ const HomePage = () => {
                 Flexible Pricing Plans
               </h2>
 
-              <p className="text-md text-gray-400 mb-8 max-w-4xl mx-auto">
+              <p className="text-md text-gray-500 mb-8 max-w-4xl mx-auto">
                 Choose a plan that fits your business needs and unlock the full
                 potential of our platform
               </p>
@@ -881,7 +905,7 @@ const HomePage = () => {
                     className={`px-8 py-3 font-medium rounded-full transition-all duration-300 text-base relative z-10 ${
                       !isYearly
                         ? "text-white"
-                        : "text-gray-400 hover:text-gray-300"
+                        : "text-gray-500 hover:text-gray-300"
                     }`}
                   >
                     Monthly
@@ -894,7 +918,7 @@ const HomePage = () => {
                     className={`px-8 py-3 font-medium rounded-full transition-all duration-300 text-base relative z-10 ${
                       isYearly
                         ? "text-white"
-                        : "text-gray-400 hover:text-gray-300"
+                        : "text-gray-500 hover:text-gray-300"
                     }`}
                   >
                     Yearly
@@ -966,32 +990,34 @@ const HomePage = () => {
             className="absolute top-0 -translate-y-1/2 left-0 right-0 h-px"
             style={{
               background:
-                "linear-gradient(90deg, transparent 0%, rgba(100, 150, 255, 0.2) 30%, rgba(150, 180, 255, 0.2) 50%, rgba(100, 150, 255, 0.2) 70%, transparent 100%)",
+                "radial-gradient(63.671876482476385% 63.671876482476385% at 50.000000948784894% 50.000000948784894%, var(--token-6da9d50d-e927-4dcf-93ed-bf3b8039528b, rgb(138, 165, 255)) 0%, var(--token-6d7bfc0f-867f-43f5-837b-f61a13bf9490, rgb(0, 0, 0)) 100%)",
+              opacity: 0.14,
             }}
           />
           <div
             className="absolute bottom-0 -translate-y-1/2 left-0 right-0 h-px"
             style={{
               background:
-                "linear-gradient(90deg, transparent 0%, rgba(100, 150, 255, 0.2) 30%, rgba(150, 180, 255, 0.2) 50%, rgba(100, 150, 255, 0.2) 70%, transparent 100%)",
+                "radial-gradient(63.671876482476385% 63.671876482476385% at 50.000000948784894% 50.000000948784894%, var(--token-6da9d50d-e927-4dcf-93ed-bf3b8039528b, rgb(138, 165, 255)) 0%, var(--token-6d7bfc0f-867f-43f5-837b-f61a13bf9490, rgb(0, 0, 0)) 100%)",
+              opacity: 0.14,
             }}
           />
           <div
-            className="px-6 bg-black min-h-[40vh] my-auto flex flex-col justify-center overflow-hidden"
+            className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/2 h-72 z-1"
+            style={{
+              background:
+                "radial-gradient(50% 50% at 50% 50%, var(--token-e8bc8706-b247-48f0-95ed-879074c7f908, #121426) 0%, var(--token-6d7bfc0f-867f-43f5-837b-f61a13bf9490, #000) 100%)",
+              borderRadius: "10px",
+              rotate: "-13deg",
+            }}
+          />
+          <div
+            className="px-6 z-50 bg-transparent min-h-[40vh] my-auto flex flex-col justify-center overflow-hidden"
             style={{
               borderColor: "rgba(138, 165, 255, 0.3)",
               boxShadow: "0 4px 24px rgba(41, 52, 255, 0.1)",
             }}
           >
-            {/* Bottom glowing light effect - centered spreading mountain */}
-            <div
-              className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full h-32"
-              style={{
-                background:
-                  "radial-gradient(ellipse 800px 150px at center bottom, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.08) 25%, rgba(255, 255, 255, 0.03) 50%, transparent 70%)",
-                filter: "blur(40px)",
-              }}
-            />
             <div className="max-w-4xl mx-auto text-center flex flex-col">
               <div className="flex justify-center mb-8">
                 <StarBorder
@@ -1022,7 +1048,7 @@ const HomePage = () => {
                   <p className="text-white text-base font-medium">
                     Luqman Yousaf
                   </p>
-                  <p className="text-gray-400 text-sm">
+                  <p className="text-gray-500 text-sm">
                     Co-founder & ex-Meta Data Scientist
                   </p>
                 </div>
@@ -1032,16 +1058,19 @@ const HomePage = () => {
         </FadeInSection>
 
         {/* Seamless Integrations Section */}
-        <FadeInSection delay={0.1} className="py-20">
-          <div
-            className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full h-32"
-            style={{
-              background:
-                "radial-gradient(ellipse 800px 150px at center bottom, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.08) 25%, rgba(255, 255, 255, 0.03) 50%, transparent 70%)",
-              filter: "blur(40px)",
-            }}
-          />
-          <div className="px-6 relative min-h-[80vh] flex items-center justify-center overflow-hidden">
+        <FadeInSection delay={0.1} className="pt-20 !min-h-[40vh] relative">
+          <div className="absolute top-0 left-0 right-0 w-full bottom-0 opacity-[0.2] z-50">
+            <LightRays
+              lightSpread={200}
+              rayLength={20}
+              raysColor="8aa5ff"
+              rotationSpeed={0.02}
+              fadeDistance={20}
+              numRays={8}
+              raysSpeed={1.0}
+            />
+          </div>
+          <div className="px-6 relative min-h-[40vh] flex items-center justify-center overflow-hidden">
             <div className="max-w-7xl mx-auto text-center relative w-full">
               {/* Badge */}
               <div className="flex justify-center mb-8">
@@ -1053,11 +1082,11 @@ const HomePage = () => {
                 </StarBorder>
               </div>
 
-              <h2 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight">
+              <h2 className="text-3xl md:text-5xl font-medium text-white mb-6 leading-tight">
                 Seamless integrations
               </h2>
 
-              <p className="text-2xl font-light text-gray-400 mb-20 max-w-4xl mx-auto">
+              <p className="text-base font-light text-gray-500 mb-20 max-w-4xl mx-auto">
                 Works with your existing stack — no complex setup required
               </p>
 
@@ -1451,7 +1480,25 @@ const HomePage = () => {
         </FadeInSection>
 
         {/* Comparison Section */}
-        <FadeInSection delay={0.1} className="py-40">
+        <FadeInSection delay={0.1} className="relative">
+          <div
+            className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/2 h-72 relative"
+            style={{
+              background:
+                "radial-gradient(50% 50% at 50% 50%, var(--token-e8bc8706-b247-48f0-95ed-879074c7f908, #121426) 0%, var(--token-6d7bfc0f-867f-43f5-837b-f61a13bf9490, #000) 100%)",
+              zIndex: 1,
+              borderRadius: "10px",
+            }}
+          >
+            <div
+              className="absolute top-1/2 bottom-0 -translate-y-1/2 left-0 right-0 h-px"
+              style={{
+                background:
+                  "radial-gradient(63.671876482476385% 63.671876482476385% at 50.000000948784894% 50.000000948784894%, var(--token-6da9d50d-e927-4dcf-93ed-bf3b8039528b, rgb(138, 165, 255)) 0%, var(--token-6d7bfc0f-867f-43f5-837b-f61a13bf9490, rgb(0, 0, 0)) 100%)",
+                opacity: 0.14,
+              }}
+            />
+          </div>
           <div
             className="px-6 flex flex-col justify-center overflow-hidden"
             id="comparison"
@@ -1459,14 +1506,6 @@ const HomePage = () => {
               background: "rgba(0, 0, 0, 0.7)",
             }}
           >
-            {/* Dark overlay */}
-            <div
-              className="absolute inset-0 -z-10"
-              style={{
-                background:
-                  "linear-gradient(180deg, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.95) 100%)",
-              }}
-            />
             <div className="max-w-7xl mx-auto text-center">
               {/* Badge */}
               <div className="flex justify-center mb-8">
@@ -1478,11 +1517,11 @@ const HomePage = () => {
                 </StarBorder>
               </div>
 
-              <h2 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight">
+              <h2 className="text-3xl md:text-5xl font-medium text-white mb-6 leading-tight">
                 Why Qudemo Stands Out
               </h2>
 
-              <p className="text-2xl font-light md:text-2xl text-gray-400 mb-16 max-w-4xl mx-auto">
+              <p className="text-base font-light md:text-2xl text-gray-500 mb-16 max-w-4xl mx-auto">
                 Unlike generic chatbots or static videos, Qudemo combines the
                 best of both worlds
               </p>
@@ -1637,7 +1676,7 @@ const HomePage = () => {
                   <div className="flex items-center justify-center mb-6 h-24">
                     <div className="flex items-center gap-3">
                       <svg
-                        className="w-10 h-10 text-gray-400"
+                        className="w-10 h-10 text-gray-500"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -1672,7 +1711,7 @@ const HomePage = () => {
                             d="M6 18L18 6M6 6l12 12"
                           />
                         </svg>
-                        <span className="text-gray-400 text-lg leading-relaxed">
+                        <span className="text-gray-500 text-lg leading-relaxed">
                           Generic, impersonal replies
                         </span>
                       </div>
@@ -1698,7 +1737,7 @@ const HomePage = () => {
                             d="M6 18L18 6M6 6l12 12"
                           />
                         </svg>
-                        <span className="text-gray-400 text-lg leading-relaxed">
+                        <span className="text-gray-500 text-lg leading-relaxed">
                           Limited to text/chat responses
                         </span>
                       </div>
@@ -1724,7 +1763,7 @@ const HomePage = () => {
                             d="M6 18L18 6M6 6l12 12"
                           />
                         </svg>
-                        <span className="text-gray-400 text-lg leading-relaxed">
+                        <span className="text-gray-500 text-lg leading-relaxed">
                           Often only provides text instructions
                         </span>
                       </div>
@@ -1750,7 +1789,7 @@ const HomePage = () => {
                             d="M6 18L18 6M6 6l12 12"
                           />
                         </svg>
-                        <span className="text-gray-400 text-lg leading-relaxed">
+                        <span className="text-gray-500 text-lg leading-relaxed">
                           Requires manual follow-up
                         </span>
                       </div>
@@ -1776,7 +1815,7 @@ const HomePage = () => {
                             d="M6 18L18 6M6 6l12 12"
                           />
                         </svg>
-                        <span className="text-gray-400 text-lg leading-relaxed">
+                        <span className="text-gray-500 text-lg leading-relaxed">
                           Struggles with nuanced queries
                         </span>
                       </div>
@@ -1788,44 +1827,26 @@ const HomePage = () => {
           </div>
         </FadeInSection>
 
-        <div className="relative z-50">
-          <div
-            className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full h-32"
-            style={{
-              background:
-                "radial-gradient(ellipse 800px 150px at center bottom, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.08) 25%, rgba(255, 255, 255, 0.03) 50%, transparent 70%)",
-              filter: "blur(40px)",
-            }}
-          />
-
-          <div
-            className="absolute top-0 -translate-y-1/2 left-0 right-0 h-px"
-            style={{
-              background:
-                "linear-gradient(90deg, transparent 0%, rgba(100, 150, 255, 0.2) 30%, rgba(150, 180, 255, 0.2) 50%, rgba(100, 150, 255, 0.2) 70%, transparent 100%)",
-            }}
-          />
-
-          <div
-            className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-32"
-            style={{
-              background:
-                "radial-gradient(ellipse 800px 150px at center bottom, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.08) 25%, rgba(255, 255, 255, 0.03) 50%, transparent 70%)",
-              filter: "blur(40px)",
-            }}
-          />
-        </div>
-
         {/* FAQ Section */}
-        <FadeInSection delay={0.1} className="pt-20">
+        <FadeInSection delay={0.1} className="relative">
           <div
-            className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full h-32"
+            className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/2 h-72 relative"
             style={{
               background:
-                "radial-gradient(ellipse 800px 150px at center bottom, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.08) 25%, rgba(255, 255, 255, 0.03) 50%, transparent 70%)",
-              filter: "blur(40px)",
+                "radial-gradient(50% 50% at 50% 50%, var(--token-e8bc8706-b247-48f0-95ed-879074c7f908, #121426) 0%, var(--token-6d7bfc0f-867f-43f5-837b-f61a13bf9490, #000) 100%)",
+              zIndex: 1,
+              borderRadius: "10px",
             }}
-          />
+          >
+            <div
+              className="absolute top-1/2 bottom-0 -translate-y-1/2 left-0 right-0 h-px"
+              style={{
+                background:
+                  "radial-gradient(63.671876482476385% 63.671876482476385% at 50.000000948784894% 50.000000948784894%, var(--token-6da9d50d-e927-4dcf-93ed-bf3b8039528b, rgb(138, 165, 255)) 0%, var(--token-6d7bfc0f-867f-43f5-837b-f61a13bf9490, rgb(0, 0, 0)) 100%)",
+                opacity: 0.14,
+              }}
+            />
+          </div>
           <div
             className="py-16 px-6 min-h-[80vh] overflow-hidden"
             id="faq"
@@ -1851,30 +1872,22 @@ const HomePage = () => {
                 </StarBorder>
               </div>
 
-              <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
+              <h2 className="text-3xl md:text-5xl font-mediumum text-white">
                 Some Common FAQ's
               </h2>
 
-              <p className="text-2xl font-light text-gray-300 mb-8">
+              <p className="text-base font-light text-gray-500 my-4 mb-10">
                 Everything you need to know about getting started with Qudemo
               </p>
 
               {/* FAQ Items */}
-              <div className="max-w-4xl mx-auto space-y-4">
-                <div
-                  className="rounded-xl border hover:scale-[1.02] transition-all duration-300"
-                  style={{
-                    background: "rgba(18, 20, 38, 0.6)",
-                    backdropFilter: "blur(16px)",
-                    borderColor: "rgba(138, 165, 255, 0.3)",
-                    boxShadow: "0 4px 24px rgba(41, 52, 255, 0.1)",
-                  }}
-                >
+              <div className="max-w-2xl mx-auto space-y-4">
+                <SpotlightCard className="!p-0 !rounded-xl">
                   <div
-                    className="flex justify-between items-center cursor-pointer p-6"
+                    className="flex justify-between items-center cursor-pointer p-4"
                     onClick={() => toggleFAQ(0)}
                   >
-                    <h3 className="text-lg font-semibold text-white">
+                    <h3 className="text-base font-thin text-white">
                       What is Qudemo?
                     </h3>
                     <svg
@@ -1892,29 +1905,21 @@ const HomePage = () => {
                     </svg>
                   </div>
                   {openFAQ === 0 && (
-                    <div className="px-6 pb-6 text-gray-300 text-left">
+                    <div className="px-4 pb-6 text-gray-500 text-sm text-left">
                       Qudemo is an AI video assistant that makes your demo
                       videos interactive. Viewers can ask questions, get instant
                       answers and jump straight to the exact moment in the video
                       where the answer is shown.
                     </div>
                   )}
-                </div>
+                </SpotlightCard>
 
-                <div
-                  className="rounded-xl border hover:scale-[1.02] transition-all duration-300"
-                  style={{
-                    background: "rgba(18, 20, 38, 0.6)",
-                    backdropFilter: "blur(16px)",
-                    borderColor: "rgba(138, 165, 255, 0.3)",
-                    boxShadow: "0 4px 24px rgba(41, 52, 255, 0.1)",
-                  }}
-                >
+                <SpotlightCard className="!p-0 !rounded-xl">
                   <div
-                    className="flex justify-between items-center cursor-pointer p-6"
+                    className="flex justify-between items-center cursor-pointer p-4"
                     onClick={() => toggleFAQ(1)}
                   >
-                    <h3 className="text-lg font-semibold text-white">
+                    <h3 className="text-base font-thin text-white">
                       How does it work?
                     </h3>
                     <svg
@@ -1932,28 +1937,20 @@ const HomePage = () => {
                     </svg>
                   </div>
                   {openFAQ === 1 && (
-                    <div className="px-6 pb-6 text-gray-300 text-left">
+                    <div className="px-4 pb-6 text-gray-500 text-sm text-left">
                       Upload your video, generate a Qudemo, and share the link.
                       Viewers can ask questions in chat, get instant answers,
                       and jump to the exact video moment.
                     </div>
                   )}
-                </div>
+                </SpotlightCard>
 
-                <div
-                  className="rounded-xl border hover:scale-[1.02] transition-all duration-300"
-                  style={{
-                    background: "rgba(18, 20, 38, 0.6)",
-                    backdropFilter: "blur(16px)",
-                    borderColor: "rgba(138, 165, 255, 0.3)",
-                    boxShadow: "0 4px 24px rgba(41, 52, 255, 0.1)",
-                  }}
-                >
+                <SpotlightCard className="!p-0 !rounded-xl">
                   <div
-                    className="flex justify-between items-center cursor-pointer p-6"
+                    className="flex justify-between items-center cursor-pointer p-4"
                     onClick={() => toggleFAQ(2)}
                   >
-                    <h3 className="text-lg font-semibold text-white">
+                    <h3 className="text-base font-thin text-white">
                       Who is it for?
                     </h3>
                     <svg
@@ -1971,7 +1968,7 @@ const HomePage = () => {
                     </svg>
                   </div>
                   {openFAQ === 2 && (
-                    <div className="px-6 pb-6 text-gray-300 text-left">
+                    <div className="px-4 pb-6 text-gray-500 text-left">
                       B2B SaaS teams sharing pre-recorded product videos with
                       prospects.
                       <br />
@@ -1981,22 +1978,14 @@ const HomePage = () => {
                       customers.
                     </div>
                   )}
-                </div>
+                </SpotlightCard>
 
-                <div
-                  className="rounded-xl border hover:scale-[1.02] transition-all duration-300"
-                  style={{
-                    background: "rgba(18, 20, 38, 0.6)",
-                    backdropFilter: "blur(16px)",
-                    borderColor: "rgba(138, 165, 255, 0.3)",
-                    boxShadow: "0 4px 24px rgba(41, 52, 255, 0.1)",
-                  }}
-                >
+                <SpotlightCard className="!p-0 !rounded-xl">
                   <div
-                    className="flex justify-between items-center cursor-pointer p-6"
+                    className="flex justify-between items-center cursor-pointer p-4"
                     onClick={() => toggleFAQ(3)}
                   >
-                    <h3 className="text-lg font-semibold text-white">
+                    <h3 className="text-base font-thin text-white">
                       Do I need technical setup?
                     </h3>
                     <svg
@@ -2014,27 +2003,19 @@ const HomePage = () => {
                     </svg>
                   </div>
                   {openFAQ === 3 && (
-                    <div className="px-6 pb-6 text-gray-300 text-left">
+                    <div className="px-4 pb-6 text-gray-500 text-left">
                       No, just upload your youtube/loom video, Create Qudemo and
                       Share it anywhere
                     </div>
                   )}
-                </div>
+                </SpotlightCard>
 
-                <div
-                  className="rounded-xl border hover:scale-[1.02] transition-all duration-300"
-                  style={{
-                    background: "rgba(18, 20, 38, 0.6)",
-                    backdropFilter: "blur(16px)",
-                    borderColor: "rgba(138, 165, 255, 0.3)",
-                    boxShadow: "0 4px 24px rgba(41, 52, 255, 0.1)",
-                  }}
-                >
+                <SpotlightCard className="!p-0 !rounded-xl">
                   <div
-                    className="flex justify-between items-center cursor-pointer p-6"
+                    className="flex justify-between items-center cursor-pointer p-4"
                     onClick={() => toggleFAQ(4)}
                   >
-                    <h3 className="text-lg font-semibold text-white">
+                    <h3 className="text-base font-thin text-white">
                       What's the benefit?
                     </h3>
                     <svg
@@ -2052,26 +2033,37 @@ const HomePage = () => {
                     </svg>
                   </div>
                   {openFAQ === 4 && (
-                    <div className="px-6 pb-6 text-gray-300 text-left">
+                    <div className="px-4 pb-6 text-gray-500 text-left">
                       Customers get answers faster and you get more qualified
                       leads.
                     </div>
                   )}
-                </div>
+                </SpotlightCard>
               </div>
             </div>
           </div>
         </FadeInSection>
 
         {/* Final Call-to-Action Section */}
-        <FadeInSection delay={0.1}>
-          <div className="px-6 relative min-h-[80vh] flex flex-col justify-center">
-            <div className="absolute top-0 left-0 right-0 w-full h-full bottom-0 opacity-[0.3]">
+        <FadeInSection delay={0.1} className="min-h-[40vh]">
+          <div className="px-6 relative min-h-[40vh] flex flex-col justify-center">
+            <div
+              className="absolute top-0 -translate-y-1/2 left-0 right-0 h-px"
+              style={{
+                background:
+                  "radial-gradient(63.671876482476385% 63.671876482476385% at 50.000000948784894% 50.000000948784894%, var(--token-6da9d50d-e927-4dcf-93ed-bf3b8039528b, rgb(138, 165, 255)) 0%, var(--token-6d7bfc0f-867f-43f5-837b-f61a13bf9490, rgb(0, 0, 0)) 100%)",
+                opacity: 0.14,
+              }}
+            />
+            <div className="absolute top-0 left-0 right-0 w-full bottom-0 opacity-[0.2] z-50">
               <LightRays
-                raysOrigin="top-center"
-                lightSpread={1}
-                pulsating
-                rayLength={10}
+                lightSpread={200}
+                rayLength={20}
+                raysColor="8aa5ff"
+                rotationSpeed={0.02}
+                fadeDistance={20}
+                numRays={8}
+                raysSpeed={1.0}
               />
             </div>
             <div className="max-w-4xl mx-auto text-center relative">
@@ -2094,12 +2086,13 @@ const HomePage = () => {
                   </StarBorder>
                 </div>
 
-                <h2 className="text-4xl md:text-5xl font-medium text-white mb-8 leading-tight">
+                <h2 className="text-3xl md:text-5xl font-medium text-white leading-tight">
                   Grow Now with Qudemo
                 </h2>
 
-                <p className="text-2xl font-light text-gray-300 mb-8 max-w-3xl mx-auto">
-                  Create interactive video demos that engage prospects and
+                <p className="text-base font-light text-gray-500 my-4 max-w-3xl mx-auto">
+                  Create interactive video demos that engage prospects and{" "}
+                  <br />
                   qualify leads automatically. Get started in minutes.
                 </p>
 
@@ -2126,17 +2119,18 @@ const HomePage = () => {
         </FadeInSection>
 
         <div
-          className="py-12 px-6 bg-black relative"
+          className="py-10 px-6 bg-black relative"
           style={{
-            borderColor: "rgba(138, 165, 255, 0.3)",
-            boxShadow: "0 4px 24px rgba(41, 52, 255, 0.1)",
+            background:
+              "radial-gradient(83% 50% at 44% 111.5%, var(--token-c6d9a740-f8af-44c7-ac7a-31b27a79b7f2, rgb(0, 14, 71)) 0%, var(--token-6d7bfc0f-867f-43f5-837b-f61a13bf9490, rgb(0, 0, 0)) 100%)",
           }}
         >
           <div
             className="absolute top-0 -translate-y-1/2 left-0 right-0 h-px"
             style={{
               background:
-                "linear-gradient(90deg, transparent 0%, rgba(100, 150, 255, 0.2) 30%, rgba(150, 180, 255, 0.2) 50%, rgba(100, 150, 255, 0.2) 70%, transparent 100%)",
+                "radial-gradient(63.671876482476385% 63.671876482476385% at 50.000000948784894% 50.000000948784894%, var(--token-6da9d50d-e927-4dcf-93ed-bf3b8039528b, rgb(138, 165, 255)) 0%, var(--token-6d7bfc0f-867f-43f5-837b-f61a13bf9490, rgb(0, 0, 0)) 100%)",
+              opacity: 0.14,
             }}
           />
           <div className="max-w-7xl mx-auto">
@@ -2152,7 +2146,7 @@ const HomePage = () => {
               </div>
 
               {/* Navigation Links */}
-              <div className="flex flex-wrap justify-center items-center gap-8 text-gray-400">
+              <div className="flex flex-wrap justify-center items-center gap-8 text-gray-500">
                 <button
                   onClick={() => scrollToSection("pricing")}
                   className="hover:text-white transition-colors duration-200"
@@ -2204,6 +2198,95 @@ const HomePage = () => {
               </div>
             </div>
           </div>
+          <footer className="py-8 px-6 relative">
+            <div
+              className="absolute top-0 -translate-y-1/2 left-0 right-0 h-px"
+              style={{
+                background:
+                  "radial-gradient(63.671876482476385% 63.671876482476385% at 50.000000948784894% 50.000000948784894%, var(--token-6da9d50d-e927-4dcf-93ed-bf3b8039528b, rgb(138, 165, 255)) 0%, var(--token-6d7bfc0f-867f-43f5-837b-f61a13bf9490, rgb(0, 0, 0)) 100%)",
+                opacity: 0.14,
+              }}
+            />
+            <div className="max-w-7xl mx-auto">
+              <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+                {/* Copyright */}
+                <div className="text-gray-500 text-sm">
+                  © {new Date().getFullYear()} Qudemo. All rights reserved.
+                </div>
+
+                {/* Social Media Icons */}
+                <div className="flex gap-4 items-center">
+                  <a
+                    href="https://twitter.com/qudemo"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-gray-500 hover:text-white transition-colors"
+                    aria-label="Twitter"
+                  >
+                    <svg
+                      className="w-5 h-5"
+                      fill="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                    </svg>
+                  </a>
+                  <a
+                    href="https://facebook.com/qudemo"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-gray-500 hover:text-white transition-colors"
+                    aria-label="Facebook"
+                  >
+                    <svg
+                      className="w-5 h-5"
+                      fill="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                    </svg>
+                  </a>
+                  <a
+                    href="https://instagram.com/qudemo"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-gray-500 hover:text-white transition-colors"
+                    aria-label="Instagram"
+                  >
+                    <svg
+                      className="w-5 h-5"
+                      fill="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
+                    </svg>
+                  </a>
+                </div>
+
+                {/* Links */}
+                <div className="flex gap-6 text-sm">
+                  <a
+                    href="/privacy"
+                    className="text-gray-500 hover:text-white transition-colors"
+                  >
+                    Privacy Policy
+                  </a>
+                  <a
+                    href="/terms"
+                    className="text-gray-500 hover:text-white transition-colors"
+                  >
+                    Terms of Service
+                  </a>
+                  <a
+                    href="mailto:support@qudemo.com"
+                    className="text-gray-500 hover:text-white transition-colors"
+                  >
+                    Contact
+                  </a>
+                </div>
+              </div>
+            </div>
+          </footer>
         </div>
       </div>
 
@@ -2233,89 +2316,6 @@ const HomePage = () => {
           animation: fadeIn 0.8s ease-out both;
         }
       `}</style>
-
-      {/* Footer Copyright Section */}
-      <footer className="py-8 px-6 border-t border-gray-800 relative">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-            {/* Copyright */}
-            <div className="text-gray-400 text-sm">
-              © {new Date().getFullYear()} Qudemo. All rights reserved.
-            </div>
-
-            {/* Social Media Icons */}
-            <div className="flex gap-4 items-center">
-              <a
-                href="https://twitter.com/qudemo"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-gray-400 hover:text-white transition-colors"
-                aria-label="Twitter"
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                </svg>
-              </a>
-              <a
-                href="https://facebook.com/qudemo"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-gray-400 hover:text-white transition-colors"
-                aria-label="Facebook"
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-                </svg>
-              </a>
-              <a
-                href="https://instagram.com/qudemo"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-gray-400 hover:text-white transition-colors"
-                aria-label="Instagram"
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
-                </svg>
-              </a>
-            </div>
-
-            {/* Links */}
-            <div className="flex gap-6 text-sm">
-              <a
-                href="/privacy"
-                className="text-gray-400 hover:text-white transition-colors"
-              >
-                Privacy Policy
-              </a>
-              <a
-                href="/terms"
-                className="text-gray-400 hover:text-white transition-colors"
-              >
-                Terms of Service
-              </a>
-              <a
-                href="mailto:support@qudemo.com"
-                className="text-gray-400 hover:text-white transition-colors"
-              >
-                Contact
-              </a>
-            </div>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 };
