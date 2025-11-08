@@ -1347,16 +1347,31 @@ const Qudemos = () => {
                           {qudemo.videos[0].duration}
                         </div>
                       )}
+                      </div>
                     </div>
-                  </div>
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
-                    <div className="text-center">
-                      <VideoCameraIcon className="w-12 h-10 text-bodydark2 mx-auto mb-2" />
-                      <p className="text-gray-500 text-sm">No video</p>
+                  ) : qudemo.presenter_photo_url ? (
+                    // Show presenter photo as preview (full photo, not circular)
+                    <div className="w-full h-full relative overflow-hidden bg-gray-100">
+                      <img
+                        src={qudemo.presenter_photo_url}
+                        alt={qudemo.presenter_name || "Presenter"}
+                        className="w-full h-full object-contain"
+                        style={{ objectPosition: 'center center' }}
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.style.display = 'none';
+                          e.target.parentElement.innerHTML = '<div class="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center"><span class="text-white text-5xl font-bold">' + (qudemo.presenter_name?.charAt(0) || 'Q') + '</span></div>';
+                        }}
+                      />
                     </div>
-                  </div>
-                )}
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
+                      <div className="text-center">
+                        <VideoCameraIcon className="w-12 h-10 text-bodydark2 mx-auto mb-2" />
+                        <p className="text-gray-500 text-sm">No preview</p>
+                      </div>
+                    </div>
+                  )}
               </div>
               {/* Card Content */}
               <div className={qudemo.isDemo ? "p-3" : "p-4"}>
