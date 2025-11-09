@@ -49,6 +49,7 @@ const FloatingQudemoWidget = ({
   const loomIframeRef = useRef(null);
   const hasLoadedDataRef = useRef(false); // Track if we've already loaded data
   const hasShownIntroRef = useRef(false); // Track if intro video has been shown
+  const hasCachedVideosRef = useRef(false); // Track if we've already cached videos
   
   // User data collection states
   const [collectionPhase, setCollectionPhase] = useState(null); // 'name', 'email', 'company', or null
@@ -129,20 +130,20 @@ const FloatingQudemoWidget = ({
     }
   }, [qudemoId, companyName]);
 
-  // Load full data when expanded (only for universal widget, not playground)
+  // Preload static demo data immediately on mount (for instant widget opening)
   useEffect(() => {
-    // Skip if we already loaded data (playground mode with qudemoId)
+    // Skip if this is a specific QuDemo (playground/embed mode)
     if (qudemoId) {
       return; // Data already loaded by the immediate effect above
     }
     
-    // For universal widget: load when expanded and not already loaded
-    if (isExpanded && !videoFlow && !hasLoadedDataRef.current) {
-      console.log('🚀 Widget: Loading data on expansion (universal widget)');
+    // For universal widget: preload data immediately on page load (not when expanded)
+    if (!hasLoadedDataRef.current) {
+      console.log('🚀 Widget: Preloading static demo data on page load for instant access');
       hasLoadedDataRef.current = true; // Prevent re-loading
       loadBetaVersionData();
     }
-  }, [isExpanded, qudemoId]);
+  }, [qudemoId]); // Run once on mount (qudemoId doesn't change)
   
   // Trigger initial video load when videoFlow becomes available
   useEffect(() => {
@@ -456,7 +457,16 @@ const FloatingQudemoWidget = ({
   // Proactively cache ALL videos when page loads
   const preloadAllVideos = async () => {
     try {
+      // Check if videos are already cached for this session
+      if (hasCachedVideosRef.current) {
+        console.log('✅ Videos already cached for this session, skipping');
+        return;
+      }
+      
       console.log('🎬 Starting proactive video caching for QuDemo...');
+      
+      // Mark as cached immediately to prevent duplicate calls
+      hasCachedVideosRef.current = true;
       
       // Get FAQ version/timestamp to check if cache is valid
       const cacheKey = `qudemo_${companyName}_${qudemoId}`;
@@ -530,16 +540,26 @@ const FloatingQudemoWidget = ({
 
   const loadBetaVersionData = async () => {
     try {
+      console.log('🔄 Loading QuDemo data...');
       setLoading(true);
       
       let videoFlowData = null;
       
       // Only load static video flow if no specific qudemoId is provided
       if (!qudemoId) {
-        console.log('📹 Widget: Loading static video flow');
-        const videoFlowResponse = await fetch('/video-flow.json');
-        videoFlowData = await videoFlowResponse.json();
-      setVideoFlow(videoFlowData);
+        // Try to get from sessionStorage first
+        const cachedVideoFlow = sessionStorage.getItem('static_video_flow');
+        if (cachedVideoFlow) {
+          console.log('⚡ Using cached static video flow');
+          videoFlowData = JSON.parse(cachedVideoFlow);
+        } else {
+          console.log('📹 Widget: Loading static video flow from API');
+          const videoFlowResponse = await fetch('/video-flow.json');
+          videoFlowData = await videoFlowResponse.json();
+          // Cache it for future toggles
+          sessionStorage.setItem('static_video_flow', JSON.stringify(videoFlowData));
+        }
+        setVideoFlow(videoFlowData);
       } else {
         console.log('🎯 Widget: Skipping static video flow (qudemoId provided)');
       }
@@ -579,12 +599,23 @@ const FloatingQudemoWidget = ({
             qudemoResponse = await fetch(getNodeApiUrl(`/api/qudemos/public/${qudemoId}`));
           }
         } else {
-          // Otherwise, load Universal Demo
-          console.log('🌐 Widget: Loading Universal Demo');
-          qudemoResponse = await fetch(getNodeApiUrl(`/api/qudemos/share/${UNIVERSAL_DEMO_TOKEN}`));
+          // Otherwise, load Universal Demo - try cache first
+          const cachedUniversalDemo = sessionStorage.getItem('universal_demo');
+          if (cachedUniversalDemo) {
+            console.log('⚡ Using cached Universal Demo');
+            qudemoResponse = { json: () => Promise.resolve(JSON.parse(cachedUniversalDemo)) };
+          } else {
+            console.log('🌐 Widget: Loading Universal Demo from API');
+            qudemoResponse = await fetch(getNodeApiUrl(`/api/qudemos/share/${UNIVERSAL_DEMO_TOKEN}`));
+          }
         }
         
         const qudemoResponseData = await qudemoResponse.json();
+        
+        // Cache Universal Demo if it's not a specific QuDemo
+        if (!qudemoId) {
+          sessionStorage.setItem('universal_demo', JSON.stringify(qudemoResponseData));
+        }
         
         if (qudemoResponseData.success && (qudemoResponseData.data || qudemoResponseData.qudemo)) {
           const qudemo = qudemoResponseData.data || qudemoResponseData.qudemo;
@@ -657,13 +688,28 @@ const FloatingQudemoWidget = ({
       let qudemoQuestions = [];
       if (loadedQudemo && loadedQudemo.id && loadedQudemo.company_name) {
         try {
-          const suggestedQuestionsUrl = getVideoApiUrl(`/suggested-questions/${encodeURIComponent(loadedQudemo.company_name)}/${loadedQudemo.id}`);
-          console.log('🔍 Fetching suggested questions from:', suggestedQuestionsUrl);
+          // Check cache first for static demo
+          const cachedQuestions = !qudemoId ? sessionStorage.getItem('suggested_questions') : null;
+          let suggestedQuestionsData;
           
-          const suggestedQuestionsResponse = await fetch(suggestedQuestionsUrl);
-          console.log('📡 Suggested questions response status:', suggestedQuestionsResponse.status);
+          if (cachedQuestions) {
+            console.log('⚡ Using cached suggested questions');
+            suggestedQuestionsData = JSON.parse(cachedQuestions);
+          } else {
+            const suggestedQuestionsUrl = getVideoApiUrl(`/suggested-questions/${encodeURIComponent(loadedQudemo.company_name)}/${loadedQudemo.id}`);
+            console.log('🔍 Fetching suggested questions from:', suggestedQuestionsUrl);
+            
+            const suggestedQuestionsResponse = await fetch(suggestedQuestionsUrl);
+            console.log('📡 Suggested questions response status:', suggestedQuestionsResponse.status);
+            
+            suggestedQuestionsData = await suggestedQuestionsResponse.json();
+            
+            // Cache for static demo
+            if (!qudemoId) {
+              sessionStorage.setItem('suggested_questions', JSON.stringify(suggestedQuestionsData));
+            }
+          }
           
-          const suggestedQuestionsData = await suggestedQuestionsResponse.json();
           console.log('📊 Suggested questions data:', suggestedQuestionsData);
           
           // Handle both response formats: {questions: [...]} and {suggested_questions: [...]}
@@ -707,9 +753,24 @@ const FloatingQudemoWidget = ({
       if (loadedQudemo && loadedQudemo.id && loadedQudemo.company_name && loadedQudemo.collect_user_info) {
         try {
           console.log('👤 Identifying user collection videos from FAQs...');
-          const faqsUrl = getVideoApiUrl(`/faqs/${encodeURIComponent(loadedQudemo.company_name)}/${loadedQudemo.id}`);
-          const faqsResponse = await fetch(faqsUrl);
-          const faqsData = await faqsResponse.json();
+          
+          // Check cache first for static demo
+          const cachedFaqs = !qudemoId ? sessionStorage.getItem('collection_faqs') : null;
+          let faqsData;
+          
+          if (cachedFaqs) {
+            console.log('⚡ Using cached collection FAQs');
+            faqsData = JSON.parse(cachedFaqs);
+          } else {
+            const faqsUrl = getVideoApiUrl(`/faqs/${encodeURIComponent(loadedQudemo.company_name)}/${loadedQudemo.id}`);
+            const faqsResponse = await fetch(faqsUrl);
+            faqsData = await faqsResponse.json();
+            
+            // Cache for static demo
+            if (!qudemoId) {
+              sessionStorage.setItem('collection_faqs', JSON.stringify(faqsData));
+            }
+          }
           
           if (faqsData && faqsData.faqs) {
             const nameVideo = faqsData.faqs.find(f => f.question === 'NAME_REQUEST');
