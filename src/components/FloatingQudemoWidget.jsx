@@ -174,12 +174,14 @@ const FloatingQudemoWidget = ({
     }
   }, [isExpanded, qudemoData]);
 
-  // Fetch intro video preview for collapsed state
+  // Fetch intro video preview for collapsed state (only for specific QuDemos, not static demo)
   useEffect(() => {
-    if (qudemoData && qudemoData.id && !introVideoPreview) {
-      console.log('🎬 Triggering intro video preview fetch...');
+    // Only fetch intro video if this is a specific QuDemo (qudemoId prop provided)
+    // For static demo (no qudemoId), preview is already in videoFlow
+    if (qudemoId && qudemoData && qudemoData.id && !introVideoPreview) {
+      console.log('🎬 Triggering intro video preview fetch for specific QuDemo...');
       fetchIntroVideoPreview();
-    } else if (qudemoData && qudemoData.id && introVideoPreview === null && isLoadingPreview) {
+    } else if (qudemoId && qudemoData && qudemoData.id && introVideoPreview === null && isLoadingPreview) {
       // If we have qudemoData but still loading, give it a timeout
       const timeout = setTimeout(() => {
         if (isLoadingPreview && !introVideoPreview) {
@@ -830,6 +832,13 @@ const FloatingQudemoWidget = ({
       ]);
     } finally {
       setLoading(false);
+      
+      // For static demo (no qudemoId), ensure loading preview is false
+      // since preview video is already in videoFlow
+      if (!qudemoId) {
+        console.log('✅ Static demo loaded - clearing preview loading state');
+        setIsLoadingPreview(false);
+      }
     }
   };
 
