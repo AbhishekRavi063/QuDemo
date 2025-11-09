@@ -50,6 +50,10 @@
   }
 }
 
+body {
+  font-family: "Inter", "Inter Placeholder", sans-serif;
+}
+
 .card-spotlight {
   position: relative;
   border-radius: 1.5rem;

@@ -89,52 +89,64 @@ const HomePage = () => {
   // Testimonials data
   const testimonials = [
     {
-      name: "Sarah Johnson",
-      role: "VP of Sales",
+      name: "Wayne",
+      role: "Sales Operations",
       company: "TechCorp",
       rating: 5,
+      image:
+        "https://framerusercontent.com/images/ETgoVdeITLLIYCHTFNeVuZDMyQY.png?width=1024&height=1024",
       testimonial:
-        "Qudemo transformed how we present our product. Our demo engagement increased by 300% and qualified leads by 150%.",
+        "SaaS companies are in great need of this product. Customers can get immediate answers and thus helps in decision making.",
     },
     {
-      name: "Michael Chen",
-      role: "Product Manager",
+      name: "Corvin Wucher",
+      role: "Marketing Strategy",
       company: "StartupXYZ",
       rating: 5,
+      image:
+        "https://framerusercontent.com/images/QmmaDSjXyuZNNDsZdt23lDVXI.png?width=512&height=512",
       testimonial:
-        "The AI-powered Q&A is incredible. Prospects get instant answers and we save hours of manual demos every week.",
+        "We've all been there watching a 20-minute demo hoping they'll address your specific use case, only to sit through stuff that doesn't apply to you.",
     },
     {
-      name: "Emily Rodriguez",
-      role: "Marketing Director",
+      name: "Tuba Ismail",
+      role: "Sales Manager",
       company: "CloudSolutions",
       rating: 5,
+      image:
+        "https://framerusercontent.com/images/0zuVQ2JmvxEtdnpdOq5FtRJxmNY.png?width=382&height=512",
       testimonial:
-        "Setup took less than 5 minutes. The interactive experience keeps visitors engaged 5x longer than our old videos.",
+        "Qudemo’s interactive agentic approach is a huge step forward. Answering questions instantly and jumping to the right video moment is a major upgrade over traditional demos.",
     },
     {
-      name: "David Park",
-      role: "Founder",
+      name: "Abhilash Sathyan",
+      role: "CEO - Rateup",
       company: "InnovateLabs",
       rating: 5,
+      image:
+        "https://framerusercontent.com/images/4EiFhjIPXbRF4y7hS6k9U484AQM.jpg?width=3456&height=4028",
       testimonial:
-        "Game changer for our sales process. Customers love being able to ask questions and jump to relevant parts instantly.",
+        "Qudemo made our website feel personal, visitors get answers instantly and qualified leads have doubled!",
     },
     {
-      name: "Lisa Anderson",
-      role: "Head of Growth",
+      name: "Dilshad",
+      role: "CEO - Dgymbook",
       company: "ScaleUp Inc",
       rating: 5,
+      image:
+        "https://framerusercontent.com/images/7qBFv2WmuOwj4qUFS7XUzQSFL4.jpg?width=3265&height=4898",
       testimonial:
-        "Our conversion rate doubled after implementing Qudemo. The personalized experience makes all the difference.",
+        "Qudemo's AI video agent engages every visitor like a founder would. It saves our team so much time.",
     },
     {
-      name: "James Wilson",
-      role: "CTO",
+      name: "John Mathew",
+      role: "Product Marketing Lead",
       company: "DevTools Pro",
       rating: 5,
+      image:
+        "https://framerusercontent.com/images/tvip64h9JcqV1xA68gzm2QrLSM.png?width=2048&height=2048",
       testimonial:
-        "Finally, a solution that makes video demos feel like real conversations. Our prospects are more engaged than ever.",
+        "Setting up Qudemo was fast, and our demo conversions has increased. Visitors love interacting with it!",
     },
   ];
 
@@ -170,10 +182,6 @@ const HomePage = () => {
 
   return (
     <div className="h-full w-full flex flex-col relative bg-black">
-      <div className="absolute top-0 left-0 right-0 w-full h-[100vh] bottom-0 opacity-[0.2] z-50">
-        <SimpleLightRays />
-      </div>
-
       {/* Radial gradient overlays for depth */}
       <div
         className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[800px] opacity-30"
@@ -220,7 +228,7 @@ const HomePage = () => {
 
       {/* Enhanced Navigation Bar - Outside overflow container */}
       <nav
-        className="w-full fixed top-0 z-50"
+        className="w-full fixed top-0 z-[999]"
         style={{
           background:
             "linear-gradient(180deg, var(--token-6d7bfc0f-867f-43f5-837b-f61a13bf9490, rgb(0, 0, 0)) -50%, rgba(0, 0, 0, 0) 170.00000000000003%)",
@@ -230,9 +238,9 @@ const HomePage = () => {
         <div className="flex justify-between items-center max-w-7xl w-full mx-auto p-4  md:px-6">
           <div className="flex items-center">
             <img
-              src={`https://framerusercontent.com/images/FbO4dnbdmZd5UO3ULm6CTPenvIo.png?width=470&height=160`}
+              src="/Qudemo LP.svg"
               alt="Qudemo Logo"
-              className="cursor-pointer w-auto h-8"
+              className="cursor-pointer w-auto h-8 scale-[3] ml-2"
               height={36}
               onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
             />
@@ -292,18 +300,21 @@ const HomePage = () => {
       </nav>
 
       <div
-        className="relative z-10 flex flex-col min-h-screen max-w-full"
+        className="relative z-50 flex flex-col min-h-screen max-w-full"
         style={{ overflowX: "clip" }}
       >
         {/* Hero Section */}
-        <FadeInSection delay={0} className="flex flex-col">
+        <FadeInSection delay={0} className="flex flex-col z-[999]">
           <div
-            className="flex justify-center items-start pt-60 px-6 h-[60vh] relative"
+            className="flex justify-center flex-col items-center pt-60 px-6 h-[60vh] relative"
             style={{
               background:
                 "radial-gradient(80% 25% at 50% 7.5%,var(--token-c6d9a740-f8af-44c7-ac7a-31b27a79b7f2,#000e47)0%,var(--token-6d7bfc0f-867f-43f5-837b-f61a13bf9490,#000)100%)",
             }}
           >
+            <div className="absolute top-0 left-0 right-0 w-full h-[100vh] bottom-0 opacity-[0.2] z-50">
+              <SimpleLightRays />
+            </div>
             <img
               decoding="auto"
               width="513"
@@ -330,7 +341,7 @@ const HomePage = () => {
                   "radial-gradient(ellipse at 90% 100%, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.7) 30%, transparent 60%)",
               }}
             />
-            <div className="max-w-5xl text-center relative z-10">
+            <div className="max-w-5xl text-center relative z-50">
               {/* User Avatars Badge */}
               <div className="flex justify-center mb-4 animate-fadeIn">
                 <div className="flex items-center gap-3">
@@ -408,7 +419,7 @@ const HomePage = () => {
               >
                 <button
                   onClick={() => navigateToCreate(navigate)}
-                  className="text-white font-medium text-base px-8 py-3.5 rounded-xl transition-all duration-300 flex items-center justify-center relative overflow-hidden group"
+                  className="text-white font-medium text-base px-8 py-3.5 rounded-xl transition-all duration-300 flex items-center justify-center relative overflow-hidden group z-[999]"
                   style={{
                     background: "rgba(59, 130, 246, 1)",
                     boxShadow: "0 8px 32px rgba(59, 130, 246, 0.5)",
@@ -419,13 +430,13 @@ const HomePage = () => {
               </div>
 
               {/* Infinite Scrolling Logos */}
-              <div
-                style={{
-                  animation: "fadeInUp 0.8s ease-out 0.6s both",
-                }}
-              >
-                <InfiniteScroll />
-              </div>
+            </div>
+            <div
+              style={{
+                animation: "fadeInUp 0.8s ease-out 0.6s both",
+              }}
+            >
+              <InfiniteScroll />
             </div>
           </div>
         </FadeInSection>
@@ -848,7 +859,7 @@ const HomePage = () => {
 
         {/* Pricing Section */}
         <FadeInSection delay={0.1} className="flex flex-col py-20 relative">
-          <div className="absolute top-0 left-0 right-0 w-full bottom-0 opacity-[0.2] z-50">
+          <div className="absolute top-0 left-0 right-0 w-full bottom-0 opacity-[0.2]">
             <LightRays
               lightSpread={200}
               rayLength={20}
@@ -947,7 +958,7 @@ const HomePage = () => {
               </div>
 
               {/* Pricing Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 max-w-5xl mx-auto">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 max-w-5xl mx-auto z-50">
                 <PricingCard
                   title="Starter"
                   price={isYearly ? "167" : "200"}
@@ -1028,27 +1039,24 @@ const HomePage = () => {
                 </StarBorder>
               </div>
 
-              <blockquote className="text-3xl md:text-4xl font-bold text-white leading-relaxed">
-                "Book demos should feel like the
+              <blockquote className="text-3xl md:text-4xl font-normal text-white leading-relaxed">
+                “We think demos should feel like the
                 <br />
-                founder is there, every time. Qudemo
+                founder is talking to every visitor. Qudemo
                 <br />
-                makes it happen instantly."
+                makes it happen instantly„
               </blockquote>
 
               <div className="flex items-center gap-3 text-left mx-auto mt-8">
-                <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-blue-400">
+                <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-white">
                   <img
-                    src="https://i.pravatar.cc/150?img=4"
+                    src="https://framerusercontent.com/images/81XI4Y9Evkk0bmbRaTAgilWrNc.jpeg?width=560&height=560"
                     alt="Founder"
                     className="w-full h-full object-cover"
                   />
                 </div>
                 <div>
-                  <p className="text-white text-base font-medium">
-                    Luqman Yousaf
-                  </p>
-                  <p className="text-gray-500 text-sm">
+                  <p className="text-gray-400 text-base">
                     Co-founder & ex-Meta Data Scientist
                   </p>
                 </div>
@@ -1521,7 +1529,7 @@ const HomePage = () => {
                 Why Qudemo Stands Out
               </h2>
 
-              <p className="text-base font-light md:text-2xl text-gray-500 mb-16 max-w-4xl mx-auto">
+              <p className="text-base font-light md:text-base text-gray-500 mb-16 max-w-4xl mx-auto">
                 Unlike generic chatbots or static videos, Qudemo combines the
                 best of both worlds
               </p>
@@ -2076,7 +2084,7 @@ const HomePage = () => {
                 }}
               />
 
-              <div className="relative z-10">
+              <div className="relative z-50">
                 <div className="flex justify-center mb-8">
                   <StarBorder
                     color="#1e40af"
@@ -2097,7 +2105,7 @@ const HomePage = () => {
                 </p>
 
                 <div
-                  className="flex items-center justify-center mb-10"
+                  className="flex items-center justify-center mb-10 z-50"
                   style={{
                     animation: "fadeInUp 0.8s ease-out 0.5s both",
                   }}
