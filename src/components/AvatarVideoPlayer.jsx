@@ -117,7 +117,7 @@ const AvatarVideoPlayer = ({ avatarVideoUrl, answer, isVisible, faqId, avatarVid
           <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 z-10">
             <div className="flex flex-col items-center">
               <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-white"></div>
-              <p className="text-white mt-2 text-sm">Loading avatar video...</p>
+              <p className="text-white mt-2 text-sm">Loading video...</p>
             </div>
           </div>
         )}

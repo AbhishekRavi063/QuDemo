@@ -7,6 +7,7 @@ import ReactPlayer from "react-player";
 import HybridVideoPlayer from "./HybridVideoPlayer";
 import QudemoPreview from "./QudemoPreview";
 import WidgetGeneratorModal from "./WidgetGeneratorModal";
+import VideoGenerationProgress from "./VideoGenerationProgress";
 import {
   EyeIcon,
   PencilIcon,
@@ -895,8 +896,11 @@ const Qudemos = () => {
                 title: welcomeData.data.title || "Welcome to Qudemo",
               };
 
+              // Deduplicate: Remove any user QuDemos with the same ID as the demo
+              const uniqueUserQudemos = userQudemos.filter(q => q.id !== demoQudemo.id);
+              
               // Add demo Qudemo at the beginning
-              setQudemos([demoQudemo, ...userQudemos]);
+              setQudemos([demoQudemo, ...uniqueUserQudemos]);
             } else {
               // If demo fetch fails, just show user's Qudemos
               setQudemos(userQudemos);
@@ -1202,6 +1206,21 @@ const Qudemos = () => {
             >
               {/* Video Thumbnail */}
               <div className="relative h-48 bg-whiten rounded-t-lg overflow-hidden">
+                {/* Video Generation Progress Overlay - OVER the image */}
+                {!qudemo.isDemo && 
+                 qudemo.avatar_generation_status && 
+                 (qudemo.avatar_generation_status === 'processing' || qudemo.avatar_generation_status === 'pending') && (
+                  <div className="absolute top-0 left-0 right-0 z-20">
+                    <VideoGenerationProgress
+                      qudemoId={qudemo.id}
+                      status={qudemo.avatar_generation_status}
+                      onComplete={() => {
+                        fetchQudemos();
+                      }}
+                    />
+                  </div>
+                )}
+                
                 {/* Delete Loading Overlay */}
                 {deletingQudemoId === qudemo.id && (
                   <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-10 rounded-t-lg">

@@ -39,7 +39,7 @@ const FloatingQudemoWidget = ({
   const [videoRefreshKey, setVideoRefreshKey] = useState(0);
   const [currentAvatarVideo, setCurrentAvatarVideo] = useState(null); // State for avatar video
   const [introVideoPreview, setIntroVideoPreview] = useState(null); // State for intro video preview URL
-  const [isLoadingPreview, setIsLoadingPreview] = useState(true); // Loading state for preview
+  const [isLoadingPreview, setIsLoadingPreview] = useState(false); // Loading state for preview (start false, only true when fetching)
   const videoPlayerRef = useRef(null);
   const previewVideoRef = useRef(null);
   const chatMessagesRef = useRef(null);
@@ -178,9 +178,63 @@ const FloatingQudemoWidget = ({
     if (qudemoData && qudemoData.id && !introVideoPreview) {
       console.log('🎬 Triggering intro video preview fetch...');
       fetchIntroVideoPreview();
+    } else if (qudemoData && qudemoData.id && introVideoPreview === null && isLoadingPreview) {
+      // If we have qudemoData but still loading, give it a timeout
+      const timeout = setTimeout(() => {
+        if (isLoadingPreview && !introVideoPreview) {
+          console.log('⏱️ Intro video fetch timeout - clearing loading state');
+          setIsLoadingPreview(false);
+        }
+      }, 3000); // 3 second timeout
+      return () => clearTimeout(timeout);
     }
-  }, [qudemoData]);
+  }, [qudemoData, introVideoPreview, isLoadingPreview]);
   
+  // Debug: Log preview state changes
+  useEffect(() => {
+    console.log('🖼️ Preview state:', {
+      isLoadingPreview,
+      hasIntroVideo: !!introVideoPreview,
+      hasQudemoId: !!qudemoId,
+      hasVideoFlow: !!videoFlow,
+      hasVideoThumbnail: !!videoThumbnail,
+      hasPreviewImage: !!previewImage
+    });
+  }, [isLoadingPreview, introVideoPreview, qudemoId, videoFlow, videoThumbnail, previewImage]);
+
+  // Ensure preview videos are muted and play (for both intro and static)
+  useEffect(() => {
+    if (introVideoPreview && introPreviewRef.current && !isExpanded) {
+      const videoElement = introPreviewRef.current;
+      videoElement.muted = true;
+      // Force play after a tiny delay to ensure video is ready
+      setTimeout(() => {
+        videoElement.play().catch(err => console.log('Preview play prevented:', err));
+      }, 50);
+    }
+  }, [introVideoPreview, isExpanded]);
+  
+  // Also handle static preview video (for demo on home page)
+  const staticVideoRef = useRef(null);
+  useEffect(() => {
+    if (!qudemoId && videoFlow && videoFlow.videos && videoFlow.videos[0] && staticVideoRef.current && !isExpanded) {
+      console.log('🎬 Static preview video ready - attempting to play');
+      const videoElement = staticVideoRef.current;
+      videoElement.muted = true;
+      
+      // Try multiple times to ensure it plays
+      const attemptPlay = () => {
+        videoElement.play()
+          .then(() => console.log('✅ Static preview playing'))
+          .catch(err => console.log('⚠️ Static preview play prevented:', err));
+      };
+      
+      attemptPlay();
+      setTimeout(attemptPlay, 100);
+      setTimeout(attemptPlay, 500);
+    }
+  }, [qudemoId, videoFlow, isExpanded]);
+
   // Also try to fetch intro video preview directly when qudemoId/companyName are provided as props
   const hasAttemptedDirectFetchRef = useRef(false);
   
@@ -644,8 +698,8 @@ const FloatingQudemoWidget = ({
       }
       console.log('📋 Questions array:', allQuestions);
       
-      const questionsToSet = allQuestions.slice(0, 10); // Show up to 10 questions total
-      console.log('📌 Final questions to display (max 10):', questionsToSet);
+      const questionsToSet = allQuestions.slice(0, 15); // Show up to 15 questions total (6 static + 7 Loom + room for more)
+      console.log('📌 Final questions to display (max 15):', questionsToSet);
       setSuggestedQuestions(questionsToSet);
       console.log('✅ Suggested questions state updated with', questionsToSet.length, 'questions');
       
@@ -1809,7 +1863,7 @@ const FloatingQudemoWidget = ({
         >
           {/* Circular video preview with pulse animation */}
           <div className="relative w-20 h-20 md:w-36 md:h-36 rounded-full overflow-hidden shadow-2xl border-4 border-white hover:border-blue-500 transition-all duration-300">
-            {isLoadingPreview && !introVideoPreview ? (
+            {isLoadingPreview && introVideoPreview === null && qudemoId ? (
               <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
                 <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-white"></div>
               </div>
@@ -1824,8 +1878,16 @@ const FloatingQudemoWidget = ({
                 className="w-full h-full object-cover"
                 style={{ objectPosition: 'center 0%' }}
               />
+            ) : qudemoData && qudemoData.presenter_photo_url ? (
+              <img 
+                src={qudemoData.presenter_photo_url} 
+                alt="Presenter" 
+                className="w-full h-full object-cover"
+                style={{ objectPosition: 'center center' }}
+              />
             ) : !qudemoId && videoFlow && videoFlow.videos && videoFlow.videos[0] && videoFlow.videos[0].src ? (
               <video 
+                ref={staticVideoRef}
                 src={videoFlow.videos[0].src || videoFlow.videos[0].url}
                 autoPlay
                 loop
