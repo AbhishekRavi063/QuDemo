@@ -456,16 +456,22 @@ const FloatingQudemoWidget = ({
     });
   };
 
-  // Proactively cache ALL videos when page loads
+  // Proactively cache ALL videos when page loads (only for specific QuDemos)
   const preloadAllVideos = async () => {
     try {
+      // Only preload for specific QuDemos, not static demo
+      if (!qudemoId || !companyName) {
+        console.log('ℹ️ Skipping video preload for static demo (uses video-flow.json)');
+        return;
+      }
+      
       // Check if videos are already cached for this session
       if (hasCachedVideosRef.current) {
         console.log('✅ Videos already cached for this session, skipping');
         return;
       }
       
-      console.log('🎬 Starting proactive video caching for QuDemo...');
+      console.log('🎬 Starting proactive video caching for specific QuDemo:', qudemoId);
       
       // Mark as cached immediately to prevent duplicate calls
       hasCachedVideosRef.current = true;
@@ -686,116 +692,167 @@ const FloatingQudemoWidget = ({
         }
       }
       
-      // Get suggested questions from Universal Demo Qudemo (if available)
-      let qudemoQuestions = [];
-      if (loadedQudemo && loadedQudemo.id && loadedQudemo.company_name) {
-        try {
-          // Check cache first for static demo
-          const cachedQuestions = !qudemoId ? sessionStorage.getItem('suggested_questions') : null;
-          let suggestedQuestionsData;
-          
-          if (cachedQuestions) {
-            console.log('⚡ Using cached suggested questions');
-            suggestedQuestionsData = JSON.parse(cachedQuestions);
-          } else {
-            const suggestedQuestionsUrl = getVideoApiUrl(`/suggested-questions/${encodeURIComponent(loadedQudemo.company_name)}/${loadedQudemo.id}`);
-            console.log('🔍 Fetching suggested questions from:', suggestedQuestionsUrl);
+      // Set static questions immediately
+      console.log('📋 Setting static questions immediately:', staticQuestions);
+      setSuggestedQuestions(staticQuestions);
+      
+      // Fetch suggested questions from Python API ONLY for specific QuDemos (not static demo)
+      // Static demo uses questions from video-flow.json only
+      if (qudemoId && loadedQudemo && loadedQudemo.id && loadedQudemo.company_name) {
+        console.log('🎯 Fetching Python API questions for specific QuDemo:', qudemoId);
+        
+        // Check cache first
+        const cachedQuestions = sessionStorage.getItem(`suggested_questions_${qudemoId}`);
+        
+        if (cachedQuestions) {
+          // Use cached questions immediately
+          console.log('⚡ Using cached suggested questions');
+          try {
+            const suggestedQuestionsData = JSON.parse(cachedQuestions);
+            const questionsArray = suggestedQuestionsData.questions || suggestedQuestionsData.suggested_questions || [];
             
-            const suggestedQuestionsResponse = await fetch(suggestedQuestionsUrl);
-            console.log('📡 Suggested questions response status:', suggestedQuestionsResponse.status);
-            
-            suggestedQuestionsData = await suggestedQuestionsResponse.json();
-            
-            // Cache for static demo
-            if (!qudemoId) {
-              sessionStorage.setItem('suggested_questions', JSON.stringify(suggestedQuestionsData));
+            if (questionsArray && questionsArray.length > 0) {
+              const qudemoQuestions = questionsArray.map(q => {
+                if (typeof q === 'string') return q;
+                return q.question || q.text || q.title || '';
+              }).filter(q => q.trim() !== '');
+              
+              const allQuestions = qudemoId && qudemoQuestions.length > 0 
+                ? qudemoQuestions 
+                : [...staticQuestions, ...qudemoQuestions];
+              
+              setSuggestedQuestions(allQuestions.slice(0, 15));
+              console.log('✅ Updated with cached questions:', allQuestions.length);
             }
+          } catch (err) {
+            console.error('❌ Error parsing cached questions:', err);
           }
+        } else {
+          // Fetch in background with timeout - don't block widget loading
+          console.log('🔍 Fetching suggested questions in background (non-blocking)...');
           
-          console.log('📊 Suggested questions data:', suggestedQuestionsData);
+          const suggestedQuestionsUrl = getVideoApiUrl(`/suggested-questions/${encodeURIComponent(loadedQudemo.company_name)}/${loadedQudemo.id}`);
           
-          // Handle both response formats: {questions: [...]} and {suggested_questions: [...]}
-          const questionsArray = suggestedQuestionsData.questions || suggestedQuestionsData.suggested_questions || [];
-          console.log('✅ Extracted questions array:', questionsArray);
-          console.log('📝 Questions count:', questionsArray.length);
+          // Fetch with 5 second timeout
+          const fetchWithTimeout = (url, timeout = 5000) => {
+            return Promise.race([
+              fetch(url),
+              new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('Timeout')), timeout)
+              )
+            ]);
+          };
           
-          if (questionsArray && questionsArray.length > 0) {
-            qudemoQuestions = questionsArray.map(q => {
-              // Handle different question formats
-              if (typeof q === 'string') return q;
-              return q.question || q.text || q.title || '';
-            }).filter(q => q.trim() !== '');
-            console.log('✅ Processed questions:', qudemoQuestions);
-          } else {
-            console.warn('⚠️ No questions found in response');
-          }
-        } catch (qError) {
-          console.error('❌ Error loading suggested questions:', qError);
-          // Failed to load suggested questions
+          fetchWithTimeout(suggestedQuestionsUrl, 5000)
+            .then(response => response.json())
+            .then(suggestedQuestionsData => {
+              console.log('📊 Background fetch complete - updating questions');
+              
+              // Cache for this specific QuDemo
+              sessionStorage.setItem(`suggested_questions_${qudemoId}`, JSON.stringify(suggestedQuestionsData));
+              
+              const questionsArray = suggestedQuestionsData.questions || suggestedQuestionsData.suggested_questions || [];
+              
+              if (questionsArray && questionsArray.length > 0) {
+                const qudemoQuestions = questionsArray.map(q => {
+                  if (typeof q === 'string') return q;
+                  return q.question || q.text || q.title || '';
+                }).filter(q => q.trim() !== '');
+                
+                const allQuestions = qudemoId && qudemoQuestions.length > 0 
+                  ? qudemoQuestions 
+                  : [...staticQuestions, ...qudemoQuestions];
+                
+                setSuggestedQuestions(allQuestions.slice(0, 15));
+                console.log('✅ Updated with API questions:', allQuestions.length);
+              }
+            })
+            .catch(error => {
+              console.warn('⚠️ Background fetch failed (non-critical):', error.message);
+              // Keep using static questions - widget still works
+            });
         }
       }
       
-      // Combine questions: if specific qudemoId is provided, ONLY use qudemo questions
-      let allQuestions;
-      if (qudemoId && qudemoQuestions.length > 0) {
-        console.log('🎯 Using ONLY QuDemo questions (qudemoId provided)');
-        allQuestions = qudemoQuestions;
-      } else {
-        console.log('🔗 Combining static and qudemo questions');
-        allQuestions = [...staticQuestions, ...qudemoQuestions];
-      }
-      console.log('📋 Questions array:', allQuestions);
-      
-      const questionsToSet = allQuestions.slice(0, 15); // Show up to 15 questions total (6 static + 7 Loom + room for more)
-      console.log('📌 Final questions to display (max 15):', questionsToSet);
-      setSuggestedQuestions(questionsToSet);
-      console.log('✅ Suggested questions state updated with', questionsToSet.length, 'questions');
-      
-      // Identify collection videos from FAQs (if collection is enabled)
-      if (loadedQudemo && loadedQudemo.id && loadedQudemo.company_name && loadedQudemo.collect_user_info) {
-        try {
-          console.log('👤 Identifying user collection videos from FAQs...');
-          
-          // Check cache first for static demo
-          const cachedFaqs = !qudemoId ? sessionStorage.getItem('collection_faqs') : null;
-          let faqsData;
-          
-          if (cachedFaqs) {
-            console.log('⚡ Using cached collection FAQs');
-            faqsData = JSON.parse(cachedFaqs);
-          } else {
-            const faqsUrl = getVideoApiUrl(`/faqs/${encodeURIComponent(loadedQudemo.company_name)}/${loadedQudemo.id}`);
-            const faqsResponse = await fetch(faqsUrl);
-            faqsData = await faqsResponse.json();
+      // Identify collection videos from FAQs (if collection is enabled) - non-blocking with timeout
+      // Only fetch for specific QuDemos, not static demo
+      if (qudemoId && loadedQudemo && loadedQudemo.id && loadedQudemo.company_name && loadedQudemo.collect_user_info) {
+        console.log('🎯 Fetching collection videos for specific QuDemo:', qudemoId);
+        
+        const cachedFaqs = sessionStorage.getItem(`collection_faqs_${qudemoId}`);
+        
+        if (cachedFaqs) {
+          // Use cached FAQs immediately
+          console.log('⚡ Using cached collection FAQs');
+          try {
+            const faqsData = JSON.parse(cachedFaqs);
             
-            // Cache for static demo
-            if (!qudemoId) {
-              sessionStorage.setItem('collection_faqs', JSON.stringify(faqsData));
+            if (faqsData && faqsData.faqs) {
+              const nameVideo = faqsData.faqs.find(f => f.question === 'NAME_REQUEST');
+              const emailVideo = faqsData.faqs.find(f => f.question === 'EMAIL_REQUEST');
+              const companyVideo = faqsData.faqs.find(f => f.question === 'COMPANY_REQUEST');
+              const completeVideo = faqsData.faqs.find(f => f.question === 'COLLECTION_COMPLETE');
+              
+              setCollectionVideos({
+                name: nameVideo,
+                email: emailVideo,
+                company: companyVideo,
+                complete: completeVideo
+              });
+              
+              console.log('✅ Collection videos identified from cache');
             }
+          } catch (err) {
+            console.error('❌ Error parsing cached FAQs:', err);
           }
+        } else {
+          // Fetch in background with timeout - don't block widget loading
+          console.log('👤 Fetching collection videos in background (non-blocking)...');
           
-          if (faqsData && faqsData.faqs) {
-            const nameVideo = faqsData.faqs.find(f => f.question === 'NAME_REQUEST');
-            const emailVideo = faqsData.faqs.find(f => f.question === 'EMAIL_REQUEST');
-            const companyVideo = faqsData.faqs.find(f => f.question === 'COMPANY_REQUEST');
-            const completeVideo = faqsData.faqs.find(f => f.question === 'COLLECTION_COMPLETE');
-            
-            setCollectionVideos({
-              name: nameVideo,
-              email: emailVideo,
-              company: companyVideo,
-              complete: completeVideo
+          const faqsUrl = getVideoApiUrl(`/faqs/${encodeURIComponent(loadedQudemo.company_name)}/${loadedQudemo.id}`);
+          
+          const fetchWithTimeout = (url, timeout = 5000) => {
+            return Promise.race([
+              fetch(url),
+              new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('Timeout')), timeout)
+              )
+            ]);
+          };
+          
+          fetchWithTimeout(faqsUrl, 5000)
+            .then(response => response.json())
+            .then(faqsData => {
+              console.log('📊 Background FAQs fetch complete');
+              
+              // Cache for this specific QuDemo
+              sessionStorage.setItem(`collection_faqs_${qudemoId}`, JSON.stringify(faqsData));
+              
+              if (faqsData && faqsData.faqs) {
+                const nameVideo = faqsData.faqs.find(f => f.question === 'NAME_REQUEST');
+                const emailVideo = faqsData.faqs.find(f => f.question === 'EMAIL_REQUEST');
+                const companyVideo = faqsData.faqs.find(f => f.question === 'COMPANY_REQUEST');
+                const completeVideo = faqsData.faqs.find(f => f.question === 'COLLECTION_COMPLETE');
+                
+                setCollectionVideos({
+                  name: nameVideo,
+                  email: emailVideo,
+                  company: companyVideo,
+                  complete: completeVideo
+                });
+                
+                console.log('✅ Collection videos identified:', {
+                  name: !!nameVideo,
+                  email: !!emailVideo,
+                  company: !!companyVideo,
+                  complete: !!completeVideo
+                });
+              }
+            })
+            .catch(error => {
+              console.warn('⚠️ Background FAQs fetch failed (non-critical):', error.message);
+              // Widget still works without collection videos
             });
-            
-            console.log('✅ Collection videos identified:', {
-              name: !!nameVideo,
-              email: !!emailVideo,
-              company: !!companyVideo,
-              complete: !!completeVideo
-            });
-          }
-        } catch (faqError) {
-          console.error('❌ Error loading collection videos:', faqError);
         }
       }
       
@@ -2614,4 +2671,5 @@ const FloatingQudemoWidget = ({
 };
 
 export default FloatingQudemoWidget;
+
 
