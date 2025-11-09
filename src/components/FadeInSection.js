@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { useInView } from "react-intersection-observer";
+import { cn } from "../lib/utils";
 
 const FadeInSection = ({ children, delay = 0, className = "" }) => {
   const { ref, inView } = useInView({
@@ -14,8 +15,7 @@ const FadeInSection = ({ children, delay = 0, className = "" }) => {
       initial={{ opacity: 0, y: 20 }}
       animate={inView ? { opacity: 1, y: 0 } : {}}
       transition={{ duration: 0.5, ease: "easeOut", delay }}
-      className={className}
-      style={{ minHeight: "80vh" }}
+      className={cn("min-h-[80vh] relative", className)}
     >
       {children}
     </motion.div>

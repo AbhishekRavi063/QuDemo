@@ -1,7 +1,7 @@
 import { useRef, useEffect, useState } from "react";
 import { Renderer, Program, Triangle, Mesh } from "ogl";
 
-const DEFAULT_COLOR = "0096ff";
+const DEFAULT_COLOR = "8aa5ff";
 
 const hexToRgb = (hex) => {
   const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -37,7 +37,7 @@ const getAnchorAndDir = (origin, w, h) => {
 };
 
 const LightRays = ({
-  raysOrigin = "top-left",
+  raysOrigin = "top-center",
   raysColor = DEFAULT_COLOR,
   raysSpeed = 0.4,
   lightSpread = 10,
@@ -45,10 +45,12 @@ const LightRays = ({
   pulsating = false,
   fadeDistance = 5,
   saturation = 0,
-  followMouse = true,
-  mouseInfluence = 0.1,
+  followMouse = false,
+  mouseInfluence = 0.0,
   noiseAmount = 0.0,
   distortion = 0.0,
+  numRays = 8,
+  rotationSpeed = 0.3,
   className = "",
 }) => {
   const containerRef = useRef(null);
@@ -139,66 +141,111 @@ uniform vec2  mousePos;
 uniform float mouseInfluence;
 uniform float noiseAmount;
 uniform float distortion;
+uniform float numRays;
+uniform float rotationSpeed;
 
 varying vec2 vUv;
+
+#define PI 3.14159265359
 
 float noise(vec2 st) {
   return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
 }
 
-float rayStrength(vec2 raySource, vec2 rayRefDirection, vec2 coord,
-                  float seedA, float seedB, float speed) {
-  vec2 sourceToCoord = coord - raySource;
-  vec2 dirNorm = normalize(sourceToCoord);
-  float cosAngle = dot(dirNorm, rayRefDirection);
+float random(float x) {
+  return fract(sin(x * 12.9898) * 43758.5453);
+}
 
-  float distortedAngle = cosAngle + distortion * sin(iTime * 2.0 + length(sourceToCoord) * 0.01) * 0.2;
+// Rotation matrix
+vec2 rotate(vec2 v, float angle) {
+  float s = sin(angle);
+  float c = cos(angle);
+  return vec2(v.x * c - v.y * s, v.x * s + v.y * c);
+}
 
-  float spreadFactor = pow(max(distortedAngle, 0.0), 1.0 / max(lightSpread, 0.001));
+// Simple vertical beam with slight angle
+float angledBeam(vec2 rayStart, vec2 coord, float width, float lengthMultiplier, float angle) {
+  // Apply slight rotation to the coordinate system
+  vec2 relativeCoord = coord - rayStart;
+  vec2 rotatedCoord = rotate(relativeCoord, -angle);
 
-  float distance = length(sourceToCoord);
-  float maxDistance = iResolution.x * rayLength;
-  float lengthFalloff = clamp((maxDistance - distance) / maxDistance, 0.0, 1.0);
+  float distX = abs(rotatedCoord.x);
+  float distY = rotatedCoord.y;
 
-  float fadeFalloff = clamp((iResolution.x * fadeDistance - distance) / (iResolution.x * fadeDistance), 0.5, 1.0);
-  float pulse = pulsating > 0.5 ? (0.8 + 0.2 * sin(iTime * speed * 3.0)) : 1.0;
+  // Only render downward
+  if (distY < 0.0) return 0.0;
 
-  float baseStrength = clamp(
-    (0.45 + 0.15 * sin(distortedAngle * seedA + iTime * speed)) +
-    (0.3 + 0.2 * cos(-distortedAngle * seedB + iTime * speed)),
-    0.0, 1.0
-  );
+  // Soft beam shape
+  float beamShape = exp(-distX * distX / (width * width));
 
-  return baseStrength * lengthFalloff * fadeFalloff * spreadFactor * pulse;
+  // Length with soft falloff
+  float maxLen = iResolution.y * rayLength * lengthMultiplier;
+  float lengthFade = smoothstep(maxLen, maxLen * 0.5, distY);
+
+  // Distance fade
+  float distFade = 1.0 - smoothstep(0.0, iResolution.y * fadeDistance, length(relativeCoord));
+
+  return beamShape * lengthFade * distFade;
 }
 
 void mainImage(out vec4 fragColor, in vec2 fragCoord) {
   vec2 coord = vec2(fragCoord.x, iResolution.y - fragCoord.y);
 
-  vec2 finalRayDir = rayDir;
-  if (mouseInfluence > 0.0) {
-    vec2 mouseScreenPos = mousePos * iResolution.xy;
-    vec2 mouseDirection = normalize(mouseScreenPos - rayPos);
-    finalRayDir = normalize(mix(rayDir, mouseDirection, mouseInfluence));
+  vec4 finalColor = vec4(0.0);
+
+  // Simple vertical beams spread across width with random properties
+  for (float i = 0.0; i < 16.0; i += 1.0) {
+    if (i >= numRays) break;
+
+    // Evenly space rays across screen width
+    float spacing = iResolution.x / (numRays + 1.0);
+    vec2 rayPosition = vec2(spacing * (i + 1.0), rayPos.y);
+
+    // Base random width for each ray
+    float widthVariation = random(i * 7.123);
+    float baseWidth = iResolution.x * (0.02 + widthVariation * 0.03);
+
+    // Calculate subtle angle toward center (500px below top)
+    vec2 convergencePoint = vec2(iResolution.x * 0.5, 500.0);
+    vec2 toConvergence = convergencePoint - rayPosition;
+    float convergenceAngle = atan(toConvergence.x, toConvergence.y) * 0.25;
+
+    // Random variation angle
+    float angleVariation = random(i * 13.456);
+    float randomAngle = (angleVariation - 0.5) * 0.15;
+
+    // Combine both: subtle convergence + random variation
+    float angle = convergenceAngle + randomAngle;
+
+    // Animate length AND width for 40% of rays
+    float lengthMultiplier = 1.0;
+    float widthMultiplier = 1.0;
+    if (i < numRays * 0.4) {
+      // Much faster and more visible animation
+      float phase = sin(iTime * 2.0 + i * 2.0) * 0.5 + 0.5;
+      lengthMultiplier = 0.2 + phase * 0.8;  // 20% to 100%
+      widthMultiplier = 0.6 + phase * 0.8;   // 60% to 140%
+    }
+
+    float width = baseWidth * widthMultiplier;
+
+    // Calculate beam
+    float beam = angledBeam(rayPosition, coord, width, lengthMultiplier, angle);
+
+    finalColor += vec4(1.0) * beam;
   }
 
-  vec4 rays1 = vec4(1.0) *
-               rayStrength(rayPos, finalRayDir, coord, 36.2214, 21.11349,
-                           1.5 * raysSpeed);
-  vec4 rays2 = vec4(1.0) *
-               rayStrength(rayPos, finalRayDir, coord, 22.3991, 18.0234,
-                           1.1 * raysSpeed);
-
-  fragColor = rays1 * 0.5 + rays2 * 0.4;
+  fragColor = finalColor;
 
   if (noiseAmount > 0.0) {
     float n = noise(coord * 0.01 + iTime * 0.1);
     fragColor.rgb *= (1.0 - noiseAmount + noiseAmount * n);
   }
 
+  // Vertical brightness gradient (brighter at top)
   float brightness = 1.0 - (coord.y / iResolution.y);
-  fragColor.x *= 0.1 + brightness * 0.8;
-  fragColor.y *= 0.3 + brightness * 0.6;
+  fragColor.x *= 0.3 + brightness * 0.7;
+  fragColor.y *= 0.4 + brightness * 0.6;
   fragColor.z *= 0.5 + brightness * 0.5;
 
   if (saturation != 1.0) {
@@ -206,7 +253,18 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     fragColor.rgb = mix(vec3(gray), fragColor.rgb, saturation);
   }
 
+  // Apply blue color (#8aa5ff)
   fragColor.rgb *= raysColor;
+
+  // Calculate radial distance from center (0 at center, 1 at edges)
+  vec2 centerPos = iResolution.xy * 0.5;
+  float distFromCenter = length(coord - centerPos) / (length(iResolution.xy) * 0.5);
+
+  // Radial gradient: full opacity at center (0%), transparent at edges (100%)
+  float radialAlpha = 1.0 - smoothstep(0.0, 1.0, distFromCenter);
+
+  // Apply radial gradient to alpha
+  fragColor.a = fragColor.a * radialAlpha;
 }
 
 void main() {
@@ -233,6 +291,8 @@ void main() {
         mouseInfluence: { value: mouseInfluence },
         noiseAmount: { value: noiseAmount },
         distortion: { value: distortion },
+        numRays: { value: numRays },
+        rotationSpeed: { value: rotationSpeed },
       };
       uniformsRef.current = uniforms;
 
@@ -270,6 +330,11 @@ void main() {
         }
 
         uniforms.iTime.value = t * 0.001;
+
+        // Debug - remove after testing
+        if (Math.floor(t / 1000) % 2 === 0 && t % 1000 < 50) {
+          console.log('LightRays animating, iTime:', uniforms.iTime.value);
+        }
 
         if (followMouse && mouseInfluence > 0.0) {
           const smoothing = 0.92;
@@ -353,6 +418,8 @@ void main() {
     mouseInfluence,
     noiseAmount,
     distortion,
+    numRays,
+    rotationSpeed,
   ]);
 
   useEffect(() => {
@@ -372,6 +439,8 @@ void main() {
     u.mouseInfluence.value = mouseInfluence;
     u.noiseAmount.value = noiseAmount;
     u.distortion.value = distortion;
+    u.numRays.value = numRays;
+    u.rotationSpeed.value = rotationSpeed;
 
     const { clientWidth: wCSS, clientHeight: hCSS } = containerRef.current;
     const dpr = renderer.dpr;
@@ -390,6 +459,8 @@ void main() {
     mouseInfluence,
     noiseAmount,
     distortion,
+    numRays,
+    rotationSpeed,
   ]);
 
   useEffect(() => {
@@ -408,10 +479,20 @@ void main() {
   }, [followMouse]);
 
   return (
-    <div
-      ref={containerRef}
-      className={`light-rays-container ${className}`.trim()}
-    />
+    <div className="relative w-full h-full max-w-7xl mx-auto">
+      {/* Blue glow background */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(50% 50% at 50% 50%,var(--token-077104a2-d76f-4b61-ba61-73e253fa3923,#2934ff)0%,#ababab00 100%)",
+        }}
+      />
+      <div
+        ref={containerRef}
+        className={`light-rays-container ${className}`.trim()}
+      />
+    </div>
   );
 };
 

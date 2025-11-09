@@ -22,16 +22,18 @@ import TestimonialCard from "./ui/TestimonialCard";
 import PricingCard from "./ui/PricingCard";
 import IntegrationCard from "./ui/IntegrationCard";
 import LightRays from "./ui/LightRays";
+import SimpleLightRays from "./ui/SimpleLightRays";
 import { navigateToCreate } from "../utils/navigation";
 import SpotlightCard from "./ui/SpotlightCard";
 import InfiniteBadges from "./ui/InfiniteBadges";
 import { Edit2, Eye, Pointer, Upload, User2 } from "lucide-react";
-import Orb from "./ui/orb";
+import RadarScanner from "./ui/RadarScanner";
 
 const HomePage = () => {
   const [openFAQ, setOpenFAQ] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userEmail, setUserEmail] = useState("");
+  const [isYearly, setIsYearly] = useState(false);
   const navigate = useNavigate();
 
   // Check authentication state on home page load
@@ -87,52 +89,64 @@ const HomePage = () => {
   // Testimonials data
   const testimonials = [
     {
-      name: "Sarah Johnson",
-      role: "VP of Sales",
+      name: "Wayne",
+      role: "Sales Operations",
       company: "TechCorp",
       rating: 5,
+      image:
+        "https://framerusercontent.com/images/ETgoVdeITLLIYCHTFNeVuZDMyQY.png?width=1024&height=1024",
       testimonial:
-        "Qudemo transformed how we present our product. Our demo engagement increased by 300% and qualified leads by 150%.",
+        "SaaS companies are in great need of this product. Customers can get immediate answers and thus helps in decision making.",
     },
     {
-      name: "Michael Chen",
-      role: "Product Manager",
+      name: "Corvin Wucher",
+      role: "Marketing Strategy",
       company: "StartupXYZ",
       rating: 5,
+      image:
+        "https://framerusercontent.com/images/QmmaDSjXyuZNNDsZdt23lDVXI.png?width=512&height=512",
       testimonial:
-        "The AI-powered Q&A is incredible. Prospects get instant answers and we save hours of manual demos every week.",
+        "We've all been there watching a 20-minute demo hoping they'll address your specific use case, only to sit through stuff that doesn't apply to you.",
     },
     {
-      name: "Emily Rodriguez",
-      role: "Marketing Director",
+      name: "Tuba Ismail",
+      role: "Sales Manager",
       company: "CloudSolutions",
       rating: 5,
+      image:
+        "https://framerusercontent.com/images/0zuVQ2JmvxEtdnpdOq5FtRJxmNY.png?width=382&height=512",
       testimonial:
-        "Setup took less than 5 minutes. The interactive experience keeps visitors engaged 5x longer than our old videos.",
+        "Qudemo’s interactive agentic approach is a huge step forward. Answering questions instantly and jumping to the right video moment is a major upgrade over traditional demos.",
     },
     {
-      name: "David Park",
-      role: "Founder",
+      name: "Abhilash Sathyan",
+      role: "CEO - Rateup",
       company: "InnovateLabs",
       rating: 5,
+      image:
+        "https://framerusercontent.com/images/4EiFhjIPXbRF4y7hS6k9U484AQM.jpg?width=3456&height=4028",
       testimonial:
-        "Game changer for our sales process. Customers love being able to ask questions and jump to relevant parts instantly.",
+        "Qudemo made our website feel personal, visitors get answers instantly and qualified leads have doubled!",
     },
     {
-      name: "Lisa Anderson",
-      role: "Head of Growth",
+      name: "Dilshad",
+      role: "CEO - Dgymbook",
       company: "ScaleUp Inc",
       rating: 5,
+      image:
+        "https://framerusercontent.com/images/7qBFv2WmuOwj4qUFS7XUzQSFL4.jpg?width=3265&height=4898",
       testimonial:
-        "Our conversion rate doubled after implementing Qudemo. The personalized experience makes all the difference.",
+        "Qudemo's AI video agent engages every visitor like a founder would. It saves our team so much time.",
     },
     {
-      name: "James Wilson",
-      role: "CTO",
+      name: "John Mathew",
+      role: "Product Marketing Lead",
       company: "DevTools Pro",
       rating: 5,
+      image:
+        "https://framerusercontent.com/images/tvip64h9JcqV1xA68gzm2QrLSM.png?width=2048&height=2048",
       testimonial:
-        "Finally, a solution that makes video demos feel like real conversations. Our prospects are more engaged than ever.",
+        "Setting up Qudemo was fast, and our demo conversions has increased. Visitors love interacting with it!",
     },
   ];
 
@@ -167,121 +181,167 @@ const HomePage = () => {
   ];
 
   return (
-    <div className="h-full w-full flex flex-col relative">
-      {/* Deep Ocean Light Rays Background */}
+    <div className="h-full w-full flex flex-col relative bg-black">
+      {/* Radial gradient overlays for depth */}
       <div
-        className="absolute inset-0"
+        className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[800px] opacity-30"
         style={{
           background:
-            "linear-gradient(180deg, rgba(2, 6, 23, 1) 0%, rgba(1, 4, 15, 1) 50%, rgba(0, 2, 10, 1) 100%)",
+            "radial-gradient(circle at center top, rgba(41, 52, 255, 0.15) 0%, transparent 70%)",
+          filter: "blur(80px)",
         }}
       />
-      <div className="fixed top-0 left-0 right-0 w-full opacity-[0.2]">
-        <LightRays />
-      </div>
+      <div
+        className="absolute top-1/3 left-1/4 w-[600px] h-[600px] opacity-20"
+        style={{
+          background:
+            "radial-gradient(circle, rgba(59, 130, 246, 0.2) 0%, transparent 70%)",
+          filter: "blur(100px)",
+        }}
+      />
+      <div
+        className="absolute top-2/3 right-1/4 w-[600px] h-[600px] opacity-20"
+        style={{
+          background:
+            "radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%)",
+          filter: "blur(100px)",
+        }}
+      />
+
+      {/* Left and Right side darkness gradients - background layer */}
+      <div
+        className="fixed left-0 top-0 bottom-0 w-1/3 pointer-events-none"
+        style={{
+          background:
+            "linear-gradient(90deg, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.5) 50%, transparent 100%)",
+          zIndex: 1,
+        }}
+      />
+      <div
+        className="fixed right-0 top-0 bottom-0 w-1/3 pointer-events-none"
+        style={{
+          background:
+            "linear-gradient(-90deg, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.5) 50%, transparent 100%)",
+          zIndex: 1,
+        }}
+      />
 
       {/* Enhanced Navigation Bar - Outside overflow container */}
       <nav
-        className="flex justify-between items-center px-4 md:px-6 w-full fixed top-0 z-50"
+        className="w-full fixed top-0 z-[999]"
         style={{
-          background: "rgba(18, 20, 38, 0.6)",
+          background:
+            "linear-gradient(180deg, var(--token-6d7bfc0f-867f-43f5-837b-f61a13bf9490, rgb(0, 0, 0)) -50%, rgba(0, 0, 0, 0) 170.00000000000003%)",
           backdropFilter: "blur(5px)",
         }}
       >
-        <div className="flex items-center">
-          <img
-            src="/Qudemo LP.svg"
-            alt="Qudemo Logo"
-            className="w-32 h-20 cursor-pointer"
-            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          />
-        </div>
+        <div className="flex justify-between items-center max-w-7xl w-full mx-auto p-4  md:px-6">
+          <div className="flex items-center">
+            <img
+              src="/Qudemo LP.svg"
+              alt="Qudemo Logo"
+              className="cursor-pointer w-auto h-8 scale-[3] ml-2"
+              height={36}
+              onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+            />
+          </div>
 
-        {/* Navigation Links - Hidden on mobile */}
-        <div className="hidden md:flex items-center gap-8 text-white">
-          <button
-            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-            className="hover:text-blue-400 transition-colors duration-200 font-medium"
-          >
-            Home
-          </button>
-          <button
-            onClick={() => scrollToSection("pricing")}
-            className="hover:text-blue-400 transition-colors duration-200 font-medium"
-          >
-            Pricing
-          </button>
-          <button
-            onClick={() => scrollToSection("testimonials")}
-            className="hover:text-blue-400 transition-colors duration-200 font-medium"
-          >
-            Testimonials
-          </button>
-          <button
-            onClick={() => scrollToSection("faq")}
-            className="hover:text-blue-400 transition-colors duration-200 font-medium"
-          >
-            FAQ
-          </button>
-        </div>
-
-        {/* Auth Buttons */}
-        <div className="flex items-center gap-2 md:gap-6">
-          {isLoggedIn ? (
-            <div className="flex items-center gap-2 md:gap-4">
-              <div
-                onClick={() => navigate("/profile")}
-                className="text-white font-medium px-3 md:px-6 py-2 rounded-[20px] border text-xs md:text-sm hover:shadow-lg transition-all duration-300 cursor-pointer"
-                style={{
-                  background: "rgba(18, 20, 38, 0.6)",
-                  backdropFilter: "blur(16px)",
-                  borderColor: "rgba(138, 165, 255, 0.3)",
-                  boxShadow: "0 4px 24px rgba(41, 52, 255, 0.1)",
-                }}
-              >
-                <span className="hidden sm:inline">{userEmail}</span>
-                <span className="sm:hidden">{userEmail.split("@")[0]}</span>
-              </div>
-              <div
-                onClick={() => navigate("/overview")}
-                className="text-white font-medium px-4 md:px-8 py-2 rounded-[20px] border hover:shadow-2xl transition-all duration-300 cursor-pointer text-sm md:text-base"
-                style={{
-                  background: "rgba(41, 52, 255, 0.9)",
-                  backdropFilter: "blur(16px)",
-                  borderColor: "rgba(138, 165, 255, 0.5)",
-                  boxShadow:
-                    "0 8px 32px rgba(41, 52, 255, 0.4), inset 0 2px 4px rgba(138, 165, 255, 0.5)",
-                }}
-              >
-                <span className="hidden sm:inline">Dashboard</span>
-                <span className="sm:hidden">Dash</span>
-              </div>
-            </div>
-          ) : (
-            <div
-              onClick={() => navigate("/login", { state: { from: "/" } })}
-              className="text-white font-medium px-4 md:px-8 py-2 rounded-[20px] border hover:shadow-lg transition-all duration-300 cursor-pointer text-sm md:text-base"
-              style={{
-                background: "rgba(18, 20, 38, 0.6)",
-                backdropFilter: "blur(16px)",
-                borderColor: "rgba(138, 165, 255, 0.3)",
-                boxShadow: "0 4px 24px rgba(41, 52, 255, 0.1)",
-              }}
+          {/* Navigation Links - Hidden on mobile */}
+          <div className="hidden md:flex items-center gap-8 text-gray-500">
+            <button
+              onClick={() => scrollToSection("pricing")}
+              className="hover:text-blue-400 transition-colors duration-200 font-thin"
             >
-              Login
+              Pricing
+            </button>
+            <button
+              onClick={() => scrollToSection("testimonials")}
+              className="hover:text-blue-400 transition-colors duration-200 font-thin"
+            >
+              Contacts
+            </button>
+          </div>
+
+          {/* Auth Buttons */}
+          {isLoggedIn && (
+            <div className="flex items-center gap-2 md:gap-6">
+              <div className="flex items-center gap-2 md:gap-4">
+                <div
+                  onClick={() => navigate("/profile")}
+                  className="text-white font-medium px-3 md:px-6 py-2 rounded-[20px] border text-xs md:text-sm hover:shadow-lg transition-all duration-300 cursor-pointer"
+                  style={{
+                    background: "rgba(18, 20, 38, 0.6)",
+                    backdropFilter: "blur(16px)",
+                    borderColor: "rgba(138, 165, 255, 0.3)",
+                    boxShadow: "0 4px 24px rgba(41, 52, 255, 0.1)",
+                  }}
+                >
+                  <span className="hidden sm:inline">{userEmail}</span>
+                  <span className="sm:hidden">{userEmail.split("@")[0]}</span>
+                </div>
+                <div
+                  onClick={() => navigate("/overview")}
+                  className="text-white font-medium px-4 md:px-8 py-2 rounded-[20px] border hover:shadow-2xl transition-all duration-300 cursor-pointer text-sm md:text-base"
+                  style={{
+                    background: "rgba(41, 52, 255, 0.9)",
+                    backdropFilter: "blur(16px)",
+                    borderColor: "rgba(138, 165, 255, 0.5)",
+                    boxShadow:
+                      "0 8px 32px rgba(41, 52, 255, 0.4), inset 0 2px 4px rgba(138, 165, 255, 0.5)",
+                  }}
+                >
+                  <span className="hidden sm:inline">Dashboard</span>
+                  <span className="sm:hidden">Dash</span>
+                </div>
+              </div>
             </div>
           )}
         </div>
       </nav>
 
       <div
-        className="relative z-10 flex flex-col min-h-screen max-w-full"
+        className="relative z-50 flex flex-col min-h-screen max-w-full"
         style={{ overflowX: "clip" }}
       >
         {/* Hero Section */}
-        <FadeInSection delay={0} className="flex flex-col">
-          <div className="flex justify-center items-start mt-60 px-6 h-[60vh] ">
-            <div className="max-w-5xl text-center">
+        <FadeInSection delay={0} className="flex flex-col z-[999]">
+          <div
+            className="flex justify-center flex-col items-center pt-60 px-6 h-[60vh] relative"
+            style={{
+              background:
+                "radial-gradient(80% 25% at 50% 7.5%,var(--token-c6d9a740-f8af-44c7-ac7a-31b27a79b7f2,#000e47)0%,var(--token-6d7bfc0f-867f-43f5-837b-f61a13bf9490,#000)100%)",
+            }}
+          >
+            <div className="absolute top-0 left-0 right-0 w-full h-[100vh] bottom-0 opacity-[0.2] z-50">
+              <SimpleLightRays />
+            </div>
+            <img
+              decoding="auto"
+              width="513"
+              height="272"
+              sizes="100vw"
+              srcset="https://framerusercontent.com/images/eVPQSYBoVqwchmpN78sjyYtovY.svg?scale-down-to=512&amp;width=513&amp;height=272 512w,https://framerusercontent.com/images/eVPQSYBoVqwchmpN78sjyYtovY.svg?width=513&amp;height=272 513w"
+              src="https://framerusercontent.com/images/eVPQSYBoVqwchmpN78sjyYtovY.svg?width=513&amp;height=272"
+              alt="Grid"
+              className="absolute top-0"
+              style={{
+                display: "block",
+                width: "100%",
+                height: "100%",
+                borderRadius: "inherit",
+                objectPosition: "center center",
+                objectFit: "cover",
+              }}
+            />
+            {/* Bottom right gradient overlay */}
+            <div
+              className="absolute inset-0 pointer-events-none z-0"
+              style={{
+                background:
+                  "radial-gradient(ellipse at 90% 100%, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.7) 30%, transparent 60%)",
+              }}
+            />
+            <div className="max-w-5xl text-center relative z-50">
               {/* User Avatars Badge */}
               <div className="flex justify-center mb-4 animate-fadeIn">
                 <div className="flex items-center gap-3">
@@ -289,35 +349,35 @@ const HomePage = () => {
                   <div className="flex -space-x-2">
                     <div className="w-7 h-7 rounded-full overflow-hidden bg-gradient-to-br from-purple-500 to-pink-500">
                       <img
-                        src="https://i.pravatar.cc/150?img=1"
+                        src="https://framerusercontent.com/images/ETgoVdeITLLIYCHTFNeVuZDMyQY.png"
                         alt="User"
                         className="w-full h-full object-cover"
                       />
                     </div>
                     <div className="w-7 h-7 rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-cyan-500">
                       <img
-                        src="https://i.pravatar.cc/150?img=2"
+                        src="https://framerusercontent.com/images/bnJJiW5Vfixlrz7M2pzoeyHBU.png"
                         alt="User"
                         className="w-full h-full object-cover"
                       />
                     </div>
                     <div className="w-7 h-7 rounded-full overflow-hidden bg-gradient-to-br from-green-500 to-emerald-500">
                       <img
-                        src="https://i.pravatar.cc/150?img=3"
+                        src="https://framerusercontent.com/images/rlizSNVuxrrqd6I5hGaSxwqn0Os.png"
                         alt="User"
                         className="w-full h-full object-cover"
                       />
                     </div>
                     <div className="w-7 h-7 rounded-full overflow-hidden bg-gradient-to-br from-orange-500 to-red-500">
                       <img
-                        src="https://i.pravatar.cc/150?img=4"
+                        src="https://framerusercontent.com/images/X0pqhTmlK8gdYqPbljhuLXlyd0I.png"
                         alt="User"
                         className="w-full h-full object-cover"
                       />
                     </div>
                   </div>
                   {/* Join Text */}
-                  <span className="text-gray-400 text-md font-normal">
+                  <span className="text-gray-500 text-md font-normal">
                     Join <span className="text-white font-medium">200+</span>{" "}
                     other loving customers
                   </span>
@@ -339,15 +399,15 @@ const HomePage = () => {
               </h1>
 
               <p
-                className="text-base md:text-lg text-gray-400 my-8 max-w-2xl mx-auto leading-relaxed font-normal"
+                className="text-base md:text-lg text-gray-500 my-8 max-w-2xl mx-auto leading-relaxed font-normal"
                 style={{
                   animation: "fadeInUp 0.8s ease-out 0.4s both",
                   fontWeight: "400",
                 }}
               >
-                Engage and Qualify your SaaS website visitors with an AI
-                interactive video agent that feels like you are always
-                available.
+                Engage with your visitors and qualify your leads in a
+                personalized way that feels like you're always present, all
+                while keeping them engaged on your website.
               </p>
 
               {/* CTA Button */}
@@ -359,7 +419,7 @@ const HomePage = () => {
               >
                 <button
                   onClick={() => navigateToCreate(navigate)}
-                  className="text-white font-medium text-base px-8 py-3.5 rounded-xl transition-all duration-300 flex items-center justify-center relative overflow-hidden group"
+                  className="text-white font-medium text-base px-8 py-3.5 rounded-xl transition-all duration-300 flex items-center justify-center relative overflow-hidden group z-[999]"
                   style={{
                     background: "rgba(59, 130, 246, 1)",
                     boxShadow: "0 8px 32px rgba(59, 130, 246, 0.5)",
@@ -370,37 +430,85 @@ const HomePage = () => {
               </div>
 
               {/* Infinite Scrolling Logos */}
-              <div
-                style={{
-                  animation: "fadeInUp 0.8s ease-out 0.6s both",
-                }}
-              >
-                <InfiniteScroll />
-              </div>
+            </div>
+            <div
+              style={{
+                animation: "fadeInUp 0.8s ease-out 0.6s both",
+              }}
+            >
+              <InfiniteScroll />
             </div>
           </div>
         </FadeInSection>
 
         {/* Why Choose Us Section */}
-        <FadeInSection delay={0.1} className="flex flex-col">
+        <FadeInSection delay={0.1} className="flex flex-col relative">
           <div
-            className="px-6 min-h-[100vh] relative my-auto flex flex-col justify-center"
+            className="w-full h-32 relative overflow-hidden z-50 bg-black/20"
+            style={{
+              backdropFilter: "blur(100%)",
+            }}
+          >
+            {/* Horizontal glow lines */}
+            <div
+              className="absolute top-0 -translate-y-1/2 left-0 right-0 h-px"
+              style={{
+                background:
+                  "linear-gradient(90deg, transparent 0%, rgba(100, 150, 255, 0.2) 20%, rgba(150, 180, 255, 0.3) 50%, rgba(100, 150, 255, 0.2) 80%, transparent 100%)",
+              }}
+            />
+            <div
+              className="absolute bottom-0 -translate-y-1/2 left-0 right-0 h-px"
+              style={{
+                background:
+                  "linear-gradient(90deg, transparent 0%, rgba(100, 150, 255, 0.2) 20%, rgba(150, 180, 255, 0.3) 50%, rgba(100, 150, 255, 0.2) 80%, transparent 100%)",
+              }}
+            />
+          </div>
+          <div
+            className="px-6 min-h-[100vh] relative my-auto flex flex-col justify-center overflow-hidden"
             id="benefits"
           >
+            <div className="absolute top-0 left-0 right-0 w-full h-[100vh] bottom-0 opacity-[0.2] z-50">
+              <LightRays
+                lightSpread={200}
+                rayLength={20}
+                raysColor="8aa5ff"
+                rotationSpeed={0.02}
+                fadeDistance={20}
+                numRays={8}
+                raysSpeed={1.0}
+              />
+            </div>
             <div className="max-w-7xl mx-auto text-center flex flex-col">
               <div
                 style={{
                   width: "100%",
                   height: "600px",
                   position: "absolute",
-                  top: 0,
+                  top: "16%",
                   left: 0,
                   right: 0,
-                  opacity: 0.4,
+                  opacity: 0.6,
                 }}
               >
-                <Orb rotateOnHover={true} hue={0} forceHoverState={false} />
+                <RadarScanner
+                  gridColor={[0.3, 0.5, 1.0]}
+                  scanColor={[0, 0, 1.0]}
+                  glowColor={[0, 0.5, 1.0]}
+                  scanSpeed={0.6}
+                />
               </div>
+
+              {/* Bottom glowing light effect - centered spreading mountain */}
+              <div
+                className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full h-32"
+                style={{
+                  background:
+                    "radial-gradient(ellipse 800px 150px at center bottom, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.08) 25%, rgba(255, 255, 255, 0.03) 50%, transparent 70%)",
+                  filter: "blur(40px)",
+                }}
+              />
 
               <div className="flex justify-center">
                 <StarBorder
@@ -415,22 +523,24 @@ const HomePage = () => {
                 Create Qudemo in Minutes
               </h2>
 
-              <p className="text-md text-gray-400 mb-8 max-w-4xl mx-auto">
-                Build your AI video agent once and let it qualify every visitor.
+              <p className="text-md text-gray-500 mb-8 max-w-4xl mx-auto">
+                Three simple steps to launch your AI video agent
               </p>
 
               {/* Benefit Cards */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                 <SpotlightCard>
-                  <div
-                    className="w-14 h-14 rounded-xl flex items-center justify-center mb-6"
-                    style={{
-                      background: "rgba(41, 52, 255, 0.9)",
-                      boxShadow:
-                        "0 8px 32px rgba(41, 52, 255, 0.5), inset 0 2px 4px rgba(138, 165, 255, 0.5)",
-                    }}
-                  >
-                    <Upload className="text-white text-2xl" />
+                  <div className="relative w-14 h-14 rounded-xl flex items-center justify-center mb-6 bg-black border border-blue-500/30">
+                    {/* Corner accent */}
+                    <div
+                      className="absolute top-0 right-0 w-6 h-6 rounded-br-xl"
+                      style={{
+                        background:
+                          "linear-gradient(135deg, transparent 50%, rgba(59, 130, 246, 0.5) 50%)",
+                        borderTopRightRadius: "0.75rem",
+                      }}
+                    />
+                    <Upload className="text-blue-400 text-2xl relative z-10" />
                   </div>
                   <div className="text-left">
                     <h3 className="text-2xl font-bold text-white mb-3">
@@ -445,15 +555,17 @@ const HomePage = () => {
                 </SpotlightCard>
 
                 <SpotlightCard>
-                  <div
-                    className="w-14 h-14 rounded-xl flex items-center justify-center mb-6"
-                    style={{
-                      background: "rgba(41, 52, 255, 0.9)",
-                      boxShadow:
-                        "0 8px 32px rgba(41, 52, 255, 0.5), inset 0 2px 4px rgba(138, 165, 255, 0.5)",
-                    }}
-                  >
-                    <Edit2 className="text-white text-2xl" />
+                  <div className="relative w-14 h-14 rounded-xl flex items-center justify-center mb-6 bg-black border border-blue-500/30">
+                    {/* Corner accent */}
+                    <div
+                      className="absolute top-0 right-0 w-6 h-6 rounded-br-xl"
+                      style={{
+                        background:
+                          "linear-gradient(135deg, transparent 50%, rgba(59, 130, 246, 0.5) 50%)",
+                        borderTopRightRadius: "0.75rem",
+                      }}
+                    />
+                    <Edit2 className="text-blue-400 text-2xl relative z-10" />
                   </div>
                   <div className="text-left">
                     <h3 className="text-2xl font-bold text-white mb-3">
@@ -468,15 +580,17 @@ const HomePage = () => {
                 </SpotlightCard>
 
                 <SpotlightCard>
-                  <div
-                    className="w-14 h-14 rounded-xl flex items-center justify-center mb-6"
-                    style={{
-                      background: "rgba(41, 52, 255, 0.9)",
-                      boxShadow:
-                        "0 8px 32px rgba(41, 52, 255, 0.5), inset 0 2px 4px rgba(138, 165, 255, 0.5)",
-                    }}
-                  >
-                    <FaChartLine className="text-white text-2xl" />
+                  <div className="relative w-14 h-14 rounded-xl flex items-center justify-center mb-6 bg-black border border-blue-500/30">
+                    {/* Corner accent */}
+                    <div
+                      className="absolute top-0 right-0 w-6 h-6 rounded-br-xl"
+                      style={{
+                        background:
+                          "linear-gradient(135deg, transparent 50%, rgba(59, 130, 246, 0.5) 50%)",
+                        borderTopRightRadius: "0.75rem",
+                      }}
+                    />
+                    <FaChartLine className="text-blue-400 text-2xl relative z-10" />
                   </div>
                   <div className="text-left">
                     <h3 className="text-2xl font-bold text-white mb-3">
@@ -509,7 +623,26 @@ const HomePage = () => {
             </div>
           </div>
 
-          <div className="h-100 px-6 min-h-[80vh]" id="why">
+          <div
+            className="px-6 min-h-[80vh] relative overflow-hidden flex flex-col justify-center"
+            id="why"
+          >
+            <div
+              className="absolute top-0 -translate-y-1/2 left-0 right-0 h-px"
+              style={{
+                background:
+                  "linear-gradient(90deg, transparent 0%, rgba(100, 150, 255, 0.2) 30%, rgba(150, 180, 255, 0.2) 50%, rgba(100, 150, 255, 0.2) 70%, transparent 100%)",
+              }}
+            />
+            {/* Bottom glowing light effect - centered spreading mountain */}
+            <div
+              className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full h-32"
+              style={{
+                background:
+                  "radial-gradient(ellipse 800px 150px at center bottom, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.08) 25%, rgba(255, 255, 255, 0.03) 50%, transparent 70%)",
+                filter: "blur(40px)",
+              }}
+            />
             <div className="max-w-7xl mx-auto text-center flex flex-col">
               <div className="flex justify-center mb-8">
                 <StarBorder
@@ -524,23 +657,25 @@ const HomePage = () => {
                 Why Choose Us?
               </h2>
 
-              <p className="text-md text-gray-400 mb-8 max-w-4xl mx-auto">
-                Engage, educate and qualify leads with an AI agent that feels
-                like you.
+              <p className="text-md text-gray-500 mb-8 max-w-4xl mx-auto">
+                Transform passive viewers into engaged prospects with
+                intelligent video interactions
               </p>
 
               {/* Benefit Cards */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                 <SpotlightCard>
-                  <div
-                    className="w-14 h-14 rounded-xl flex items-center justify-center mb-6"
-                    style={{
-                      background: "rgba(41, 52, 255, 0.9)",
-                      boxShadow:
-                        "0 8px 32px rgba(41, 52, 255, 0.5), inset 0 2px 4px rgba(138, 165, 255, 0.5)",
-                    }}
-                  >
-                    <FaClock className="text-white text-2xl" />
+                  <div className="relative w-14 h-14 rounded-xl flex items-center justify-center mb-6 bg-black border border-blue-500/30">
+                    {/* Corner accent */}
+                    <div
+                      className="absolute top-0 right-0 w-6 h-6 rounded-br-xl"
+                      style={{
+                        background:
+                          "linear-gradient(135deg, transparent 50%, rgba(59, 130, 246, 0.5) 50%)",
+                        borderTopRightRadius: "0.75rem",
+                      }}
+                    />
+                    <FaClock className="text-blue-400 text-2xl relative z-10" />
                   </div>
                   <div className="text-left">
                     <h3 className="text-2xl font-bold text-white mb-3">
@@ -554,15 +689,17 @@ const HomePage = () => {
                 </SpotlightCard>
 
                 <SpotlightCard>
-                  <div
-                    className="w-14 h-14 rounded-xl flex items-center justify-center mb-6"
-                    style={{
-                      background: "rgba(41, 52, 255, 0.9)",
-                      boxShadow:
-                        "0 8px 32px rgba(41, 52, 255, 0.5), inset 0 2px 4px rgba(138, 165, 255, 0.5)",
-                    }}
-                  >
-                    <FaChartLine className="text-white text-2xl" />
+                  <div className="relative w-14 h-14 rounded-xl flex items-center justify-center mb-6 bg-black border border-blue-500/30">
+                    {/* Corner accent */}
+                    <div
+                      className="absolute top-0 right-0 w-6 h-6 rounded-br-xl"
+                      style={{
+                        background:
+                          "linear-gradient(135deg, transparent 50%, rgba(59, 130, 246, 0.5) 50%)",
+                        borderTopRightRadius: "0.75rem",
+                      }}
+                    />
+                    <FaChartLine className="text-blue-400 text-2xl relative z-10" />
                   </div>
                   <div className="text-left">
                     <h3 className="text-2xl font-bold text-white mb-3">
@@ -576,15 +713,17 @@ const HomePage = () => {
                 </SpotlightCard>
 
                 <SpotlightCard>
-                  <div
-                    className="w-14 h-14 rounded-xl flex items-center justify-center mb-6"
-                    style={{
-                      background: "rgba(41, 52, 255, 0.9)",
-                      boxShadow:
-                        "0 8px 32px rgba(41, 52, 255, 0.5), inset 0 2px 4px rgba(138, 165, 255, 0.5)",
-                    }}
-                  >
-                    <FaDollarSign className="text-white text-2xl" />
+                  <div className="relative w-14 h-14 rounded-xl flex items-center justify-center mb-6 bg-black border border-blue-500/30">
+                    {/* Corner accent */}
+                    <div
+                      className="absolute top-0 right-0 w-6 h-6 rounded-br-xl"
+                      style={{
+                        background:
+                          "linear-gradient(135deg, transparent 50%, rgba(59, 130, 246, 0.5) 50%)",
+                        borderTopRightRadius: "0.75rem",
+                      }}
+                    />
+                    <FaDollarSign className="text-blue-400 text-2xl relative z-10" />
                   </div>
                   <div className="text-left">
                     <h3 className="text-2xl font-bold text-white mb-3">
@@ -609,11 +748,48 @@ const HomePage = () => {
         </FadeInSection>
 
         {/* Testimonials Section */}
-        <FadeInSection delay={0.1} className="flex flex-col">
+        <FadeInSection delay={0.1} className="flex flex-col relative">
           <div
-            className="px-6 min-h-[100vh] flex flex-col my-auto justify-center"
+            className="absolute top-0 -translate-y-1/2 left-0 right-0 h-px"
+            style={{
+              background:
+                "radial-gradient(63.671876482476385% 63.671876482476385% at 50.000000948784894% 50.000000948784894%, var(--token-6da9d50d-e927-4dcf-93ed-bf3b8039528b, rgb(138, 165, 255)) 0%, var(--token-6d7bfc0f-867f-43f5-837b-f61a13bf9490, rgb(0, 0, 0)) 100%)",
+              opacity: 0.14,
+            }}
+          />
+          <div
+            className="absolute bottom-0 -translate-y-1/2 left-0 right-0 h-px"
+            style={{
+              background:
+                "radial-gradient(63.671876482476385% 63.671876482476385% at 50.000000948784894% 50.000000948784894%, var(--token-6da9d50d-e927-4dcf-93ed-bf3b8039528b, rgb(138, 165, 255)) 0%, var(--token-6d7bfc0f-867f-43f5-837b-f61a13bf9490, rgb(0, 0, 0)) 100%)",
+              opacity: 0.14,
+            }}
+          />
+          <div
+            className="px-6 min-h-[100vh] flex flex-col my-auto justify-center overflow-hidden"
             id="testimonials"
+            style={{
+              background: "rgba(0, 0, 0, 0.6)",
+            }}
           >
+            {/* Dark overlay */}
+            <div
+              className="absolute inset-0 -z-10"
+              style={{
+                background:
+                  "linear-gradient(180deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.9) 100%)",
+              }}
+            />
+
+            {/* Bottom glowing light effect - centered spreading mountain */}
+            <div
+              className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full h-32"
+              style={{
+                background:
+                  "radial-gradient(ellipse 800px 150px at center bottom, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.08) 25%, rgba(255, 255, 255, 0.03) 50%, transparent 70%)",
+                filter: "blur(40px)",
+              }}
+            />
             <div className="max-w-7xl mx-auto text-center flex flex-col">
               <div className="flex justify-center mb-8">
                 <StarBorder
@@ -625,12 +801,12 @@ const HomePage = () => {
               </div>
 
               <h2 className="text-3xl md:text-5xl font-medium text-white mb-6 leading-tight">
-                Loved by Product Teams Worldwide
+                Loved by thinkers
               </h2>
 
-              <p className="text-md text-gray-400 mb-8 max-w-4xl mx-auto">
-                See what our customers are saying about their experience with
-                Qudemo
+              <p className="text-md text-gray-500 mb-8 max-w-4xl mx-auto">
+                Real testimonials from people who have transformed their demos
+                with Qudemo
               </p>
 
               {/* Testimonials Grid */}
@@ -644,35 +820,35 @@ const HomePage = () => {
                 <div className="flex -space-x-2">
                   <div className="w-7 h-7 rounded-full overflow-hidden bg-gradient-to-br from-purple-500 to-pink-500">
                     <img
-                      src="https://i.pravatar.cc/150?img=1"
+                      src="https://framerusercontent.com/images/ETgoVdeITLLIYCHTFNeVuZDMyQY.png"
                       alt="User"
                       className="w-full h-full object-cover"
                     />
                   </div>
                   <div className="w-7 h-7 rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-cyan-500">
                     <img
-                      src="https://i.pravatar.cc/150?img=2"
+                      src="https://framerusercontent.com/images/bnJJiW5Vfixlrz7M2pzoeyHBU.png"
                       alt="User"
                       className="w-full h-full object-cover"
                     />
                   </div>
                   <div className="w-7 h-7 rounded-full overflow-hidden bg-gradient-to-br from-green-500 to-emerald-500">
                     <img
-                      src="https://i.pravatar.cc/150?img=3"
+                      src="https://framerusercontent.com/images/rlizSNVuxrrqd6I5hGaSxwqn0Os.png"
                       alt="User"
                       className="w-full h-full object-cover"
                     />
                   </div>
                   <div className="w-7 h-7 rounded-full overflow-hidden bg-gradient-to-br from-orange-500 to-red-500">
                     <img
-                      src="https://i.pravatar.cc/150?img=4"
+                      src="https://framerusercontent.com/images/X0pqhTmlK8gdYqPbljhuLXlyd0I.png"
                       alt="User"
                       className="w-full h-full object-cover"
                     />
                   </div>
                 </div>
                 {/* Join Text */}
-                <span className="text-gray-400 text-md font-normal">
+                <span className="text-gray-500 text-md font-normal">
                   Join <span className="text-white font-medium">200+</span>{" "}
                   other loving customers
                 </span>
@@ -682,11 +858,31 @@ const HomePage = () => {
         </FadeInSection>
 
         {/* Pricing Section */}
-        <FadeInSection delay={0.1} className="flex flex-col">
+        <FadeInSection delay={0.1} className="flex flex-col py-20 relative">
+          <div className="absolute top-0 left-0 right-0 w-full bottom-0 opacity-[0.2]">
+            <LightRays
+              lightSpread={200}
+              rayLength={20}
+              raysColor="8aa5ff"
+              rotationSpeed={0.02}
+              fadeDistance={20}
+              numRays={8}
+              raysSpeed={1.0}
+            />
+          </div>
           <div
-            className="px-6 min-h-[80vh] w-full flex flex-col my-auto justify-center"
+            className="px-6 w-full flex flex-col my-auto justify-center overflow-hidden"
             id="pricing"
           >
+            <div
+              className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/2 h-72 z-1"
+              style={{
+                background:
+                  "radial-gradient(50% 50% at 50% 50%, var(--token-e8bc8706-b247-48f0-95ed-879074c7f908, #121426) 0%, var(--token-6d7bfc0f-867f-43f5-837b-f61a13bf9490, #000) 100%)",
+                borderRadius: "10px",
+                rotate: "-13deg",
+              }}
+            />
             <div className="max-w-7xl mx-auto w-full text-center">
               <div className="flex justify-center mb-8">
                 <StarBorder
@@ -698,66 +894,101 @@ const HomePage = () => {
               </div>
 
               <h2 className="text-3xl md:text-5xl font-medium text-white mb-4 leading-tight">
-                Simple, Transparent Pricing
+                Flexible Pricing Plans
               </h2>
 
-              <p className="text-md text-gray-400 mb-8 max-w-4xl mx-auto">
-                Choose the plan that fits your needs. No hidden fees, cancel
-                anytime.
+              <p className="text-md text-gray-500 mb-8 max-w-4xl mx-auto">
+                Choose a plan that fits your business needs and unlock the full
+                potential of our platform
               </p>
 
+              {/* Pricing Toggle - Monthly/Yearly */}
+              <div className="flex items-center justify-center mb-12">
+                <div
+                  className="inline-flex items-center gap-0 p-1.5 px-10 rounded-full relative"
+                  style={{
+                    background: "rgba(20, 25, 55, 0.8)",
+                    border: "1px solid rgba(71, 85, 165, 0.3)",
+                  }}
+                >
+                  <button
+                    onClick={() => setIsYearly(false)}
+                    className={`px-8 py-3 font-medium rounded-full transition-all duration-300 text-base relative z-10 ${
+                      !isYearly
+                        ? "text-white"
+                        : "text-gray-500 hover:text-gray-300"
+                    }`}
+                  >
+                    Monthly
+                  </button>
+
+                  <div className="w-px h-8 bg-gray-600 opacity-30 relative z-10"></div>
+
+                  <button
+                    onClick={() => setIsYearly(true)}
+                    className={`px-8 py-3 font-medium rounded-full transition-all duration-300 text-base relative z-10 ${
+                      isYearly
+                        ? "text-white"
+                        : "text-gray-500 hover:text-gray-300"
+                    }`}
+                  >
+                    Yearly
+                  </button>
+
+                  <span
+                    className="ml-2 px-4 py-2 text-sm font-semibold text-white rounded-full relative z-10"
+                    style={{
+                      background: "rgba(59, 130, 246, 0.9)",
+                    }}
+                  >
+                    20% off
+                  </span>
+
+                  {/* Animated underline */}
+                  <div
+                    className="absolute bottom-1 h-0.5 transition-all rounded duration-300 ease-out"
+                    style={{
+                      background: "rgba(59, 130, 246, 1)",
+                      width: isYearly ? "180px" : "80px",
+                      left: isYearly ? "calc(50% - 20px + 8px)" : "60px",
+                      boxShadow: "0 0 8px rgba(59, 130, 246, 0.6)",
+                    }}
+                  />
+                </div>
+              </div>
+
               {/* Pricing Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 max-w-5xl mx-auto z-50">
                 <PricingCard
                   title="Starter"
-                  price="12"
+                  price={isYearly ? "167" : "200"}
                   period="month"
                   features={[
-                    "5 interactive videos",
-                    "AI-powered Q&A",
-                    "Basic analytics",
-                    "Email support",
-                    "Standard quality video",
+                    "1 AI video agent",
+                    "3,000 interactions/month",
+                    "Qualifies leads automatically",
+                    "Basic engagement insights",
+                    "Quick no-code setup",
                   ]}
-                  buttonText="Start Free Trial"
+                  buttonText="Get Started Now"
                   onButtonClick={() => navigateToCreate(navigate)}
                 />
 
                 <PricingCard
-                  title="Professional"
-                  price="17"
+                  title="Pro"
+                  price={isYearly ? "417" : "500"}
                   period="month"
                   isPopular={true}
                   className="!overflow-visible"
                   features={[
-                    "Unlimited interactive videos",
-                    "Advanced AI capabilities",
-                    "Detailed analytics & insights",
-                    "Priority support",
-                    "HD video quality",
-                    "Custom branding",
-                    "Integration support",
+                    "Multiple AI agents",
+                    "Unlimited interactions/month",
+                    "Founder-like answers",
+                    "Advanced lead insights",
+                    "Detailed viewer analytics",
                   ]}
-                  buttonText="Get Started"
+                  buttonText="Get Started Now"
                   onButtonClick={() => navigateToCreate(navigate)}
-                />
-
-                <PricingCard
-                  title="Enterprise"
-                  customPrice={true}
-                  features={[
-                    "Everything in Professional",
-                    "Dedicated account manager",
-                    "Custom integrations",
-                    "SLA guarantee",
-                    "White-label solution",
-                    "On-premise deployment",
-                    "Advanced security features",
-                  ]}
-                  buttonText="Contact Sales"
-                  onButtonClick={() =>
-                    (window.location.href = "mailto:mail@qudemo.com")
-                  }
                 />
               </div>
             </div>
@@ -765,9 +996,34 @@ const HomePage = () => {
         </FadeInSection>
 
         {/* Quote Section */}
-        <FadeInSection delay={0.1} className="flex flex-col">
+        <FadeInSection delay={0.1} className="flex flex-col !min-h-0 relative">
           <div
-            className="px-6 bg-black min-h-[40vh] my-auto flex flex-col justify-center"
+            className="absolute top-0 -translate-y-1/2 left-0 right-0 h-px"
+            style={{
+              background:
+                "radial-gradient(63.671876482476385% 63.671876482476385% at 50.000000948784894% 50.000000948784894%, var(--token-6da9d50d-e927-4dcf-93ed-bf3b8039528b, rgb(138, 165, 255)) 0%, var(--token-6d7bfc0f-867f-43f5-837b-f61a13bf9490, rgb(0, 0, 0)) 100%)",
+              opacity: 0.14,
+            }}
+          />
+          <div
+            className="absolute bottom-0 -translate-y-1/2 left-0 right-0 h-px"
+            style={{
+              background:
+                "radial-gradient(63.671876482476385% 63.671876482476385% at 50.000000948784894% 50.000000948784894%, var(--token-6da9d50d-e927-4dcf-93ed-bf3b8039528b, rgb(138, 165, 255)) 0%, var(--token-6d7bfc0f-867f-43f5-837b-f61a13bf9490, rgb(0, 0, 0)) 100%)",
+              opacity: 0.14,
+            }}
+          />
+          <div
+            className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/2 h-72 z-1"
+            style={{
+              background:
+                "radial-gradient(50% 50% at 50% 50%, var(--token-e8bc8706-b247-48f0-95ed-879074c7f908, #121426) 0%, var(--token-6d7bfc0f-867f-43f5-837b-f61a13bf9490, #000) 100%)",
+              borderRadius: "10px",
+              rotate: "-13deg",
+            }}
+          />
+          <div
+            className="px-6 z-50 bg-transparent min-h-[40vh] my-auto flex flex-col justify-center overflow-hidden"
             style={{
               borderColor: "rgba(138, 165, 255, 0.3)",
               boxShadow: "0 4px 24px rgba(41, 52, 255, 0.1)",
@@ -783,22 +1039,19 @@ const HomePage = () => {
                 </StarBorder>
               </div>
 
-              <blockquote className="text-3xl md:text-4xl font-bold text-white leading-relaxed">
-                We believe a <span className="text-blue-400">Demo</span> should
-                feel like real
+              <blockquote className="text-3xl md:text-4xl font-normal text-white leading-relaxed">
+                “We think demos should feel like the
                 <br />
-                conversations, not one-way presentations
+                founder is talking to every visitor. Qudemo
                 <br />
-                letting customers ask questions and get
-                <br />
-                instant answers
+                makes it happen instantly„
               </blockquote>
 
               <div className="flex items-center gap-3 text-left mx-auto mt-8">
                 <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-white">
                   <img
-                    src="https://i.pravatar.cc/150?img=4"
-                    alt="User"
+                    src="https://framerusercontent.com/images/81XI4Y9Evkk0bmbRaTAgilWrNc.jpeg?width=560&height=560"
+                    alt="Founder"
                     className="w-full h-full object-cover"
                   />
                 </div>
@@ -813,8 +1066,19 @@ const HomePage = () => {
         </FadeInSection>
 
         {/* Seamless Integrations Section */}
-        <FadeInSection delay={0.1}>
-          <div className="px-6 relative min-h-[80vh] flex items-center justify-center overflow-hidden">
+        <FadeInSection delay={0.1} className="pt-20 !min-h-[40vh] relative">
+          <div className="absolute top-0 left-0 right-0 w-full bottom-0 opacity-[0.2] z-50">
+            <LightRays
+              lightSpread={200}
+              rayLength={20}
+              raysColor="8aa5ff"
+              rotationSpeed={0.02}
+              fadeDistance={20}
+              numRays={8}
+              raysSpeed={1.0}
+            />
+          </div>
+          <div className="px-6 relative min-h-[40vh] flex items-center justify-center overflow-hidden">
             <div className="max-w-7xl mx-auto text-center relative w-full">
               {/* Badge */}
               <div className="flex justify-center mb-8">
@@ -826,12 +1090,12 @@ const HomePage = () => {
                 </StarBorder>
               </div>
 
-              <h2 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight">
-                Seamless Integrations
+              <h2 className="text-3xl md:text-5xl font-medium text-white mb-6 leading-tight">
+                Seamless integrations
               </h2>
 
-              <p className="text-xl text-gray-400 mb-20 max-w-4xl mx-auto">
-                Connect with your favorite tools to streamline workflows
+              <p className="text-base font-light text-gray-500 mb-20 max-w-4xl mx-auto">
+                Works with your existing stack — no complex setup required
               </p>
 
               {/* Integration Hub - Center Logo with Connecting Lines */}
@@ -1223,45 +1487,32 @@ const HomePage = () => {
           </div>
         </FadeInSection>
 
-        {/* Integrations Section */}
-        <FadeInSection delay={0.1}>
-          <div
-            className="h-100 px-6 flex min-h-[80vh] flex-col justify-center"
-            id="integrations"
-          >
-            <div className="max-w-7xl mx-auto text-center w-full">
-              <div className="flex justify-center mb-8">
-                <StarBorder
-                  color="#2934ff"
-                  className="text-white text-sm font-semibold uppercase tracking-wide"
-                >
-                  CONNECTIONS
-                </StarBorder>
-              </div>
-
-              <h2 className="text-3xl md:text-5xl font-medium text-white mb-6 leading-tight">
-                Connect With Your Favorite Tools
-              </h2>
-
-              <p className="text-md text-gray-400 mb-8 max-w-4xl mx-auto">
-                Seamlessly integrate Qudemo with the tools you already use
-              </p>
-
-              {/* Integrations Grid */}
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6">
-                {integrations.map((integration, index) => (
-                  <IntegrationCard key={index} {...integration} />
-                ))}
-              </div>
-            </div>
-          </div>
-        </FadeInSection>
-
         {/* Comparison Section */}
-        <FadeInSection delay={0.1}>
+        <FadeInSection delay={0.1} className="relative">
           <div
-            className="h-100 px-6 min-h-[80vh] flex flex-col justify-center"
+            className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/2 h-72 relative"
+            style={{
+              background:
+                "radial-gradient(50% 50% at 50% 50%, var(--token-e8bc8706-b247-48f0-95ed-879074c7f908, #121426) 0%, var(--token-6d7bfc0f-867f-43f5-837b-f61a13bf9490, #000) 100%)",
+              zIndex: 1,
+              borderRadius: "10px",
+            }}
+          >
+            <div
+              className="absolute top-1/2 bottom-0 -translate-y-1/2 left-0 right-0 h-px"
+              style={{
+                background:
+                  "radial-gradient(63.671876482476385% 63.671876482476385% at 50.000000948784894% 50.000000948784894%, var(--token-6da9d50d-e927-4dcf-93ed-bf3b8039528b, rgb(138, 165, 255)) 0%, var(--token-6d7bfc0f-867f-43f5-837b-f61a13bf9490, rgb(0, 0, 0)) 100%)",
+                opacity: 0.14,
+              }}
+            />
+          </div>
+          <div
+            className="px-6 flex flex-col justify-center overflow-hidden"
             id="comparison"
+            style={{
+              background: "rgba(0, 0, 0, 0.7)",
+            }}
           >
             <div className="max-w-7xl mx-auto text-center">
               {/* Badge */}
@@ -1274,155 +1525,166 @@ const HomePage = () => {
                 </StarBorder>
               </div>
 
-              <h2 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight">
+              <h2 className="text-3xl md:text-5xl font-medium text-white mb-6 leading-tight">
                 Why Qudemo Stands Out
               </h2>
 
-              <p className="text-xl md:text-2xl text-gray-400 mb-16 max-w-4xl mx-auto">
-                See how we compare against others in performance, growth
+              <p className="text-base font-light md:text-base text-gray-500 mb-16 max-w-4xl mx-auto">
+                Unlike generic chatbots or static videos, Qudemo combines the
+                best of both worlds
               </p>
 
               {/* Comparison Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-6xl mx-auto">
                 {/* LanX/Qudemo Column */}
-                <SpotlightCard>
-                  {/* Header */}
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="flex items-center gap-2 scale-150">
+                <div className="flex flex-col">
+                  {/* Header - Above Card */}
+                  <div className="flex items-center justify-center mb-6">
+                    <div className="flex items-center gap-2">
                       <img
                         src="/Qudemo LP.svg"
                         alt="Qudemo Logo"
-                        className="h-20"
+                        className="h-24 scale-[1.4]"
                       />
                     </div>
                   </div>
 
-                  {/* Features List */}
-                  <div className="space-y-6 text-left">
-                    <div className="flex items-start gap-3 border-b border-gray-700 pb-4">
-                      <svg
-                        className="w-6 h-6 text-green-400 flex-shrink-0 mt-1"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M5 13l4 4L19 7"
-                        />
-                      </svg>
-                      <span className="text-gray-300 text-lg leading-relaxed">
-                        Feels like the founder personally talking
-                      </span>
-                    </div>
+                  <SpotlightCard>
+                    {/* Features List */}
+                    <div className="space-y-6 text-left">
+                      <div className="flex items-start gap-3">
+                        <svg
+                          className="w-6 h-6 text-blue-400 flex-shrink-0 mt-1"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                        <span className="text-gray-300 text-lg leading-relaxed">
+                          Feels like the founder personally talking
+                        </span>
+                      </div>
 
-                    <div className="flex items-start gap-3 border-b border-gray-700 pb-4">
-                      <svg
-                        className="w-6 h-6 text-green-400 flex-shrink-0 mt-1"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M5 13l4 4L19 7"
+                      <div className="flex items-start gap-3 relative pt-4">
+                        <div
+                          className="absolute top-0 -translate-y-1/2 left-0 right-0 h-px"
+                          style={{
+                            background:
+                              "linear-gradient(90deg, transparent 0%, rgba(100, 150, 255, 0.2) 30%, rgba(150, 180, 255, 0.2) 50%, rgba(100, 150, 255, 0.2) 70%, transparent 100%)",
+                          }}
                         />
-                      </svg>
-                      <span className="text-gray-300 text-lg leading-relaxed">
-                        Answers questions in real time through the video
-                      </span>
-                    </div>
+                        <svg
+                          className="w-6 h-6 text-blue-400 flex-shrink-0 mt-1"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                        <span className="text-gray-300 text-lg leading-relaxed">
+                          Answers questions in real time through the video
+                        </span>
+                      </div>
 
-                    <div className="flex items-start gap-3 border-b border-gray-700 pb-4">
-                      <svg
-                        className="w-6 h-6 text-green-400 flex-shrink-0 mt-1"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M5 13l4 4L19 7"
+                      <div className="flex items-start gap-3 relative pt-4">
+                        <div
+                          className="absolute top-0 -translate-y-1/2 left-0 right-0 h-px"
+                          style={{
+                            background:
+                              "linear-gradient(90deg, transparent 0%, rgba(100, 150, 255, 0.2) 30%, rgba(150, 180, 255, 0.2) 50%, rgba(100, 150, 255, 0.2) 70%, transparent 100%)",
+                          }}
                         />
-                      </svg>
-                      <span className="text-gray-300 text-lg leading-relaxed">
-                        Engages visitors while explaining product visually
-                      </span>
-                    </div>
+                        <svg
+                          className="w-6 h-6 text-blue-400 flex-shrink-0 mt-1"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                        <span className="text-gray-300 text-lg leading-relaxed">
+                          Engages visitors while explaining product visually
+                        </span>
+                      </div>
 
-                    <div className="flex items-start gap-3 border-b border-gray-700 pb-4">
-                      <svg
-                        className="w-6 h-6 text-green-400 flex-shrink-0 mt-1"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M5 13l4 4L19 7"
+                      <div className="flex items-start gap-3 relative pt-4">
+                        <div
+                          className="absolute top-0 -translate-y-1/2 left-0 right-0 h-px"
+                          style={{
+                            background:
+                              "linear-gradient(90deg, transparent 0%, rgba(100, 150, 255, 0.2) 30%, rgba(150, 180, 255, 0.2) 50%, rgba(100, 150, 255, 0.2) 70%, transparent 100%)",
+                          }}
                         />
-                      </svg>
-                      <span className="text-gray-300 text-lg leading-relaxed">
-                        Qualifies leads automatically
-                      </span>
-                    </div>
+                        <svg
+                          className="w-6 h-6 text-blue-400 flex-shrink-0 mt-1"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                        <span className="text-gray-300 text-lg leading-relaxed">
+                          Qualifies leads automatically
+                        </span>
+                      </div>
 
-                    <div className="flex items-start gap-3 pb-4">
-                      <svg
-                        className="w-6 h-6 text-green-400 flex-shrink-0 mt-1"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M5 13l4 4L19 7"
+                      <div className="flex items-start gap-3 relative pt-4">
+                        <div
+                          className="absolute top-0 -translate-y-1/2 left-0 right-0 h-px"
+                          style={{
+                            background:
+                              "linear-gradient(90deg, transparent 0%, rgba(100, 150, 255, 0.2) 30%, rgba(150, 180, 255, 0.2) 50%, rgba(100, 150, 255, 0.2) 70%, transparent 100%)",
+                          }}
                         />
-                      </svg>
-                      <span className="text-gray-300 text-lg leading-relaxed">
-                        Handles complex questions naturally
-                      </span>
+                        <svg
+                          className="w-6 h-6 text-blue-400 flex-shrink-0 mt-1"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                        <span className="text-gray-300 text-lg leading-relaxed">
+                          Handles complex questions naturally
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                </SpotlightCard>
+                  </SpotlightCard>
+                </div>
 
                 {/* Others Column */}
-                <SpotlightCard>
-                  {/* Header */}
-                  <div className="flex items-center gap-3 mb-4 h-20">
-                    <svg
-                      className="w-8 h-8 text-gray-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-                      />
-                    </svg>
-                    <span className="text-2xl font-bold text-gray-300">
-                      Others
-                    </span>
-                  </div>
-
-                  {/* Features List */}
-                  <div className="space-y-6 text-left">
-                    <div className="flex items-start gap-3 border-b border-gray-700 pb-4">
+                <div className="flex flex-col">
+                  {/* Header - Above Card */}
+                  <div className="flex items-center justify-center mb-6 h-24">
+                    <div className="flex items-center gap-3">
                       <svg
-                        className="w-6 h-6 text-red-400 flex-shrink-0 mt-1"
+                        className="w-10 h-10 text-gray-500"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -1431,99 +1693,183 @@ const HomePage = () => {
                           strokeLinecap="round"
                           strokeLinejoin="round"
                           strokeWidth={2}
-                          d="M6 18L18 6M6 6l12 12"
+                          d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
                         />
                       </svg>
-                      <span className="text-gray-400 text-lg leading-relaxed">
-                        Generic, impersonal replies
-                      </span>
-                    </div>
-
-                    <div className="flex items-start gap-3 border-b border-gray-700 pb-4">
-                      <svg
-                        className="w-6 h-6 text-red-400 flex-shrink-0 mt-1"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M6 18L18 6M6 6l12 12"
-                        />
-                      </svg>
-                      <span className="text-gray-400 text-lg leading-relaxed">
-                        Limited to text/chat responses
-                      </span>
-                    </div>
-
-                    <div className="flex items-start gap-3 border-b border-gray-700 pb-4">
-                      <svg
-                        className="w-6 h-6 text-red-400 flex-shrink-0 mt-1"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M6 18L18 6M6 6l12 12"
-                        />
-                      </svg>
-                      <span className="text-gray-400 text-lg leading-relaxed">
-                        Often only provides text instructions
-                      </span>
-                    </div>
-
-                    <div className="flex items-start gap-3 border-b border-gray-700 pb-4">
-                      <svg
-                        className="w-6 h-6 text-red-400 flex-shrink-0 mt-1"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M6 18L18 6M6 6l12 12"
-                        />
-                      </svg>
-                      <span className="text-gray-400 text-lg leading-relaxed">
-                        Requires manual follow-up
-                      </span>
-                    </div>
-
-                    <div className="flex items-start gap-3 pb-4">
-                      <svg
-                        className="w-6 h-6 text-red-400 flex-shrink-0 mt-1"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M6 18L18 6M6 6l12 12"
-                        />
-                      </svg>
-                      <span className="text-gray-400 text-lg leading-relaxed">
-                        Struggles with nuanced queries
+                      <span className="text-3xl font-bold text-gray-300">
+                        Others
                       </span>
                     </div>
                   </div>
-                </SpotlightCard>
+
+                  <SpotlightCard>
+                    {/* Features List */}
+                    <div className="space-y-6 text-left">
+                      <div className="flex items-start gap-3 relative">
+                        <svg
+                          className="w-6 h-6 text-blue-400 flex-shrink-0 mt-1"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M6 18L18 6M6 6l12 12"
+                          />
+                        </svg>
+                        <span className="text-gray-500 text-lg leading-relaxed">
+                          Generic, impersonal replies
+                        </span>
+                      </div>
+
+                      <div className="flex items-start gap-3 relative pt-4">
+                        <div
+                          className="absolute top-0 -translate-y-1/2 left-0 right-0 h-px"
+                          style={{
+                            background:
+                              "linear-gradient(90deg, transparent 0%, rgba(100, 150, 255, 0.2) 30%, rgba(150, 180, 255, 0.2) 50%, rgba(100, 150, 255, 0.2) 70%, transparent 100%)",
+                          }}
+                        />
+                        <svg
+                          className="w-6 h-6 text-blue-400 flex-shrink-0 mt-1"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M6 18L18 6M6 6l12 12"
+                          />
+                        </svg>
+                        <span className="text-gray-500 text-lg leading-relaxed">
+                          Limited to text/chat responses
+                        </span>
+                      </div>
+
+                      <div className="flex items-start gap-3 relative pt-4">
+                        <div
+                          className="absolute top-0 -translate-y-1/2 left-0 right-0 h-px"
+                          style={{
+                            background:
+                              "linear-gradient(90deg, transparent 0%, rgba(100, 150, 255, 0.2) 30%, rgba(150, 180, 255, 0.2) 50%, rgba(100, 150, 255, 0.2) 70%, transparent 100%)",
+                          }}
+                        />
+                        <svg
+                          className="w-6 h-6 text-blue-400 flex-shrink-0 mt-1"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M6 18L18 6M6 6l12 12"
+                          />
+                        </svg>
+                        <span className="text-gray-500 text-lg leading-relaxed">
+                          Often only provides text instructions
+                        </span>
+                      </div>
+
+                      <div className="flex items-start gap-3 relative pt-4">
+                        <div
+                          className="absolute top-0 -translate-y-1/2 left-0 right-0 h-px"
+                          style={{
+                            background:
+                              "linear-gradient(90deg, transparent 0%, rgba(100, 150, 255, 0.2) 30%, rgba(150, 180, 255, 0.2) 50%, rgba(100, 150, 255, 0.2) 70%, transparent 100%)",
+                          }}
+                        />
+                        <svg
+                          className="w-6 h-6 text-blue-400 flex-shrink-0 mt-1"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M6 18L18 6M6 6l12 12"
+                          />
+                        </svg>
+                        <span className="text-gray-500 text-lg leading-relaxed">
+                          Requires manual follow-up
+                        </span>
+                      </div>
+
+                      <div className="flex items-start gap-3 relative pt-4">
+                        <div
+                          className="absolute top-0 -translate-y-1/2 left-0 right-0 h-px"
+                          style={{
+                            background:
+                              "linear-gradient(90deg, transparent 0%, rgba(100, 150, 255, 0.2) 30%, rgba(150, 180, 255, 0.2) 50%, rgba(100, 150, 255, 0.2) 70%, transparent 100%)",
+                          }}
+                        />
+                        <svg
+                          className="w-6 h-6 text-blue-400 flex-shrink-0 mt-1"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M6 18L18 6M6 6l12 12"
+                          />
+                        </svg>
+                        <span className="text-gray-500 text-lg leading-relaxed">
+                          Struggles with nuanced queries
+                        </span>
+                      </div>
+                    </div>
+                  </SpotlightCard>
+                </div>
               </div>
             </div>
           </div>
         </FadeInSection>
 
         {/* FAQ Section */}
-        <FadeInSection delay={0.1}>
-          <div className="py-16 px-6 min-h-[80vh]" id="faq">
+        <FadeInSection delay={0.1} className="relative">
+          <div
+            className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/2 h-72 relative"
+            style={{
+              background:
+                "radial-gradient(50% 50% at 50% 50%, var(--token-e8bc8706-b247-48f0-95ed-879074c7f908, #121426) 0%, var(--token-6d7bfc0f-867f-43f5-837b-f61a13bf9490, #000) 100%)",
+              zIndex: 1,
+              borderRadius: "10px",
+            }}
+          >
+            <div
+              className="absolute top-1/2 bottom-0 -translate-y-1/2 left-0 right-0 h-px"
+              style={{
+                background:
+                  "radial-gradient(63.671876482476385% 63.671876482476385% at 50.000000948784894% 50.000000948784894%, var(--token-6da9d50d-e927-4dcf-93ed-bf3b8039528b, rgb(138, 165, 255)) 0%, var(--token-6d7bfc0f-867f-43f5-837b-f61a13bf9490, rgb(0, 0, 0)) 100%)",
+                opacity: 0.14,
+              }}
+            />
+          </div>
+          <div
+            className="py-16 px-6 min-h-[80vh] overflow-hidden"
+            id="faq"
+            style={{
+              background: "rgba(0, 0, 0, 0.7)",
+            }}
+          >
+            {/* Dark overlay */}
+            <div
+              className="absolute inset-0 -z-10"
+              style={{
+                background:
+                  "linear-gradient(180deg, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.95) 100%)",
+              }}
+            />
             <div className="max-w-4xl mx-auto text-center">
               <div className="flex justify-center mb-8">
                 <StarBorder
@@ -1534,30 +1880,22 @@ const HomePage = () => {
                 </StarBorder>
               </div>
 
-              <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
+              <h2 className="text-3xl md:text-5xl font-mediumum text-white">
                 Some Common FAQ's
               </h2>
 
-              <p className="text-xl text-gray-300 mb-8">
-                Get answers to your questions and learn about our platform
+              <p className="text-base font-light text-gray-500 my-4 mb-10">
+                Everything you need to know about getting started with Qudemo
               </p>
 
               {/* FAQ Items */}
-              <div className="max-w-4xl mx-auto space-y-4">
-                <div
-                  className="rounded-xl border hover:scale-[1.02] transition-all duration-300"
-                  style={{
-                    background: "rgba(18, 20, 38, 0.6)",
-                    backdropFilter: "blur(16px)",
-                    borderColor: "rgba(138, 165, 255, 0.3)",
-                    boxShadow: "0 4px 24px rgba(41, 52, 255, 0.1)",
-                  }}
-                >
+              <div className="max-w-2xl mx-auto space-y-4">
+                <SpotlightCard className="!p-0 !rounded-xl">
                   <div
-                    className="flex justify-between items-center cursor-pointer p-6"
+                    className="flex justify-between items-center cursor-pointer p-4"
                     onClick={() => toggleFAQ(0)}
                   >
-                    <h3 className="text-lg font-semibold text-white">
+                    <h3 className="text-base font-thin text-white">
                       What is Qudemo?
                     </h3>
                     <svg
@@ -1575,29 +1913,21 @@ const HomePage = () => {
                     </svg>
                   </div>
                   {openFAQ === 0 && (
-                    <div className="px-6 pb-6 text-gray-300 text-left">
+                    <div className="px-4 pb-6 text-gray-500 text-sm text-left">
                       Qudemo is an AI video assistant that makes your demo
                       videos interactive. Viewers can ask questions, get instant
                       answers and jump straight to the exact moment in the video
                       where the answer is shown.
                     </div>
                   )}
-                </div>
+                </SpotlightCard>
 
-                <div
-                  className="rounded-xl border hover:scale-[1.02] transition-all duration-300"
-                  style={{
-                    background: "rgba(18, 20, 38, 0.6)",
-                    backdropFilter: "blur(16px)",
-                    borderColor: "rgba(138, 165, 255, 0.3)",
-                    boxShadow: "0 4px 24px rgba(41, 52, 255, 0.1)",
-                  }}
-                >
+                <SpotlightCard className="!p-0 !rounded-xl">
                   <div
-                    className="flex justify-between items-center cursor-pointer p-6"
+                    className="flex justify-between items-center cursor-pointer p-4"
                     onClick={() => toggleFAQ(1)}
                   >
-                    <h3 className="text-lg font-semibold text-white">
+                    <h3 className="text-base font-thin text-white">
                       How does it work?
                     </h3>
                     <svg
@@ -1615,28 +1945,20 @@ const HomePage = () => {
                     </svg>
                   </div>
                   {openFAQ === 1 && (
-                    <div className="px-6 pb-6 text-gray-300 text-left">
+                    <div className="px-4 pb-6 text-gray-500 text-sm text-left">
                       Upload your video, generate a Qudemo, and share the link.
                       Viewers can ask questions in chat, get instant answers,
                       and jump to the exact video moment.
                     </div>
                   )}
-                </div>
+                </SpotlightCard>
 
-                <div
-                  className="rounded-xl border hover:scale-[1.02] transition-all duration-300"
-                  style={{
-                    background: "rgba(18, 20, 38, 0.6)",
-                    backdropFilter: "blur(16px)",
-                    borderColor: "rgba(138, 165, 255, 0.3)",
-                    boxShadow: "0 4px 24px rgba(41, 52, 255, 0.1)",
-                  }}
-                >
+                <SpotlightCard className="!p-0 !rounded-xl">
                   <div
-                    className="flex justify-between items-center cursor-pointer p-6"
+                    className="flex justify-between items-center cursor-pointer p-4"
                     onClick={() => toggleFAQ(2)}
                   >
-                    <h3 className="text-lg font-semibold text-white">
+                    <h3 className="text-base font-thin text-white">
                       Who is it for?
                     </h3>
                     <svg
@@ -1654,7 +1976,7 @@ const HomePage = () => {
                     </svg>
                   </div>
                   {openFAQ === 2 && (
-                    <div className="px-6 pb-6 text-gray-300 text-left">
+                    <div className="px-4 pb-6 text-gray-500 text-left">
                       B2B SaaS teams sharing pre-recorded product videos with
                       prospects.
                       <br />
@@ -1664,22 +1986,14 @@ const HomePage = () => {
                       customers.
                     </div>
                   )}
-                </div>
+                </SpotlightCard>
 
-                <div
-                  className="rounded-xl border hover:scale-[1.02] transition-all duration-300"
-                  style={{
-                    background: "rgba(18, 20, 38, 0.6)",
-                    backdropFilter: "blur(16px)",
-                    borderColor: "rgba(138, 165, 255, 0.3)",
-                    boxShadow: "0 4px 24px rgba(41, 52, 255, 0.1)",
-                  }}
-                >
+                <SpotlightCard className="!p-0 !rounded-xl">
                   <div
-                    className="flex justify-between items-center cursor-pointer p-6"
+                    className="flex justify-between items-center cursor-pointer p-4"
                     onClick={() => toggleFAQ(3)}
                   >
-                    <h3 className="text-lg font-semibold text-white">
+                    <h3 className="text-base font-thin text-white">
                       Do I need technical setup?
                     </h3>
                     <svg
@@ -1697,27 +2011,19 @@ const HomePage = () => {
                     </svg>
                   </div>
                   {openFAQ === 3 && (
-                    <div className="px-6 pb-6 text-gray-300 text-left">
+                    <div className="px-4 pb-6 text-gray-500 text-left">
                       No, just upload your youtube/loom video, Create Qudemo and
                       Share it anywhere
                     </div>
                   )}
-                </div>
+                </SpotlightCard>
 
-                <div
-                  className="rounded-xl border hover:scale-[1.02] transition-all duration-300"
-                  style={{
-                    background: "rgba(18, 20, 38, 0.6)",
-                    backdropFilter: "blur(16px)",
-                    borderColor: "rgba(138, 165, 255, 0.3)",
-                    boxShadow: "0 4px 24px rgba(41, 52, 255, 0.1)",
-                  }}
-                >
+                <SpotlightCard className="!p-0 !rounded-xl">
                   <div
-                    className="flex justify-between items-center cursor-pointer p-6"
+                    className="flex justify-between items-center cursor-pointer p-4"
                     onClick={() => toggleFAQ(4)}
                   >
-                    <h3 className="text-lg font-semibold text-white">
+                    <h3 className="text-base font-thin text-white">
                       What's the benefit?
                     </h3>
                     <svg
@@ -1735,20 +2041,39 @@ const HomePage = () => {
                     </svg>
                   </div>
                   {openFAQ === 4 && (
-                    <div className="px-6 pb-6 text-gray-300 text-left">
+                    <div className="px-4 pb-6 text-gray-500 text-left">
                       Customers get answers faster and you get more qualified
                       leads.
                     </div>
                   )}
-                </div>
+                </SpotlightCard>
               </div>
             </div>
           </div>
         </FadeInSection>
 
         {/* Final Call-to-Action Section */}
-        <FadeInSection delay={0.1}>
-          <div className="h-100 px-6 relative min-h-[80vh] flex flex-col justify-center">
+        <FadeInSection delay={0.1} className="min-h-[40vh]">
+          <div className="px-6 relative min-h-[40vh] flex flex-col justify-center">
+            <div
+              className="absolute top-0 -translate-y-1/2 left-0 right-0 h-px"
+              style={{
+                background:
+                  "radial-gradient(63.671876482476385% 63.671876482476385% at 50.000000948784894% 50.000000948784894%, var(--token-6da9d50d-e927-4dcf-93ed-bf3b8039528b, rgb(138, 165, 255)) 0%, var(--token-6d7bfc0f-867f-43f5-837b-f61a13bf9490, rgb(0, 0, 0)) 100%)",
+                opacity: 0.14,
+              }}
+            />
+            <div className="absolute top-0 left-0 right-0 w-full bottom-0 opacity-[0.2] z-50">
+              <LightRays
+                lightSpread={200}
+                rayLength={20}
+                raysColor="8aa5ff"
+                rotationSpeed={0.02}
+                fadeDistance={20}
+                numRays={8}
+                raysSpeed={1.0}
+              />
+            </div>
             <div className="max-w-4xl mx-auto text-center relative">
               <div
                 className="absolute inset-0 rounded-3xl"
@@ -1759,7 +2084,7 @@ const HomePage = () => {
                 }}
               />
 
-              <div className="relative z-10">
+              <div className="relative z-50">
                 <div className="flex justify-center mb-8">
                   <StarBorder
                     color="#1e40af"
@@ -1769,17 +2094,18 @@ const HomePage = () => {
                   </StarBorder>
                 </div>
 
-                <h2 className="text-4xl md:text-5xl font-medium text-white mb-8 leading-tight">
-                  Ready to transform your product videos?
+                <h2 className="text-3xl md:text-5xl font-medium text-white leading-tight">
+                  Grow Now with Qudemo
                 </h2>
 
-                <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
-                  Join Qudemo to create more engaging, interactive video
-                  experiences that save time for everyone.
+                <p className="text-base font-light text-gray-500 my-4 max-w-3xl mx-auto">
+                  Create interactive video demos that engage prospects and{" "}
+                  <br />
+                  qualify leads automatically. Get started in minutes.
                 </p>
 
                 <div
-                  className="flex items-center justify-center mb-10"
+                  className="flex items-center justify-center mb-10 z-50"
                   style={{
                     animation: "fadeInUp 0.8s ease-out 0.5s both",
                   }}
@@ -1801,12 +2127,20 @@ const HomePage = () => {
         </FadeInSection>
 
         <div
-          className="py-12 px-6 bg-black"
+          className="py-10 px-6 bg-black relative"
           style={{
-            borderColor: "rgba(138, 165, 255, 0.3)",
-            boxShadow: "0 4px 24px rgba(41, 52, 255, 0.1)",
+            background:
+              "radial-gradient(83% 50% at 44% 111.5%, var(--token-c6d9a740-f8af-44c7-ac7a-31b27a79b7f2, rgb(0, 14, 71)) 0%, var(--token-6d7bfc0f-867f-43f5-837b-f61a13bf9490, rgb(0, 0, 0)) 100%)",
           }}
         >
+          <div
+            className="absolute top-0 -translate-y-1/2 left-0 right-0 h-px"
+            style={{
+              background:
+                "radial-gradient(63.671876482476385% 63.671876482476385% at 50.000000948784894% 50.000000948784894%, var(--token-6da9d50d-e927-4dcf-93ed-bf3b8039528b, rgb(138, 165, 255)) 0%, var(--token-6d7bfc0f-867f-43f5-837b-f61a13bf9490, rgb(0, 0, 0)) 100%)",
+              opacity: 0.14,
+            }}
+          />
           <div className="max-w-7xl mx-auto">
             {/* Top Row - Logo and Navigation */}
             <div className="flex flex-col md:flex-row justify-between items-center gap-8 mb-12">
@@ -1820,7 +2154,7 @@ const HomePage = () => {
               </div>
 
               {/* Navigation Links */}
-              <div className="flex flex-wrap justify-center items-center gap-8 text-gray-400">
+              <div className="flex flex-wrap justify-center items-center gap-8 text-gray-500">
                 <button
                   onClick={() => scrollToSection("pricing")}
                   className="hover:text-white transition-colors duration-200"
@@ -1871,45 +2205,96 @@ const HomePage = () => {
                 </button>
               </div>
             </div>
+          </div>
+          <footer className="py-8 px-6 relative">
+            <div
+              className="absolute top-0 -translate-y-1/2 left-0 right-0 h-px"
+              style={{
+                background:
+                  "radial-gradient(63.671876482476385% 63.671876482476385% at 50.000000948784894% 50.000000948784894%, var(--token-6da9d50d-e927-4dcf-93ed-bf3b8039528b, rgb(138, 165, 255)) 0%, var(--token-6d7bfc0f-867f-43f5-837b-f61a13bf9490, rgb(0, 0, 0)) 100%)",
+                opacity: 0.14,
+              }}
+            />
+            <div className="max-w-7xl mx-auto">
+              <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+                {/* Copyright */}
+                <div className="text-gray-500 text-sm">
+                  © {new Date().getFullYear()} Qudemo. All rights reserved.
+                </div>
 
-            {/* Divider */}
-            <div className="border-t border-gray-800 mb-8"></div>
+                {/* Social Media Icons */}
+                <div className="flex gap-4 items-center">
+                  <a
+                    href="https://twitter.com/qudemo"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-gray-500 hover:text-white transition-colors"
+                    aria-label="Twitter"
+                  >
+                    <svg
+                      className="w-5 h-5"
+                      fill="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                    </svg>
+                  </a>
+                  <a
+                    href="https://facebook.com/qudemo"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-gray-500 hover:text-white transition-colors"
+                    aria-label="Facebook"
+                  >
+                    <svg
+                      className="w-5 h-5"
+                      fill="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                    </svg>
+                  </a>
+                  <a
+                    href="https://instagram.com/qudemo"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-gray-500 hover:text-white transition-colors"
+                    aria-label="Instagram"
+                  >
+                    <svg
+                      className="w-5 h-5"
+                      fill="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
+                    </svg>
+                  </a>
+                </div>
 
-            {/* Bottom Row - Social Links and Copyright */}
-            <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-              {/* Social Links */}
-              <div className="flex items-center gap-12">
-                <a
-                  href="#"
-                  className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors duration-200"
-                >
-                  <FaInstagram className="w-5 h-5" />
-                  <span>Instagram</span>
-                </a>
-                <a
-                  href="#"
-                  className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors duration-200"
-                >
-                  <FaTwitter className="w-5 h-5" />
-                  <span>Twitter/ X</span>
-                </a>
-                <a
-                  href="#"
-                  className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors duration-200"
-                >
-                  <FaFacebookF className="w-5 h-5" />
-                  <span>Facebook</span>
-                </a>
-              </div>
-
-              {/* Copyright */}
-              <div className="flex items-center gap-4 text-gray-400 text-sm">
-                <span>© 2025 — Copyright</span>
-                <span className="text-gray-700">|</span>
-                <span>Built in Framer</span>
+                {/* Links */}
+                <div className="flex gap-6 text-sm">
+                  <a
+                    href="/privacy"
+                    className="text-gray-500 hover:text-white transition-colors"
+                  >
+                    Privacy Policy
+                  </a>
+                  <a
+                    href="/terms"
+                    className="text-gray-500 hover:text-white transition-colors"
+                  >
+                    Terms of Service
+                  </a>
+                  <a
+                    href="mailto:support@qudemo.com"
+                    className="text-gray-500 hover:text-white transition-colors"
+                  >
+                    Contact
+                  </a>
+                </div>
               </div>
             </div>
-          </div>
+          </footer>
         </div>
       </div>
 

@@ -50,46 +50,76 @@
   }
 }
 
+body {
+  font-family: "Inter", "Inter Placeholder", sans-serif;
+}
+
 .card-spotlight {
   position: relative;
   border-radius: 1.5rem;
-  border-top: 2px solid;
-  border-color: rgba(138, 165, 255, 0.3);
-  background: radial-gradient(
-    96% 96% at 48.8% -35.699999999999996%,
-    var(--token-6da9d50d-e927-4dcf-93ed-bf3b8039528b, rgba(138, 165, 255, 0.2))
-      0%,
-    var(--token-6d7bfc0f-867f-43f5-837b-f61a13bf9490, rgba(0, 0, 0, 0)) 100%
-  );
-  box-shadow: 0 -4px 4px rgba(138, 165, 255, 0.1);
-  filter: blur(5%);
-  overflow: hidden;
   padding: 2rem;
+  background: linear-gradient(
+    180deg,
+    rgba(35, 45, 80, 0.3) 0%,
+    rgba(10, 12, 25, 0.6) 100%
+  );
+  backdrop-filter: blur(10px);
   --mouse-x: 50%;
   --mouse-y: 50%;
-  --spotlight-color: rgba(255, 255, 255, 0.05);
 }
 
+/* Glass border overlay - creates the glowing border effect */
 .card-spotlight::before {
   content: "";
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: radial-gradient(
-    circle at var(--mouse-x) var(--mouse-y),
-    var(--spotlight-color),
-    transparent 60%
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    180deg,
+    rgba(71, 85, 165, 0.6) 0%,
+    rgba(71, 85, 165, 0.2) 50%,
+    rgba(71, 85, 165, 0.05) 100%
   );
-  opacity: 0;
-  transition: opacity 0.2s ease;
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
   pointer-events: none;
+  z-index: 1;
 }
 
-.card-spotlight:hover::before,
-.card-spotlight:focus-within::before {
-  opacity: 0.6;
+/* Top bright white light effect + Spotlight hover effect */
+.card-spotlight::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    radial-gradient(
+      ellipse 50% 30% at center top,
+      rgba(255, 255, 255, 0.05) 40%,
+      transparent 90%
+    ),
+    radial-gradient(
+      600px circle at var(--mouse-x) var(--mouse-y),
+      rgba(71, 85, 165, 0.15),
+      transparent 10%
+    );
+  filter: blur(20px);
+  pointer-events: none;
+  z-index: 0;
+  transition: opacity 0.3s ease;
+}
+
+.card-spotlight:hover::after {
+  opacity: 1;
+}
+
+.card-spotlight > * {
+  position: relative;
+  z-index: 2;
 }
 
 .carousel-container {
