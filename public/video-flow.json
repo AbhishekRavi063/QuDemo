@@ -771,6 +771,28 @@
       "nextQuestions": null
     },
     {
+      "id": "video_loom_create",
+      "title": "How do I create a Qudemo?",
+      "heygenVideoId": "LOOM_VIDEO",
+      "src": "https://storage.googleapis.com/qudemo-sample-qudemo/Sample%20Qudemo/48b29bfb-b290-4669-9f25-ee411cdb1d9d/avatar_videos/faq_loom_create_qudemo.mp4",
+      "question": "How do I create a Qudemo?",
+      "answer": "Creating a Qudemo is simple and quick! First, log into your account and navigate to the main dashboard. Click on the 'Create New Qudemo' button. You'll then be guided through a step-by-step process where you can upload your demo video, add relevant documents or website links for context, and configure your settings. The system will process your content, generate FAQs, and create an interactive demo experience. The entire setup takes just a few minutes, and you'll have a fully functional interactive demo ready to share with your customers.",
+      "nextQuestions": null,
+      "category": "tutorial",
+      "isLoomVideo": true
+    },
+    {
+      "id": "video_loom_interactions",
+      "title": "How can I view customer interactions?",
+      "heygenVideoId": "LOOM_VIDEO",
+      "src": "https://storage.googleapis.com/qudemo-sample-qudemo/Sample%20Qudemo/48b29bfb-b290-4669-9f25-ee411cdb1d9d/avatar_videos/faq_loom_view_interactions.mp4",
+      "question": "How can I view customer interactions?",
+      "answer": "Viewing customer interactions is easy through the Interactions dashboard. From your QuDemo list, click on the 'View Interactions' button for any QuDemo. You'll see a comprehensive overview showing all visitors who have engaged with your demo. The dashboard displays visitor details (name, email, company), questions they asked, time spent, and their full interaction history. You can click on individual users to see their complete conversation timeline, helping you understand their interests and follow up effectively. This feature gives you valuable insights into customer engagement and sales opportunities.",
+      "nextQuestions": null,
+      "category": "feature",
+      "isLoomVideo": true
+    },
+    {
       "id": "video_fallback",
       "title": "I'm not sure about that",
       "heygenVideoId": "FALLBACK_VIDEO",

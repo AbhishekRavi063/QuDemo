@@ -555,17 +555,20 @@ const FloatingQudemoWidget = ({
       
       // Only load static video flow if no specific qudemoId is provided
       if (!qudemoId) {
-        // Try to get from sessionStorage first
-        const cachedVideoFlow = sessionStorage.getItem('static_video_flow');
+        // Try to get from sessionStorage first (v2 includes Loom videos)
+        const cachedVideoFlow = sessionStorage.getItem('static_video_flow_v2');
         if (cachedVideoFlow) {
-          console.log('⚡ Using cached static video flow');
+          console.log('⚡ Using cached static video flow (v2 with Loom)');
           videoFlowData = JSON.parse(cachedVideoFlow);
         } else {
           console.log('📹 Widget: Loading static video flow from API');
           const videoFlowResponse = await fetch('/video-flow.json');
           videoFlowData = await videoFlowResponse.json();
           // Cache it for future toggles
-          sessionStorage.setItem('static_video_flow', JSON.stringify(videoFlowData));
+          sessionStorage.setItem('static_video_flow_v2', JSON.stringify(videoFlowData));
+          // Clear old cache
+          sessionStorage.removeItem('static_video_flow');
+          console.log('✅ Loaded fresh video-flow.json with Loom videos');
         }
         setVideoFlow(videoFlowData);
       } else {
@@ -668,7 +671,7 @@ const FloatingQudemoWidget = ({
       // Extract suggested questions from video flow (static videos)
       const staticQuestions = [];
       if (videoFlowData && videoFlowData.videos && videoFlowData.videos.length > 0) {
-        // Get questions from the intro video (first video)
+        // 1. Get questions from the intro video (first video)
         const introVideo = videoFlowData.videos[0];
         if (introVideo.nextQuestions) {
           introVideo.nextQuestions.forEach(q => {
@@ -678,31 +681,41 @@ const FloatingQudemoWidget = ({
           });
         }
         
-        // If we need more questions, get from other videos
-        if (staticQuestions.length < 6) {
+        // 2. Add Loom video questions early (they're important tutorial videos)
+        videoFlowData.videos.forEach(video => {
+          if (video.isLoomVideo && video.question && !staticQuestions.includes(video.question)) {
+            staticQuestions.push(video.question);
+            console.log('➕ Added Loom video question:', video.question);
+          }
+        });
+        
+        // 3. Add more questions from other videos' nextQuestions
+        if (staticQuestions.length < 15) {
           videoFlowData.videos.forEach(video => {
-            if (video.nextQuestions && staticQuestions.length < 6) {
+            if (video.nextQuestions && staticQuestions.length < 15) {
               video.nextQuestions.forEach(q => {
-                if (q.text && !staticQuestions.includes(q.text) && staticQuestions.length < 6) {
+                if (q.text && !staticQuestions.includes(q.text) && staticQuestions.length < 15) {
                   staticQuestions.push(q.text);
                 }
               });
             }
           });
         }
+        
+        console.log(`📋 Extracted ${staticQuestions.length} static questions (including Loom videos)`);
       }
       
       // Set static questions immediately
       console.log('📋 Setting static questions immediately:', staticQuestions);
       setSuggestedQuestions(staticQuestions);
       
-      // Fetch suggested questions from Python API ONLY for specific QuDemos (not static demo)
-      // Static demo uses questions from video-flow.json only
+      // Fetch suggested questions from Python API ONLY for specific QuDemos (with qudemoId prop)
+      // Home page widget uses ONLY static questions from video-flow.json (includes Loom videos)
       if (qudemoId && loadedQudemo && loadedQudemo.id && loadedQudemo.company_name) {
-        console.log('🎯 Fetching Python API questions for specific QuDemo:', qudemoId);
+        console.log('🎯 Fetching Python API questions for specific QuDemo:', loadedQudemo.id);
         
-        // Check cache first
-        const cachedQuestions = sessionStorage.getItem(`suggested_questions_${qudemoId}`);
+        // Check cache first (use loaded QuDemo ID, not prop)
+        const cachedQuestions = sessionStorage.getItem(`suggested_questions_${loadedQudemo.id}`);
         
         if (cachedQuestions) {
           // Use cached questions immediately
@@ -748,8 +761,8 @@ const FloatingQudemoWidget = ({
             .then(suggestedQuestionsData => {
               console.log('📊 Background fetch complete - updating questions');
               
-              // Cache for this specific QuDemo
-              sessionStorage.setItem(`suggested_questions_${qudemoId}`, JSON.stringify(suggestedQuestionsData));
+              // Cache for this QuDemo
+              sessionStorage.setItem(`suggested_questions_${loadedQudemo.id}`, JSON.stringify(suggestedQuestionsData));
               
               const questionsArray = suggestedQuestionsData.questions || suggestedQuestionsData.suggested_questions || [];
               
@@ -759,6 +772,8 @@ const FloatingQudemoWidget = ({
                   return q.question || q.text || q.title || '';
                 }).filter(q => q.trim() !== '');
                 
+                // For specific QuDemos (qudemoId prop), use ONLY QuDemo questions
+                // For Universal Demo (no qudemoId prop), combine static + QuDemo questions
                 const allQuestions = qudemoId && qudemoQuestions.length > 0 
                   ? qudemoQuestions 
                   : [...staticQuestions, ...qudemoQuestions];
