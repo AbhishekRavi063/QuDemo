@@ -47,6 +47,7 @@ const FloatingQudemoWidget = ({
   const avatarVideoCacheRef = useRef({}); // Cache for avatar videos
   const recognitionRef = useRef(null);
   const loomIframeRef = useRef(null);
+  const avatarVideoPlayerRef = useRef(null); // Ref for controlling avatar video player
   const hasLoadedDataRef = useRef(false); // Track if we've already loaded data
   const hasShownIntroRef = useRef(false); // Track if intro video has been shown
   const hasCachedVideosRef = useRef(false); // Track if we've already cached videos
@@ -923,7 +924,16 @@ const FloatingQudemoWidget = ({
       recognition.interimResults = true;
       recognition.lang = 'en-US';
 
-      recognition.onstart = () => setIsListening(true);
+      let capturedTranscript = ''; // Store transcript for auto-send
+
+      recognition.onstart = () => {
+        setIsListening(true);
+        // Pause any playing video when microphone starts
+        if (avatarVideoPlayerRef.current) {
+          avatarVideoPlayerRef.current.pause();
+        }
+        capturedTranscript = ''; // Reset on start
+      };
       recognition.onresult = (event) => {
         let finalTranscript = '';
         for (let i = event.resultIndex; i < event.results.length; i++) {
@@ -932,12 +942,19 @@ const FloatingQudemoWidget = ({
           }
         }
         if (finalTranscript) {
+          capturedTranscript = finalTranscript; // Store for auto-send
           setInputMessage(finalTranscript);
           recognition.stop();
         }
       };
       recognition.onerror = () => setIsListening(false);
-      recognition.onend = () => setIsListening(false);
+      recognition.onend = () => {
+        setIsListening(false);
+        // Auto-send the message when microphone stops
+        if (capturedTranscript && capturedTranscript.trim()) {
+          setTimeout(() => handleSendMessage(capturedTranscript), 100); // Small delay and use captured transcript
+        }
+      };
 
       recognitionRef.current = recognition;
     }
@@ -1990,7 +2007,7 @@ const FloatingQudemoWidget = ({
   // Small circular widget (collapsed state)
   if (!isExpanded) {
     return (
-      <div className={`fixed ${positionClasses[position]} z-50`}>
+      <div className={`fixed ${positionClasses[position]} z-[10000]`}>
         {/* Text above widget */}
         <div className="absolute inset-0 pointer-events-none">
           {/* Top text */}
@@ -2072,12 +2089,24 @@ const FloatingQudemoWidget = ({
   // Expanded widget
   return (
     <>
-      {/* Mobile overlay */}
-      <div className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden" onClick={handleClose}></div>
+      {/* Mobile overlay - only show when expanded */}
+      {isExpanded && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-[9999] md:hidden" onClick={handleClose}></div>
+      )}
       
-      <div className={`fixed inset-0 md:inset-auto md:${positionClasses[position]} z-50 transition-all duration-300 p-4 md:p-0 flex items-center justify-center md:block`}>
-      {/* Minimized bar */}
-      {isMinimized ? (
+      <div className={`fixed inset-0 md:inset-auto md:${positionClasses[position]} z-[10000] transition-all duration-300 p-4 md:p-0 flex items-center justify-center md:block`}>
+      
+      {/* Collapsed preview button */}
+      {!isExpanded && !isMinimized ? (
+        <button
+          onClick={() => setIsExpanded(true)}
+          className="group relative bg-gradient-to-br from-blue-600 to-purple-700 hover:from-blue-700 hover:to-purple-800 text-white rounded-full shadow-2xl hover:shadow-3xl transition-all duration-300 transform hover:scale-105 w-16 h-16 md:w-20 md:h-20 flex items-center justify-center"
+          title={previewText}
+        >
+          <ChatBubbleLeftRightIcon className="w-8 h-8 md:w-10 md:h-10" />
+          <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full animate-pulse"></div>
+        </button>
+      ) : isMinimized ? (
         <div className="bg-white rounded-lg shadow-2xl border border-gray-200 overflow-hidden">
           <button
             onClick={() => setIsMinimized(false)}
@@ -2098,7 +2127,7 @@ const FloatingQudemoWidget = ({
           }`}
           style={{ 
             width: isMaximized ? 'auto' : (window.innerWidth >= 768 ? '313px' : '100%'),
-            height: isMaximized ? 'auto' : (window.innerWidth >= 768 ? '700px' : 'auto'),
+            height: isMaximized ? 'auto' : (window.innerWidth >= 768 ? '550px' : 'auto'),
             border:'none', 
             outline:'none',
           }}
@@ -2142,7 +2171,7 @@ const FloatingQudemoWidget = ({
                    className="relative flex items-center justify-center flex-1" 
                    style={{ 
                      height: window.innerWidth >= 768 ? 'auto' : '300px',
-                     minHeight: window.innerWidth >= 768 ? '550px' : '300px',
+                     minHeight: window.innerWidth >= 768 ? '500px' : '300px',
                      overflow: 'visible'
                    }}
                  >
@@ -2150,6 +2179,7 @@ const FloatingQudemoWidget = ({
                 {currentAvatarVideo ? (
                    <div className="w-full h-full flex items-center justify-center bg-black">
                      <AvatarVideoPlayer
+                       ref={avatarVideoPlayerRef}
                        avatarVideoUrl={currentAvatarVideo.videoUrl}
                        answer={currentAvatarVideo.answer}
                        isVisible={isExpanded}

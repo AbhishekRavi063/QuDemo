@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
 
 /**
  * AvatarVideoPlayer Component
@@ -6,13 +6,28 @@ import React, { useState, useRef, useEffect } from "react";
  * Displays HeyGen-generated AI avatar videos for document-based answers.
  * Provides a modern video player with playback controls.
  */
-const AvatarVideoPlayer = ({ avatarVideoUrl, answer, isVisible, faqId, avatarVideoCache, isMaximized = false, onVideoEnd }) => {
+const AvatarVideoPlayer = forwardRef(({ avatarVideoUrl, answer, isVisible, faqId, avatarVideoCache, isMaximized = false, onVideoEnd }, ref) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const videoRef = useRef(null);
+
+  // Expose pause and play methods to parent component
+  useImperativeHandle(ref, () => ({
+    pause: () => {
+      if (videoRef.current && !videoRef.current.paused) {
+        videoRef.current.pause();
+      }
+    },
+    play: () => {
+      if (videoRef.current && videoRef.current.paused) {
+        videoRef.current.play().catch(err => console.log('Play prevented:', err));
+      }
+    },
+    isPlaying: () => videoRef.current && !videoRef.current.paused
+  }));
 
   useEffect(() => {
     const video = videoRef.current;
@@ -165,6 +180,8 @@ const AvatarVideoPlayer = ({ avatarVideoUrl, answer, isVisible, faqId, avatarVid
       </div>
     </div>
   );
-};
+});
+
+AvatarVideoPlayer.displayName = 'AvatarVideoPlayer';
 
 export default AvatarVideoPlayer;
