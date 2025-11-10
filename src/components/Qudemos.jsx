@@ -929,7 +929,10 @@ const Qudemos = () => {
     fetchQudemos();
   }, [company]);
   
-  // Auto-refresh when videos are processing
+  // Auto-refresh when videos are processing - DISABLED
+  // Removed automatic refresh to prevent page interruptions
+  // Users can manually refresh if needed
+  /*
   useEffect(() => {
     const hasProcessingVideos = qudemos.some(
       q => q.avatar_generation_status === 'processing' || q.avatar_generation_status === 'pending'
@@ -945,6 +948,7 @@ const Qudemos = () => {
       return () => clearInterval(refreshInterval);
     }
   }, [qudemos]);
+  */
 
   // Fetch intro videos for all QuDemos
   useEffect(() => {
