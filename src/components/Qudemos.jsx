@@ -928,6 +928,23 @@ const Qudemos = () => {
   useEffect(() => {
     fetchQudemos();
   }, [company]);
+  
+  // Auto-refresh when videos are processing
+  useEffect(() => {
+    const hasProcessingVideos = qudemos.some(
+      q => q.avatar_generation_status === 'processing' || q.avatar_generation_status === 'pending'
+    );
+    
+    if (hasProcessingVideos) {
+      console.log('🔄 Videos are processing, enabling auto-refresh...');
+      const refreshInterval = setInterval(() => {
+        console.log('🔄 Auto-refreshing QuDemos for progress updates...');
+        fetchQudemos();
+      }, 10000); // Refresh every 10 seconds
+      
+      return () => clearInterval(refreshInterval);
+    }
+  }, [qudemos]);
 
   // Fetch intro videos for all QuDemos
   useEffect(() => {

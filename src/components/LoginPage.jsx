@@ -138,8 +138,8 @@ const LoginPage = () => {
             </Link>
           </p>
         </div>
-        {/* Email/Password form hidden */}
-        <div style={{ display: "none" }}>
+        {/* Email/Password form */}
+        <div>
           <form className="mt-8 space-y-6 text-left" onSubmit={handleSubmit}>
             {loginError && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
@@ -148,12 +148,6 @@ const LoginPage = () => {
             )}
             <div className="space-y-4">
               <div>
-                <label
-                  htmlFor="email"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Email address
-                </label>
                 <input
                   id="email"
                   name="email"
@@ -162,22 +156,16 @@ const LoginPage = () => {
                   required
                   value={formData.email}
                   onChange={handleInputChange}
-                  className={`mt-1 appearance-none relative block w-full px-3 py-2 border ${
+                  className={`appearance-none relative block w-full px-3 py-2 border ${
                     errors.email ? "border-red-300" : "border-gray-300"
                   } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm`}
-                  placeholder="Enter your email"
+                  placeholder="Email address"
                 />
                 {errors.email && (
                   <p className="mt-1 text-sm text-red-600">{errors.email}</p>
                 )}
               </div>
               <div>
-                <label
-                  htmlFor="password"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Password
-                </label>
                 <input
                   id="password"
                   name="password"
@@ -186,10 +174,10 @@ const LoginPage = () => {
                   required
                   value={formData.password}
                   onChange={handleInputChange}
-                  className={`mt-1 appearance-none relative block w-full px-3 py-2 border ${
+                  className={`appearance-none relative block w-full px-3 py-2 border ${
                     errors.password ? "border-red-300" : "border-gray-300"
                   } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm`}
-                  placeholder="Enter your password"
+                  placeholder="Password"
                 />
                 {errors.password && (
                   <p className="mt-1 text-sm text-red-600">{errors.password}</p>
@@ -214,7 +202,7 @@ const LoginPage = () => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="group relative w-full flex items-center justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? (
                   <svg
@@ -257,11 +245,22 @@ const LoginPage = () => {
             </div>
           </form>
         </div>
+        
+        {/* Divider */}
+        <div className="relative my-6">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-300"></div>
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-2 bg-gradient-to-br from-blue-50 to-indigo-100 text-gray-500">Or continue with</span>
+          </div>
+        </div>
+
         <button
           type="button"
           onClick={handleGoogleSignIn}
           disabled={isGoogleLoading}
-          className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md bg-white text-gray-700 hover:bg-gray-50 font-medium mt-4 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full flex items-center justify-center py-2 px-4 border border-gray-300 rounded-md bg-white text-gray-700 hover:bg-gray-50 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isGoogleLoading ? (
             <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-600 mr-2"></div>

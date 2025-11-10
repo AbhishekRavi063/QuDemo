@@ -7,7 +7,7 @@ const API_URL = process.env.REACT_APP_NODE_BACKEND_URL || 'http://localhost:5000
  * VideoGenerationProgress Component
  * Displays real-time progress of HeyGen avatar video generation
  */
-const VideoGenerationProgress = ({ qudemoId, status, onComplete }) => {
+const VideoGenerationProgress = ({ qudemoId, status, onComplete, onProgressUpdate }) => {
   const [progress, setProgress] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -26,10 +26,16 @@ const VideoGenerationProgress = ({ qudemoId, status, onComplete }) => {
       );
 
       if (response.data.success) {
-        setProgress(response.data.data);
+        const newProgress = response.data.data;
+        setProgress(newProgress);
+        
+        // Notify parent of progress update
+        if (onProgressUpdate) {
+          onProgressUpdate(newProgress);
+        }
         
         // If completed, notify parent and stop polling
-        if (response.data.data.status === 'completed') {
+        if (newProgress.status === 'completed') {
           setIsPolling(false);
           if (onComplete) {
             onComplete();
@@ -56,16 +62,19 @@ const VideoGenerationProgress = ({ qudemoId, status, onComplete }) => {
       setIsPolling(true);
       fetchProgress();
       
-      // Poll every 10 seconds
+      // Poll every 5 seconds (faster updates)
       const interval = setInterval(() => {
         fetchProgress();
-      }, 10000);
+      }, 5000);
 
       return () => clearInterval(interval);
     } else if (status === 'completed') {
       fetchProgress(); // Fetch once to get final data
     }
   }, [qudemoId, status]);
+  
+  // Use progress state for rendering, not just the status prop
+  const currentStatus = progress?.status || status;
 
   // Don't render anything if not started
   if (!status || status === 'not_started') {
@@ -147,7 +156,7 @@ const VideoGenerationProgress = ({ qudemoId, status, onComplete }) => {
     }
   };
 
-  const config = statusConfig[status] || statusConfig.processing;
+  const config = statusConfig[currentStatus] || statusConfig.processing;
 
   return (
     <div className={`p-3 ${config.bgColor} border-b ${config.borderColor} bg-opacity-95`}>
@@ -159,7 +168,7 @@ const VideoGenerationProgress = ({ qudemoId, status, onComplete }) => {
             {config.message}
           </span>
         </div>
-        {status === 'processing' && (
+        {currentStatus === 'processing' && (
           <div className="flex items-center space-x-1">
             <div className="animate-spin rounded-full h-3 w-3 border-t-2 border-b-2 border-blue-500"></div>
           </div>
@@ -167,7 +176,7 @@ const VideoGenerationProgress = ({ qudemoId, status, onComplete }) => {
       </div>
 
       {/* Progress Bar */}
-      {status !== 'completed' && status !== 'failed' && (
+      {currentStatus !== 'completed' && currentStatus !== 'failed' && (
         <>
           <div className="relative w-full h-2 bg-gray-200 rounded-full overflow-hidden mb-2">
             <div
@@ -199,14 +208,14 @@ const VideoGenerationProgress = ({ qudemoId, status, onComplete }) => {
       )}
 
       {/* Completed State */}
-      {status === 'completed' && (
+      {currentStatus === 'completed' && (
         <div className="text-xs text-green-600 font-medium">
           🎉 {total} avatar videos are ready to use
         </div>
       )}
 
       {/* Failed State */}
-      {status === 'failed' && (
+      {currentStatus === 'failed' && (
         <div className="text-xs text-red-600">
           Some videos failed to generate. Please try regenerating.
         </div>
