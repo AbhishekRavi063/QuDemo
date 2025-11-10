@@ -278,7 +278,9 @@ function App() {
       <FloatingQudemoWidget
         position="bottom-right"
         previewImage="/round.png" // Fallback image if video thumbnail fails to load
-        previewText="Watch Beta Version"
+        previewText="Watch Demo"
+        qudemoId="c4b2bfae-6fad-47a9-8ce7-a397c96317e3"
+        companyName="Sample Qudemo"
       />
     ) : null;
   };
