@@ -472,7 +472,7 @@ const FloatingQudemoWidget = ({
         return;
       }
       
-      console.log('🎬 Starting proactive video caching for specific QuDemo:', qudemoId);
+      console.log('🎬 Starting proactive FAQ caching (questions, answers, videos) for QuDemo:', qudemoId);
       
       // Mark as cached immediately to prevent duplicate calls
       hasCachedVideosRef.current = true;
@@ -494,15 +494,29 @@ const FloatingQudemoWidget = ({
         
         // Check if we need to refresh cache
         if (cachedVersion !== String(currentVersion)) {
-          console.log('🔄 FAQ version changed, refreshing video cache...');
+          console.log('🔄 FAQ version changed, refreshing cache...');
           localStorage.setItem(`${cacheKey}_version`, String(currentVersion));
         }
         
-        console.log(`📦 Found ${data.faqs.length} FAQs, caching videos...`);
+        console.log(`📦 Found ${data.faqs.length} FAQs, caching questions, answers, and videos...`);
         
-        // Preload ALL videos in background
+        // Create comprehensive FAQ cache
+        const faqCache = {};
+        
+        // Preload ALL videos and cache FAQ data
         let cachedCount = 0;
         for (const faq of data.faqs) {
+          // Cache FAQ data (question + answer + video URL)
+          const questionKey = faq.question.toLowerCase().trim();
+          faqCache[questionKey] = {
+            question: faq.question,
+            answer: faq.answer,
+            videoUrl: faq.video_url,
+            faqId: faq.id,
+            hasVideo: faq.video_status === 'completed' && !!faq.video_url
+          };
+          
+          // Preload video if available
           if (faq.video_url && faq.video_status === 'completed') {
             try {
               // Create hidden video element to trigger browser cache
@@ -512,7 +526,7 @@ const FloatingQudemoWidget = ({
               video.style.display = 'none';
               document.body.appendChild(video);
               
-              // Store in memory cache
+              // Store video URL in memory cache
               videoPreloadRef.current[faq.question] = faq.video_url;
               
               // Remove from DOM after loaded
@@ -532,8 +546,13 @@ const FloatingQudemoWidget = ({
           }
         }
         
-        console.log(`✅ Video caching complete! ${cachedCount} videos cached.`);
-        console.log('⚡ All questions will now play INSTANTLY!');
+        // Store FAQ cache in ref for instant access
+        videoPreloadRef.current.faqCache = faqCache;
+        
+        console.log(`✅ FAQ caching complete!`);
+        console.log(`   📝 ${Object.keys(faqCache).length} Q&A pairs cached`);
+        console.log(`   🎬 ${cachedCount} videos preloaded`);
+        console.log('⚡ All questions will now respond INSTANTLY!');
       }
     } catch (error) {
       console.error('❌ Error in proactive video caching:', error);
@@ -1111,7 +1130,54 @@ const FloatingQudemoWidget = ({
       return;
     }
     
-    // STEP 2: If no static match, call Universal Demo Qudemo API
+    // STEP 2: Check cache first for instant response
+    const questionKey = userQuestion.toLowerCase().trim();
+    const faqCache = videoPreloadRef.current.faqCache || {};
+    let cachedFaq = faqCache[questionKey];
+    
+    // If no exact match, try fuzzy matching
+    if (!cachedFaq) {
+      for (const [key, faq] of Object.entries(faqCache)) {
+        // Check if the cached question contains the user's question or vice versa
+        if (key.includes(questionKey) || questionKey.includes(key)) {
+          cachedFaq = faq;
+          console.log('⚡ FUZZY MATCH found:', faq.question);
+          break;
+        }
+      }
+    }
+    
+    if (cachedFaq) {
+      console.log('⚡ INSTANT RESPONSE from cache:', cachedFaq.question);
+      
+      // Add bot response from cache
+      setChatMessages(prev => [...prev, { 
+        type: 'bot', 
+        text: cachedFaq.answer
+      }]);
+      
+      // Display avatar video if available
+      if (cachedFaq.hasVideo && cachedFaq.videoUrl) {
+        console.log('⚡ INSTANT VIDEO from cache:', cachedFaq.videoUrl);
+        
+        setCurrentAvatarVideo({
+          videoUrl: cachedFaq.videoUrl,
+          answer: cachedFaq.answer,
+          faqId: cachedFaq.faqId
+        });
+        
+        // Submit interaction to backend
+        submitInteraction(userQuestion, cachedFaq.answer, cachedFaq.faqId);
+        
+        // Pause any playing video
+        setIsPlaying(false);
+      }
+      
+      setIsTyping(false);
+      return;
+    }
+    
+    // STEP 3: If no cache match, call Universal Demo Qudemo API
     if (!qudemoData || !qudemoData.id) {
       setTimeout(() => {
         setChatMessages(prev => [...prev, { 
