@@ -2127,7 +2127,7 @@ const FloatingQudemoWidget = ({
           }`}
           style={{ 
             width: isMaximized ? 'auto' : (window.innerWidth >= 768 ? '313px' : '100%'),
-            height: isMaximized ? 'auto' : (window.innerWidth >= 768 ? '550px' : 'auto'),
+            height: isMaximized ? 'auto' : (window.innerWidth >= 768 ? '700px' : 'auto'),
             border:'none', 
             outline:'none',
           }}
@@ -2167,14 +2167,14 @@ const FloatingQudemoWidget = ({
                {/* Left Column: Video + Book a Meeting Button */}
                <div className={`w-full ${isMaximized ? 'md:w-[60%]' : 'md:w-full'} flex flex-col`}>
                  {/* Video Section - Optimized for Portrait Videos */}
-                 <div 
-                   className="relative flex items-center justify-center flex-1" 
-                   style={{ 
-                     height: window.innerWidth >= 768 ? 'auto' : '300px',
-                     minHeight: window.innerWidth >= 768 ? '500px' : '300px',
-                     overflow: 'visible'
-                   }}
-                 >
+                <div 
+                  className="relative flex items-center justify-center flex-1" 
+                  style={{ 
+                    height: window.innerWidth >= 768 ? 'auto' : '300px',
+                    minHeight: window.innerWidth >= 768 ? '550px' : '300px',
+                    overflow: 'visible'
+                  }}
+                >
                 {/* Show avatar video if available */}
                 {currentAvatarVideo ? (
                    <div className="w-full h-full flex items-center justify-center bg-black">
