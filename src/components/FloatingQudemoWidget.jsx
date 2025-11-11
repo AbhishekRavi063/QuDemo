@@ -251,6 +251,19 @@ const FloatingQudemoWidget = ({
         return;
       }
       
+      // Check cache first for instant loading
+      const cacheKey = `intro_video_${qudemoId}`;
+      const cachedIntroVideo = sessionStorage.getItem(cacheKey);
+      
+      if (cachedIntroVideo) {
+        console.log('⚡ Using cached intro video preview URL');
+        setIntroVideoPreview(cachedIntroVideo);
+        setIsLoadingPreview(false);
+        hasAttemptedDirectFetchRef.current = true;
+        // Note: Answer is also cached and will be retrieved by loadIntroVideo when widget expands
+        return;
+      }
+      
       console.log('🎬 Fetching intro video preview with props (before qudemoData)...');
       hasAttemptedDirectFetchRef.current = true; // Mark as attempted
       
@@ -270,6 +283,12 @@ const FloatingQudemoWidget = ({
           if (data && data.has_avatar_video && data.avatar_video_url) {
             console.log('✅ Setting intro video preview URL (from props)');
             setIntroVideoPreview(data.avatar_video_url);
+            // Cache video URL and answer for instant loading next time
+            sessionStorage.setItem(cacheKey, data.avatar_video_url);
+            if (data.answer) {
+              const answerCacheKey = `intro_answer_${qudemoId}`;
+              sessionStorage.setItem(answerCacheKey, data.answer);
+            }
           }
         } catch (error) {
           console.error('❌ Error fetching intro video preview (from props):', error);
@@ -604,30 +623,37 @@ const FloatingQudemoWidget = ({
         if (qudemoId && companyName) {
           console.log('🎯 Widget: Loading specific QuDemo:', qudemoId, companyName);
           
-          // Try with authentication first (for logged-in users)
-          const token = localStorage.getItem('accessToken');
-          if (token) {
-            try {
-              qudemoResponse = await fetch(getNodeApiUrl(`/api/qudemos/${qudemoId}`), {
-                headers: {
-                  'Authorization': `Bearer ${token}`
+          // Check cache first for instant loading
+          const qudemoCache = sessionStorage.getItem(`qudemo_${qudemoId}`);
+          if (qudemoCache) {
+            console.log('⚡ Using cached specific QuDemo data');
+            qudemoResponse = { json: () => Promise.resolve(JSON.parse(qudemoCache)) };
+          } else {
+            // Try with authentication first (for logged-in users)
+            const token = localStorage.getItem('accessToken');
+            if (token) {
+              try {
+                qudemoResponse = await fetch(getNodeApiUrl(`/api/qudemos/${qudemoId}`), {
+                  headers: {
+                    'Authorization': `Bearer ${token}`
+                  }
+                });
+                
+                // If auth fails, fall through to public endpoint
+                if (!qudemoResponse.ok) {
+                  console.log('⚠️ Auth fetch failed, trying public endpoint');
+                  throw new Error('Auth failed');
                 }
-              });
-              
-              // If auth fails, fall through to public endpoint
-              if (!qudemoResponse.ok) {
-                console.log('⚠️ Auth fetch failed, trying public endpoint');
-                throw new Error('Auth failed');
+              } catch (authError) {
+                console.log('⚠️ Trying public endpoint without auth');
+                // Try public endpoint without auth
+                qudemoResponse = await fetch(getNodeApiUrl(`/api/qudemos/public/${qudemoId}`));
               }
-            } catch (authError) {
-              console.log('⚠️ Trying public endpoint without auth');
-              // Try public endpoint without auth
+            } else {
+              // No token, use public endpoint
+              console.log('🌐 No auth token, using public endpoint');
               qudemoResponse = await fetch(getNodeApiUrl(`/api/qudemos/public/${qudemoId}`));
             }
-          } else {
-            // No token, use public endpoint
-            console.log('🌐 No auth token, using public endpoint');
-            qudemoResponse = await fetch(getNodeApiUrl(`/api/qudemos/public/${qudemoId}`));
           }
         } else {
           // Otherwise, load Universal Demo - try cache first
@@ -643,9 +669,14 @@ const FloatingQudemoWidget = ({
         
         const qudemoResponseData = await qudemoResponse.json();
         
-        // Cache Universal Demo if it's not a specific QuDemo
+        // Cache QuDemo data for instant loading next time
         if (!qudemoId) {
+          // Cache Universal Demo
           sessionStorage.setItem('universal_demo', JSON.stringify(qudemoResponseData));
+        } else {
+          // Cache specific QuDemo
+          sessionStorage.setItem(`qudemo_${qudemoId}`, JSON.stringify(qudemoResponseData));
+          console.log('💾 Cached specific QuDemo data for instant loading');
         }
         
         if (qudemoResponseData.success && (qudemoResponseData.data || qudemoResponseData.qudemo)) {
@@ -1765,7 +1796,30 @@ const FloatingQudemoWidget = ({
         return;
       }
       
-      // Make a special request to get the intro video
+      // Check if we already have the intro video URL from preview or cache
+      const cacheKey = `intro_video_${qudemoData.id}`;
+      const cachedIntroVideoUrl = sessionStorage.getItem(cacheKey);
+      
+      if (cachedIntroVideoUrl || introVideoPreview) {
+        const videoUrl = cachedIntroVideoUrl || introVideoPreview;
+        console.log('⚡ Using cached intro video URL - instant playback!');
+        
+        // Check if we also have cached answer text
+        const answerCacheKey = `intro_answer_${qudemoData.id}`;
+        const cachedAnswer = sessionStorage.getItem(answerCacheKey);
+        
+        setCurrentAvatarVideo({
+          videoUrl: videoUrl,
+          answer: cachedAnswer || "Welcome! Let me show you what this is all about.",
+          faqId: 'faq_intro'
+        });
+        
+        setIsPlaying(false);
+        return;
+      }
+      
+      // Make a special request to get the intro video (only if not cached)
+      console.log('📡 Fetching intro video from API...');
       const response = await fetch(
         getVideoApiUrl(`/ask/${encodeURIComponent(companyName)}/${qudemoData.id}`),
         {
@@ -1781,6 +1835,13 @@ const FloatingQudemoWidget = ({
       
       if (data && data.has_avatar_video && data.avatar_video_url) {
         console.log('✅ Intro video found, auto-playing...');
+        
+        // Cache the intro video URL and answer for instant loading next time
+        sessionStorage.setItem(cacheKey, data.avatar_video_url);
+        if (data.answer) {
+          const answerCacheKey = `intro_answer_${qudemoData.id}`;
+          sessionStorage.setItem(answerCacheKey, data.answer);
+        }
         
         // Set the intro avatar video
         setCurrentAvatarVideo({
@@ -1802,7 +1863,6 @@ const FloatingQudemoWidget = ({
   const fetchIntroVideoPreview = async () => {
     try {
       console.log('🎬 Fetching intro video for collapsed preview...');
-      setIsLoadingPreview(true);
       
       if (!qudemoData || !qudemoData.id) {
         console.log('❌ No QuDemo data available for preview');
@@ -1817,6 +1877,19 @@ const FloatingQudemoWidget = ({
         setIsLoadingPreview(false);
         return;
       }
+      
+      // Check cache first for instant loading
+      const cacheKey = `intro_video_${qudemoData.id}`;
+      const cachedIntroVideo = sessionStorage.getItem(cacheKey);
+      
+      if (cachedIntroVideo) {
+        console.log('⚡ Using cached intro video preview URL (fetchIntroVideoPreview)');
+        setIntroVideoPreview(cachedIntroVideo);
+        setIsLoadingPreview(false);
+        return;
+      }
+      
+      setIsLoadingPreview(true);
       
       // Fetch intro video URL
       const response = await fetch(
@@ -1835,6 +1908,12 @@ const FloatingQudemoWidget = ({
       if (data && data.has_avatar_video && data.avatar_video_url) {
         console.log('✅ Setting intro video preview URL');
         setIntroVideoPreview(data.avatar_video_url);
+        // Cache video URL and answer for instant loading next time
+        sessionStorage.setItem(cacheKey, data.avatar_video_url);
+        if (data.answer) {
+          const answerCacheKey = `intro_answer_${qudemoData.id}`;
+          sessionStorage.setItem(answerCacheKey, data.answer);
+        }
       } else {
         console.log('ℹ️ No intro video available for preview');
       }

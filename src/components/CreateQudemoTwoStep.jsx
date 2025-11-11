@@ -267,12 +267,36 @@ const CreateQudemoTwoStep = () => {
         console.log("ℹ️ No documents to upload (selectedFiles is empty)");
       }
       
-      setSuccess("✅ QuDemo created successfully! Now click 'Generate FAQ' to preview questions and answers.");
+      // Now automatically generate FAQs
+      setSuccess("Reading your sources...");
+      setIsGeneratingFAQs(true);
+      
+      const pythonApiUrl = getApiUrl('python');
+      const faqResponse = await fetch(
+        `${pythonApiUrl}/generate-faqs-preview?company_name=${encodeURIComponent(company.name)}&qudemo_id=${qudemoId}`,
+        { method: "POST" }
+      );
+      
+      if (!faqResponse.ok) {
+        throw new Error("Failed to generate FAQs");
+      }
+      
+      setSuccess("Generating FAQ questions and answers...");
+      
+      const faqData = await faqResponse.json();
+      if (faqData.success && faqData.faqs) {
+        setGeneratedFAQs(faqData.faqs);
+        setCurrentStep(2); // Move to FAQ review step
+        setSuccess(`✅ Generated ${faqData.faqs.total_content} content FAQs + ${faqData.faqs.total_system} system FAQs!`);
+      } else {
+        throw new Error("Failed to generate FAQs");
+      }
       
     } catch (error) {
       setError(error.message || "Failed to create qudemo. Please try again.");
     } finally {
       setIsSubmitting(false);
+      setIsGeneratingFAQs(false);
     }
   };
   
@@ -356,19 +380,26 @@ const CreateQudemoTwoStep = () => {
     if (!generatedFAQs) return;
     
     if (isSystem) {
-      // Don't allow deleting system FAQs (intro, fallback, etc.)
-      alert("System FAQs cannot be deleted.");
-      return;
+      // Allow deleting system FAQs
+      const updatedSystemFaqs = generatedFAQs.system_faqs.filter(faq => faq.id !== faqId);
+      
+      setGeneratedFAQs({
+        ...generatedFAQs,
+        system_faqs: updatedSystemFaqs,
+        total_system: updatedSystemFaqs.length,
+        total_videos: generatedFAQs.content_faqs.length + updatedSystemFaqs.length
+      });
+    } else {
+      // Delete content FAQ
+      const updatedContentFaqs = generatedFAQs.content_faqs.filter(faq => faq.id !== faqId);
+      
+      setGeneratedFAQs({
+        ...generatedFAQs,
+        content_faqs: updatedContentFaqs,
+        total_content: updatedContentFaqs.length,
+        total_videos: updatedContentFaqs.length + generatedFAQs.system_faqs.length
+      });
     }
-    
-    const updatedContentFaqs = generatedFAQs.content_faqs.filter(faq => faq.id !== faqId);
-    
-    setGeneratedFAQs({
-      ...generatedFAQs,
-      content_faqs: updatedContentFaqs,
-      total_content: updatedContentFaqs.length,
-      total_videos: updatedContentFaqs.length + generatedFAQs.system_faqs.length
-    });
   };
   
   const addNewFaq = () => {
@@ -738,63 +769,19 @@ const CreateQudemoTwoStep = () => {
             <div className="flex justify-center">
               <button
                 type="submit"
-                disabled={isSubmitting}
-                className="px-8 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={isSubmitting || isGeneratingFAQs}
+                className="px-8 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
               >
-                {isSubmitting ? "Creating QuDemo..." : "Create QuDemo"}
+                <span>{isSubmitting || isGeneratingFAQs ? "Processing..." : "Generate FAQ"}</span>
+                {(isSubmitting || isGeneratingFAQs) && (
+                  <svg className="animate-spin ml-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                )}
               </button>
             </div>
           </form>
-          
-          {/* Generate FAQ Button Modal/Popup */}
-          {createdQudemoId && !isGeneratingFAQs && !generatedFAQs && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-              <div className="bg-white rounded-lg shadow-xl p-8 max-w-md mx-4 relative">
-                {/* Close Button */}
-                <button
-                  onClick={() => {
-                    setCreatedQudemoId(null);
-                    setSuccess("");
-                  }}
-                  className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
-                >
-                  <XMarkIcon className="h-6 w-6" />
-                </button>
-                
-                <div className="text-center">
-                  <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
-                    <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">
-                    QuDemo Created Successfully!
-                  </h3>
-                  <p className="text-sm text-gray-600 mb-6">
-                    Your QuDemo is ready. Click the button below to generate FAQ questions and answers from your sources.
-                  </p>
-                  <div className="space-y-3">
-                    <button
-                      onClick={handleGenerateFAQs}
-                      className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 flex items-center justify-center"
-                    >
-                      <span className="mr-2">🤖</span>
-                      Generate FAQ
-                    </button>
-                    <button
-                      onClick={() => {
-                        setCreatedQudemoId(null);
-                        setSuccess("");
-                      }}
-                      className="w-full px-6 py-3 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
           
           {/* Validation Warning Popup */}
           {showValidationPopup && (
@@ -1006,12 +993,20 @@ const CreateQudemoTwoStep = () => {
                             </span>
                             <h4 className="font-semibold text-gray-900 text-left">{faq.question}</h4>
                           </div>
-                          <button
-                            onClick={() => startEditingFaq(faq)}
-                            className="p-1.5 text-purple-600 hover:bg-purple-100 rounded ml-4"
-                          >
-                            <PencilIcon className="h-4 w-4" />
-                          </button>
+                          <div className="flex space-x-2 ml-4">
+                            <button
+                              onClick={() => startEditingFaq(faq)}
+                              className="p-1.5 text-purple-600 hover:bg-purple-100 rounded"
+                            >
+                              <PencilIcon className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={() => deleteFaq(faq.id, true)}
+                              className="p-1.5 text-red-600 hover:bg-red-50 rounded"
+                            >
+                              <TrashIcon className="h-4 w-4" />
+                            </button>
+                          </div>
                         </div>
                         <p className="text-sm text-gray-700 text-left">{faq.answer}</p>
                       </div>

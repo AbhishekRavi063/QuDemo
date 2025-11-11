@@ -1,114 +1,79 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-
-const API_URL = process.env.REACT_APP_NODE_BACKEND_URL || 'http://localhost:5000';
 
 /**
  * VideoGenerationProgress Component
- * Displays real-time progress of HeyGen avatar video generation
+ * Displays a 10-minute timer-based progress bar for video generation
  */
 const VideoGenerationProgress = ({ qudemoId, status, onComplete, onProgressUpdate }) => {
-  const [progress, setProgress] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [timerProgress, setTimerProgress] = useState(0);
+  const [startTime, setStartTime] = useState(null);
   const [error, setError] = useState(null);
-  const [isPolling, setIsPolling] = useState(false);
 
-  // Fetch progress from backend
-  const fetchProgress = async () => {
-    try {
-      setLoading(true);
-      setError(null);
+  const TOTAL_DURATION_MS = 10 * 60 * 1000; // 10 minutes in milliseconds
 
-      const token = localStorage.getItem('accessToken'); // Fixed: use 'accessToken' not 'token'
-      const response = await axios.get(
-        `${API_URL}/api/qudemos/video-progress/${qudemoId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      if (response.data.success) {
-        const newProgress = response.data.data;
-        setProgress(newProgress);
+  // Start timer when status is processing or pending
+  useEffect(() => {
+    if (status === 'processing' || status === 'pending') {
+      if (!startTime) {
+        setStartTime(Date.now());
+      }
+      
+      // Update progress every 100ms for smooth animation
+      const interval = setInterval(() => {
+        const elapsed = Date.now() - (startTime || Date.now());
+        const percentage = Math.min((elapsed / TOTAL_DURATION_MS) * 100, 100);
+        
+        setTimerProgress(percentage);
         
         // Notify parent of progress update
         if (onProgressUpdate) {
-          onProgressUpdate(newProgress);
+          onProgressUpdate({
+            status: percentage >= 100 ? 'completed' : 'processing',
+            progress: {
+              percentage: percentage,
+              completed: Math.floor((percentage / 100) * 10),
+              total: 10
+            }
+          });
         }
         
-        // If completed, notify parent and stop polling
-        if (newProgress.status === 'completed') {
-          setIsPolling(false);
-          if (onComplete) {
-            onComplete();
-          }
+        // If 10 minutes passed, mark as completed
+        if (percentage >= 100 && onComplete) {
+          onComplete();
         }
-      }
-    } catch (err) {
-      // Silently ignore 404 errors (demo QuDemos or unauthorized access)
-      if (err.response?.status === 404) {
-        console.log('⚠️ QuDemo not found or unauthorized - likely a demo QuDemo');
-        setIsPolling(false); // Stop polling
-        return;
-      }
-      console.error('Error fetching video generation progress:', err);
-      setError(err.response?.data?.error || 'Failed to fetch progress');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Poll for progress updates
-  useEffect(() => {
-    if (status === 'processing' || status === 'pending') {
-      setIsPolling(true);
-      fetchProgress();
-      
-      // Poll every 5 seconds (faster updates)
-      const interval = setInterval(() => {
-        fetchProgress();
-      }, 5000);
+      }, 100); // Update every 100ms
 
       return () => clearInterval(interval);
     } else if (status === 'completed') {
-      fetchProgress(); // Fetch once to get final data
+      setTimerProgress(100);
     }
-  }, [qudemoId, status]);
+  }, [status, startTime, onProgressUpdate, onComplete]);
+
+  // Reset timer when qudemoId changes
+  useEffect(() => {
+    setStartTime(null);
+    setTimerProgress(0);
+  }, [qudemoId]);
   
-  // Use progress state for rendering, not just the status prop
-  const currentStatus = progress?.status || status;
+  // Use status prop directly
+  const currentStatus = status;
 
   // Don't render anything if not started
   if (!status || status === 'not_started') {
     return null;
   }
 
-  // Render error state
-  if (error) {
-    return (
-      <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-600">
-        ⚠️ {error}
-      </div>
-    );
-  }
+  // Calculate progress values based on timer
+  const progressPercentage = timerProgress;
+  const completed = Math.floor((timerProgress / 100) * 10);
+  const total = 10;
+  
+  // Calculate remaining time based on timer
+  const elapsedMs = startTime ? Date.now() - startTime : 0;
+  const remainingMs = Math.max(0, TOTAL_DURATION_MS - elapsedMs);
+  const remainingSeconds = Math.floor(remainingMs / 1000);
 
-  // Render loading state
-  if (loading && !progress) {
-    return (
-      <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded">
-        <div className="flex items-center space-x-2">
-          <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-blue-500"></div>
-          <span className="text-xs text-blue-600">Loading progress...</span>
-        </div>
-      </div>
-    );
-  }
-
-  // Calculate progress percentage
-  const progressPercentage = progress?.progress?.percentage || 0;
-  const completed = progress?.progress?.completed || 0;
-  const total = progress?.progress?.total || 0;
-  const estimatedTime = progress?.progress?.estimated_time_remaining || 0;
-
-  // Format estimated time
+  // Format time remaining
   const formatTime = (seconds) => {
     if (seconds < 60) return `${seconds}s`;
     const minutes = Math.floor(seconds / 60);
@@ -125,7 +90,7 @@ const VideoGenerationProgress = ({ qudemoId, status, onComplete, onProgressUpdat
       textColor: 'text-yellow-700',
       progressColor: 'bg-yellow-500',
       icon: '⏳',
-      message: 'Queued for processing'
+      message: 'Starting video generation...'
     },
     processing: {
       color: 'blue',
@@ -134,7 +99,7 @@ const VideoGenerationProgress = ({ qudemoId, status, onComplete, onProgressUpdat
       textColor: 'text-blue-700',
       progressColor: 'bg-blue-500',
       icon: '🎬',
-      message: 'Generating avatar videos'
+      message: 'Generating avatar videos (Est. ~10 min)'
     },
     completed: {
       color: 'green',
@@ -199,9 +164,9 @@ const VideoGenerationProgress = ({ qudemoId, status, onComplete, onProgressUpdat
           </div>
 
           {/* Estimated Time */}
-          {estimatedTime > 0 && (
+          {remainingSeconds > 0 && currentStatus === 'processing' && (
             <div className={`mt-1 text-xs ${config.textColor} opacity-75`}>
-              ⏱️ Est. time remaining: {formatTime(estimatedTime)}
+              ⏱️ Est. time remaining: {formatTime(remainingSeconds)}
             </div>
           )}
         </>
