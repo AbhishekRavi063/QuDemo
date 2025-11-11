@@ -1,0 +1,1150 @@
+import React, { useState, useEffect, useRef } from "react";
+import { XMarkIcon, PencilIcon, TrashIcon, PlusIcon, CheckIcon } from "@heroicons/react/24/outline";
+import { useCompany } from "../context/CompanyContext";
+import { getNodeApiUrl, getApiUrl } from "../config/api";
+import { useNavigate } from "react-router-dom";
+import DocumentUpload from "./DocumentUpload";
+
+const CreateQudemoTwoStep = () => {
+  const { company, isLoading } = useCompany();
+  const navigate = useNavigate();
+  
+  // Step management
+  const [currentStep, setCurrentStep] = useState(1); // 1 = Sources & Generate FAQ, 2 = Review & Generate Videos
+  
+  // Form states
+  const [title, setTitle] = useState("");
+  const [videoUrls, setVideoUrls] = useState([""]);
+  const [calendlyLink, setCalendlyLink] = useState("");
+  const [presenterName, setPresenterName] = useState("");
+  const [documents, setDocuments] = useState([]);
+  const [selectedFiles, setSelectedFiles] = useState([]);
+  const [createdQudemoId, setCreatedQudemoId] = useState(null);
+  
+  // Voice & User Collection
+  const [voices, setVoices] = useState([]);
+  const [selectedVoice, setSelectedVoice] = useState(null);
+  const [collectUserInfo, setCollectUserInfo] = useState(false);
+  const [collectName, setCollectName] = useState(true);
+  const [collectEmail, setCollectEmail] = useState(true);
+  const [collectCompany, setCollectCompany] = useState(false);
+  
+  // FAQ states
+  const [generatedFAQs, setGeneratedFAQs] = useState(null); // { content_faqs: [], system_faqs: [] }
+  const [isGeneratingFAQs, setIsGeneratingFAQs] = useState(false);
+  const [faqGenerationProgress, setFaqGenerationProgress] = useState("");
+  const [editingFaqId, setEditingFaqId] = useState(null);
+  const [editedQuestion, setEditedQuestion] = useState("");
+  const [editedAnswer, setEditedAnswer] = useState("");
+  
+  // Video generation states
+  const [presenterPhoto, setPresenterPhoto] = useState(null);
+  const [presenterPhotoPreview, setPresenterPhotoPreview] = useState(null);
+  const [isGeneratingVideos, setIsGeneratingVideos] = useState(false);
+  const [videoGenerationProgress, setVideoGenerationProgress] = useState("");
+  
+  // UI states
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [urlValidationErrors, setUrlValidationErrors] = useState({});
+  const [showValidationPopup, setShowValidationPopup] = useState(false);
+  
+  // Fetch voices
+  useEffect(() => {
+    const fetchVoices = async () => {
+      try {
+        const pythonApiUrl = getApiUrl('python');
+        const response = await fetch(`${pythonApiUrl}/heygen-voices`);
+        const data = await response.json();
+        if (data.success && data.voices) {
+          setVoices(data.voices);
+          const defaultVoice = data.voices.find((v) => v.is_default);
+          if (defaultVoice) {
+            setSelectedVoice(defaultVoice.id);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch voices:", err);
+      }
+    };
+    fetchVoices();
+  }, []);
+  
+  // URL validation functions
+  const validateVideoUrl = (url) => {
+    if (!url || !url.trim()) return { isValid: false, error: "URL is required" };
+    
+    const loomRegex = /^https?:\/\/(www\.)?loom\.com\/share\/[a-zA-Z0-9]+/;
+    const youtubeRegex = /^https?:\/\/(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/)[a-zA-Z0-9_-]+/;
+    
+    if (loomRegex.test(url)) return { isValid: true, type: "loom" };
+    if (youtubeRegex.test(url)) return { isValid: true, type: "youtube" };
+    
+    return { isValid: false, error: "Invalid URL. Must be a Loom or YouTube link." };
+  };
+  
+  // URL management
+  const handleVideoUrlChange = (index, value) => {
+    const newUrls = [...videoUrls];
+    newUrls[index] = value;
+    setVideoUrls(newUrls);
+    
+    if (value.trim()) {
+      const validation = validateVideoUrl(value);
+      if (!validation.isValid) {
+        setUrlValidationErrors({ ...urlValidationErrors, [index]: validation.error });
+      } else {
+        const { [index]: removed, ...rest } = urlValidationErrors;
+        setUrlValidationErrors(rest);
+      }
+    }
+  };
+  
+  const addVideoUrlField = () => setVideoUrls([...videoUrls, ""]);
+  const removeVideoUrlField = (index) => {
+    if (videoUrls.length > 1) {
+      setVideoUrls(videoUrls.filter((_, i) => i !== index));
+      const { [index]: removed, ...rest } = urlValidationErrors;
+      setUrlValidationErrors(rest);
+    }
+  };
+  
+  // Step 1: Create QuDemo and process content (NO video generation yet)
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (isSubmitting) return;
+    
+    setIsSubmitting(true);
+    setError("");
+    setSuccess("");
+    
+    try {
+      // Validate
+      if (!company || !company.id) {
+        setError("Company information is required. Please refresh the page and try again.");
+        return;
+      }
+      
+      const validVideoUrls = videoUrls.filter((url) => url.trim());
+      const hasDocuments = documents.length > 0 || selectedFiles.length > 0;
+      
+      console.log("📋 Creating QuDemo - Sources check:", {
+        videos: validVideoUrls.length,
+        documents: documents.length,
+        selectedFiles: selectedFiles.length,
+        selectedFilesData: selectedFiles
+      });
+      
+      // Require at least one source (video OR document)
+      if (validVideoUrls.length === 0 && !hasDocuments) {
+        setShowValidationPopup(true);
+        return;
+      }
+      
+      // Validate video URLs if provided
+      if (validVideoUrls.length > 0) {
+        for (let i = 0; i < validVideoUrls.length; i++) {
+          const validation = validateVideoUrl(validVideoUrls[i]);
+          if (!validation.isValid) {
+            setError(`Video ${i + 1}: ${validation.error}`);
+            return;
+          }
+        }
+      }
+      
+      // Create qudemo
+      const qudemoData = {
+        title: title || "Untitled Qudemo",
+        description: "No description provided",
+        companyId: company.id,
+        calendlyLink: calendlyLink.trim() || null,
+        presenterName: presenterName.trim() || null,
+        voiceId: selectedVoice || null,
+        collectUserInfo: collectUserInfo,
+        collectName: collectUserInfo ? collectName : false,
+        collectEmail: collectUserInfo ? collectEmail : false,
+        collectCompany: collectUserInfo ? collectCompany : false,
+        videos: validVideoUrls.map((url, index) => {
+          const validation = validateVideoUrl(url);
+          return {
+            url: url.trim(),
+            type: validation.type,
+            title: `Video ${index + 1}`,
+            order: index + 1,
+          };
+        }),
+      };
+      
+      const token = localStorage.getItem("accessToken");
+      const createResponse = await fetch(getNodeApiUrl("/api/qudemos"), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(qudemoData),
+      });
+      
+      const createResult = await createResponse.json();
+      if (!createResult.success) {
+        throw new Error(createResult.error || "Failed to create qudemo");
+      }
+      
+      const qudemoId = createResult.data.id;
+      setCreatedQudemoId(qudemoId);
+      
+      // Process content (videos)
+      if (validVideoUrls.length > 0) {
+        setSuccess("Processing your videos... This may take a few minutes.");
+        
+        const contentResponse = await fetch(
+          getNodeApiUrl(`/api/qudemos/process-content/${company.name}/${qudemoId}`),
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              video_urls: validVideoUrls,
+              website_urls: [], // No websites
+            }),
+          }
+        );
+        
+        const contentResult = await contentResponse.json();
+        if (!contentResult.success && contentResult.processing_errors) {
+          setError("Some content failed to process. Please check and try again.");
+          return;
+        }
+      }
+      
+      // Upload documents if any
+      if (selectedFiles.length > 0) {
+        console.log(`📤 Uploading ${selectedFiles.length} document(s) to Python backend...`);
+        setSuccess(`Uploading ${selectedFiles.length} document(s)...`);
+        
+        const pythonApiUrl = getApiUrl('python');
+        console.log(`🔗 Python API URL: ${pythonApiUrl}`);
+        
+        const uploadPromises = selectedFiles.map(async (fileInfo) => {
+          console.log(`📄 Uploading file: ${fileInfo.name || fileInfo.file.name}`, {
+            id: fileInfo.id,
+            type: fileInfo.type,
+            size: fileInfo.size
+          });
+          
+          const formData = new FormData();
+          formData.append("file", fileInfo.file);
+          formData.append("company_name", company.name);
+          formData.append("qudemo_id", qudemoId);
+          formData.append("document_id", fileInfo.id.toString());
+          formData.append("mime_type", fileInfo.type || fileInfo.file.type);
+          
+          const uploadResponse = await fetch(`${pythonApiUrl}/process-document`, {
+            method: "POST",
+            body: formData,
+          });
+          
+          const result = await uploadResponse.json();
+          console.log(`📄 Upload result for ${fileInfo.name || fileInfo.file.name}:`, result);
+          return result;
+        });
+        
+        const uploadResults = await Promise.all(uploadPromises);
+        const failedUploads = uploadResults.filter(r => !r.success);
+        
+        if (failedUploads.length > 0) {
+          console.error(`❌ Failed uploads:`, failedUploads);
+          setError(`Failed to upload ${failedUploads.length} document(s). Please try again.`);
+          return;
+        }
+        
+        console.log(`✅ All ${selectedFiles.length} document(s) uploaded successfully!`);
+        setSuccess(`✅ Uploaded ${selectedFiles.length} document(s) successfully!`);
+      } else {
+        console.log("ℹ️ No documents to upload (selectedFiles is empty)");
+      }
+      
+      setSuccess("✅ QuDemo created successfully! Now click 'Generate FAQ' to preview questions and answers.");
+      
+    } catch (error) {
+      setError(error.message || "Failed to create qudemo. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  // Step 1.5: Generate FAQs for preview
+  const handleGenerateFAQs = async () => {
+    if (!createdQudemoId || !company) return;
+    
+    setIsGeneratingFAQs(true);
+    setFaqGenerationProgress("Reading your sources...");
+    setError("");
+    
+    try {
+      const pythonApiUrl = getApiUrl('python');
+      const response = await fetch(
+        `${pythonApiUrl}/generate-faqs-preview?company_name=${encodeURIComponent(company.name)}&qudemo_id=${createdQudemoId}`,
+        { method: "POST" }
+      );
+      
+      if (!response.ok) {
+        throw new Error("Failed to generate FAQs");
+      }
+      
+      setFaqGenerationProgress("Generating FAQ questions and answers...");
+      
+      const data = await response.json();
+      if (data.success && data.faqs) {
+        setGeneratedFAQs(data.faqs);
+        setFaqGenerationProgress("");
+        setCurrentStep(2); // Move to FAQ review step
+        setSuccess(`✅ Generated ${data.faqs.total_content} content FAQs + ${data.faqs.total_system} system FAQs!`);
+      } else {
+        throw new Error("Failed to generate FAQs");
+      }
+    } catch (error) {
+      setError("Failed to generate FAQs: " + error.message);
+      setFaqGenerationProgress("");
+    } finally {
+      setIsGeneratingFAQs(false);
+    }
+  };
+  
+  // FAQ editing functions
+  const startEditingFaq = (faq) => {
+    setEditingFaqId(faq.id);
+    setEditedQuestion(faq.question);
+    setEditedAnswer(faq.answer);
+  };
+  
+  const cancelEditingFaq = () => {
+    setEditingFaqId(null);
+    setEditedQuestion("");
+    setEditedAnswer("");
+  };
+  
+  const saveEditedFaq = () => {
+    if (!generatedFAQs || !editingFaqId) return;
+    
+    // Update in content_faqs or system_faqs
+    const updatedContentFaqs = generatedFAQs.content_faqs.map(faq => 
+      faq.id === editingFaqId 
+        ? { ...faq, question: editedQuestion, answer: editedAnswer }
+        : faq
+    );
+    
+    const updatedSystemFaqs = generatedFAQs.system_faqs.map(faq =>
+      faq.id === editingFaqId
+        ? { ...faq, question: editedQuestion, answer: editedAnswer }
+        : faq
+    );
+    
+    setGeneratedFAQs({
+      ...generatedFAQs,
+      content_faqs: updatedContentFaqs,
+      system_faqs: updatedSystemFaqs
+    });
+    
+    cancelEditingFaq();
+  };
+  
+  const deleteFaq = (faqId, isSystem) => {
+    if (!generatedFAQs) return;
+    
+    if (isSystem) {
+      // Don't allow deleting system FAQs (intro, fallback, etc.)
+      alert("System FAQs cannot be deleted.");
+      return;
+    }
+    
+    const updatedContentFaqs = generatedFAQs.content_faqs.filter(faq => faq.id !== faqId);
+    
+    setGeneratedFAQs({
+      ...generatedFAQs,
+      content_faqs: updatedContentFaqs,
+      total_content: updatedContentFaqs.length,
+      total_videos: updatedContentFaqs.length + generatedFAQs.system_faqs.length
+    });
+  };
+  
+  const addNewFaq = () => {
+    if (!generatedFAQs) return;
+    
+    const newId = `faq_${String(generatedFAQs.content_faqs.length + 1).padStart(3, '0')}`;
+    const newFaq = {
+      id: newId,
+      question: "New Question",
+      answer: "New Answer",
+      category: "general",
+      source: "manual",
+      is_system: false
+    };
+    
+    setGeneratedFAQs({
+      ...generatedFAQs,
+      content_faqs: [...generatedFAQs.content_faqs, newFaq],
+      total_content: generatedFAQs.content_faqs.length + 1,
+      total_videos: generatedFAQs.content_faqs.length + 1 + generatedFAQs.system_faqs.length
+    });
+    
+    // Start editing the new FAQ
+    startEditingFaq(newFaq);
+  };
+  
+  // Save FAQs to backend (draft)
+  const handleSaveFAQs = async () => {
+    if (!generatedFAQs || !createdQudemoId || !company) return;
+    
+    try {
+      const pythonApiUrl = getApiUrl('python');
+      const response = await fetch(`${pythonApiUrl}/update-faqs/${createdQudemoId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          company_name: company.name,
+          content_faqs: generatedFAQs.content_faqs,
+          system_faqs: generatedFAQs.system_faqs
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to save FAQs");
+      }
+      
+      setSuccess("✅ FAQs saved successfully!");
+    } catch (error) {
+      setError("Failed to save FAQs: " + error.message);
+    }
+  };
+  
+  // Step 2: Upload photo and trigger video generation
+  const handlePresenterPhotoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (!file.type.startsWith("image/")) {
+        setError("Please upload an image file (JPG, PNG, etc.)");
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        setError("Image size must be less than 5MB");
+        return;
+      }
+      
+      setPresenterPhoto(file);
+      const reader = new FileReader();
+      reader.onloadend = () => setPresenterPhotoPreview(reader.result);
+      reader.readAsDataURL(file);
+      setError("");
+    }
+  };
+  
+  const removePresenterPhoto = () => {
+    setPresenterPhoto(null);
+    setPresenterPhotoPreview(null);
+  };
+  
+  const handleGenerateVideos = async () => {
+    if (!presenterPhoto || !createdQudemoId || !company) {
+      setError("Please upload a presenter photo first.");
+      return;
+    }
+    
+    // Save FAQs first
+    await handleSaveFAQs();
+    
+    setIsGeneratingVideos(true);
+    setVideoGenerationProgress("Uploading presenter photo...");
+    setError("");
+    
+    try {
+      const formData = new FormData();
+      formData.append("presenterPhoto", presenterPhoto);
+      formData.append("qudemoId", createdQudemoId);
+      formData.append("companyName", company.name);
+      
+      const pythonApiUrl = getApiUrl('python');
+      const response = await fetch(`${pythonApiUrl}/trigger-video-generation-final`, {
+        method: "POST",
+        body: formData
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to start video generation");
+      }
+      
+      setVideoGenerationProgress("Starting AI video generation...");
+      
+      const data = await response.json();
+      if (data.success) {
+        setSuccess(`✅ Video generation started! ${data.total_videos} videos will be generated in ~${data.estimated_time_minutes} minutes. Redirecting to QuDemos page...`);
+        
+        // Redirect after 3 seconds
+        setTimeout(() => {
+          navigate("/qudemos");
+        }, 3000);
+      } else {
+        throw new Error("Failed to start video generation");
+      }
+    } catch (error) {
+      setError("Failed to generate videos: " + error.message);
+      setVideoGenerationProgress("");
+    } finally {
+      setIsGeneratingVideos(false);
+    }
+  };
+  
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
+  
+  if (!company) {
+    return (
+      <div className="text-center py-12 px-4 sm:px-6 lg:px-8 bg-white rounded-lg border">
+        <h3 className="mt-2 text-lg font-medium text-graydark">No Company Found</h3>
+        <p className="mt-1 text-sm text-bodydark">
+          You need to create a company before you can create a QuDemo.
+        </p>
+      </div>
+    );
+  }
+  
+  return (
+    <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Step Indicator */}
+      <div className="mb-8">
+        <div className="flex items-center justify-center space-x-4">
+          <div className={`flex items-center ${currentStep >= 1 ? 'text-blue-600' : 'text-gray-400'}`}>
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${currentStep >= 1 ? 'border-blue-600 bg-blue-50' : 'border-gray-300'}`}>
+              1
+            </div>
+            <span className="ml-2 font-medium">Upload Sources & Generate FAQ</span>
+          </div>
+          
+          <div className={`w-16 h-0.5 ${currentStep >= 2 ? 'bg-blue-600' : 'bg-gray-300'}`}></div>
+          
+          <div className={`flex items-center ${currentStep >= 2 ? 'text-blue-600' : 'text-gray-400'}`}>
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${currentStep >= 2 ? 'border-blue-600 bg-blue-50' : 'border-gray-300'}`}>
+              2
+            </div>
+            <span className="ml-2 font-medium">Review FAQs & Generate Videos</span>
+          </div>
+        </div>
+      </div>
+      
+      {/* Error & Success Messages */}
+      {error && (
+        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-red-600 text-sm">{error}</p>
+        </div>
+      )}
+      
+      {success && (
+        <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+          <p className="text-green-600 text-sm whitespace-pre-line">{success}</p>
+        </div>
+      )}
+      
+      {/* STEP 1: Upload Sources */}
+      {currentStep === 1 && (
+        <div className="bg-white rounded-lg shadow-sm border p-6">
+          <h2 className="text-2xl font-bold text-graydark mb-6">Step 1: Add Your Content Sources</h2>
+          
+          <form onSubmit={handleSubmit} className="space-y-6 max-w-3xl mx-auto">
+            {/* Title */}
+            <div>
+              <label className="block text-sm font-bold text-graydark mb-2 text-left">
+                Qudemo Title <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Enter qudemo title"
+                required
+                className="w-full border border-strokedark/20 px-4 py-3 rounded-lg focus:ring-2 focus:ring-blue-500 text-left"
+              />
+            </div>
+            
+            {/* Video URLs */}
+            <div>
+              <label className="block text-sm font-bold text-graydark mb-2 text-left">
+                Link to Loom or YouTube demo videos (Optional)
+              </label>
+              <p className="text-xs text-gray-500 mb-3 text-left">
+                Add videos to generate FAQs from transcripts. Unlisted YouTube videos will not be processed.
+              </p>
+              {videoUrls.map((url, index) => (
+                <div key={index} className="mb-4">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={url}
+                      onChange={(e) => handleVideoUrlChange(index, e.target.value)}
+                      placeholder="https://www.loom.com/share/your-video-id or https://youtube.com/watch?v="
+                      className={`flex-1 border px-4 py-3 rounded-lg text-left ${
+                        urlValidationErrors[index] ? "border-red-500" : "border-strokedark/20"
+                      }`}
+                    />
+                    {videoUrls.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeVideoUrlField(index)}
+                        className="text-red-500 hover:text-red-700 p-2"
+                      >
+                        <XMarkIcon className="h-5 w-5" />
+                      </button>
+                    )}
+                  </div>
+                  {urlValidationErrors[index] && (
+                    <p className="text-red-500 text-xs mt-1">{urlValidationErrors[index]}</p>
+                  )}
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={addVideoUrlField}
+                className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+              >
+                + Add another video
+              </button>
+            </div>
+            
+            {/* Document Upload */}
+            <div>
+              <label className="block text-sm font-bold text-graydark mb-2 text-left">
+                Upload Documents (Optional - PDF, DOCX, TXT)
+              </label>
+              <DocumentUpload
+                onDocumentsChange={setDocuments}
+                onSelectedFilesChange={setSelectedFiles}
+              />
+            </div>
+            
+            {/* Calendly Link */}
+            <div>
+              <label className="block text-sm font-bold text-graydark mb-2 text-left">
+                Calendly Meeting Link (Optional)
+              </label>
+              <input
+                type="url"
+                value={calendlyLink}
+                onChange={(e) => setCalendlyLink(e.target.value)}
+                placeholder="https://calendly.com/your-link"
+                className="w-full border border-strokedark/20 px-4 py-3 rounded-lg text-left"
+              />
+            </div>
+            
+            {/* User Data Collection */}
+            <div className="border-t pt-6">
+              <div className="max-w-2xl mx-auto">
+                <div className="flex items-center justify-between mb-4 p-4 bg-gray-50 rounded-lg">
+                  <label htmlFor="collectUserInfo" className="text-sm font-bold text-graydark cursor-pointer text-left">
+                    Collect visitor information before demo
+                  </label>
+                  
+                  {/* Main Toggle Switch */}
+                  <button
+                    type="button"
+                    onClick={() => setCollectUserInfo(!collectUserInfo)}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                      collectUserInfo ? 'bg-blue-600' : 'bg-gray-300'
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        collectUserInfo ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
+                </div>
+                
+                {collectUserInfo && (
+                  <div className="ml-4 space-y-1 mt-4 bg-white border border-gray-200 rounded-lg p-4">
+                    <p className="text-xs font-semibold text-gray-600 uppercase mb-2 text-left">Select information to collect:</p>
+                    
+                    {/* Name Toggle */}
+                    <div className="flex items-center justify-between py-1.5">
+                      <label htmlFor="collectName" className="text-sm text-gray-700 cursor-pointer text-left">
+                        Name
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setCollectName(!collectName)}
+                        className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-1 ${
+                          collectName ? 'bg-blue-600' : 'bg-gray-300'
+                        }`}
+                      >
+                        <span
+                          className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                            collectName ? 'translate-x-5' : 'translate-x-1'
+                          }`}
+                        />
+                      </button>
+                    </div>
+                    
+                    {/* Email Toggle */}
+                    <div className="flex items-center justify-between py-1.5">
+                      <label htmlFor="collectEmail" className="text-sm text-gray-700 cursor-pointer text-left">
+                        Email
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setCollectEmail(!collectEmail)}
+                        className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-1 ${
+                          collectEmail ? 'bg-blue-600' : 'bg-gray-300'
+                        }`}
+                      >
+                        <span
+                          className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                            collectEmail ? 'translate-x-5' : 'translate-x-1'
+                          }`}
+                        />
+                      </button>
+                    </div>
+                    
+                    {/* Company Toggle */}
+                    <div className="flex items-center justify-between py-1.5">
+                      <label htmlFor="collectCompany" className="text-sm text-gray-700 cursor-pointer text-left">
+                        Company
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setCollectCompany(!collectCompany)}
+                        className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-1 ${
+                          collectCompany ? 'bg-blue-600' : 'bg-gray-300'
+                        }`}
+                      >
+                        <span
+                          className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                            collectCompany ? 'translate-x-5' : 'translate-x-1'
+                          }`}
+                        />
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            {/* Submit Button - Centered */}
+            <div className="flex justify-center">
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="px-8 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSubmitting ? "Creating QuDemo..." : "Create QuDemo"}
+              </button>
+            </div>
+          </form>
+          
+          {/* Generate FAQ Button Modal/Popup */}
+          {createdQudemoId && !isGeneratingFAQs && !generatedFAQs && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white rounded-lg shadow-xl p-8 max-w-md mx-4 relative">
+                {/* Close Button */}
+                <button
+                  onClick={() => {
+                    setCreatedQudemoId(null);
+                    setSuccess("");
+                  }}
+                  className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+                >
+                  <XMarkIcon className="h-6 w-6" />
+                </button>
+                
+                <div className="text-center">
+                  <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                    <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">
+                    QuDemo Created Successfully!
+                  </h3>
+                  <p className="text-sm text-gray-600 mb-6">
+                    Your QuDemo is ready. Click the button below to generate FAQ questions and answers from your sources.
+                  </p>
+                  <div className="space-y-3">
+                    <button
+                      onClick={handleGenerateFAQs}
+                      className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 flex items-center justify-center"
+                    >
+                      <span className="mr-2">🤖</span>
+                      Generate FAQ
+                    </button>
+                    <button
+                      onClick={() => {
+                        setCreatedQudemoId(null);
+                        setSuccess("");
+                      }}
+                      className="w-full px-6 py-3 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* Validation Warning Popup */}
+          {showValidationPopup && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white rounded-lg shadow-xl p-8 max-w-md mx-4 relative">
+                {/* Close Button */}
+                <button
+                  onClick={() => setShowValidationPopup(false)}
+                  className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+                >
+                  <XMarkIcon className="h-6 w-6" />
+                </button>
+                
+                <div className="text-center">
+                  <div className="mx-auto w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mb-4">
+                    <svg className="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">
+                    Source Required
+                  </h3>
+                  <p className="text-sm text-gray-600 mb-6">
+                    Please provide at least one video URL or upload a document to create a QuDemo.
+                  </p>
+                  <button
+                    onClick={() => setShowValidationPopup(false)}
+                    className="w-full px-6 py-3 bg-yellow-600 text-white rounded-lg font-medium hover:bg-yellow-700"
+                  >
+                    Got it
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* FAQ Generation Progress */}
+          {isGeneratingFAQs && (
+            <div className="mt-6 p-6 bg-gray-50 border border-gray-200 rounded-lg">
+              <div className="flex items-center space-x-3">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                <p className="text-sm font-medium text-gray-700">{faqGenerationProgress}</p>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+      
+      {/* STEP 2: Review FAQs & Generate Videos */}
+      {currentStep === 2 && generatedFAQs && (
+        <div className="space-y-6">
+          {/* FAQ Preview Section */}
+          <div className="bg-white rounded-lg shadow-sm border p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-graydark">
+                Step 2: Review & Edit FAQs
+              </h2>
+              <div className="text-sm text-gray-600">
+                {generatedFAQs.total_content} Content + {generatedFAQs.total_system} System = {generatedFAQs.total_videos} Total Videos
+              </div>
+            </div>
+            
+            {/* Content FAQs */}
+            <div className="mb-8">
+              <div className="mb-4">
+                <h3 className="text-lg font-semibold text-gray-800 text-left">Content FAQs ({generatedFAQs.total_content})</h3>
+              </div>
+              
+              <div className="space-y-4">
+                {generatedFAQs.content_faqs.map((faq, index) => (
+                  <div key={faq.id} className="border rounded-lg p-4 hover:border-blue-300 transition">
+                    {editingFaqId === faq.id ? (
+                      // Edit Mode
+                      <div className="space-y-3">
+                        <input
+                          type="text"
+                          value={editedQuestion}
+                          onChange={(e) => setEditedQuestion(e.target.value)}
+                          className="w-full border border-blue-300 px-3 py-2 rounded-lg font-medium"
+                          placeholder="Question"
+                        />
+                        <textarea
+                          value={editedAnswer}
+                          onChange={(e) => setEditedAnswer(e.target.value)}
+                          rows={4}
+                          className="w-full border border-blue-300 px-3 py-2 rounded-lg text-sm"
+                          placeholder="Answer"
+                          maxLength={1000}
+                        />
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-gray-500">
+                            {editedAnswer.length}/1000 characters
+                          </span>
+                          <div className="flex space-x-2">
+                            <button
+                              onClick={saveEditedFaq}
+                              className="flex items-center px-3 py-1.5 bg-green-600 text-white rounded text-sm hover:bg-green-700"
+                            >
+                              <CheckIcon className="h-4 w-4 mr-1" />
+                              Save
+                            </button>
+                            <button
+                              onClick={cancelEditingFaq}
+                              className="px-3 py-1.5 bg-gray-200 text-gray-700 rounded text-sm hover:bg-gray-300"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      // View Mode
+                      <div>
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex-1">
+                            <span className="text-xs font-semibold text-blue-600 uppercase">Q{index + 1}</span>
+                            <h4 className="font-semibold text-gray-900 text-left">{faq.question}</h4>
+                          </div>
+                          <div className="flex space-x-2 ml-4">
+                            <button
+                              onClick={() => startEditingFaq(faq)}
+                              className="p-1.5 text-blue-600 hover:bg-blue-50 rounded"
+                            >
+                              <PencilIcon className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={() => deleteFaq(faq.id, false)}
+                              className="p-1.5 text-red-600 hover:bg-red-50 rounded"
+                            >
+                              <TrashIcon className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </div>
+                        <p className="text-sm text-gray-700 whitespace-pre-line text-left">{faq.answer}</p>
+                        <div className="mt-2 flex items-center space-x-4 text-xs text-gray-500">
+                          <span className="bg-gray-100 px-2 py-1 rounded">{faq.category}</span>
+                          <span>{faq.answer.length} chars</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+              
+              {/* Add New FAQ Button */}
+              <div className="mt-4">
+                <button
+                  onClick={addNewFaq}
+                  className="flex items-center px-4 py-2 text-sm bg-green-50 text-green-700 rounded-lg hover:bg-green-100 border border-green-200"
+                >
+                  <PlusIcon className="h-4 w-4 mr-2" />
+                  Add New FAQ
+                </button>
+              </div>
+            </div>
+            
+            {/* System FAQs */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-800 text-left mb-4">System FAQs ({generatedFAQs.total_system})</h3>
+              <div className="space-y-4">
+                {generatedFAQs.system_faqs.map((faq) => (
+                  <div key={faq.id} className="border border-purple-200 bg-purple-50 rounded-lg p-4">
+                    {editingFaqId === faq.id ? (
+                      // Edit Mode
+                      <div className="space-y-3">
+                        <input
+                          type="text"
+                          value={editedQuestion}
+                          onChange={(e) => setEditedQuestion(e.target.value)}
+                          className="w-full border border-purple-300 px-3 py-2 rounded-lg font-medium"
+                          placeholder="Question"
+                        />
+                        <textarea
+                          value={editedAnswer}
+                          onChange={(e) => setEditedAnswer(e.target.value)}
+                          rows={3}
+                          className="w-full border border-purple-300 px-3 py-2 rounded-lg text-sm"
+                          placeholder="Answer"
+                          maxLength={1000}
+                        />
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-gray-500">
+                            {editedAnswer.length}/1000 characters
+                          </span>
+                          <div className="flex space-x-2">
+                            <button
+                              onClick={saveEditedFaq}
+                              className="flex items-center px-3 py-1.5 bg-green-600 text-white rounded text-sm hover:bg-green-700"
+                            >
+                              <CheckIcon className="h-4 w-4 mr-1" />
+                              Save
+                            </button>
+                            <button
+                              onClick={cancelEditingFaq}
+                              className="px-3 py-1.5 bg-gray-200 text-gray-700 rounded text-sm hover:bg-gray-300"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      // View Mode
+                      <div>
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex-1">
+                            <span className="text-xs font-semibold text-purple-600 uppercase">
+                              {faq.is_intro ? "INTRO" : faq.is_fallback ? "FALLBACK" : faq.is_sales ? "SALES" : faq.is_no_answer ? "NO ANSWER" : "SYSTEM"}
+                            </span>
+                            <h4 className="font-semibold text-gray-900 text-left">{faq.question}</h4>
+                          </div>
+                          <button
+                            onClick={() => startEditingFaq(faq)}
+                            className="p-1.5 text-purple-600 hover:bg-purple-100 rounded ml-4"
+                          >
+                            <PencilIcon className="h-4 w-4" />
+                          </button>
+                        </div>
+                        <p className="text-sm text-gray-700 text-left">{faq.answer}</p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            {/* Save FAQs Button */}
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={handleSaveFAQs}
+                className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700"
+              >
+                💾 Save FAQs
+              </button>
+            </div>
+          </div>
+          
+          {/* Presenter Photo & Video Generation */}
+          <div className="bg-white rounded-lg shadow-sm border p-6">
+            <h3 className="text-xl font-bold text-graydark mb-6">Presenter Details & Generate AI Videos</h3>
+            
+            {/* Presenter Name */}
+            <div className="mb-6">
+              <label className="block text-sm font-bold text-graydark mb-2 text-left">
+                Presenter Name (Optional)
+              </label>
+              <input
+                type="text"
+                value={presenterName}
+                onChange={(e) => setPresenterName(e.target.value)}
+                placeholder="Enter presenter name (optional)"
+                className="w-full border border-strokedark/20 px-4 py-3 rounded-lg text-left"
+              />
+            </div>
+            
+            {/* Voice Selection */}
+            <div className="mb-6">
+              <label className="block text-sm font-bold text-graydark mb-2 text-left">
+                Select AI Voice <span className="text-red-500">*</span>
+              </label>
+              <p className="text-xs text-gray-500 mb-3 text-left">
+                Choose the voice that will read your FAQ answers
+              </p>
+              <select
+                value={selectedVoice || ""}
+                onChange={(e) => setSelectedVoice(e.target.value)}
+                required
+                className="w-full border border-strokedark/20 px-4 py-3 rounded-lg text-left bg-white"
+              >
+                <option value="">Select a voice</option>
+                {voices.map((voice) => (
+                  <option key={voice.id} value={voice.id}>
+                    {voice.name} ({voice.gender}, {voice.language})
+                  </option>
+                ))}
+              </select>
+            </div>
+            
+            {/* Presenter Photo */}
+            <div className="mb-6">
+              <label className="block text-sm font-bold text-graydark mb-2 text-left">
+                Presenter Photo <span className="text-red-500">*</span>
+              </label>
+              <p className="text-xs text-gray-500 mb-3 text-left">
+                Upload a clear, front-facing photo for the AI avatar (max 5MB)
+              </p>
+              
+              {presenterPhotoPreview ? (
+                <div className="relative inline-block">
+                  <img
+                    src={presenterPhotoPreview}
+                    alt="Presenter preview"
+                    className="w-32 h-32 object-cover rounded-lg border-2 border-blue-300"
+                  />
+                  <button
+                    onClick={removePresenterPhoto}
+                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                  >
+                    <XMarkIcon className="h-4 w-4" />
+                  </button>
+                </div>
+              ) : (
+                <label className="block w-full border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-blue-400">
+                  <div className="space-y-2">
+                    <div className="text-gray-400">
+                      <svg className="mx-auto h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      <span className="text-blue-600 font-medium">Click to upload</span> or drag and drop
+                    </div>
+                    <p className="text-xs text-gray-500">PNG, JPG up to 5MB</p>
+                  </div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handlePresenterPhotoChange}
+                    className="hidden"
+                  />
+                </label>
+              )}
+            </div>
+            
+            {/* Generate Videos Button - Centered */}
+            <div className="flex justify-center">
+              <button
+                onClick={handleGenerateVideos}
+                disabled={!selectedVoice || !presenterPhoto || isGeneratingVideos}
+                className="px-8 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isGeneratingVideos ? "Generating..." : `🎬 Generate ${generatedFAQs.total_videos} AI Videos`}
+              </button>
+            </div>
+            
+            {/* Video Generation Progress */}
+            {isGeneratingVideos && videoGenerationProgress && (
+              <div className="mt-4 p-4 bg-purple-50 border border-purple-200 rounded-lg">
+                <div className="flex items-center space-x-3">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-600"></div>
+                  <p className="text-sm font-medium text-purple-700">{videoGenerationProgress}</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default CreateQudemoTwoStep;
+

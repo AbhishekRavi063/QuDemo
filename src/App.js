@@ -15,7 +15,7 @@ import Header from "./components/Header";
 import Sidebar from "./components/Sidebar";
 // CUSTOMER PAGE COMPONENT - COMMENTED OUT (NOT IN USE)
 // import DemoHomePage from './components/DemoHomePage';
-import CreateQuDemo from "./components/CreateQuDemo";
+import CreateQuDemo from "./components/CreateQudemoTwoStep";
 import Qudemos from "./components/Qudemos";
 import ViewQudemo from "./components/EditQudemo";
 import BuyerInteractions from "./components/BuyerInteractions";
