@@ -629,30 +629,30 @@ const FloatingQudemoWidget = ({
             console.log('⚡ Using cached specific QuDemo data');
             qudemoResponse = { json: () => Promise.resolve(JSON.parse(qudemoCache)) };
           } else {
-            // Try with authentication first (for logged-in users)
-            const token = localStorage.getItem('accessToken');
-            if (token) {
-              try {
-                qudemoResponse = await fetch(getNodeApiUrl(`/api/qudemos/${qudemoId}`), {
-                  headers: {
-                    'Authorization': `Bearer ${token}`
-                  }
-                });
-                
-                // If auth fails, fall through to public endpoint
-                if (!qudemoResponse.ok) {
-                  console.log('⚠️ Auth fetch failed, trying public endpoint');
-                  throw new Error('Auth failed');
+          // Try with authentication first (for logged-in users)
+          const token = localStorage.getItem('accessToken');
+          if (token) {
+            try {
+              qudemoResponse = await fetch(getNodeApiUrl(`/api/qudemos/${qudemoId}`), {
+                headers: {
+                  'Authorization': `Bearer ${token}`
                 }
-              } catch (authError) {
-                console.log('⚠️ Trying public endpoint without auth');
-                // Try public endpoint without auth
-                qudemoResponse = await fetch(getNodeApiUrl(`/api/qudemos/public/${qudemoId}`));
+              });
+              
+              // If auth fails, fall through to public endpoint
+              if (!qudemoResponse.ok) {
+                console.log('⚠️ Auth fetch failed, trying public endpoint');
+                throw new Error('Auth failed');
               }
-            } else {
-              // No token, use public endpoint
-              console.log('🌐 No auth token, using public endpoint');
+            } catch (authError) {
+              console.log('⚠️ Trying public endpoint without auth');
+              // Try public endpoint without auth
               qudemoResponse = await fetch(getNodeApiUrl(`/api/qudemos/public/${qudemoId}`));
+            }
+          } else {
+            // No token, use public endpoint
+            console.log('🌐 No auth token, using public endpoint');
+            qudemoResponse = await fetch(getNodeApiUrl(`/api/qudemos/public/${qudemoId}`));
             }
           }
         } else {
@@ -2312,14 +2312,14 @@ const FloatingQudemoWidget = ({
                {/* Left Column: Video + Book a Meeting Button */}
                <div className={`w-full ${isMaximized ? 'md:w-[60%]' : 'md:w-full'} flex flex-col`}>
                  {/* Video Section - Optimized for Portrait Videos */}
-                <div 
-                  className="relative flex items-center justify-center flex-1" 
-                  style={{ 
-                    height: window.innerWidth >= 768 ? 'auto' : '300px',
-                    minHeight: window.innerWidth >= 768 ? '550px' : '300px',
-                    overflow: 'visible'
-                  }}
-                >
+                 <div 
+                   className="relative flex items-center justify-center flex-1" 
+                   style={{ 
+                     height: window.innerWidth >= 768 ? 'auto' : '300px',
+                     minHeight: window.innerWidth >= 768 ? '550px' : '300px',
+                     overflow: 'visible'
+                   }}
+                 >
                 {/* Show avatar video if available */}
                 {currentAvatarVideo ? (
                    <div className="w-full h-full flex items-center justify-center bg-black">

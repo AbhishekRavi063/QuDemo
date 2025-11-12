@@ -136,67 +136,67 @@ const RegisterPage = () => {
           <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
             <div className="space-y-4">
               <div>
-                <input
-                  name="firstName"
-                  type="text"
-                  autoComplete="given-name"
-                  required
+              <input
+                name="firstName"
+                type="text"
+                autoComplete="given-name"
+                required
                   className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                  placeholder="First Name"
-                  value={formData.firstName}
-                  onChange={handleInputChange}
-                />
-                {errors.firstName && (
+                placeholder="First Name"
+                value={formData.firstName}
+                onChange={handleInputChange}
+              />
+              {errors.firstName && (
                   <p className="text-red-500 text-xs mt-1">{errors.firstName}</p>
-                )}
+              )}
               </div>
               
               <div>
-                <input
-                  name="lastName"
-                  type="text"
-                  autoComplete="family-name"
-                  required
+              <input
+                name="lastName"
+                type="text"
+                autoComplete="family-name"
+                required
                   className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                  placeholder="Last Name"
-                  value={formData.lastName}
-                  onChange={handleInputChange}
-                />
-                {errors.lastName && (
+                placeholder="Last Name"
+                value={formData.lastName}
+                onChange={handleInputChange}
+              />
+              {errors.lastName && (
                   <p className="text-red-500 text-xs mt-1">{errors.lastName}</p>
-                )}
+              )}
               </div>
               
               <div>
-                <input
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
+              <input
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
                   className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                  placeholder="Email address"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                />
-                {errors.email && (
+                placeholder="Email address"
+                value={formData.email}
+                onChange={handleInputChange}
+              />
+              {errors.email && (
                   <p className="text-red-500 text-xs mt-1">{errors.email}</p>
-                )}
+              )}
               </div>
               
               <div>
-                <input
-                  name="password"
-                  type="password"
-                  autoComplete="new-password"
-                  required
+              <input
+                name="password"
+                type="password"
+                autoComplete="new-password"
+                required
                   className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                  placeholder="Password"
-                  value={formData.password}
-                  onChange={handleInputChange}
-                />
-                {errors.password && (
+                placeholder="Password"
+                value={formData.password}
+                onChange={handleInputChange}
+              />
+              {errors.password && (
                   <p className="text-red-500 text-xs mt-1">{errors.password}</p>
-                )}
+              )}
               </div>
             </div>
             {registerError && (

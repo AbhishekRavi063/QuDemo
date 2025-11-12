@@ -154,11 +154,8 @@ const VideoGenerationProgress = ({ qudemoId, status, onComplete, onProgressUpdat
           </div>
 
           {/* Progress Stats */}
-          <div className="flex items-center justify-between text-xs">
-            <span className={`${config.textColor} font-medium`}>
-              {completed} / {total} videos
-            </span>
-            <span className={`${config.textColor}`}>
+          <div className="flex items-center justify-center text-xs">
+            <span className={`${config.textColor} font-semibold text-sm`}>
               {progressPercentage.toFixed(0)}%
             </span>
           </div>
@@ -174,8 +171,8 @@ const VideoGenerationProgress = ({ qudemoId, status, onComplete, onProgressUpdat
 
       {/* Completed State */}
       {currentStatus === 'completed' && (
-        <div className="text-xs text-green-600 font-medium">
-          🎉 {total} avatar videos are ready to use
+        <div className="text-sm text-green-600 font-semibold text-center">
+          🎉 Avatar videos are ready to use!
         </div>
       )}
 

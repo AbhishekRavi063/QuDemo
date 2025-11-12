@@ -38,7 +38,7 @@ const DocumentUpload = ({ qudemoId, companyName, onDocumentsChange, onSelectedFi
   const handleFiles = (fileList) => {
     const selectedFiles = Array.from(fileList);
     const newFiles = selectedFiles.map(file => ({
-      id: Date.now() + Math.random(),
+      id: crypto.randomUUID(), // Generate proper UUID instead of timestamp
       file,
       name: file.name,
       size: file.size,

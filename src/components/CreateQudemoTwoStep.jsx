@@ -479,8 +479,24 @@ const CreateQudemoTwoStep = () => {
   };
   
   const handleGenerateVideos = async () => {
-    if (!presenterPhoto || !createdQudemoId || !company) {
-      setError("Please upload a presenter photo first.");
+    // Validate required fields
+    if (!presenterPhoto) {
+      setError("⚠️ Presenter photo is required to generate AI videos. Please upload a clear, front-facing photo.");
+      // Scroll to presenter photo section
+      const presenterSection = document.getElementById('presenter-photo-section');
+      if (presenterSection) {
+        presenterSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      return;
+    }
+    
+    if (!selectedVoice) {
+      setError("⚠️ Please select an AI voice for the video narration.");
+      return;
+    }
+    
+    if (!createdQudemoId || !company) {
+      setError("⚠️ QuDemo information is missing. Please try again.");
       return;
     }
     
@@ -997,14 +1013,9 @@ const CreateQudemoTwoStep = () => {
                             <button
                               onClick={() => startEditingFaq(faq)}
                               className="p-1.5 text-purple-600 hover:bg-purple-100 rounded"
+                              title="Edit system FAQ"
                             >
                               <PencilIcon className="h-4 w-4" />
-                            </button>
-                            <button
-                              onClick={() => deleteFaq(faq.id, true)}
-                              className="p-1.5 text-red-600 hover:bg-red-50 rounded"
-                            >
-                              <TrashIcon className="h-4 w-4" />
                             </button>
                           </div>
                         </div>
@@ -1069,12 +1080,12 @@ const CreateQudemoTwoStep = () => {
             </div>
             
             {/* Presenter Photo */}
-            <div className="mb-6">
+            <div className="mb-6" id="presenter-photo-section">
               <label className="block text-sm font-bold text-graydark mb-2 text-left">
                 Presenter Photo <span className="text-red-500">*</span>
               </label>
               <p className="text-xs text-gray-500 mb-3 text-left">
-                Upload a clear, front-facing photo for the AI avatar (max 5MB)
+                <span className="font-semibold text-red-600">Required:</span> Upload a clear, front-facing photo for the AI avatar (max 5MB)
               </p>
               
               {presenterPhotoPreview ? (
@@ -1092,15 +1103,18 @@ const CreateQudemoTwoStep = () => {
                   </button>
                 </div>
               ) : (
-                <label className="block w-full border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-blue-400">
+                <label className="block w-full border-2 border-dashed border-red-300 bg-red-50 rounded-lg p-6 text-center cursor-pointer hover:border-red-500 hover:bg-red-100">
                   <div className="space-y-2">
-                    <div className="text-gray-400">
+                    <div className="text-red-400">
                       <svg className="mx-auto h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
                     </div>
-                    <div className="text-sm text-gray-600">
-                      <span className="text-blue-600 font-medium">Click to upload</span> or drag and drop
+                    <div className="text-sm font-semibold text-red-600">
+                      ⚠️ Required: Click to upload presenter photo
+                    </div>
+                    <div className="text-xs text-gray-600">
+                      or drag and drop
                     </div>
                     <p className="text-xs text-gray-500">PNG, JPG up to 5MB</p>
                   </div>
@@ -1115,14 +1129,28 @@ const CreateQudemoTwoStep = () => {
             </div>
             
             {/* Generate Videos Button - Centered */}
-            <div className="flex justify-center">
-              <button
-                onClick={handleGenerateVideos}
-                disabled={!selectedVoice || !presenterPhoto || isGeneratingVideos}
-                className="px-8 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isGeneratingVideos ? "Generating..." : `🎬 Generate ${generatedFAQs.total_videos} AI Videos`}
-              </button>
+            <div className="space-y-3">
+              <div className="flex justify-center">
+                <button
+                  onClick={handleGenerateVideos}
+                  disabled={!selectedVoice || !presenterPhoto || isGeneratingVideos}
+                  className="px-8 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isGeneratingVideos ? "Generating..." : `🎬 Generate ${generatedFAQs.total_videos} AI Videos`}
+                </button>
+              </div>
+              
+              {/* Requirements Notice */}
+              {(!presenterPhoto || !selectedVoice) && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-center">
+                  <p className="text-sm text-yellow-800">
+                    <span className="font-semibold">⚠️ Missing Requirements:</span>
+                    {!presenterPhoto && !selectedVoice && " Upload presenter photo and select AI voice"}
+                    {!presenterPhoto && selectedVoice && " Upload presenter photo"}
+                    {presenterPhoto && !selectedVoice && " Select AI voice"}
+                  </p>
+                </div>
+              )}
             </div>
             
             {/* Video Generation Progress */}

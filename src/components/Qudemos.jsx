@@ -928,7 +928,7 @@ const Qudemos = () => {
   useEffect(() => {
     fetchQudemos();
   }, [company]);
-  
+
   // Auto-refresh when videos are processing - DISABLED
   // Removed automatic refresh to prevent page interruptions
   // Users can manually refresh if needed
