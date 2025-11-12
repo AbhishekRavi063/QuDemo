@@ -10,14 +10,15 @@ const FloatingQudemoWidget = ({
   previewText = "Watch Demo",
   qudemoId = null,
   companyName = null,
-  isPreview = false
+  isPreview = false,
+  lockedExpanded = false // For public share links - locks widget in expanded state
 }) => {
   // Debug: Log props on component mount (commented out to prevent spam)
-  // console.log('🔍 FloatingQudemoWidget PROPS:', { qudemoId, companyName, isPreview, position });
+  // console.log('🔍 FloatingQudemoWidget PROPS:', { qudemoId, companyName, isPreview, position, lockedExpanded });
 
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(lockedExpanded); // Start expanded if locked
   const [isMinimized, setIsMinimized] = useState(false);
-  const [isMaximized, setIsMaximized] = useState(false);
+  const [isMaximized, setIsMaximized] = useState(lockedExpanded); // Start maximized if locked
   const [videoFlow, setVideoFlow] = useState(null);
   const [qudemoData, setQudemoData] = useState(null); // Universal Demo Qudemo data
   const [loading, setLoading] = useState(false);
@@ -2113,10 +2114,19 @@ const FloatingQudemoWidget = ({
   };
 
   const handleMinimize = () => {
+    // Prevent minimizing if widget is locked in expanded state
+    if (lockedExpanded) {
+      return;
+    }
     setIsMinimized(true);
   };
 
   const handleClose = () => {
+    // Prevent closing if widget is locked in expanded state
+    if (lockedExpanded) {
+      return;
+    }
+    
     setIsExpanded(false);
     setIsMinimized(false);
     setIsMaximized(false); // Reset maximized state when closing
@@ -2234,12 +2244,9 @@ const FloatingQudemoWidget = ({
   // Expanded widget
   return (
     <>
-      {/* Mobile overlay - only show when expanded */}
-      {isExpanded && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-[9999] md:hidden" onClick={handleClose}></div>
-      )}
+      {/* Mobile overlay - removed as widget is now full screen on mobile */}
       
-      <div className={`fixed inset-0 md:inset-auto md:${positionClasses[position]} z-[10000] transition-all duration-300 p-4 md:p-0 flex items-center justify-center md:block`}>
+      <div className={`fixed inset-0 md:inset-auto md:${positionClasses[position]} z-[10000] transition-all duration-300 md:p-0 flex items-center justify-center md:block`}>
       
       {/* Collapsed preview button */}
       {!isExpanded && !isMinimized ? (
@@ -2265,14 +2272,14 @@ const FloatingQudemoWidget = ({
           </button>
         </div>
       ) : (
-         // Full expanded widget - shows only video in normal view, adds chat when maximized
+         // Full expanded widget - Full screen on mobile, shows only video in normal view, adds chat when maximized
          <div 
-          className={`bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-row w-full md:w-auto transition-all duration-300 ${
-            isMaximized ? 'fixed inset-4' : ''
+          className={`bg-white overflow-hidden flex ${isMaximized ? 'flex-col md:flex-row' : 'flex-col'} w-full transition-all duration-300 ${
+            isMaximized ? 'fixed inset-0 md:inset-4 md:rounded-2xl shadow-2xl' : 'md:rounded-2xl md:shadow-2xl h-full md:h-auto'
           }`}
           style={{ 
             width: isMaximized ? 'auto' : (window.innerWidth >= 768 ? '313px' : '100%'),
-            height: isMaximized ? 'auto' : (window.innerWidth >= 768 ? '700px' : 'auto'),
+            height: isMaximized ? 'auto' : (window.innerWidth >= 768 ? '700px' : '100vh'),
             border:'none', 
             outline:'none',
           }}
@@ -2284,12 +2291,13 @@ const FloatingQudemoWidget = ({
              </div>
           ) : (videoFlow && videoFlow.videos && videoFlow.videos.length > 0) || qudemoData ? (
              <>
-               {/* Action buttons - absolute positioned */}
-               <div className="absolute top-4 right-4 z-30 flex gap-2">
-                 {/* Maximize/Restore button */}
+               {/* Action buttons - absolute positioned (hidden when locked in public share) */}
+               {!lockedExpanded && (
+               <div className="absolute top-2 right-2 md:top-4 md:right-4 z-30 flex gap-2">
+                 {/* Maximize/Restore button - Hidden on mobile */}
                  <button
-                   onClick={() => setIsMaximized(!isMaximized)}
-                   className="bg-black bg-opacity-50 hover:bg-opacity-70 text-white rounded-full p-2 transition-all"
+                   onClick={() => !lockedExpanded && setIsMaximized(!isMaximized)}
+                   className="hidden md:block bg-black bg-opacity-50 hover:bg-opacity-70 text-white rounded-full p-2 transition-all"
                    title={isMaximized ? "Restore" : "Maximize"}
                  >
                    {isMaximized ? (
@@ -2308,21 +2316,22 @@ const FloatingQudemoWidget = ({
                  <XMarkIcon className="w-5 h-5" />
                </button>
                </div>
+               )}
 
                {/* Left Column: Video + Book a Meeting Button */}
-               <div className={`w-full ${isMaximized ? 'md:w-[60%]' : 'md:w-full'} flex flex-col`}>
-                 {/* Video Section - Optimized for Portrait Videos */}
+               <div className={`w-full ${isMaximized ? 'md:w-[60%]' : 'md:w-full'} flex flex-col ${isMaximized ? 'h-auto md:h-full' : 'h-full'}`}>
+                 {/* Video Section - Full screen on mobile, optimized for Portrait Videos */}
                  <div 
                    className="relative flex items-center justify-center flex-1" 
                    style={{ 
-                     height: window.innerWidth >= 768 ? 'auto' : '300px',
-                     minHeight: window.innerWidth >= 768 ? '550px' : '300px',
-                     overflow: 'visible'
+                     height: isMaximized && window.innerWidth < 768 ? '50vh' : (window.innerWidth >= 768 ? 'auto' : 'calc(100vh - 300px)'),
+                     minHeight: isMaximized && window.innerWidth < 768 ? '50vh' : (window.innerWidth >= 768 ? '550px' : 'calc(100vh - 300px)'),
+                     overflow: 'hidden'
                    }}
                  >
                 {/* Show avatar video if available */}
                 {currentAvatarVideo ? (
-                   <div className="w-full h-full flex items-center justify-center bg-black">
+                   <div className="w-full h-full flex items-center justify-center">
                      <AvatarVideoPlayer
                        ref={avatarVideoPlayerRef}
                        avatarVideoUrl={currentAvatarVideo.videoUrl}
@@ -2344,7 +2353,12 @@ const FloatingQudemoWidget = ({
                      controls={false}
                      playing={isPlaying}
                      startTime={currentTimestamp}
-                    style={{ width: '100%', height: '100%', objectFit: isMaximized ? 'contain' : 'cover' }}
+                    style={{ 
+                      width: '100%', 
+                      height: '100%', 
+                      objectFit: isMaximized ? 'contain' : 'cover',
+                      objectPosition: 'center center'
+                    }}
                     onReady={() => {
                       if (isExpanded) {
                         setIsPlaying(true);
@@ -2395,7 +2409,7 @@ const FloatingQudemoWidget = ({
 
                  {/* Chat Input - Below Video, Above Book a Meeting (Only show when NOT maximized) */}
                  {!isMaximized && (
-                 <div className="w-full bg-white p-4 border-t border-gray-200">
+                 <div className="w-full bg-white p-2 md:p-4 border-t border-gray-200">
                    <div className="relative flex items-center gap-2 bg-gray-50 rounded-2xl p-2 border border-gray-200 shadow-sm">
                      <textarea 
                        value={inputMessage} 
@@ -2442,16 +2456,16 @@ const FloatingQudemoWidget = ({
 
                  {/* Book a Meeting Button - Below Chat Input (Only show when NOT maximized) */}
                  {!isMaximized && (
-                 <div className="w-full bg-white px-4 pb-4">
+                 <div className="w-full bg-white px-2 pb-2 md:px-4 md:pb-4">
                    <button
                      onClick={handleBookMeeting}
-                     className="group relative w-full inline-flex items-center justify-center px-5 py-3 text-sm font-semibold rounded-2xl transition-all duration-300 shadow-lg hover:shadow-xl bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 transform hover:-translate-y-0.5 overflow-hidden"
+                     className="group relative w-full inline-flex items-center justify-center px-4 py-2 md:px-5 md:py-3 text-xs md:text-sm font-semibold rounded-xl md:rounded-2xl transition-all duration-300 shadow-lg hover:shadow-xl bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 transform hover:-translate-y-0.5 overflow-hidden"
                    >
                      {/* Shimmer effect */}
                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
                      
                      <svg
-                       className="relative z-10 w-5 h-5 mr-2"
+                       className="relative z-10 w-4 h-4 md:w-5 md:h-5 mr-1.5 md:mr-2"
                        fill="none"
                        stroke="currentColor"
                        viewBox="0 0 24 24"
@@ -2463,7 +2477,7 @@ const FloatingQudemoWidget = ({
                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                        />
                      </svg>
-                     <span className="relative z-10 font-semibold">Book a Meeting</span>
+                     <span className="relative z-10 font-semibold text-xs md:text-sm">Book a Meeting</span>
                    </button>
                  </div>
                  )}
@@ -2474,7 +2488,8 @@ const FloatingQudemoWidget = ({
               <div 
                 className="w-full md:w-[40%] flex flex-col bg-white border-t md:border-t-0 md:border-l border-gray-200" 
                 style={{ 
-                  minHeight: 'auto'
+                  minHeight: 'auto',
+                  height: window.innerWidth < 768 ? '50vh' : 'auto'
                 }}
                >
                  {/* Chat header - Professional Blue Design */}

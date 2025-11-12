@@ -302,31 +302,22 @@ const Qudemos = () => {
       return [];
     }
   };
-  // Share functionality
+  // Share functionality - Opens QuDemo in new tab with locked expanded widget
   const handleShareQudemo = async (qudemo) => {
-    // Special handling for demo Qudemo - bypass Pro check and go straight to single link
-    if (qudemo.isDemo && qudemo.share_token) {
-      await generateSingleShareLink(qudemo);
-      return;
+    try {
+      // Generate the public share URL
+      const shareUrl = `${window.location.origin}/qudemo-share/${qudemo.id}`;
+      
+      // Copy to clipboard
+      await navigator.clipboard.writeText(shareUrl);
+      showSuccess("Share link copied! Opening in new tab...");
+      
+      // Open in new tab
+      window.open(shareUrl, '_blank');
+    } catch (err) {
+      console.error("❌ Error sharing QuDemo:", err);
+      showError("Failed to generate share link");
     }
-
-    // Check if user has Pro/Enterprise plan first
-    // COMMENTED OUT FOR TESTING - Allow free users to share
-    // if (!isPro) {
-    //   // Show upgrade popup for free users
-    //   setErrorDetails({
-    //     title: 'Share functionality requires Pro plan',
-    //     message: 'Upgrade to Pro to generate shareable links for your Qudemos.',
-    //     currentPlan: 'free',
-    //     subscriptionStatus: 'active',
-    //     isCancelled: false
-    //   });
-    //   setShowUpgradeModal(true);
-    //   return;
-    // }
-    // Show share options modal for Pro/Enterprise users (don't generate link yet)
-    setQudemoToShare(qudemo);
-    setShowShareOptionsModal(true);
   };
   // Handle share option selection
   const handleShareOption = async (option) => {

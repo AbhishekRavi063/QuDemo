@@ -42,6 +42,7 @@ import FloatingQudemoWidget from "./components/FloatingQudemoWidget";
 import WidgetTokenHelper from "./components/WidgetTokenHelper";
 import WidgetPlayground from "./components/WidgetPlayground";
 import WidgetEmbed from "./components/WidgetEmbed";
+import PublicQudemoShareWidget from "./components/PublicQudemoShareWidget";
 import { CompanyProvider, useCompany } from "./context/CompanyContext";
 import { BackendProvider } from "./context/BackendContext";
 import { NotificationProvider } from "./context/NotificationContext";
@@ -307,6 +308,10 @@ function App() {
                 element={<WidgetPlayground />}
               />
               <Route path="/widget-embed/:qudemoId" element={<WidgetEmbed />} />
+              <Route 
+                path="/qudemo-share/:qudemoId" 
+                element={<PublicQudemoShareWidget />} 
+              />
               {/* Protected Routes - Wrapped with CompanyProvider */}
               <Route
                 path="/overview"
