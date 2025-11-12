@@ -2318,17 +2318,18 @@ const FloatingQudemoWidget = ({
                </div>
                )}
 
-               {/* Left Column: Video + Book a Meeting Button */}
-               <div className={`w-full ${isMaximized ? 'md:w-[60%]' : 'md:w-full'} flex flex-col ${isMaximized ? 'h-auto md:h-full' : 'h-full'}`}>
-                 {/* Video Section - Full screen on mobile, optimized for Portrait Videos */}
-                 <div 
-                   className="relative flex items-center justify-center flex-1" 
-                   style={{ 
-                     height: isMaximized && window.innerWidth < 768 ? '50vh' : (window.innerWidth >= 768 ? 'auto' : 'calc(100vh - 300px)'),
-                     minHeight: isMaximized && window.innerWidth < 768 ? '50vh' : (window.innerWidth >= 768 ? '550px' : 'calc(100vh - 300px)'),
-                     overflow: 'hidden'
-                   }}
-                 >
+              {/* Left Column: Video + Book a Meeting Button */}
+              <div className={`w-full ${isMaximized ? 'md:w-[60%]' : 'md:w-full'} flex flex-col ${isMaximized ? 'h-auto md:h-full' : 'h-full'}`}>
+                {/* Video Section - Full screen on mobile, optimized for Portrait Videos */}
+                <div 
+                  className="relative flex items-center justify-center flex-1" 
+                  style={{ 
+                    height: isMaximized && window.innerWidth < 768 ? '50vh' : (window.innerWidth >= 768 ? 'auto' : 'auto'),
+                    minHeight: isMaximized && window.innerWidth < 768 ? '50vh' : (window.innerWidth >= 768 ? '550px' : '0'),
+                    maxHeight: isMaximized && window.innerWidth < 768 ? '50vh' : (window.innerWidth >= 768 ? 'none' : 'calc(100vh - 190px)'),
+                    overflow: 'hidden'
+                  }}
+                >
                 {/* Show avatar video if available */}
                 {currentAvatarVideo ? (
                    <div className="w-full h-full flex items-center justify-center">
@@ -2483,15 +2484,16 @@ const FloatingQudemoWidget = ({
                  )}
                </div>
 
-              {/* Chat Section (Right on desktop, Bottom on mobile) - Only show when maximized */}
-              {isMaximized && (
-              <div 
-                className="w-full md:w-[40%] flex flex-col bg-white border-t md:border-t-0 md:border-l border-gray-200" 
-                style={{ 
-                  minHeight: 'auto',
-                  height: window.innerWidth < 768 ? '50vh' : 'auto'
-                }}
-               >
+             {/* Chat Section (Right on desktop, Bottom on mobile) - Only show when maximized */}
+             {isMaximized && (
+             <div 
+               className="w-full md:w-[40%] flex flex-col bg-white border-t md:border-t-0 md:border-l border-gray-200" 
+               style={{ 
+                 minHeight: 'auto',
+                 maxHeight: window.innerWidth < 768 ? '50vh' : 'auto',
+                 height: window.innerWidth < 768 ? 'auto' : 'auto'
+               }}
+              >
                  {/* Chat header - Professional Blue Design */}
                  <div className="relative bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 px-4 py-3 flex items-center justify-between flex-shrink-0 overflow-hidden">
                    {/* Animated background effect */}
@@ -2524,15 +2526,15 @@ const FloatingQudemoWidget = ({
                    </div>
                  </div>
 
-                 {/* Chat messages - Modern scrollable area */}
-                 <div 
-                   ref={chatMessagesRef} 
-                   className="flex-1 overflow-y-auto p-3 md:p-4 bg-gradient-to-br from-gray-50 to-gray-100/50 flex flex-col gap-3" 
-                   style={{ 
-                     maxHeight: window.innerWidth >= 768 ? 'none' : '300px',
-                     minHeight: window.innerWidth >= 768 ? 'auto' : '250px'
-                   }}
-                 >
+                {/* Chat messages - Modern scrollable area */}
+                <div 
+                  ref={chatMessagesRef} 
+                  className="flex-1 overflow-y-auto p-3 md:p-4 bg-gradient-to-br from-gray-50 to-gray-100/50 flex flex-col gap-3" 
+                  style={{ 
+                    maxHeight: window.innerWidth >= 768 ? 'none' : 'calc(50vh - 250px)',
+                    minHeight: window.innerWidth >= 768 ? 'auto' : '150px'
+                  }}
+                >
                    {chatMessages.length === 0 ? (
                      <>
                        {/* Welcome message - Professional Blue design */}
