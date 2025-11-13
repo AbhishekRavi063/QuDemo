@@ -126,7 +126,6 @@ const PublicQudemoShare = () => {
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false); // Will be set to true after user interaction or auto-attempt
   const [isMuted, setIsMuted] = useState(false); // Start unmuted, will handle autoplay blocking
-  const [showPlayButton, setShowPlayButton] = useState(false); // Show play button if autoplay is blocked
   const [currentTimestamp, setCurrentTimestamp] = useState(0);
   const [audioEnabled, setAudioEnabled] = useState(false);
   const [showLoomTimestamp, setShowLoomTimestamp] = useState(false);
@@ -287,27 +286,14 @@ const PublicQudemoShare = () => {
     }
   }, [qudemo]);
   
-  // Handle autoplay behavior based on device type
+  // Handle autoplay behavior - start playing when qudemo loads
   useEffect(() => {
-    if (qudemo && qudemo.videos && qudemo.videos.length > 0 && !isPlaying && !showPlayButton) {
-      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      
-      if (isMobile) {
-        // On mobile, browsers block autoplay with sound
-        // Load video muted first, then show play button for user interaction
-        console.log('📱 Mobile detected - loading video and showing play button');
-        setShowPlayButton(true);
-        setIsPlaying(true); // Start playing muted to load video
-        setIsMuted(true); // Mute initially for mobile autoplay compatibility
-      } else {
-        // On desktop, autoplay with sound works
-        console.log('🖥️ Desktop detected - autoplaying with sound');
-        setTimeout(() => {
-          setIsPlaying(true);
-          setIsMuted(false);
-          setAudioEnabled(true);
-        }, 500);
-      }
+    if (qudemo && qudemo.videos && qudemo.videos.length > 0 && !isPlaying) {
+      console.log('🎬 Starting video playback');
+      // Just start playing - let the browser/player handle autoplay restrictions
+      setIsPlaying(true);
+      setIsMuted(false);
+      setAudioEnabled(true);
     }
   }, [qudemo]);
   
@@ -868,59 +854,10 @@ const PublicQudemoShare = () => {
                     }}
                     onPlay={() => {
                       console.log('▶️ Video playing');
-                      // Hide play button when video successfully starts
-                      if (showPlayButton) {
-                        setShowPlayButton(false);
-                      }
                     }}
                     iframeRef={loomIframeRef}
                   />
                   
-                  {/* Tap to Play Indicator (Shows when autoplay is blocked on mobile) */}
-                  {showPlayButton && (
-                    <div 
-                      className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 z-10"
-                      onClick={(e) => {
-                        e.stopPropagation(); // Prevent event bubbling
-                        console.log('▶️ User tapped to play with sound');
-                        setShowPlayButton(false);
-                        setIsMuted(false); // Unmute the video
-                        setAudioEnabled(true);
-                        // Force video to play with sound
-                        setTimeout(() => {
-                          const videoElements = document.querySelectorAll("video");
-                          videoElements.forEach((video) => {
-                            video.muted = false;
-                            video.volume = 1.0;
-                            video.play().catch((e) => console.log('Video play error:', e));
-                          });
-                          // Also handle iframe videos (YouTube, Loom, etc.)
-                          const iframes = document.querySelectorAll("iframe");
-                          iframes.forEach((iframe) => {
-                            try {
-                              if (iframe.src.includes("youtube.com")) {
-                                iframe.contentWindow.postMessage({ event: "command", func: "unMute" }, "*");
-                                iframe.contentWindow.postMessage({ event: "command", func: "playVideo" }, "*");
-                              } else if (iframe.src.includes("loom.com")) {
-                                iframe.contentWindow.postMessage({ method: "setVolume", value: 1.0 }, "*");
-                                iframe.contentWindow.postMessage({ method: "play" }, "*");
-                              } else if (iframe.src.includes("vimeo.com")) {
-                                iframe.contentWindow.postMessage({ method: "setVolume", value: 1.0 }, "*");
-                                iframe.contentWindow.postMessage({ method: "play" }, "*");
-                              }
-                            } catch (e) {
-                              console.log('Iframe control error:', e);
-                            }
-                          });
-                        }, 100);
-                      }}
-                    >
-                      <div className="bg-blue-600 text-white px-8 py-4 rounded-full flex items-center space-x-3 cursor-pointer hover:bg-blue-700 transition-all shadow-2xl">
-                        <PlayIcon className="w-8 h-8" />
-                        <span className="text-lg font-semibold">Tap to Play</span>
-                      </div>
-                    </div>
-                  )}
                   
                   {/* Loom Timestamp Indicator */}
                   {showLoomTimestamp &&
