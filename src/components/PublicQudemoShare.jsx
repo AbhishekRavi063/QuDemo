@@ -294,11 +294,11 @@ const PublicQudemoShare = () => {
       
       if (isMobile) {
         // On mobile, browsers block autoplay with sound
-        // Show play button immediately for user interaction
-        console.log('📱 Mobile detected - showing play button for user interaction');
+        // Load video muted first, then show play button for user interaction
+        console.log('📱 Mobile detected - loading video and showing play button');
         setShowPlayButton(true);
-        setIsPlaying(false);
-        setIsMuted(false); // Will play with sound once user taps
+        setIsPlaying(true); // Start playing muted to load video
+        setIsMuted(true); // Mute initially for mobile autoplay compatibility
       } else {
         // On desktop, autoplay with sound works
         console.log('🖥️ Desktop detected - autoplaying with sound');
@@ -880,12 +880,39 @@ const PublicQudemoShare = () => {
                   {showPlayButton && (
                     <div 
                       className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 z-10"
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation(); // Prevent event bubbling
                         console.log('▶️ User tapped to play with sound');
                         setShowPlayButton(false);
-                        setIsPlaying(true);
-                        setIsMuted(false);
+                        setIsMuted(false); // Unmute the video
                         setAudioEnabled(true);
+                        // Force video to play with sound
+                        setTimeout(() => {
+                          const videoElements = document.querySelectorAll("video");
+                          videoElements.forEach((video) => {
+                            video.muted = false;
+                            video.volume = 1.0;
+                            video.play().catch((e) => console.log('Video play error:', e));
+                          });
+                          // Also handle iframe videos (YouTube, Loom, etc.)
+                          const iframes = document.querySelectorAll("iframe");
+                          iframes.forEach((iframe) => {
+                            try {
+                              if (iframe.src.includes("youtube.com")) {
+                                iframe.contentWindow.postMessage({ event: "command", func: "unMute" }, "*");
+                                iframe.contentWindow.postMessage({ event: "command", func: "playVideo" }, "*");
+                              } else if (iframe.src.includes("loom.com")) {
+                                iframe.contentWindow.postMessage({ method: "setVolume", value: 1.0 }, "*");
+                                iframe.contentWindow.postMessage({ method: "play" }, "*");
+                              } else if (iframe.src.includes("vimeo.com")) {
+                                iframe.contentWindow.postMessage({ method: "setVolume", value: 1.0 }, "*");
+                                iframe.contentWindow.postMessage({ method: "play" }, "*");
+                              }
+                            } catch (e) {
+                              console.log('Iframe control error:', e);
+                            }
+                          });
+                        }, 100);
                       }}
                     >
                       <div className="bg-blue-600 text-white px-8 py-4 rounded-full flex items-center space-x-3 cursor-pointer hover:bg-blue-700 transition-all shadow-2xl">
