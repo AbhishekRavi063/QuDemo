@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
-import HybridVideoPlayer from "./HybridVideoPlayer";
+import ReactPlayer from "react-player";
 import {
   XMarkIcon,
   PaperAirplaneIcon,
@@ -124,8 +124,8 @@ const PublicQudemoShare = () => {
   const [inputMessage, setInputMessage] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false); // Will be set to true after user interaction or auto-attempt
-  const [isMuted, setIsMuted] = useState(false); // Start unmuted, will handle autoplay blocking
+  const [isPlaying, setIsPlaying] = useState(true); // Start playing immediately for autoplay
+  const [isMuted, setIsMuted] = useState(true); // Start muted for reliable autoplay across all browsers
   const [currentTimestamp, setCurrentTimestamp] = useState(0);
   const [audioEnabled, setAudioEnabled] = useState(false);
   const [showLoomTimestamp, setShowLoomTimestamp] = useState(false);
@@ -286,16 +286,8 @@ const PublicQudemoShare = () => {
     }
   }, [qudemo]);
   
-  // Handle autoplay behavior - start playing when qudemo loads
-  useEffect(() => {
-    if (qudemo && qudemo.videos && qudemo.videos.length > 0 && !isPlaying) {
-      console.log('🎬 Starting video playback');
-      // Just start playing - let the browser/player handle autoplay restrictions
-      setIsPlaying(true);
-      setIsMuted(false);
-      setAudioEnabled(true);
-    }
-  }, [qudemo]);
+  // Don't use useEffect for autoplay - let ReactPlayer onReady handle it
+  // This ensures video is fully loaded before attempting to play
   
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -834,7 +826,7 @@ const PublicQudemoShare = () => {
             >
               {currentVideo ? (
                 <div className="relative w-full h-full">
-                  <HybridVideoPlayer
+                  <ReactPlayer
                     ref={videoPlayerRef}
                     key={`${currentVideo.video_url}-${currentTimestamp}-${videoRefreshKey}`}
                     url={currentVideo.video_url}
@@ -842,21 +834,62 @@ const PublicQudemoShare = () => {
                     height="100%"
                     controls={true}
                     playing={isPlaying}
+                    volume={isMuted ? 0 : 1}
                     muted={isMuted}
-                    startTime={currentTimestamp}
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      background: "black",
+                    playsinline={true}
+                    config={{
+                      youtube: {
+                        playerVars: {
+                          autoplay: 1,
+                          controls: 1,
+                          modestbranding: 1,
+                          rel: 0,
+                          start: Math.floor(currentTimestamp) || 0,
+                          mute: isMuted ? 1 : 0,
+                        }
+                      },
+                      file: {
+                        attributes: {
+                          autoPlay: true,
+                          muted: isMuted,
+                          playsInline: true,
+                        }
+                      }
                     }}
                     onReady={() => {
-                      console.log('✅ Video ready');
+                      console.log('✅ ReactPlayer ready - autoplay muted for browser compatibility');
+                      setIsPlaying(true);
+                      
+                      // Seek to timestamp if needed
+                      if (currentTimestamp > 0 && videoPlayerRef.current) {
+                        videoPlayerRef.current.seekTo(currentTimestamp, 'seconds');
+                      }
                     }}
                     onPlay={() => {
                       console.log('▶️ Video playing');
                     }}
-                    iframeRef={loomIframeRef}
+                    onError={(e) => {
+                      console.error('❌ Video error:', e);
+                    }}
                   />
+                  
+                  {/* Unmute Button - Shows when video is muted */}
+                  {isMuted && isPlaying && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsMuted(false);
+                        console.log('🔊 User unmuted video');
+                      }}
+                      className="absolute top-4 right-4 bg-white/90 hover:bg-white text-gray-900 rounded-full p-3 shadow-lg z-20 transition-all hover:scale-110"
+                      title="Click to unmute"
+                    >
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
+                      </svg>
+                    </button>
+                  )}
                   
                   
                   {/* Loom Timestamp Indicator */}

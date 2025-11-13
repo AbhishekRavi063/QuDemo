@@ -8,6 +8,7 @@ import React, { useState, useRef, useEffect, forwardRef, useImperativeHandle } f
  */
 const AvatarVideoPlayer = forwardRef(({ avatarVideoUrl, answer, isVisible, faqId, avatarVideoCache, isMaximized = false, onVideoEnd }, ref) => {
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isMuted, setIsMuted] = useState(false); // Try unmuted first, fallback to muted if autoplay fails
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -33,15 +34,31 @@ const AvatarVideoPlayer = forwardRef(({ avatarVideoUrl, answer, isVisible, faqId
     const video = videoRef.current;
     if (!video) return;
 
-    // Auto-play when visible
+    // Try unmuted autoplay first, fallback to muted if blocked
     if (isVisible && video.paused) {
+      console.log('🎬 AvatarVideoPlayer: Attempting UNMUTED autoplay');
+      video.muted = false; // Try unmuted first
       video
         .play()
         .then(() => {
+          console.log('✅ AvatarVideoPlayer: UNMUTED autoplay successful!');
           setIsPlaying(true);
+          setIsMuted(false);
         })
         .catch((err) => {
-          console.error("Autoplay failed:", err);
+          console.warn("⚠️ Unmuted autoplay blocked, trying MUTED fallback:", err);
+          // Fallback: try muted autoplay
+          video.muted = true;
+          video
+            .play()
+            .then(() => {
+              console.log('✅ AvatarVideoPlayer: MUTED autoplay successful (fallback)');
+              setIsPlaying(true);
+              setIsMuted(true);
+            })
+            .catch((err2) => {
+              console.error("❌ Both unmuted and muted autoplay failed:", err2);
+            });
         });
     }
 
@@ -146,13 +163,34 @@ const AvatarVideoPlayer = forwardRef(({ avatarVideoUrl, answer, isVisible, faqId
           }}
           src={avatarVideoUrl.replace(/ /g, "%20")}
           autoPlay
-          muted={false}
+          muted={isMuted}
           preload="auto"
           playsInline
           crossOrigin="anonymous"
         >
           Your browser does not support the video tag.
         </video>
+
+        {/* Unmute Button - Shows when video is muted and playing */}
+        {isMuted && isPlaying && !isLoading && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsMuted(false);
+              if (videoRef.current) {
+                videoRef.current.muted = false;
+              }
+              console.log('🔊 User unmuted avatar video');
+            }}
+            className="absolute top-4 right-4 bg-white/90 hover:bg-white text-gray-900 rounded-full p-3 shadow-lg z-30 transition-all hover:scale-110"
+            title="Click to unmute"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
+            </svg>
+          </button>
+        )}
 
 
         {/* Minimal Overlay Controls - Bottom */}

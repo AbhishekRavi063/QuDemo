@@ -36,7 +36,8 @@ const FloatingQudemoWidget = ({
   const [inputMessage, setInputMessage] = useState('');
   const [isListening, setIsListening] = useState(false);
   const [showBookingPrompt, setShowBookingPrompt] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(lockedExpanded); // Start playing if locked expanded
+  const [isMuted, setIsMuted] = useState(true); // Start muted for reliable autoplay across all browsers
   const [videoRefreshKey, setVideoRefreshKey] = useState(0);
   const [currentAvatarVideo, setCurrentAvatarVideo] = useState(null); // State for avatar video
   const [introVideoPreview, setIntroVideoPreview] = useState(null); // State for intro video preview URL
@@ -150,8 +151,15 @@ const FloatingQudemoWidget = ({
   // Trigger initial video load when videoFlow becomes available
   useEffect(() => {
     if (isExpanded && videoFlow && videoFlow.videos && videoFlow.videos.length > 0 && !loading) {
-      // Start playing the initial video
+      // Start playing the initial video immediately
+      console.log('🎬 Widget: Video flow loaded, ensuring autoplay', {
+        isExpanded,
+        hasVideos: videoFlow.videos.length,
+        loading,
+        currentIsPlaying: isPlaying
+      });
       setIsPlaying(true);
+      setIsMuted(true); // Ensure muted for autoplay
     }
   }, [videoFlow, isExpanded, loading]);
 
@@ -2354,6 +2362,13 @@ const FloatingQudemoWidget = ({
                      />
                    </div>
                  ) : videoFlow && videoFlow.videos && videoFlow.videos[currentVideoIndex] ? (
+                   <>
+                   {console.log('🎥 Rendering HybridVideoPlayer:', {
+                     isPlaying,
+                     isMuted,
+                     url: videoFlow.videos[currentVideoIndex].url || videoFlow.videos[currentVideoIndex].src,
+                     currentTimestamp
+                   })}
                    <HybridVideoPlayer
                    ref={videoPlayerRef}
                      key={`${videoFlow.videos[currentVideoIndex].url || videoFlow.videos[currentVideoIndex].src}-${currentTimestamp}-${videoRefreshKey}`}
@@ -2362,6 +2377,7 @@ const FloatingQudemoWidget = ({
                      height="100%"
                      controls={false}
                      playing={isPlaying}
+                     muted={isMuted}
                      startTime={currentTimestamp}
                     style={{ 
                       width: '100%', 
@@ -2370,9 +2386,14 @@ const FloatingQudemoWidget = ({
                       objectPosition: 'center center'
                     }}
                     onReady={() => {
-                      if (isExpanded) {
-                        setIsPlaying(true);
-                      }
+                      console.log('✅ Widget Video Ready - forcing autoplay (muted)', {
+                        isExpanded,
+                        isMuted,
+                        isPlaying
+                      });
+                      // Force playing state when video is ready
+                      setIsPlaying(true);
+                      setIsMuted(true);
                     }}
                      onPlay={() => {
                        setIsPlaying(true);
@@ -2380,6 +2401,25 @@ const FloatingQudemoWidget = ({
                      iframeRef={loomIframeRef}
                      isMaximized={isMaximized}
                    />
+                   
+                   {/* Unmute Button - Always show when widget is expanded and muted */}
+                   {isMuted && isExpanded && (
+                     <button
+                       onClick={(e) => {
+                         e.stopPropagation();
+                         setIsMuted(false);
+                         console.log('🔊 User unmuted video');
+                       }}
+                       className="absolute top-4 right-4 bg-white/90 hover:bg-white text-gray-900 rounded-full p-3 shadow-lg z-30 transition-all hover:scale-110"
+                       title="Click to unmute"
+                     >
+                       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
+                       </svg>
+                     </button>
+                   )}
+                   </>
                  ) : null}
                 
                 {/* 3 Suggested Questions - Overlay on Video (Only show when NOT maximized) */}
