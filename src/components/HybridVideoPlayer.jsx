@@ -13,6 +13,7 @@ const HybridVideoPlayer = ({
   height = "100%",
   controls = true,
   playing = true,
+  muted = false,
   startTime = 0,
   onReady,
   onPlay,
@@ -22,8 +23,8 @@ const HybridVideoPlayer = ({
   className = "",
   iframeRef,
 }) => {
-  const [audioEnabled, setAudioEnabled] = useState(true); // Start with audio enabled
-  const [hasUserInteracted, setHasUserInteracted] = useState(true); // Assume user has interacted
+  const [audioEnabled, setAudioEnabled] = useState(!muted); // Start based on muted prop
+  const [hasUserInteracted, setHasUserInteracted] = useState(!muted); // Assume user has interacted if not muted
   const [videoEnded, setVideoEnded] = useState(false); // Track if YouTube video ended
   const internalIframeRef = useRef(null);
   const reactPlayerRef = useRef(null); // For ReactPlayer (YouTube)
@@ -32,6 +33,12 @@ const HybridVideoPlayer = ({
 
   // Use external iframeRef if provided, otherwise use internal one
   const currentIframeRef = iframeRef || internalIframeRef;
+
+  // Update audio state when muted prop changes
+  useEffect(() => {
+    setAudioEnabled(!muted);
+    setHasUserInteracted(!muted);
+  }, [muted]);
 
   // Function to enable audio after user interaction
   const enableAudio = () => {
@@ -336,7 +343,8 @@ const HybridVideoPlayer = ({
 
           // Build base embed URL with parameters
           const autoplay = playing ? "1" : "0";
-          let embedUrl = `https://www.loom.com/embed/${videoId}?autoplay=${autoplay}&hide_share=1&hide_title=1&muted=0&enablejsapi=1&allowfullscreen=1&showinfo=0&controls=1&rel=0`;
+          const mutedParam = muted ? "1" : "0";
+          let embedUrl = `https://www.loom.com/embed/${videoId}?autoplay=${autoplay}&hide_share=1&hide_title=1&muted=${mutedParam}&enablejsapi=1&allowfullscreen=1&showinfo=0&controls=1&rel=0`;
 
           // Add timestamp - prioritize startTime prop over existing URL timestamp
           const timestampToUse =
@@ -358,8 +366,9 @@ const HybridVideoPlayer = ({
           const vimeoTime =
             startTime && startTime > 0 ? `#t=${Math.floor(startTime)}s` : "";
           const autoplay = playing ? "1" : "0";
+          const mutedParam = muted ? "1" : "0";
           const embedUrl = videoId
-            ? `https://player.vimeo.com/video/${videoId}?autoplay=${autoplay}&muted=0&controls=1${vimeoTime}`
+            ? `https://player.vimeo.com/video/${videoId}?autoplay=${autoplay}&muted=${mutedParam}&controls=1${vimeoTime}`
             : url;
 
           return embedUrl;
@@ -424,8 +433,8 @@ const HybridVideoPlayer = ({
           height="100%"
           controls={controls}
           playing={playing && !videoEnded}
-          volume={1.0}
-          muted={false}
+          volume={muted ? 0 : 1.0}
+          muted={muted}
           config={{
             youtube: {
               playerVars: {

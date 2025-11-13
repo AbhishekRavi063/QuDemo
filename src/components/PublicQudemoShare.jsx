@@ -124,8 +124,9 @@ const PublicQudemoShare = () => {
   const [inputMessage, setInputMessage] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(true); // Autoplay intro video when page loads
-  const [isMuted, setIsMuted] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false); // Will be set to true after user interaction or auto-attempt
+  const [isMuted, setIsMuted] = useState(false); // Start unmuted, will handle autoplay blocking
+  const [showPlayButton, setShowPlayButton] = useState(false); // Show play button if autoplay is blocked
   const [currentTimestamp, setCurrentTimestamp] = useState(0);
   const [audioEnabled, setAudioEnabled] = useState(false);
   const [showLoomTimestamp, setShowLoomTimestamp] = useState(false);
@@ -283,6 +284,30 @@ const PublicQudemoShare = () => {
         console.log('🚀 Starting proactive video preloading for instant playback...');
         preloadAllVideos();
       }, 500);
+    }
+  }, [qudemo]);
+  
+  // Handle autoplay behavior based on device type
+  useEffect(() => {
+    if (qudemo && qudemo.videos && qudemo.videos.length > 0 && !isPlaying && !showPlayButton) {
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      
+      if (isMobile) {
+        // On mobile, browsers block autoplay with sound
+        // Show play button immediately for user interaction
+        console.log('📱 Mobile detected - showing play button for user interaction');
+        setShowPlayButton(true);
+        setIsPlaying(false);
+        setIsMuted(false); // Will play with sound once user taps
+      } else {
+        // On desktop, autoplay with sound works
+        console.log('🖥️ Desktop detected - autoplaying with sound');
+        setTimeout(() => {
+          setIsPlaying(true);
+          setIsMuted(false);
+          setAudioEnabled(true);
+        }, 500);
+      }
     }
   }, [qudemo]);
   
@@ -831,16 +856,45 @@ const PublicQudemoShare = () => {
                     height="100%"
                     controls={true}
                     playing={isPlaying}
+                    muted={isMuted}
                     startTime={currentTimestamp}
                     style={{
                       width: "100%",
                       height: "100%",
                       background: "black",
                     }}
-                    onReady={() => {}}
-                    onPlay={() => {}}
+                    onReady={() => {
+                      console.log('✅ Video ready');
+                    }}
+                    onPlay={() => {
+                      console.log('▶️ Video playing');
+                      // Hide play button when video successfully starts
+                      if (showPlayButton) {
+                        setShowPlayButton(false);
+                      }
+                    }}
                     iframeRef={loomIframeRef}
                   />
+                  
+                  {/* Tap to Play Indicator (Shows when autoplay is blocked on mobile) */}
+                  {showPlayButton && (
+                    <div 
+                      className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 z-10"
+                      onClick={() => {
+                        console.log('▶️ User tapped to play with sound');
+                        setShowPlayButton(false);
+                        setIsPlaying(true);
+                        setIsMuted(false);
+                        setAudioEnabled(true);
+                      }}
+                    >
+                      <div className="bg-blue-600 text-white px-8 py-4 rounded-full flex items-center space-x-3 cursor-pointer hover:bg-blue-700 transition-all shadow-2xl">
+                        <PlayIcon className="w-8 h-8" />
+                        <span className="text-lg font-semibold">Tap to Play</span>
+                      </div>
+                    </div>
+                  )}
+                  
                   {/* Loom Timestamp Indicator */}
                   {showLoomTimestamp &&
                     currentVideo.video_url.includes("loom.com") &&
@@ -1058,56 +1112,66 @@ const PublicQudemoShare = () => {
               </div>
 
               {/* Schedule Meeting Button */}
-              <div className="px-3 py-2 border-t flex justify-end bg-gray-50">
-                <button
-                  onClick={handleScheduleMeeting}
-                  disabled={loadingCalendly}
-                  className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200 shadow-sm hover:border disabled:opacity-50 disabled:cursor-not-allowed bg-blue-600 text-white hover:bg-blue-700"
-                >
-                  {loadingCalendly ? (
-                    <>
-                      <svg
-                        className="animate-spin h-4 w-4 mr-2"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
+              <div className="px-3 py-2 border-t bg-gray-50">
+                <div className="flex flex-col items-center gap-2">
+                  <button
+                    onClick={handleScheduleMeeting}
+                    disabled={loadingCalendly}
+                    className="w-full inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200 shadow-sm hover:border disabled:opacity-50 disabled:cursor-not-allowed bg-blue-600 text-white hover:bg-blue-700"
+                  >
+                    {loadingCalendly ? (
+                      <>
+                        <svg
+                          className="animate-spin h-4 w-4 mr-2"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                        Loading...
+                      </>
+                    ) : (
+                      <>
+                        <svg
+                          className="w-4 h-4 mr-2"
+                          fill="none"
                           stroke="currentColor"
-                          strokeWidth="4"
-                        ></circle>
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        ></path>
-                      </svg>
-                      Loading...
-                    </>
-                  ) : (
-                    <>
-                      <svg
-                        className="w-4 h-4 mr-2"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                        />
-                      </svg>
-                      Book Meeting
-                    </>
-                  )}
-                </button>
+                          viewBox="0 0 24 24"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                          />
+                        </svg>
+                        Book Meeting
+                      </>
+                    )}
+                  </button>
+                  
+                  {/* Powered by Qudemo */}
+                  <div className="text-xs text-gray-600">
+                    powered by{" "}
+                    <span className="text-blue-600 font-semibold">
+                      Qudemo
+                    </span>
+                  </div>
+                </div>
               </div>
 
               {/* Calendly Error Message */}

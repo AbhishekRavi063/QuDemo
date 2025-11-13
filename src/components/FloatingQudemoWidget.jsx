@@ -2279,7 +2279,7 @@ const FloatingQudemoWidget = ({
           }`}
           style={{ 
             width: isMaximized ? 'auto' : (window.innerWidth >= 768 ? '313px' : '100vw'),
-            height: isMaximized ? 'auto' : (window.innerWidth >= 768 ? '700px' : '100vh'),
+            height: isMaximized ? 'auto' : (window.innerWidth >= 768 ? '715px' : '100vh'),
             border:'none', 
             outline:'none',
             margin: window.innerWidth < 768 ? '0' : 'auto',
@@ -2466,7 +2466,7 @@ const FloatingQudemoWidget = ({
 
                  {/* Book a Meeting Button - Below Chat Input (Only show when NOT maximized) */}
                  {!isMaximized && (
-                 <div className="w-full bg-white px-2 pt-0.5 pb-0 md:px-4 md:pb-4">
+                 <div className="w-full bg-white px-2 pt-0.5 pb-2 md:px-4 md:pb-4">
                    <button
                      onClick={handleBookMeeting}
                      className="group relative w-full inline-flex items-center justify-center px-4 py-2 md:px-5 md:py-3 text-xs md:text-sm font-semibold rounded-xl md:rounded-2xl transition-all duration-300 shadow-lg hover:shadow-xl bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 transform hover:-translate-y-0.5 overflow-hidden"
@@ -2488,12 +2488,20 @@ const FloatingQudemoWidget = ({
                        />
                      </svg>
                      <span className="relative z-10 font-semibold text-xs md:text-sm">Book a Meeting</span>
-                   </button>
-                 </div>
-                 )}
-               </div>
+                  </button>
+                  
+                  {/* Powered by Qudemo text */}
+                  <div className="mt-1.5 mb-0.5 text-center text-[10px] text-gray-400 flex items-center justify-center gap-1">
+                    powered by{" "}
+                    <span className="text-blue-600 font-semibold">
+                      Qudemo
+                    </span>
+                  </div>
+                </div>
+                )}
+              </div>
 
-             {/* Chat Section (Right on desktop, Bottom on mobile) - Only show when maximized */}
+            {/* Chat Section (Right on desktop, Bottom on mobile) - Only show when maximized */}
              {isMaximized && (
              <div 
                className="w-full md:w-[40%] flex flex-col bg-white border-t md:border-t-0 md:border-l border-gray-200" 
@@ -2674,24 +2682,24 @@ const FloatingQudemoWidget = ({
                    )}
              </div>
 
-                 {/* Chat input - Futuristic design */}
-                 <div className="relative p-3 md:p-4 bg-gradient-to-r from-gray-50 to-white border-t border-gray-200 flex-shrink-0">
-                   <div className="flex items-center gap-2">
-                     {/* Modern input field with glass effect */}
-                     <div className="flex-1 relative">
-                       <textarea 
-                        value={inputMessage} 
-                        onChange={handleInputChange} 
-                        onKeyDown={handleKeyPress} 
-                        placeholder={
-                          collectionPhase && collectionPhase !== 'complete' 
-                            ? '👆 Please use the form above' 
-                            : isListening ? '🎙️ Listening...' : 'Type your message...'
-                        } 
-                        rows="1"
-                        disabled={collectionPhase && collectionPhase !== 'complete'}
-                        className={`w-full px-4 py-3 pr-12 bg-white/80 backdrop-blur-sm border-2 ${isListening ? 'border-green-400 shadow-green-100' : 'border-gray-200 focus:border-blue-400'} rounded-2xl text-sm resize-none overflow-hidden min-h-[2.75rem] max-h-[7.5rem] focus:outline-none focus:ring-2 focus:ring-blue-100 shadow-sm placeholder:text-gray-400 transition-all duration-200 text-left ${collectionPhase && collectionPhase !== 'complete' ? 'opacity-50 cursor-not-allowed' : ''}`}
-                      />
+                {/* Chat input - Futuristic design */}
+                <div className="relative p-3 md:px-4 md:pt-3 md:pb-2 bg-gradient-to-r from-gray-50 to-white border-t border-gray-200 flex-shrink-0">
+                  <div className="flex items-center gap-2">
+                    {/* Modern input field with glass effect */}
+                    <div className="flex-1 relative">
+                      <textarea 
+                       value={inputMessage} 
+                       onChange={handleInputChange} 
+                       onKeyDown={handleKeyPress} 
+                       placeholder={
+                         collectionPhase && collectionPhase !== 'complete' 
+                           ? '👆 Please use the form above' 
+                           : isListening ? '🎙️ Listening...' : 'Type your message...'
+                       } 
+                       rows="1"
+                       disabled={collectionPhase && collectionPhase !== 'complete'}
+                       className={`w-full px-4 py-3 pr-12 bg-white/80 backdrop-blur-sm border-2 ${isListening ? 'border-green-400 shadow-green-100' : 'border-gray-200 focus:border-blue-400'} rounded-2xl text-sm resize-none overflow-hidden min-h-[2.75rem] max-h-[7.5rem] focus:outline-none focus:ring-2 focus:ring-blue-100 shadow-sm placeholder:text-gray-400 transition-all duration-200 text-left ${collectionPhase && collectionPhase !== 'complete' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                     />
                        {/* Character/typing indicator */}
                        {inputMessage && (
                          <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -2727,28 +2735,28 @@ const FloatingQudemoWidget = ({
                        </svg>
                      </button>
                    </div>
-                   
-                   {/* Helper text */}
-                   <div className="mt-2 px-1 text-[10px] text-gray-400 flex items-center justify-between">
-                     <span className="flex items-center gap-1">
-                       <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                         <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                       </svg>
-                       Press Enter to send
-                     </span>
-                     {isTyping && (
-                       <span className="flex items-center gap-1 text-blue-600">
-                         <div className="w-1 h-1 bg-blue-600 rounded-full animate-bounce"></div>
-                         <div className="w-1 h-1 bg-blue-600 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                         <div className="w-1 h-1 bg-blue-600 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
-                         AI is thinking
-                       </span>
-                     )}
-                   </div>
-                 </div>
+                  
+                  {/* Helper text */}
+                  <div className="mt-1.5 md:mt-1 px-1 text-[10px] text-gray-400 flex items-center justify-between">
+                    <span className="flex items-center gap-1">
+                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                      </svg>
+                      Press Enter to send
+                    </span>
+                    {isTyping && (
+                      <span className="flex items-center gap-1 text-blue-600">
+                        <div className="w-1 h-1 bg-blue-600 rounded-full animate-bounce"></div>
+                        <div className="w-1 h-1 bg-blue-600 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                        <div className="w-1 h-1 bg-blue-600 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                        AI is thinking
+                      </span>
+                    )}
+                  </div>
+                </div>
 
-                 {/* Book Meeting Button - Professional Blue Design */}
-                 <div className="relative px-3 py-3 md:py-3 bg-gradient-to-r from-gray-50 to-white border-t border-gray-200 flex-shrink-0">
+                {/* Book Meeting Button - Professional Blue Design */}
+                <div className="relative px-3 py-3 md:px-3 md:py-2 bg-gradient-to-r from-gray-50 to-white border-t border-gray-200 flex-shrink-0">
                    <button
                      onClick={handleBookMeeting}
                      className="group relative w-full inline-flex items-center justify-center px-5 py-3 text-sm font-semibold rounded-2xl transition-all duration-300 shadow-lg hover:shadow-xl bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 transform hover:-translate-y-0.5 overflow-hidden"
@@ -2778,17 +2786,17 @@ const FloatingQudemoWidget = ({
                      <svg className="relative z-10 w-4 h-4 ml-2 opacity-0 group-hover:opacity-100 transform translate-x-0 group-hover:translate-x-1 transition-all duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                      </svg>
-                   </button>
-                   
-                   {/* Helper text */}
-                   <div className="mt-1.5 text-center text-[10px] text-gray-400 flex items-center justify-center gap-1">
-                     <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-                     </svg>
-                     Schedule a 1-on-1 demo call
-                   </div>
-                 </div>
-               </div>
+                  </button>
+                  
+                  {/* Powered by Qudemo text */}
+                  <div className="mt-1.5 md:mt-1 mb-0.5 text-center text-[10px] text-gray-400 flex items-center justify-center gap-1">
+                    powered by{" "}
+                    <span className="text-blue-600 font-semibold">
+                      Qudemo
+                    </span>
+                  </div>
+                </div>
+              </div>
               )}
              </>
            ) : (
