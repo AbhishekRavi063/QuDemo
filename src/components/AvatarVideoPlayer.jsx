@@ -142,7 +142,7 @@ const AvatarVideoPlayer = forwardRef(({ avatarVideoUrl, answer, isVisible, faqId
           className="w-full h-full"
           style={{ 
             objectFit: isMaximized ? 'contain' : 'cover',
-            objectPosition: 'center center'
+            objectPosition: 'center'
           }}
           src={avatarVideoUrl.replace(/ /g, "%20")}
           autoPlay
