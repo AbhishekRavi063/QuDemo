@@ -48,14 +48,14 @@ const WidgetPlayground = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center">
+      <div className="min-h-screen md:bg-gradient-to-br md:from-blue-50 md:to-blue-100 flex items-center justify-center bg-white">
         <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", "Inter", "Roboto", "Helvetica Neue", Arial, sans-serif' }}>
+    <div className="min-h-screen md:bg-gradient-to-br md:from-blue-50 md:to-blue-100" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", "Inter", "Roboto", "Helvetica Neue", Arial, sans-serif' }}>
       {/* Header - Hidden on mobile for full-screen widget experience */}
       <div className="hidden md:block bg-white border-b border-gray-200 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">

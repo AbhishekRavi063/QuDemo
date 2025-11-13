@@ -2246,7 +2246,7 @@ const FloatingQudemoWidget = ({
     <>
       {/* Mobile overlay - removed as widget is now full screen on mobile */}
       
-      <div className={`fixed inset-0 md:inset-auto md:${positionClasses[position]} z-[10000] transition-all duration-300 md:p-0 flex items-center justify-center md:block`}>
+      <div className={`fixed inset-0 md:inset-auto md:${positionClasses[position]} z-[10000] transition-all duration-300 md:p-0 ${isExpanded ? 'block' : 'flex items-center justify-center'} md:block`}>
       
       {/* Collapsed preview button */}
       {!isExpanded && !isMinimized ? (
@@ -2278,10 +2278,12 @@ const FloatingQudemoWidget = ({
             isMaximized ? 'fixed rounded-2xl md:inset-4 shadow-2xl' : 'md:rounded-2xl md:shadow-2xl h-full md:h-auto'
           }`}
           style={{ 
-            width: isMaximized ? 'auto' : (window.innerWidth >= 768 ? '313px' : '100%'),
+            width: isMaximized ? 'auto' : (window.innerWidth >= 768 ? '313px' : '100vw'),
             height: isMaximized ? 'auto' : (window.innerWidth >= 768 ? '700px' : '100vh'),
             border:'none', 
             outline:'none',
+            margin: window.innerWidth < 768 ? '0' : 'auto',
+            padding: window.innerWidth < 768 ? '0' : 'auto',
             // Mobile maximized: use safe areas with fallback to 1rem padding
             ...(isMaximized && window.innerWidth < 768 ? {
               top: 'max(1rem, env(safe-area-inset-top))',
@@ -2329,11 +2331,11 @@ const FloatingQudemoWidget = ({
               <div className={`w-full ${isMaximized ? 'md:w-[60%]' : 'md:w-full'} flex flex-col ${isMaximized ? 'h-auto md:h-full' : 'h-full'}`}>
                 {/* Video Section - Full screen on mobile, optimized for Portrait Videos */}
                 <div 
-                  className="relative flex items-center justify-center flex-1" 
+                  className="relative flex items-center justify-center flex-1 bg-black" 
                   style={{ 
                     height: isMaximized && window.innerWidth < 768 ? '50vh' : (window.innerWidth >= 768 ? 'auto' : 'auto'),
-                    minHeight: isMaximized && window.innerWidth < 768 ? '50vh' : (window.innerWidth >= 768 ? '550px' : '0'),
-                    maxHeight: isMaximized && window.innerWidth < 768 ? '50vh' : (window.innerWidth >= 768 ? 'none' : 'calc(100vh - 190px)'),
+                    minHeight: isMaximized && window.innerWidth < 768 ? '50vh' : (window.innerWidth >= 768 ? '550px' : 'calc(100vh - 130px)'),
+                    maxHeight: isMaximized && window.innerWidth < 768 ? '50vh' : (window.innerWidth >= 768 ? 'none' : 'calc(100vh - 130px)'),
                     overflow: 'hidden'
                   }}
                 >
@@ -2417,7 +2419,7 @@ const FloatingQudemoWidget = ({
 
                  {/* Chat Input - Below Video, Above Book a Meeting (Only show when NOT maximized) */}
                  {!isMaximized && (
-                 <div className="w-full bg-white p-2 md:p-4 border-t border-gray-200">
+                 <div className="w-full bg-white px-2 pt-0.5 pb-0 md:p-4 border-t border-gray-200">
                    <div className="relative flex items-center gap-2 bg-gray-50 rounded-2xl p-2 border border-gray-200 shadow-sm">
                      <textarea 
                        value={inputMessage} 
@@ -2464,7 +2466,7 @@ const FloatingQudemoWidget = ({
 
                  {/* Book a Meeting Button - Below Chat Input (Only show when NOT maximized) */}
                  {!isMaximized && (
-                 <div className="w-full bg-white px-2 pb-2 md:px-4 md:pb-4">
+                 <div className="w-full bg-white px-2 pt-0.5 pb-0 md:px-4 md:pb-4">
                    <button
                      onClick={handleBookMeeting}
                      className="group relative w-full inline-flex items-center justify-center px-4 py-2 md:px-5 md:py-3 text-xs md:text-sm font-semibold rounded-xl md:rounded-2xl transition-all duration-300 shadow-lg hover:shadow-xl bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 transform hover:-translate-y-0.5 overflow-hidden"
