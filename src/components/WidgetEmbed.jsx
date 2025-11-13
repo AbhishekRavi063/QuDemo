@@ -58,7 +58,7 @@ const WidgetEmbed = () => {
         qudemoId={qudemoId}
         companyName={companyName}
         isPreview={false}
-        lockedExpanded={true}
+        lockedExpanded={false}
         theme={theme}
         position={position}
         size={size}

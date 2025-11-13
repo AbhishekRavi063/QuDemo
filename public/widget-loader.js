@@ -39,25 +39,22 @@
 
   const widgetSize = sizeConfig[size] || sizeConfig.medium;
 
-  // Create widget container
+  // Create widget container - starts as collapsed circular widget
   const widgetContainer = document.createElement('div');
   widgetContainer.id = `qudemo-widget-container-${qudemoId}`;
   widgetContainer.style.cssText = `
     position: fixed;
-    ${position.includes('right') ? 'right: 20px;' : 'left: 20px;'}
-    bottom: 20px;
-    width: ${widgetSize.width};
-    max-width: calc(100vw - 40px);
-    height: ${widgetSize.height};
-    max-height: calc(100vh - 40px);
+    ${position.includes('right') ? 'right: 0;' : 'left: 0;'}
+    bottom: 0;
+    top: 0;
+    width: 100vw;
+    height: 100vh;
     border: none;
-    border-radius: 16px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
     z-index: 999999;
-    transition: all 0.3s ease;
+    pointer-events: none;
   `;
 
-  // Create iframe
+  // Create iframe - full viewport to allow widget to position itself
   const iframe = document.createElement('iframe');
   const embedUrl = `${baseUrl}/widget-embed/${qudemoId}?theme=${theme}&position=${position}&size=${size}&company=${encodeURIComponent(companyName)}`;
   
@@ -66,7 +63,8 @@
     width: 100%;
     height: 100%;
     border: none;
-    border-radius: 16px;
+    background: transparent;
+    pointer-events: auto;
   `;
   iframe.allow = 'microphone';
   iframe.title = 'Qudemo Widget';
@@ -91,21 +89,7 @@
     init();
   }
 
-  // Handle mobile responsiveness
-  function handleResize() {
-    if (window.innerWidth < 768) {
-      widgetContainer.style.width = 'calc(100vw - 40px)';
-      widgetContainer.style.maxWidth = '350px';
-      widgetContainer.style.height = 'calc(100vh - 80px)';
-      widgetContainer.style.maxHeight = '600px';
-    } else {
-      widgetContainer.style.width = widgetSize.width;
-      widgetContainer.style.height = widgetSize.height;
-    }
-  }
-
-  window.addEventListener('resize', handleResize);
-  handleResize();
+  // No resize handling needed - widget manages its own responsive behavior
 
   // Expose API for programmatic control
   window.QudemoWidget = window.QudemoWidget || {};

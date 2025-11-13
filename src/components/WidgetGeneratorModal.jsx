@@ -128,22 +128,79 @@ const WidgetGeneratorModal = ({ isOpen, onClose, widgetData, qudemo }) => {
           </div>
 
           {/* Instructions */}
-          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 space-y-3 shadow-sm">
+          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-5 space-y-4 shadow-sm">
             <h4 className="font-semibold text-blue-900 flex items-center space-x-2 text-left tracking-tight">
               <span>📝</span>
               <span>How to Use</span>
             </h4>
             <ol className="list-decimal list-inside space-y-2.5 text-sm text-blue-800 text-left font-light leading-relaxed">
-              <li className="text-left pl-1">Copy the code above using the "Copy Code" button</li>
               <li className="text-left pl-1">
-                Paste it into your website's HTML, just before the closing{" "}
+                <strong className="font-semibold">Copy the code</strong> above using the "Copy Code" button
+              </li>
+              <li className="text-left pl-1">
+                <strong className="font-semibold">Paste it</strong> into your website's HTML, just before the closing{" "}
                 <code className="bg-blue-100 px-1.5 py-0.5 rounded text-xs font-mono">&lt;/body&gt;</code> tag
               </li>
               <li className="text-left pl-1">
-                The widget will appear at the bottom-right corner of your page
+                <strong className="font-semibold">Widget starts collapsed</strong> - A circular preview video appears in the bottom-right corner
               </li>
-              <li className="text-left pl-1">Users can click it to interact with your QuDemo</li>
+              <li className="text-left pl-1">
+                <strong className="font-semibold">Click to expand</strong> - Users click the widget to open the full interactive QuDemo experience
+              </li>
+              <li className="text-left pl-1">
+                <strong className="font-semibold">Auto-plays intro</strong> - The intro video plays automatically (muted with unmute button)
+              </li>
             </ol>
+            
+            <div className="bg-white/60 rounded-lg p-3 border border-blue-200/50 mt-3">
+              <div className="text-xs font-semibold text-blue-900 mb-2 text-left">✨ Widget Behavior:</div>
+              <div className="flex items-center space-x-3 text-xs text-blue-800">
+                <div className="flex items-center space-x-1">
+                  <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
+                    <span className="text-white text-xs">●</span>
+                  </div>
+                  <span>→</span>
+                  <div className="w-12 h-12 rounded-lg bg-blue-600 flex items-center justify-center">
+                    <span className="text-white text-xs">▶</span>
+                  </div>
+                  <span className="ml-2 font-light">Collapsed → Expanded</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Platform Support */}
+          <div className="bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4 shadow-sm">
+            <h4 className="font-semibold text-green-900 flex items-center space-x-2 text-left tracking-tight mb-3">
+              <span>🌐</span>
+              <span>Works Everywhere</span>
+            </h4>
+            <div className="grid grid-cols-2 gap-2 text-xs text-green-800">
+              <div className="flex items-center space-x-2">
+                <span className="text-green-600">✓</span>
+                <span>Plain HTML websites</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <span className="text-green-600">✓</span>
+                <span>React / Next.js</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <span className="text-green-600">✓</span>
+                <span>WordPress</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <span className="text-green-600">✓</span>
+                <span>Webflow / Wix</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <span className="text-green-600">✓</span>
+                <span>Shopify / Squarespace</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <span className="text-green-600">✓</span>
+                <span>Any website platform</span>
+              </div>
+            </div>
           </div>
 
           {/* Widget Config Info */}
