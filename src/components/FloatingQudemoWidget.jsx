@@ -2275,13 +2275,20 @@ const FloatingQudemoWidget = ({
          // Full expanded widget - Full screen on mobile, shows only video in normal view, adds chat when maximized
          <div 
           className={`bg-white overflow-hidden flex ${isMaximized ? 'flex-col md:flex-row' : 'flex-col'} w-full transition-all duration-300 ${
-            isMaximized ? 'fixed inset-0 md:inset-4 md:rounded-2xl shadow-2xl' : 'md:rounded-2xl md:shadow-2xl h-full md:h-auto'
+            isMaximized ? 'fixed rounded-2xl md:inset-4 shadow-2xl' : 'md:rounded-2xl md:shadow-2xl h-full md:h-auto'
           }`}
           style={{ 
             width: isMaximized ? 'auto' : (window.innerWidth >= 768 ? '313px' : '100%'),
             height: isMaximized ? 'auto' : (window.innerWidth >= 768 ? '700px' : '100vh'),
             border:'none', 
             outline:'none',
+            // Mobile maximized: use safe areas with fallback to 1rem padding
+            ...(isMaximized && window.innerWidth < 768 ? {
+              top: 'max(1rem, env(safe-area-inset-top))',
+              right: 'max(1rem, env(safe-area-inset-right))',
+              bottom: 'max(1rem, env(safe-area-inset-bottom))',
+              left: 'max(1rem, env(safe-area-inset-left))',
+            } : {})
           }}
          >
            {loading ? (
