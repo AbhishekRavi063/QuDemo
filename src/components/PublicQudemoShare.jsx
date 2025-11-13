@@ -174,17 +174,23 @@ const PublicQudemoShare = () => {
           };
           setMessages([welcomeMessage]);
           
-          // Continue to fetch fresh data in background to update cache
-          fetchFreshQudemoData(shareToken, cacheKey);
+          // Parallel: fetch fresh data + suggested questions in background
+          Promise.all([
+            fetchFreshQudemoData(shareToken, cacheKey),
+            fetchSuggestedQuestions()
+          ]);
           return;
         }
         
-        // No cache, fetch fresh data
-        const response = await fetch(
-          getNodeApiUrl(`/api/qudemos/share/${shareToken}`),
-        );
-        if (response.ok) {
-          const data = await response.json();
+        // No cache, fetch fresh data - use parallel requests for speed
+        const [qudemoResponse] = await Promise.all([
+          fetch(getNodeApiUrl(`/api/qudemos/share/${shareToken}`)),
+          // Start fetching suggested questions immediately (will be handled by useEffect but prefetch now)
+          shareToken ? fetchSuggestedQuestions() : Promise.resolve()
+        ]);
+        
+        if (qudemoResponse.ok) {
+          const data = await qudemoResponse.json();
           setQudemo(data.data);
           setCompany(data.data.company);
           
@@ -234,9 +240,9 @@ const PublicQudemoShare = () => {
           };
           setMessages([welcomeMessage]);
         } else {
-          const errorData = await response.json();
+          const errorData = await qudemoResponse.json();
           // CHECK FOR SUBSCRIPTION EXPIRED
-          if (errorData.subscriptionExpired || response.status === 403) {
+          if (errorData.subscriptionExpired || qudemoResponse.status === 403) {
             setError("subscription_expired");
           } else {
             setError(errorData.error || "Failed to load shared qudemo");
@@ -253,11 +259,30 @@ const PublicQudemoShare = () => {
     }
   }, [shareToken]);
   
-  // Proactively preload all videos for instant playback
+  // Prefetch first video immediately for instant playback
+  useEffect(() => {
+    if (qudemo && qudemo.videos && qudemo.videos.length > 0) {
+      const firstVideo = qudemo.videos[0];
+      if (firstVideo && firstVideo.video_url) {
+        console.log('⚡ Prefetching first video for instant playback...');
+        // Prefetch first video immediately
+        const link = document.createElement('link');
+        link.rel = 'prefetch';
+        link.as = 'video';
+        link.href = firstVideo.video_url;
+        document.head.appendChild(link);
+      }
+    }
+  }, [qudemo]);
+  
+  // Proactively preload all videos for instant playback (after first video is prioritized)
   useEffect(() => {
     if (qudemo && qudemo.id && !hasCachedVideosRef.current) {
-      console.log('🚀 Starting proactive video preloading for instant playback...');
-      preloadAllVideos();
+      // Delay slightly to let first video start loading
+      setTimeout(() => {
+        console.log('🚀 Starting proactive video preloading for instant playback...');
+        preloadAllVideos();
+      }, 500);
     }
   }, [qudemo]);
   
@@ -267,19 +292,28 @@ const PublicQudemoShare = () => {
   }, [messages]);
   // Clear suggested questions and fetch new ones when shareToken is available
   useEffect(() => {
-    if (shareToken) {
-      // Clear old suggested questions immediately
-      setSuggestedQuestions([]);
-      setLoadingSuggestedQuestions(true);
-      setShowAllQuestions(false); // Reset show all state
-      fetchSuggestedQuestions();
-    } else {
+    if (shareToken && qudemo) {
+      // Only fetch after qudemo is loaded (it's already being fetched in parallel above)
+      // This prevents duplicate requests
+      if (!loadingSuggestedQuestions && suggestedQuestions.length === 0) {
+        // Check cache first
+        const cacheKey = `suggested_questions_${shareToken}`;
+        const cachedQuestions = sessionStorage.getItem(cacheKey);
+        if (!cachedQuestions) {
+          // Not in cache and not already loading, fetch now
+          setSuggestedQuestions([]);
+          setLoadingSuggestedQuestions(true);
+          setShowAllQuestions(false);
+          fetchSuggestedQuestions();
+        }
+      }
+    } else if (!shareToken) {
       // Clear suggested questions when missing data
       setSuggestedQuestions([]);
       setLoadingSuggestedQuestions(false);
       setShowAllQuestions(false);
     }
-  }, [shareToken]);
+  }, [shareToken, qudemo]);
   // Helper function to fetch fresh data in background (for cache updates)
   const fetchFreshQudemoData = async (token, cacheKey) => {
     try {
@@ -641,10 +675,48 @@ const PublicQudemoShare = () => {
   const currentVideo = qudemo?.videos?.[currentVideoIndex];
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading shared Qudemo...</p>
+      <div className="min-h-screen bg-gray-50">
+        {/* Skeleton Header */}
+        <div className="bg-white shadow-sm border-b">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between h-16">
+              <div className="flex items-center space-x-4">
+                <div className="h-4 w-32 bg-gray-200 rounded animate-pulse"></div>
+              </div>
+              <div className="h-4 w-24 bg-gray-200 rounded animate-pulse"></div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Skeleton Content */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="bg-white rounded-lg border overflow-hidden">
+            <div className="flex flex-col lg:flex-row h-[80vh]">
+              {/* Skeleton Video Section */}
+              <div className="w-full lg:w-2/3 relative flex flex-col items-center justify-center bg-gray-900">
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+                    <p className="text-white text-sm">Loading video...</p>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Skeleton Chat Section */}
+              <div className="w-full lg:w-1/3 flex flex-col bg-white border-l">
+                <div className="bg-blue-600 px-4 py-3">
+                  <div className="h-4 w-48 bg-blue-500 rounded animate-pulse"></div>
+                </div>
+                <div className="flex-1 px-3 py-4 space-y-3">
+                  <div className="h-16 bg-gray-100 rounded-xl animate-pulse"></div>
+                  <div className="h-12 bg-gray-50 rounded-xl animate-pulse"></div>
+                </div>
+                <div className="px-3 py-2 border-t">
+                  <div className="h-10 bg-gray-100 rounded-lg animate-pulse"></div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
