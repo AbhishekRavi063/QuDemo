@@ -124,7 +124,7 @@ const PublicQudemoShare = () => {
   const [inputMessage, setInputMessage] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(true); // Autoplay intro video when page loads
   const [isMuted, setIsMuted] = useState(false);
   const [currentTimestamp, setCurrentTimestamp] = useState(0);
   const [audioEnabled, setAudioEnabled] = useState(false);
@@ -140,11 +140,46 @@ const PublicQudemoShare = () => {
   const messagesEndRef = useRef(null);
   const loomIframeRef = useRef();
   const videoPlayerRef = useRef(null);
+  
+  // Caching and preloading refs
+  const videoPreloadCacheRef = useRef({}); // Cache for preloaded videos
+  const hasCachedVideosRef = useRef(false); // Track if videos are already cached
+  const faqCacheRef = useRef(null); // Cache for FAQ data
+  
   // Load shared qudemo data
   useEffect(() => {
     const loadSharedQudemo = async () => {
       try {
         setLoading(true);
+        
+        // Check cache first for instant loading
+        const cacheKey = `shared_qudemo_data_${shareToken}`;
+        const cachedData = sessionStorage.getItem(cacheKey);
+        
+        if (cachedData) {
+          console.log('⚡ Using cached QuDemo data for instant loading');
+          const parsedData = JSON.parse(cachedData);
+          setQudemo(parsedData);
+          setCompany(parsedData.company);
+          setLoading(false);
+          
+          // Initialize welcome message from cache
+          const welcomeMessage = {
+            sender: "AI",
+            text: `Welcome to the ${parsedData.title}! I'm your AI assistant for this shared qudemo. I can help you understand the content from the videos and knowledge sources. What would you like to know?`,
+            time: new Date().toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+          };
+          setMessages([welcomeMessage]);
+          
+          // Continue to fetch fresh data in background to update cache
+          fetchFreshQudemoData(shareToken, cacheKey);
+          return;
+        }
+        
+        // No cache, fetch fresh data
         const response = await fetch(
           getNodeApiUrl(`/api/qudemos/share/${shareToken}`),
         );
@@ -152,6 +187,10 @@ const PublicQudemoShare = () => {
           const data = await response.json();
           setQudemo(data.data);
           setCompany(data.data.company);
+          
+          // Cache the data for next time
+          sessionStorage.setItem(cacheKey, JSON.stringify(data.data));
+          console.log('💾 Cached QuDemo data for future visits');
           // Update page title and meta tags dynamically
           const qudemoTitle = data.data.title;
           const companyName =
@@ -213,6 +252,15 @@ const PublicQudemoShare = () => {
       loadSharedQudemo();
     }
   }, [shareToken]);
+  
+  // Proactively preload all videos for instant playback
+  useEffect(() => {
+    if (qudemo && qudemo.id && !hasCachedVideosRef.current) {
+      console.log('🚀 Starting proactive video preloading for instant playback...');
+      preloadAllVideos();
+    }
+  }, [qudemo]);
+  
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -232,8 +280,127 @@ const PublicQudemoShare = () => {
       setShowAllQuestions(false);
     }
   }, [shareToken]);
+  // Helper function to fetch fresh data in background (for cache updates)
+  const fetchFreshQudemoData = async (token, cacheKey) => {
+    try {
+      console.log('🔄 Fetching fresh QuDemo data in background...');
+      const response = await fetch(
+        getNodeApiUrl(`/api/qudemos/share/${token}`),
+      );
+      if (response.ok) {
+        const data = await response.json();
+        // Update cache with fresh data
+        sessionStorage.setItem(cacheKey, JSON.stringify(data.data));
+        console.log('✅ Background cache update complete');
+      }
+    } catch (error) {
+      console.log('⚠️ Background fetch failed (using cached data):', error);
+    }
+  };
+  
+  // Proactively cache ALL videos when page loads for instant playback
+  const preloadAllVideos = async () => {
+    try {
+      if (!qudemo || !qudemo.id) {
+        console.log('⚠️ Cannot preload videos - qudemo data not available');
+        return;
+      }
+      
+      // Check if videos are already cached for this session
+      if (hasCachedVideosRef.current) {
+        console.log('✅ Videos already cached for this session, skipping');
+        return;
+      }
+      
+      console.log('🎬 Starting proactive video caching for QuDemo:', qudemo.id);
+      
+      // Mark as cached immediately to prevent duplicate calls
+      hasCachedVideosRef.current = true;
+      
+      // Get cache version
+      const cacheKey = `shared_qudemo_${shareToken}`;
+      const cachedVersion = localStorage.getItem(`${cacheKey}_version`);
+      
+      // Use qudemo.videos array if available (from API response)
+      if (qudemo.videos && qudemo.videos.length > 0) {
+        const currentVersion = qudemo.updated_at || Date.now();
+        
+        // Check if we need to refresh cache
+        if (cachedVersion !== String(currentVersion)) {
+          console.log('🔄 QuDemo version changed, refreshing cache...');
+          localStorage.setItem(`${cacheKey}_version`, String(currentVersion));
+        }
+        
+        console.log(`📦 Found ${qudemo.videos.length} videos, preloading for instant playback...`);
+        
+        // Preload ALL videos
+        let cachedCount = 0;
+        for (const video of qudemo.videos) {
+          if (video.video_url) {
+            try {
+              // Create hidden video element to trigger browser cache
+              const videoElement = document.createElement('video');
+              videoElement.preload = 'auto';
+              videoElement.src = video.video_url.replace(/ /g, '%20');
+              videoElement.style.display = 'none';
+              videoElement.muted = true;
+              document.body.appendChild(videoElement);
+              
+              // Store in cache ref
+              videoPreloadCacheRef.current[video.id || video.video_url] = {
+                element: videoElement,
+                ready: false,
+                src: video.video_url
+              };
+              
+              // Remove from DOM after loaded to free memory
+              videoElement.addEventListener('loadeddata', () => {
+                videoPreloadCacheRef.current[video.id || video.video_url].ready = true;
+                // Keep in DOM briefly to ensure cache, then remove
+                setTimeout(() => {
+                  if (videoElement.parentNode) {
+                    document.body.removeChild(videoElement);
+                  }
+                }, 1000);
+              });
+              
+              videoElement.addEventListener('error', () => {
+                if (videoElement.parentNode) {
+                  document.body.removeChild(videoElement);
+                }
+              });
+              
+              cachedCount++;
+              console.log(`✅ Preloading ${cachedCount}/${qudemo.videos.length}: ${video.title || 'Video'}...`);
+            } catch (err) {
+              console.log('⚠️ Could not preload video:', video.title || video.video_url);
+            }
+          }
+        }
+        
+        console.log(`✅ Video preloading complete!`);
+        console.log(`   🎬 ${cachedCount} videos cached`);
+        console.log('⚡ Videos will now play INSTANTLY!');
+      }
+    } catch (error) {
+      console.error('❌ Error in proactive video caching:', error);
+    }
+  };
+  
   const fetchSuggestedQuestions = async () => {
     try {
+      // Check cache first for instant loading
+      const cacheKey = `suggested_questions_${shareToken}`;
+      const cachedQuestions = sessionStorage.getItem(cacheKey);
+      
+      if (cachedQuestions) {
+        console.log('⚡ Using cached suggested questions');
+        const questions = JSON.parse(cachedQuestions);
+        setSuggestedQuestions(questions);
+        setLoadingSuggestedQuestions(false);
+        return;
+      }
+      
       // Use the public endpoint for shared QuDemos
       const response = await axios.get(
         getNodeApiUrl(`/api/qudemos/share/${shareToken}/suggested-questions`),
@@ -242,6 +409,10 @@ const PublicQudemoShare = () => {
       if (response.data.success) {
         const questions = response.data.suggested_questions || [];
         setSuggestedQuestions(questions);
+        
+        // Cache for future visits
+        sessionStorage.setItem(cacheKey, JSON.stringify(questions));
+        console.log('💾 Cached suggested questions');
       }
     } catch (error) {
       console.error("❌ Error fetching suggested questions:", error);
