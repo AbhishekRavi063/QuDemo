@@ -847,15 +847,14 @@ const Qudemos = () => {
     fetchQudemos();
   }, [company]);
 
-  // Fetch intro videos for all QuDemos
-  useEffect(() => {
-    if (qudemos.length > 0 && company?.name) {
-      fetchIntroVideos();
-    }
-  }, [qudemos, company]);
+  // Fetch intro videos for all QuDemos - DISABLED to prevent unnecessary API calls
+  // useEffect(() => {
+  //   if (qudemos.length > 0 && company?.name) {
+  //     fetchIntroVideos();
+  //   }
+  // }, [qudemos, company]);
 
   const fetchIntroVideos = async () => {
-    console.log("🎬 Fetching intro videos for all QuDemos...");
     const newIntroVideos = {};
 
     for (const qudemo of qudemos) {
@@ -872,7 +871,6 @@ const Qudemos = () => {
         const data = await response.json();
 
         if (data && data.has_avatar_video && data.avatar_video_url) {
-          console.log(`✅ Intro video found for QuDemo: ${qudemo.title}`);
           newIntroVideos[qudemo.id] = data.avatar_video_url;
         }
       } catch (error) {
@@ -881,7 +879,6 @@ const Qudemos = () => {
     }
 
     setIntroVideos(newIntroVideos);
-    console.log(`🎬 Loaded ${Object.keys(newIntroVideos).length} intro videos`);
   };
 
   // Refresh data when component comes into focus (e.g., when navigating back)
@@ -1128,15 +1125,14 @@ const Qudemos = () => {
                 {!qudemo.isDemo && 
                  qudemo.avatar_generation_status && 
                  (qudemo.avatar_generation_status === 'processing' || qudemo.avatar_generation_status === 'pending') && (
-                  <div className="absolute top-0 left-0 right-0 z-20">
-                    <VideoGenerationProgress
-                      qudemoId={qudemo.id}
-                      status={qudemo.avatar_generation_status}
-                      onComplete={() => {
-                        fetchQudemos();
-                      }}
-                    />
-                  </div>
+                  <VideoGenerationProgress
+                    qudemoId={qudemo.id}
+                    status={qudemo.avatar_generation_status}
+                    createdAt={qudemo.created_at}
+                    onComplete={() => {
+                      fetchQudemos();
+                    }}
+                  />
                 )}
                 
                 {/* Delete Loading Overlay */}
