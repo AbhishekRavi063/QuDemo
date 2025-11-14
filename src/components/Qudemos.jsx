@@ -1166,7 +1166,7 @@ const Qudemos = () => {
     );
   }
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 dashboard-font">
       {/* Header */}
       <div className="flex justify-end items-center">
         <div className="flex items-center space-x-2">
@@ -1210,14 +1210,14 @@ const Qudemos = () => {
           {qudemos.map((qudemo) => (
             <div
               key={qudemo.id}
-              className={`bg-white rounded-lg border hover:border transition-shadow border border-strokedark/10 ${
+              className={`bg-white rounded-2xl border hover:border transition-shadow border border-strokedark/10 ${
                 deletingQudemoId === qudemo.id
                   ? "opacity-50 pointer-events-none"
                   : ""
               }`}
             >
               {/* Video Thumbnail */}
-              <div className="relative h-48 bg-whiten rounded-t-lg overflow-hidden">
+              <div className="relative h-48 bg-whiten rounded-t-2xl overflow-hidden">
                 {/* Video Generation Progress Overlay - OVER the image */}
                 {!qudemo.isDemo && 
                  qudemo.avatar_generation_status && 
@@ -1439,7 +1439,7 @@ const Qudemos = () => {
                         <EllipsisVerticalIcon className="w-5 h-5 text-gray-500" />
                       </button>
                       {dropdownOpen === qudemo.id && (
-                        <div className="absolute right-0 top-8 bg-white border border-strokedark/10 rounded-lg border z-10 min-w-[160px]">
+                        <div className="absolute right-0 top-8 bg-white border border-strokedark/10 rounded-lg border z-10 min-w-[220px]">
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
