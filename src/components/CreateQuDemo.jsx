@@ -855,7 +855,7 @@ const CreateQuDemo = () => {
     );
   }
   return (
-    <div className="min-h-screen bg-whiter flex items-start justify-center pt-8">
+    <div className="min-h-screen bg-whiter flex items-start justify-center pt-8 dashboard-font">
       <div className="w-full max-w-2xl mx-auto px-4">
         {/* Main Heading and Subheading */}
         <div className="text-center mb-8">

@@ -49,7 +49,7 @@ const activity = [
 
 const Overview = () => {
   return (
-    <div className="p-4 sm:p-6 space-y-6">
+    <div className="p-4 sm:p-6 space-y-6 dashboard-font">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <h2 className="text-xl sm:text-2xl font-semibold">Overview</h2>

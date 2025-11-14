@@ -649,7 +649,7 @@ const QudemoPreview = ({ qudemo, onClose }) => {
 
   const currentVideo = qudemo?.videos?.[currentVideoIndex];
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-40 z-[9999] flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black bg-opacity-40 z-[9999] flex items-center justify-center p-4 dashboard-font">
       <div className="w-full max-w-7xl h-full max-h-[85vh] bg-white rounded-lg shadow-2xl flex flex-col md:flex-row overflow-hidden relative">
         {/* Video Section */}
         <div

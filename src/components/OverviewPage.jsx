@@ -96,7 +96,7 @@ const OverviewPage = () => {
   }
 
   return (
-    <div className="bg-whiter min-h-screen">
+    <div className="bg-whiter min-h-screen dashboard-font">
       {/* Header */}
       <div className="flex justify-between items-start mb-6">
         <div className="text-left">

@@ -236,7 +236,7 @@ const CustomerInteractionsPage = () => {
     );
   }
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 dashboard-font">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-bold text-graydark">All Interactions</h1>
@@ -461,7 +461,7 @@ const CustomerInteractionsPage = () => {
       )}
       {/* Details Modal */}
       {showDetailsModal && selectedInteraction && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center bg-black bg-opacity-50 pt-4">
+        <div className="fixed inset-0 z-50 flex items-start justify-center bg-black bg-opacity-50 pt-4 dashboard-font">
           <div className="bg-white rounded-lg border max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden flex flex-col">
             <div className="flex flex-col h-full">
               {/* Header */}
