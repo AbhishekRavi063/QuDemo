@@ -7,6 +7,7 @@ import ReactPlayer from "react-player";
 import HybridVideoPlayer from "./HybridVideoPlayer";
 import QudemoPreview from "./QudemoPreview";
 import WidgetGeneratorModal from "./WidgetGeneratorModal";
+import VideoGenerationProgress from "./VideoGenerationProgress";
 import {
   EyeIcon,
   PencilIcon,
@@ -1123,6 +1124,21 @@ const Qudemos = () => {
             >
               {/* Video Thumbnail */}
               <div className="relative h-48 bg-whiten rounded-t-2xl overflow-hidden">
+                {/* Video Generation Progress Overlay - OVER the image */}
+                {!qudemo.isDemo && 
+                 qudemo.avatar_generation_status && 
+                 (qudemo.avatar_generation_status === 'processing' || qudemo.avatar_generation_status === 'pending') && (
+                  <div className="absolute top-0 left-0 right-0 z-20">
+                    <VideoGenerationProgress
+                      qudemoId={qudemo.id}
+                      status={qudemo.avatar_generation_status}
+                      onComplete={() => {
+                        fetchQudemos();
+                      }}
+                    />
+                  </div>
+                )}
+                
                 {/* Delete Loading Overlay */}
                 {deletingQudemoId === qudemo.id && (
                   <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-10 rounded-t-lg">
@@ -1270,11 +1286,26 @@ const Qudemos = () => {
                       )}
                     </div>
                   </div>
+                ) : qudemo.presenter_photo_url ? (
+                  // Show presenter photo as preview (full photo, not circular)
+                  <div className="w-full h-full relative overflow-hidden bg-gray-100">
+                    <img
+                      src={qudemo.presenter_photo_url}
+                      alt={qudemo.presenter_name || "Presenter"}
+                      className="w-full h-full object-contain"
+                      style={{ objectPosition: 'center center' }}
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.style.display = 'none';
+                        e.target.parentElement.innerHTML = '<div class="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center"><span class="text-white text-5xl font-bold">' + (qudemo.presenter_name?.charAt(0) || 'Q') + '</span></div>';
+                      }}
+                    />
+                  </div>
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
                     <div className="text-center">
                       <VideoCameraIcon className="w-12 h-10 text-bodydark2 mx-auto mb-2" />
-                      <p className="text-gray-500 text-sm">No video</p>
+                      <p className="text-gray-500 text-sm">No preview</p>
                     </div>
                   </div>
                 )}
