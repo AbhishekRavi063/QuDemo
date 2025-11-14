@@ -7,7 +7,6 @@ import ReactPlayer from "react-player";
 import HybridVideoPlayer from "./HybridVideoPlayer";
 import QudemoPreview from "./QudemoPreview";
 import WidgetGeneratorModal from "./WidgetGeneratorModal";
-import VideoGenerationProgress from "./VideoGenerationProgress";
 import {
   EyeIcon,
   PencilIcon,
@@ -79,25 +78,15 @@ const Qudemos = () => {
   const { showSuccess, showError, showInfo } = useNotification();
   // Filter interactions based on search term and exclude users with no engagement
   const filteredInteractions = qudemoInteractions.filter((interaction) => {
-    // First, exclude users who haven't asked REAL questions (profile creation doesn't count)
+    // First, exclude users who haven't asked questions and don't have time spent
     const hasQuestions =
-      interaction.questions && interaction.questions.length > 0;
-    
-    // Debug logging
-    if (qudemoInteractions.length > 0 && window.DEBUG_INTERACTIONS) {
-      console.log('🔍 Filtering interaction:', {
-        name: interaction.client_name,
-        hasQuestions,
-        questionCount: interaction.questions?.length || 0
-      });
-    }
-    
-    // Only show users who have asked real questions
-    // (Profile creation entries are already filtered out in the data transformation)
-    if (!hasQuestions) {
+      interaction.question_count && interaction.question_count > 0;
+    const hasTimeSpent =
+      interaction.total_duration && interaction.total_duration > 0;
+    // Only show users who have asked questions OR spent time
+    if (!hasQuestions && !hasTimeSpent) {
       return false;
     }
-    
     // Then apply search filter
     if (!searchTerm) return true;
     const searchLower = searchTerm.toLowerCase();
@@ -110,15 +99,6 @@ const Qudemos = () => {
       company.includes(searchLower)
     );
   });
-  
-  // Debug log filtered results
-  if (qudemoInteractions.length > 0 && window.DEBUG_INTERACTIONS) {
-    console.log('📊 Filtering results:', {
-      total: qudemoInteractions.length,
-      filtered: filteredInteractions.length,
-      searchTerm
-    });
-  }
   // Format duration helper
   const formatDuration = (seconds) => {
     if (!seconds) return "0:00";
@@ -174,17 +154,7 @@ const Qudemos = () => {
   };
   // Handle view details for interactions
   const handleViewDetails = (interaction) => {
-    console.log('🔍 View Details clicked!', interaction);
-    console.log('   Questions count:', interaction.questions?.length || 0);
-    console.log('   Time spent (total_duration):', interaction.total_duration || 0);
-    console.log('   Time spent formatted:', formatDuration(interaction.total_duration || 0));
-    console.log('   Questions with time_spent:', interaction.questions?.map(q => ({
-      question: q.question?.substring(0, 50),
-      time_spent: q.time_spent || 0
-    })));
-    
     if (interaction.questions && interaction.questions.length > 0) {
-      console.log('✅ Interaction has questions, proceeding...');
     }
     // Reset AI summary state
     setAiInsightSummary("");
@@ -193,7 +163,6 @@ const Qudemos = () => {
     setActiveTab("overview");
     setShowDetailsModal(true);
     setShowInteractionsListModal(false);
-    console.log('✅ Modal states updated - Details should show with total_duration:', interaction.total_duration);
     // Generate AI insight summary
     generateAiInsightSummary(interaction);
   };
@@ -233,10 +202,8 @@ const Qudemos = () => {
   const fetchQudemoInteractions = async (qudemoId) => {
     try {
       const token = localStorage.getItem("accessToken");
-      console.log('🔍 Fetching visitor interactions for QuDemo:', qudemoId);
-      
       const response = await fetch(
-        getNodeApiUrl(`/api/qudemos/visitor-interactions/${qudemoId}`),
+        getNodeApiUrl(`/api/analytics/qudemo-interactions/${qudemoId}`),
         {
           method: "GET",
           headers: {
@@ -245,79 +212,41 @@ const Qudemos = () => {
           },
         },
       );
-      
-      const data = await response.json();
-      console.log('📊 Visitor interactions response:', data);
-      
-      if (response.ok && data.success) {
-        console.log('✅ Successfully fetched visitor data');
-        console.log('   Total sessions:', data.data.total_sessions);
-        console.log('   Total interactions:', data.data.total_interactions);
-        
-        // Transform the sessions data to match the old modal format
-        const sessions = data.data.sessions || [];
-        console.log('📦 Raw sessions from backend:', sessions);
-        console.log('📦 Number of sessions:', sessions.length);
-        
-        const transformedData = sessions.map(session => {
-          // Filter out "User profile created" entries - they're not real questions
-          const realQuestions = session.interactions.filter(interaction => 
-            !interaction.question.includes('👤 User profile created')
-          );
-          
-          // Calculate total duration: take the maximum time_spent from all interactions in this session
-          // (since time_spent is cumulative from session start)
-          const maxTimeSpent = session.interactions.reduce((max, interaction) => {
-            const timeSpent = interaction.time_spent || 0;
-            return timeSpent > max ? timeSpent : max;
-          }, 0);
-          
-          console.log(`⏱️ Session ${session.visitor_name}:`, {
-            total_interactions: session.interactions.length,
-            real_questions: realQuestions.length,
-            time_spent_values: session.interactions.map(i => i.time_spent || 0),
-            max_time_spent: maxTimeSpent
-          });
-          
-          return {
-            client_name: session.visitor_name,
-            client_email: session.visitor_email,
-            client_company: session.visitor_company,
-            questions: realQuestions, // Only real questions, not profile creation entries
-            total_duration: maxTimeSpent, // Maximum time_spent from interactions
-            session_id: session.session_id,
-            first_interaction_at: session.first_interaction_at
-          };
-        });
-        
-        console.log('✅ Transformed data:', transformedData);
-        console.log('✅ Number of transformed records:', transformedData.length);
-        return transformedData;
+      if (response.ok) {
+        const data = await response.json();
+        return data.data || [];
       } else {
-        console.error('❌ Failed to fetch visitor data:', data);
         return [];
       }
     } catch (error) {
-      console.error('❌ Error fetching visitor interactions:', error);
       return [];
     }
   };
-  // Share functionality - Opens QuDemo in new tab with locked expanded widget
+  // Share functionality
   const handleShareQudemo = async (qudemo) => {
-    try {
-      // Generate the public share URL
-      const shareUrl = `${window.location.origin}/qudemo-share/${qudemo.id}`;
-      
-      // Copy to clipboard
-      await navigator.clipboard.writeText(shareUrl);
-      showSuccess("Share link copied! Opening in new tab...");
-      
-      // Open in new tab
-      window.open(shareUrl, '_blank');
-    } catch (err) {
-      console.error("❌ Error sharing QuDemo:", err);
-      showError("Failed to generate share link");
+    // Special handling for demo Qudemo - bypass Pro check and go straight to single link
+    if (qudemo.isDemo && qudemo.share_token) {
+      await generateSingleShareLink(qudemo);
+      return;
     }
+
+    // Check if user has Pro/Enterprise plan first
+    // COMMENTED OUT FOR TESTING - Allow free users to share
+    // if (!isPro) {
+    //   // Show upgrade popup for free users
+    //   setErrorDetails({
+    //     title: 'Share functionality requires Pro plan',
+    //     message: 'Upgrade to Pro to generate shareable links for your Qudemos.',
+    //     currentPlan: 'free',
+    //     subscriptionStatus: 'active',
+    //     isCancelled: false
+    //   });
+    //   setShowUpgradeModal(true);
+    //   return;
+    // }
+    // Show share options modal for Pro/Enterprise users (don't generate link yet)
+    setQudemoToShare(qudemo);
+    setShowShareOptionsModal(true);
   };
   // Handle share option selection
   const handleShareOption = async (option) => {
@@ -846,7 +775,7 @@ const Qudemos = () => {
     if (!company?.id) {
       setLoading(false);
       setError("No company found. Please create a company first.");
-      setQudemos([]);
+      // setQudemos([]);
       return;
     }
     try {
@@ -887,11 +816,8 @@ const Qudemos = () => {
                 title: welcomeData.data.title || "Welcome to Qudemo",
               };
 
-              // Deduplicate: Remove any user QuDemos with the same ID as the demo
-              const uniqueUserQudemos = userQudemos.filter(q => q.id !== demoQudemo.id);
-              
               // Add demo Qudemo at the beginning
-              setQudemos([demoQudemo, ...uniqueUserQudemos]);
+              setQudemos([demoQudemo, ...userQudemos]);
             } else {
               // If demo fetch fails, just show user's Qudemos
               setQudemos(userQudemos);
@@ -907,11 +833,11 @@ const Qudemos = () => {
         }
       } else {
         setError(data.error || "Failed to fetch qudemos");
-        setQudemos([]);
+        // setQudemos([]);
       }
     } catch (err) {
       setError("Network error. Please try again.");
-      setQudemos([]);
+      // setQudemos([]);
     } finally {
       setLoading(false);
     }
@@ -919,27 +845,6 @@ const Qudemos = () => {
   useEffect(() => {
     fetchQudemos();
   }, [company]);
-
-  // Auto-refresh when videos are processing - DISABLED
-  // Removed automatic refresh to prevent page interruptions
-  // Users can manually refresh if needed
-  /*
-  useEffect(() => {
-    const hasProcessingVideos = qudemos.some(
-      q => q.avatar_generation_status === 'processing' || q.avatar_generation_status === 'pending'
-    );
-    
-    if (hasProcessingVideos) {
-      console.log('🔄 Videos are processing, enabling auto-refresh...');
-      const refreshInterval = setInterval(() => {
-        console.log('🔄 Auto-refreshing QuDemos for progress updates...');
-        fetchQudemos();
-      }, 10000); // Refresh every 10 seconds
-      
-      return () => clearInterval(refreshInterval);
-    }
-  }, [qudemos]);
-  */
 
   // Fetch intro videos for all QuDemos
   useEffect(() => {
@@ -1150,7 +1055,7 @@ const Qudemos = () => {
         {isNoCompanyError ? (
           <button
             onClick={() => navigate("/company-management")}
-            className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90"
+            className="px-4 py-3 bg-primary text-white rounded-lg hover:bg-primary/90"
           >
             Create Company
           </button>
@@ -1218,21 +1123,6 @@ const Qudemos = () => {
             >
               {/* Video Thumbnail */}
               <div className="relative h-48 bg-whiten rounded-t-2xl overflow-hidden">
-                {/* Video Generation Progress Overlay - OVER the image */}
-                {!qudemo.isDemo && 
-                 qudemo.avatar_generation_status && 
-                 (qudemo.avatar_generation_status === 'processing' || qudemo.avatar_generation_status === 'pending') && (
-                  <div className="absolute top-0 left-0 right-0 z-20">
-                    <VideoGenerationProgress
-                      qudemoId={qudemo.id}
-                      status={qudemo.avatar_generation_status}
-                      onComplete={() => {
-                        fetchQudemos();
-                      }}
-                    />
-                  </div>
-                )}
-                
                 {/* Delete Loading Overlay */}
                 {deletingQudemoId === qudemo.id && (
                   <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-10 rounded-t-lg">
@@ -1378,31 +1268,16 @@ const Qudemos = () => {
                           {qudemo.videos[0].duration}
                         </div>
                       )}
-                      </div>
                     </div>
-                  ) : qudemo.presenter_photo_url ? (
-                    // Show presenter photo as preview (full photo, not circular)
-                    <div className="w-full h-full relative overflow-hidden bg-gray-100">
-                      <img
-                        src={qudemo.presenter_photo_url}
-                        alt={qudemo.presenter_name || "Presenter"}
-                        className="w-full h-full object-contain"
-                        style={{ objectPosition: 'center center' }}
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.style.display = 'none';
-                          e.target.parentElement.innerHTML = '<div class="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center"><span class="text-white text-5xl font-bold">' + (qudemo.presenter_name?.charAt(0) || 'Q') + '</span></div>';
-                        }}
-                      />
+                  </div>
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
+                    <div className="text-center">
+                      <VideoCameraIcon className="w-12 h-10 text-bodydark2 mx-auto mb-2" />
+                      <p className="text-gray-500 text-sm">No video</p>
                     </div>
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
-                      <div className="text-center">
-                        <VideoCameraIcon className="w-12 h-10 text-bodydark2 mx-auto mb-2" />
-                        <p className="text-gray-500 text-sm">No preview</p>
-                      </div>
-                    </div>
-                  )}
+                  </div>
+                )}
               </div>
               {/* Card Content */}
               <div className={qudemo.isDemo ? "p-3" : "p-4"}>
@@ -1419,7 +1294,7 @@ const Qudemos = () => {
                         {qudemo.title}
                       </h3>
                       {qudemo.isDemo && (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary whitespace-nowrap">
+                        <span className="inline-flex items-center px-2 py-0.5 my-auto rounded-full text-xs font-medium bg-primary/10 text-primary whitespace-nowrap">
                           Demo
                         </span>
                       )}
@@ -1456,7 +1331,7 @@ const Qudemos = () => {
                               e.stopPropagation();
                               handleDropdownAction("edit", qudemo);
                             }}
-                            className="w-full px-4 py-2 text-left hover:bg-whiter flex items-center space-x-2"
+                            className="w-full px-4 py-3 text-left hover:bg-whiter flex items-center space-x-2"
                           >
                             <PencilIcon className="w-4 h-4" />
                             <span>View</span>
@@ -1481,7 +1356,7 @@ const Qudemos = () => {
                               handleDropdownAction("interactions", qudemo);
                               // }
                             }}
-                            className="w-full px-4 py-2 text-left hover:bg-whiter flex items-center space-x-2 text-bodydark"
+                            className="w-full px-4 py-3 text-left hover:bg-whiter flex items-center space-x-2 text-bodydark"
                           >
                             {/* COMMENTED OUT FOR TESTING - Always show ChartBar icon */}
                             {/* {!isPro ? <LockClosedIcon className="w-4 h-4" /> : <ChartBarIcon className="w-4 h-4" />} */}
@@ -1508,7 +1383,7 @@ const Qudemos = () => {
                               handleDropdownAction("share", qudemo);
                               // }
                             }}
-                            className="w-full px-4 py-2 text-left hover:bg-whiter flex items-center space-x-2 text-bodydark"
+                            className="w-full px-4 py-3 text-left hover:bg-whiter flex items-center space-x-2 text-bodydark"
                           >
                             <ShareIcon className="w-4 h-4" />
                             {/* COMMENTED OUT FOR TESTING - No lock icon shown */}
@@ -1520,19 +1395,19 @@ const Qudemos = () => {
                               e.stopPropagation();
                               handleDropdownAction("generate-widget", qudemo);
                             }}
-                            className="w-full px-4 py-2 text-left hover:bg-whiter flex items-center space-x-2 text-purple-600"
+                            className="w-full px-4 py-3 text-left hover:bg-whiter flex items-center space-x-2 text-purple-600"
                           >
                             <CodeBracketIcon className="w-4 h-4" />
                             <span>Generate Widget</span>
                           </button>
-                          <hr className="my-1" />
+                          <hr className="my-0" />
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               handleDropdownAction("delete", qudemo);
                             }}
                             disabled={deletingQudemoId === qudemo.id}
-                            className={`w-full px-4 py-2 text-left hover:bg-red-50 text-red-600 flex items-center space-x-2 ${
+                            className={`w-full px-4 py-3 text-left hover:bg-red-50 text-red-600 flex items-center space-x-2 ${
                               deletingQudemoId === qudemo.id
                                 ? "opacity-50 cursor-not-allowed"
                                 : ""
@@ -1563,7 +1438,7 @@ const Qudemos = () => {
                         e.stopPropagation();
                         setPreviewingQudemo(qudemo);
                       }}
-                      className="w-full flex items-center justify-center space-x-2 transition-colors duration-200 h-10 px-3 rounded-lg border text-primary hover:text-primary hover:bg-primary/10 border-primary/30"
+                      className="w-full flex items-center justify-center space-x-2 transition-colors duration-200 px-4 py-3 rounded-lg border text-primary hover:text-primary hover:bg-primary/10 border-primary/30"
                     >
                       <PlayIcon className="w-4 h-4" />
                       <span className="text-sm font-medium">
@@ -1576,7 +1451,7 @@ const Qudemos = () => {
                         e.stopPropagation();
                         handleShareQudemo(qudemo);
                       }}
-                      className="w-full flex items-center justify-center space-x-2 transition-colors duration-200 h-10 px-3 rounded-lg border text-green-600 hover:text-green-800 hover:bg-green-50 border-green-200"
+                      className="w-full flex items-center justify-center space-x-2 transition-colors duration-200 px-4 py-3 rounded-lg border text-green-600 hover:text-green-800 hover:bg-green-50 border-green-200"
                     >
                       <ShareIcon className="w-4 h-4" />
                       <span className="text-sm font-medium">Share Qudemo</span>
@@ -1605,7 +1480,7 @@ const Qudemos = () => {
                         handleViewQudemoInteractions(qudemo);
                         // }
                       }}
-                      className="w-full flex items-center justify-center space-x-2 transition-colors duration-200 h-10 px-3 rounded-lg border text-primary hover:text-primary hover:bg-primary/10 border-primary/30"
+                      className="w-full flex items-center justify-center space-x-2 transition-colors duration-200 px-4 py-3 rounded-lg border text-primary hover:text-primary hover:bg-primary/10 border-primary/30"
                     >
                       {/* COMMENTED OUT FOR TESTING - Always show Eye icon */}
                       {/* {!isPro ? <LockClosedIcon className="w-4 h-4" /> : <EyeIcon className="w-4 h-4" />} */}
@@ -3147,7 +3022,7 @@ const Qudemos = () => {
                             </p>
                             <p className="text-lg font-semibold text-graydark text-left">
                               {formatDuration(
-                                selectedInteraction.total_duration || 0,
+                                selectedInteraction.total_duration,
                               )}
                             </p>
                           </div>
@@ -3178,7 +3053,7 @@ const Qudemos = () => {
                               Questions Asked
                             </p>
                             <p className="text-lg font-semibold text-graydark text-left">
-                              {selectedInteraction.questions?.length || 0}
+                              {selectedInteraction.question_count || 0}
                             </p>
                           </div>
                           <div className="flex-shrink-0">
@@ -3468,23 +3343,22 @@ const Qudemos = () => {
                                   dateDisplay =
                                     sessionDate.toLocaleDateString();
                                 }
-                                // Calculate session duration using actual time_spent from database
-                                // Get the maximum time_spent value from all questions in this session
-                                // (since time_spent is cumulative from session start)
-                                const maxTimeSpent = session.questions.reduce((max, q) => {
-                                  const timeSpent = q.time_spent || 0;
-                                  return timeSpent > max ? timeSpent : max;
-                                }, 0);
-                                
-                                // Use actual time_spent if available, otherwise fall back to estimate
-                                const totalSessionTime = maxTimeSpent > 0 
-                                  ? maxTimeSpent 
-                                  : Math.max(
-                                      Math.floor(
-                                        (new Date(session.endTime) - new Date(session.startTime)) / 1000
-                                      ),
-                                      session.questions.length * 30
-                                    );
+                                // Calculate session duration
+                                const sessionDuration = Math.floor(
+                                  (new Date(session.endTime) -
+                                    new Date(session.startTime)) /
+                                    1000,
+                                );
+                                const questionTime =
+                                  session.questions.length * 45;
+                                const demoTime =
+                                  sessionIndex === 0
+                                    ? Math.min(sessionDuration * 0.3, 300)
+                                    : 0;
+                                const totalSessionTime = Math.max(
+                                  sessionDuration + questionTime + demoTime,
+                                  session.questions.length * 30,
+                                );
                                 return (
                                   <tr
                                     key={sessionIndex}
@@ -3788,7 +3662,7 @@ const Qudemos = () => {
                             <td className="pl-6 pr-6 py-4 whitespace-nowrap text-sm font-medium text-right">
                               <button
                                 onClick={() => handleViewDetails(interaction)}
-                                className="inline-flex items-center px-3 py-1 border border-strokedark/20 text-sm font-medium rounded text-black bg-white hover:bg-whiter focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                className="inline-flex items-center px-3 py-1 border border-strokedark/20 text-sm font-medium rounded text-bodydark bg-white hover:bg-whiter focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                               >
                                 View Details
                               </button>

@@ -4,57 +4,57 @@ const InfiniteScroll = ({ right = false }) => {
   // Logo items - you can replace these with your actual logo URLs
   const logos = [
     {
-      name: "Zuna",
+      name: "Opal",
       opacity: 1,
       image: "/zuna.png",
     },
     {
-      name: "Thaklis",
+      name: "Dune",
       opacity: 1,
       image: "/thaklis logo.png",
     },
     {
-      name: "Rateup",
+      name: "Oasis",
       opacity: 1,
       image: "/rateup-logo-blue-text.svg",
     },
     {
-      name: "Katha",
+      name: "Asterisk",
       opacity: 1,
       image: "/katha-logo-ignite.png",
     },
     {
-      name: "Dgymbook",
+      name: "Cooks",
       opacity: 1,
       image: "/dgymbook.png",
     },
     {
-      name: "Zuna",
+      name: "Opal",
       opacity: 1,
       image: "/zuna.png",
     },
     {
-      name: "Thaklis",
+      name: "Dune",
       opacity: 1,
       image: "/thaklis logo.png",
     },
     {
-      name: "Rateup",
+      name: "Oasis",
       opacity: 1,
       image: "/rateup-logo-blue-text.svg",
     },
     {
-      name: "Katha",
+      name: "Asterisk",
       opacity: 1,
       image: "/katha-logo-ignite.png",
     },
     {
-      name: "Dgymbook",
+      name: "Cooks",
       opacity: 1,
       image: "/dgymbook.png",
     },
     {
-      name: "Zuna",
+      name: "Opal",
       opacity: 1,
       image: "/zuna.png",
     },

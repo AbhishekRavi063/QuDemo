@@ -263,7 +263,7 @@ const HomePage = () => {
           </div>
 
           {/* Auth Buttons */}
-          {isLoggedIn ? (
+          {isLoggedIn && (
             <div className="flex items-center gap-2 md:gap-6">
               <div className="flex items-center gap-2 md:gap-4">
                 <div
@@ -295,34 +295,6 @@ const HomePage = () => {
                 </div>
               </div>
             </div>
-          ) : (
-            <div className="flex items-center gap-2 md:gap-4">
-              <div
-                onClick={() => navigate("/login")}
-                className="text-white font-medium px-3 md:px-6 py-2 rounded-[20px] border text-xs md:text-sm hover:shadow-lg transition-all duration-300 cursor-pointer"
-                style={{
-                  background: "rgba(18, 20, 38, 0.6)",
-                  backdropFilter: "blur(16px)",
-                  borderColor: "rgba(138, 165, 255, 0.3)",
-                  boxShadow: "0 4px 24px rgba(41, 52, 255, 0.1)",
-                }}
-              >
-                Login
-              </div>
-              <div
-                onClick={() => navigate("/register")}
-                className="text-white font-medium px-4 md:px-8 py-2 rounded-[20px] border hover:shadow-2xl transition-all duration-300 cursor-pointer text-sm md:text-base"
-                style={{
-                  background: "rgba(41, 52, 255, 0.9)",
-                  backdropFilter: "blur(16px)",
-                  borderColor: "rgba(138, 165, 255, 0.5)",
-                  boxShadow:
-                    "0 8px 32px rgba(41, 52, 255, 0.4), inset 0 2px 4px rgba(138, 165, 255, 0.5)",
-                }}
-              >
-                Sign Up
-              </div>
-            </div>
           )}
         </div>
       </nav>
@@ -332,7 +304,7 @@ const HomePage = () => {
         style={{ overflowX: "clip" }}
       >
         {/* Hero Section */}
-        <FadeInSection delay={0} className="flex flex-col z-[999]">  
+        <FadeInSection delay={0} className="flex flex-col z-[999]">
           <div
             className="flex justify-center flex-col items-center pt-60 px-6 relative"
             style={{
