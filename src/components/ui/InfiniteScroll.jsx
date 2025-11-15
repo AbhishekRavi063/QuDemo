@@ -78,7 +78,7 @@ const InfiniteScroll = ({ right = false }) => {
             "linear-gradient(-90deg, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0.8) 40%, transparent 100%)",
         }}
       />
-      <div className={right ? "carousel-group-right" : "carousel-group"}>
+      <div className={right ? "carousel-group-logos-right" : "carousel-group-logos"}>
         {logos.map((logo, index) => (
           <div
             key={index}
