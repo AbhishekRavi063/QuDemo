@@ -5,58 +5,57 @@ const InfiniteScroll = ({ right = false }) => {
   const logos = [
     {
       name: "Opal",
-      opacity: 0.4,
+      opacity: 1,
       image: "/zuna.png",
     },
     {
       name: "Dune",
-      opacity: 0.4,
+      opacity: 1,
       image: "/thaklis logo.png",
     },
     {
       name: "Oasis",
-      opacity: 0.4,
-      image: "/rateup-logo-blue-text.png",
-    },
-    {
-      name: "Cooks",
-      opacity:0.4,
-      image: "/dgymbook.png",
+      opacity: 1,
+      image: "/rateup-logo-blue-text.svg",
     },
     {
       name: "Asterisk",
-      opacity: 0.4,
+      opacity: 1,
       image: "/katha-logo-ignite.png",
     },
-  
+    {
+      name: "Cooks",
+      opacity: 1,
+      image: "/dgymbook.png",
+    },
     {
       name: "Opal",
-      opacity: 0.4,
+      opacity: 1,
       image: "/zuna.png",
     },
     {
       name: "Dune",
-      opacity: 0.4,
+      opacity: 1,
       image: "/thaklis logo.png",
     },
     {
       name: "Oasis",
-      opacity: 0.4,
-      image: "/rateup-logo-blue-text.png",
+      opacity: 1,
+      image: "/rateup-logo-blue-text.svg",
     },
     {
       name: "Asterisk",
-      opacity: 0.4,
+      opacity: 1,
       image: "/katha-logo-ignite.png",
     },
     {
       name: "Cooks",
-      opacity: 0.4,
+      opacity: 1,
       image: "/dgymbook.png",
     },
     {
       name: "Opal",
-      opacity: 0.4,
+      opacity: 1,
       image: "/zuna.png",
     },
   ];
