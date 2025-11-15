@@ -8,7 +8,7 @@ const PricingCard = ({
   period = "month",
   features,
   isPopular = false,
-  buttonText = "Get Started",
+  buttonText,
   onButtonClick,
   customPrice = false,
   className,
@@ -55,23 +55,25 @@ const PricingCard = ({
         )}
       </div>
 
-      {/* CTA Button - Positioned before features */}
-      <button
-        onClick={onButtonClick}
-        className="w-full py-4 rounded-xl font-semibold text-base transition-all duration-300 mb-8"
-        style={{
-          background: isPopular
-            ? "rgba(67, 56, 202, 1)"
-            : "rgba(30, 58, 138, 1)",
-          boxShadow: isPopular
-            ? "0 8px 24px rgba(67, 56, 202, 0.5)"
-            : "0 4px 16px rgba(30, 58, 138, 0.3)",
-          border: "none",
-          color: "white",
-        }}
-      >
-        {buttonText}
-      </button>
+      {/* CTA Button - Positioned before features - Only show if buttonText or onButtonClick is provided */}
+      {(buttonText || onButtonClick) && (
+        <button
+          onClick={onButtonClick}
+          className="w-full py-4 rounded-xl font-semibold text-base transition-all duration-300 mb-8"
+          style={{
+            background: isPopular
+              ? "rgba(67, 56, 202, 1)"
+              : "rgba(30, 58, 138, 1)",
+            boxShadow: isPopular
+              ? "0 8px 24px rgba(67, 56, 202, 0.5)"
+              : "0 4px 16px rgba(30, 58, 138, 0.3)",
+            border: "none",
+            color: "white",
+          }}
+        >
+          {buttonText}
+        </button>
+      )}
 
       {/* Includes Label */}
       <div className="text-base text-gray-400 font-light mb-4 text-left leading-relaxed">

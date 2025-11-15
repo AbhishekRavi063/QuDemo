@@ -434,14 +434,14 @@ const HomePage = () => {
                 }}
               >
                 <button
-                  onClick={() => navigateToCreate(navigate)}
+                  onClick={() => window.open('https://calendly.com/jazeem-qudemo/30min', '_blank')}
                   className="text-white font-medium text-sm sm:text-base px-6 sm:px-8 py-3 sm:py-3.5 rounded-xl transition-all duration-300 flex items-center justify-center relative overflow-hidden group z-[999]"
                   style={{
                     background: "rgba(59, 130, 246, 1)",
                     boxShadow: "0 8px 32px rgba(59, 130, 246, 0.5)",
                   }}
                 >
-                  <span className="relative z-10">Get Started Now</span>
+                  <span className="relative z-10">Book a Demo</span>
                 </button>
               </div>
 
@@ -1001,8 +1001,6 @@ const HomePage = () => {
                     "Basic engagement insights",
                     "Quick no-code setup",
                   ]}
-                  buttonText="Get Started Now"
-                  onButtonClick={() => navigateToCreate(navigate)}
                 />
 
                 <PricingCard
@@ -1018,8 +1016,6 @@ const HomePage = () => {
                     "Advanced lead insights",
                     "Detailed viewer analytics",
                   ]}
-                  buttonText="Get Started Now"
-                  onButtonClick={() => navigateToCreate(navigate)}
                 />
               </div>
             </div>
@@ -2121,24 +2117,6 @@ const HomePage = () => {
                   <br />
                   qualify leads automatically. Get started in minutes.
                 </p>
-
-                <div
-                  className="flex items-center justify-center mb-10 z-50"
-                  style={{
-                    animation: isMobile ? "none" : "fadeInUp 0.8s ease-out 0.5s both",
-                  }}
-                >
-                  <button
-                    onClick={() => navigateToCreate(navigate)}
-                    className="text-white font-medium text-base px-8 py-3.5 rounded-xl transition-all duration-300 flex items-center justify-center relative overflow-hidden group"
-                    style={{
-                      background: "rgba(59, 130, 246, 1)",
-                      boxShadow: "0 8px 32px rgba(59, 130, 246, 0.5)",
-                    }}
-                  >
-                    <span className="relative z-10">Get Started Now</span>
-                  </button>
-                </div>
               </div>
             </div>
           </div>
@@ -2211,16 +2189,6 @@ const HomePage = () => {
                 >
                   mail@qudemo.com
                 </a>
-                <span className="text-gray-700">|</span>
-                <button
-                  onClick={() => navigateToCreate(navigate)}
-                  className="px-6 py-2 rounded-lg text-white font-medium transition-all duration-200"
-                  style={{
-                    background: "rgba(59, 130, 246, 1)",
-                  }}
-                >
-                  Book a Demo
-                </button>
               </div>
             </div>
           </div>
