@@ -1129,9 +1129,10 @@ const Qudemos = () => {
                     qudemoId={qudemo.id}
                     status={qudemo.avatar_generation_status}
                     createdAt={qudemo.created_at}
-                    onComplete={() => {
-                      fetchQudemos();
-                    }}
+                    // Removed auto-refresh on completion - user can manually refresh if needed
+                    // onComplete={() => {
+                    //   fetchQudemos();
+                    // }}
                   />
                 )}
                 

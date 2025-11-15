@@ -7,6 +7,7 @@ import React, { useState, useEffect } from 'react';
  */
 const VideoGenerationProgress = ({ qudemoId, status, createdAt, onComplete, onProgressUpdate }) => {
   const [timerProgress, setTimerProgress] = useState(0);
+  const [hasCalledComplete, setHasCalledComplete] = useState(false);
 
   const TOTAL_DURATION_MS = 10 * 60 * 1000; // 10 minutes in milliseconds
 
@@ -35,8 +36,9 @@ const VideoGenerationProgress = ({ qudemoId, status, createdAt, onComplete, onPr
           });
         }
         
-        // If 10 minutes passed, mark as completed
-        if (percentage >= 100 && onComplete) {
+        // If 10 minutes passed, mark as completed (only once)
+        if (percentage >= 100 && onComplete && !hasCalledComplete) {
+          setHasCalledComplete(true);
           onComplete();
         }
       }, 100); // Update every 100ms
@@ -45,11 +47,12 @@ const VideoGenerationProgress = ({ qudemoId, status, createdAt, onComplete, onPr
     } else if (status === 'completed') {
       setTimerProgress(100);
     }
-  }, [status, startTime, onProgressUpdate, onComplete]);
+  }, [status, startTime, onProgressUpdate, onComplete, hasCalledComplete]);
 
-  // Reset progress when qudemoId changes
+  // Reset progress and completion flag when qudemoId changes
   useEffect(() => {
     setTimerProgress(0);
+    setHasCalledComplete(false);
   }, [qudemoId]);
 
   // Don't render anything if not started
