@@ -5,57 +5,58 @@ const InfiniteScroll = ({ right = false }) => {
   const logos = [
     {
       name: "Opal",
-      opacity: 1,
+      opacity: 0.4,
       image: "/zuna.png",
     },
     {
       name: "Dune",
-      opacity: 1,
+      opacity: 0.4,
       image: "/thaklis logo.png",
     },
     {
       name: "Oasis",
-      opacity: 1,
+      opacity: 0.4,
       image: "/rateup-logo-blue-text.svg",
     },
     {
-      name: "Asterisk",
-      opacity: 1,
-      image: "/katha-logo-ignite.png",
-    },
-    {
       name: "Cooks",
-      opacity: 1,
+      opacity:0.4,
       image: "/dgymbook.png",
     },
     {
+      name: "Asterisk",
+      opacity: 0.4,
+      image: "/katha-logo-ignite.png",
+    },
+  
+    {
       name: "Opal",
-      opacity: 1,
+      opacity: 0.4,
       image: "/zuna.png",
     },
     {
       name: "Dune",
-      opacity: 1,
+      opacity: 0.4,
       image: "/thaklis logo.png",
     },
     {
       name: "Oasis",
-      opacity: 1,
-      image: "/rateup-logo-blue-text.svg",
+      opacity: 0.4,
+      image: "/rateup-logo-blue-text.png",
     },
     {
       name: "Asterisk",
-      opacity: 1,
+      opacity: 0.4,
       image: "/katha-logo-ignite.png",
     },
     {
       name: "Cooks",
-      opacity: 1,
+      opacity: 0.4,
       image: "/dgymbook.png",
     },
     {
       name: "Opal",
-      opacity: 1,
+      opacity: 0.4,
       image: "/zuna.png",
     },
   ];
@@ -96,11 +97,11 @@ const InfiniteScroll = ({ right = false }) => {
               style={{
                 display: "block",
                 maxHeight: "62px",
-                margin: "auto",
+                margin: "0 auto",
                 width: "auto",
                 borderRadius: "inherit",
                 objectPosition: "center center",
-                objectFit: "cover",
+                objectFit: "contain",
               }}
             />
           </div>
