@@ -1,6 +1,7 @@
 import React from "react";
 import { FaStar } from "react-icons/fa";
 import SpotlightCard from "./SpotlightCard";
+import {  FaStarHalfAlt, FaRegStar } from "react-icons/fa";
 
 const TestimonialCard = ({
   name,
@@ -17,15 +18,23 @@ const TestimonialCard = ({
         "{testimonial}"
       </p>
 
-      <div className="flex gap-1 my-4 mb-8">
-        {[...Array(5)].map((_, index) => (
-          <FaStar
-            key={index}
-            className={index < rating ? "text-yellow-400" : "text-gray-600"}
-            size={16}
-          />
-        ))}
-      </div>
+      <div className="flex items-center gap-1 my-4 mb-8">
+  {[...Array(5)].map((_, index) => {
+    const full = index + 1 <= Math.floor(rating);
+    const half = !full && index < rating;
+
+    return (
+      <span key={index}>
+        {full && <FaStar className="text-yellow-400" size={16} />}
+        {half && <FaStarHalfAlt className="text-yellow-400" size={16} />}
+        {!full && !half && <FaRegStar className="text-gray-600" size={16} />}
+      </span>
+    );
+  })}
+
+  {/* Rating number */}
+  <span className="text-gray-400 text-sm ml-1">{rating}</span>
+</div>
 
       {/* User Info */}
       <div className="flex items-center gap-3 mt-auto text-left mt-[60px]">

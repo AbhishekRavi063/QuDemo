@@ -91,7 +91,7 @@ const HomePage = () => {
     {
       name: "Wayne",
       role: "Sales Operations",
-      company: "TechCorp",
+      company: "",
       rating: 5,
       image:
         "https://framerusercontent.com/images/ETgoVdeITLLIYCHTFNeVuZDMyQY.png?width=1024&height=1024",
@@ -101,7 +101,7 @@ const HomePage = () => {
     {
       name: "Corvin Wucher",
       role: "Marketing Strategy",
-      company: "StartupXYZ",
+      company: "",
       rating: 5,
       image:
         "https://framerusercontent.com/images/QmmaDSjXyuZNNDsZdt23lDVXI.png?width=512&height=512",
@@ -111,8 +111,8 @@ const HomePage = () => {
     {
       name: "Tuba Ismail",
       role: "Sales Manager",
-      company: "CloudSolutions",
-      rating: 5,
+      company: "",
+      rating: 4.8,
       image:
         "https://framerusercontent.com/images/0zuVQ2JmvxEtdnpdOq5FtRJxmNY.png?width=382&height=512",
       testimonial:
@@ -121,7 +121,7 @@ const HomePage = () => {
     {
       name: "Abhilash Sathyan",
       role: "CEO - Rateup",
-      company: "InnovateLabs",
+      company: "",
       rating: 5,
       image:
         "https://framerusercontent.com/images/4EiFhjIPXbRF4y7hS6k9U484AQM.jpg?width=3456&height=4028",
@@ -131,7 +131,7 @@ const HomePage = () => {
     {
       name: "Dilshad",
       role: "CEO - Dgymbook",
-      company: "ScaleUp Inc",
+      company: "",
       rating: 5,
       image:
         "https://framerusercontent.com/images/7qBFv2WmuOwj4qUFS7XUzQSFL4.jpg?width=3265&height=4898",
@@ -141,7 +141,7 @@ const HomePage = () => {
     {
       name: "John Mathew",
       role: "Product Marketing Lead",
-      company: "DevTools Pro",
+      company: "",
       rating: 5,
       image:
         "https://framerusercontent.com/images/tvip64h9JcqV1xA68gzm2QrLSM.png?width=2048&height=2048",
@@ -254,15 +254,17 @@ const HomePage = () => {
             >
               Pricing
             </button>
-            <button
-              onClick={() => scrollToSection("testimonials")}
-              className="hover:text-blue-400 transition-colors duration-200 font-thin"
-            >
-              Contacts
-            </button>
+            <a
+  href="mailto:mail@qudemo.com"
+  className="hover:text-blue-400 transition-colors duration-200 font-thin"
+>
+              Contact Us
+            </a>
           </div>
 
           {/* Auth Buttons */}
+          {/* 
+  // AUTH + DASHBOARD BUTTONS REMOVED FOR NOW
           {isLoggedIn && (
             <div className="flex items-center gap-2 md:gap-6">
               <div className="flex items-center gap-2 md:gap-4">
@@ -296,6 +298,7 @@ const HomePage = () => {
               </div>
             </div>
           )}
+            */}
         </div>
       </nav>
 
@@ -405,9 +408,7 @@ const HomePage = () => {
                   fontWeight: "400",
                 }}
               >
-                Engage with your visitors and qualify your leads in a
-                personalized way that feels like you're always present, all
-                while keeping them engaged on your website.
+                Engage and qualify your SaaS website visitors with an AI interactive video agent that feels like you are always available.
               </p>
 
               {/* CTA Button */}
@@ -1891,10 +1892,9 @@ const HomePage = () => {
                   </div>
                   {openFAQ === 0 && (
                     <div className="px-4 pb-6 text-gray-500 text-sm text-left">
-                      Qudemo is an AI video assistant that makes your demo
-                      videos interactive. Viewers can ask questions, get instant
-                      answers and jump straight to the exact moment in the video
-                      where the answer is shown.
+                    Qudemo is an AI interactive video agent for SaaS websites. It lets visitors ask 
+                    questions and get real-time answers directly from your product videos and documents. 
+                    It feels like having the founder or product expert available 24/7 to explain things in a personal, engaging way.
                     </div>
                   )}
                 </SpotlightCard>
@@ -1923,9 +1923,9 @@ const HomePage = () => {
                   </div>
                   {openFAQ === 1 && (
                     <div className="px-4 pb-6 text-gray-500 text-sm text-left">
-                      Upload your video, generate a Qudemo, and share the link.
-                      Viewers can ask questions in chat, get instant answers,
-                      and jump to the exact video moment.
+                    You upload your product video and connect your docs or help content. Qudemo’s AI learns from them and 
+                    turns your static video into a smart, interactive one where visitors can ask questions and instantly 
+                    get relevant answers—often with short video clips or clear text explanations.
                     </div>
                   )}
                 </SpotlightCard>
@@ -1989,8 +1989,8 @@ const HomePage = () => {
                   </div>
                   {openFAQ === 3 && (
                     <div className="px-4 pb-6 text-gray-500 text-left">
-                      No, just upload your youtube/loom video, Create Qudemo and
-                      Share it anywhere
+                     No, Qudemo is built for non-technical teams. 
+                     You just upload your materials and copy-paste a small embed code on your site—no coding required.
                     </div>
                   )}
                 </SpotlightCard>
@@ -2019,8 +2019,8 @@ const HomePage = () => {
                   </div>
                   {openFAQ === 4 && (
                     <div className="px-4 pb-6 text-gray-500 text-left">
-                      Customers get answers faster and you get more qualified
-                      leads.
+                     Companies using Qudemo see higher engagement on their product pages, more time 
+                     spent on demos, and a noticeable increase in qualified leads booking calls..
                     </div>
                   )}
                 </SpotlightCard>
