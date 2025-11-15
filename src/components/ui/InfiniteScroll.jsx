@@ -16,7 +16,7 @@ const InfiniteScroll = ({ right = false }) => {
     {
       name: "Oasis",
       opacity: 1,
-      image: "/rateup-logo-blue-text.svg",
+      image: "/rateup-logo-blue-text.png",
     },
     {
       name: "Asterisk",
@@ -41,7 +41,7 @@ const InfiniteScroll = ({ right = false }) => {
     {
       name: "Oasis",
       opacity: 1,
-      image: "/rateup-logo-blue-text.svg",
+      image: "/rateup-logo-blue-text.png",
     },
     {
       name: "Asterisk",
