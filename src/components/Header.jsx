@@ -4,7 +4,6 @@ import { useCompany } from "../context/CompanyContext";
 import {
   Bars3Icon,
   UserIcon,
-  DocumentArrowUpIcon,
   ArrowRightOnRectangleIcon,
   Bars3CenterLeftIcon,
 } from "@heroicons/react/24/outline";
@@ -259,16 +258,6 @@ export default function Header({ onMenuClick }) {
                 >
                   <UserIcon className="w-4 h-4" />
                   <span>Profile</span>
-                </button>
-                <button
-                  onClick={() => {
-                    navigate("/bulk-uploads");
-                    setIsProfileDropdownOpen(false);
-                  }}
-                  className="w-full px-4 py-2.5 text-left text-sm text-bodydark hover:bg-whiten hover:text-primary flex items-center gap-2 transition-colors"
-                >
-                  <DocumentArrowUpIcon className="w-4 h-4" />
-                  <span>Bulk Upload</span>
                 </button>
                 <hr className="my-1 border-strokedark/10" />
                 <button

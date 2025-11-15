@@ -35,7 +35,6 @@ import PublicQudemoShare from "./components/PublicQudemoShare";
 import PrivacyPolicy from "./components/PrivacyPolicy";
 import PricingPage from "./components/PricingPage";
 import CustomerInteractionsPage from "./components/CustomerInteractionsPage";
-import BulkUploadsPage from "./components/BulkUploadsPage";
 import VideoChatPage from "./components/VideoChatPage";
 import FloatingWidgetDemo from "./components/FloatingWidgetDemo";
 import FloatingQudemoWidget from "./components/FloatingQudemoWidget";
@@ -417,20 +416,6 @@ function App() {
                       <CompanyCheck>
                         <DashboardLayout>
                           <CustomerInteractionsPage />
-                        </DashboardLayout>
-                      </CompanyCheck>
-                    </ProtectedRoute>
-                  </CompanyProvider>
-                }
-              />
-              <Route
-                path="/bulk-uploads"
-                element={
-                  <CompanyProvider>
-                    <ProtectedRoute>
-                      <CompanyCheck>
-                        <DashboardLayout>
-                          <BulkUploadsPage />
                         </DashboardLayout>
                       </CompanyCheck>
                     </ProtectedRoute>
