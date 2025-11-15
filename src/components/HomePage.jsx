@@ -318,7 +318,7 @@ const HomePage = () => {
         style={{ overflowX: "clip" }}
       >
         {/* Hero Section */}
-        <FadeInSection delay={0} className="flex flex-col z-[999]">
+        <FadeInSection delay={0} className="flex flex-col z-[999]" disableAnimation={isMobile}>
           <div
             className="flex justify-center flex-col items-center pt-32 sm:pt-40 md:pt-48 lg:pt-60 px-4 sm:px-6 md:px-8 relative"
             style={{
@@ -361,7 +361,7 @@ const HomePage = () => {
             )}
             <div className="max-w-5xl text-center relative z-50">
               {/* User Avatars Badge */}
-              <div className="flex justify-center mb-4 sm:mb-6 animate-fadeIn">
+              <div className={`flex justify-center mb-4 sm:mb-6 ${isMobile ? '' : 'animate-fadeIn'}`}>
                 <div className="flex items-center gap-2 sm:gap-3">
                   {/* Avatar Stack */}
                   <div className="flex -space-x-2">
@@ -405,7 +405,7 @@ const HomePage = () => {
               <h1
                 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-medium text-white mb-4 sm:mb-6 leading-tight tracking-tight px-2 sm:px-4"
                 style={{
-                  animation: "fadeInUp 0.8s ease-out 0.2s both",
+                  animation: isMobile ? "none" : "fadeInUp 0.8s ease-out 0.2s both",
                   textShadow: "0 4px 24px rgba(41, 52, 255, 0.3)",
                 }}
               >
@@ -419,7 +419,7 @@ const HomePage = () => {
               <p
                 className="text-sm sm:text-base md:text-lg text-gray-500 my-6 sm:my-8 max-w-2xl mx-auto leading-relaxed font-normal px-4 sm:px-6"
                 style={{
-                  animation: "fadeInUp 0.8s ease-out 0.4s both",
+                  animation: isMobile ? "none" : "fadeInUp 0.8s ease-out 0.4s both",
                   fontWeight: "400",
                 }}
               >
@@ -430,7 +430,7 @@ const HomePage = () => {
               <div
                 className="flex items-center justify-center mb-8 sm:mb-10"
                 style={{
-                  animation: "fadeInUp 0.8s ease-out 0.5s both",
+                  animation: isMobile ? "none" : "fadeInUp 0.8s ease-out 0.5s both",
                 }}
               >
                 <button
@@ -449,7 +449,7 @@ const HomePage = () => {
             </div>
             <div
               style={{
-                animation: "fadeInUp 0.8s ease-out 0.6s both",
+                animation: isMobile ? "none" : "fadeInUp 0.8s ease-out 0.6s both",
               }}
             >
               <InfiniteScroll />
@@ -458,7 +458,7 @@ const HomePage = () => {
         </FadeInSection>
 
         {/* Why Choose Us Section */}
-        <FadeInSection delay={0.1} className="flex flex-col relative">
+        <FadeInSection delay={0.1} className="flex flex-col relative" disableAnimation={isMobile}>
           <div
             className={`w-full h-32 relative overflow-hidden z-50 ${isMobile ? '' : 'bg-black/20'}`}
             style={{
@@ -763,7 +763,7 @@ const HomePage = () => {
               <div
                 className="mt-12 md:mt-0"
                 style={{
-                  animation: "fadeInUp 0.8s ease-out 0.6s both",
+                  animation: isMobile ? "none" : "fadeInUp 0.8s ease-out 0.6s both",
                 }}
               >
                 <InfiniteBadges />
@@ -773,7 +773,7 @@ const HomePage = () => {
         </FadeInSection>
 
         {/* Testimonials Section */}
-        <FadeInSection delay={0.1} className="flex flex-col relative">
+        <FadeInSection delay={0.1} className="flex flex-col relative" disableAnimation={isMobile}>
           <div
             className="absolute top-0 -translate-y-1/2 left-0 right-0 h-px hidden md:block"
             style={{
@@ -887,7 +887,7 @@ const HomePage = () => {
         </FadeInSection>
 
         {/* Pricing Section */}
-        <FadeInSection delay={0.1} className="flex flex-col relative">
+        <FadeInSection delay={0.1} className="flex flex-col relative" disableAnimation={isMobile}>
           {!isMobile && (
             <div className="absolute top-0 left-0 right-0 w-full bottom-0 opacity-[0.2]">
               <LightRays
@@ -1027,7 +1027,7 @@ const HomePage = () => {
         </FadeInSection>
 
         {/* Quote Section */}
-        <FadeInSection delay={0.1} className="flex flex-col !min-h-0 relative">
+        <FadeInSection delay={0.1} className="flex flex-col !min-h-0 relative" disableAnimation={isMobile}>
           <div
             className="absolute top-0 -translate-y-1/2 left-0 right-0 h-px hidden md:block"
             style={{
@@ -1097,7 +1097,7 @@ const HomePage = () => {
         </FadeInSection>
 
         {/* Seamless Integrations Section */}
-        <FadeInSection delay={0.1} className="relative">
+        <FadeInSection delay={0.1} className="relative" disableAnimation={isMobile}>
           {!isMobile && (
             <div className="absolute top-0 left-0 right-0 w-full bottom-0 opacity-[0.2] z-50">
               <LightRays
@@ -1138,8 +1138,8 @@ const HomePage = () => {
               >
                 {/* Center Logo with Wave Animations */}
                 <div className="absolute top-[40%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
-                  {/* Multiple Concentric Wave Circles - 3 waves */}
-                  {[...Array(3)].map((_, i) => (
+                  {/* Multiple Concentric Wave Circles - 3 waves - hidden on mobile */}
+                  {!isMobile && [...Array(3)].map((_, i) => (
                     <div
                       key={i}
                       className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full"
@@ -1268,11 +1268,12 @@ const HomePage = () => {
                   </div>
                 </div>
 
-                {/* Connecting Lines with Animated Line Beams */}
-                <svg
-                  className="absolute inset-0 w-full h-full pointer-events-none"
-                  style={{ zIndex: 1 }}
-                >
+                {/* Connecting Lines with Animated Line Beams - hidden on mobile */}
+                {!isMobile && (
+                  <svg
+                    className="absolute inset-0 w-full h-full pointer-events-none"
+                    style={{ zIndex: 1 }}
+                  >
                   {/* Vertical Line - Top */}
                   <line
                     x1="50%"
@@ -1466,6 +1467,7 @@ const HomePage = () => {
                     />
                   </line>
                 </svg>
+                )}
               </div>
             </div>
 
@@ -1498,7 +1500,7 @@ const HomePage = () => {
         </FadeInSection>
 
         {/* Comparison Section */}
-        <FadeInSection delay={0.1} className="relative">
+        <FadeInSection delay={0.1} className="relative" disableAnimation={isMobile}>
           <div
             className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/2 h-72 relative"
             style={{
@@ -1846,7 +1848,7 @@ const HomePage = () => {
         </FadeInSection>
 
         {/* FAQ Section */}
-        <FadeInSection delay={0.1} className="relative">
+        <FadeInSection delay={0.1} className="relative" disableAnimation={isMobile}>
           <div
             className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/2 h-72 relative"
             style={{
@@ -2064,7 +2066,7 @@ const HomePage = () => {
         </FadeInSection>
 
         {/* Final Call-to-Action Section */}
-        <FadeInSection delay={0.1} className="min-h-[40vh]">
+        <FadeInSection delay={0.1} className="min-h-[40vh]" disableAnimation={isMobile}>
           <div className="px-6 relative min-h-[40vh] flex flex-col justify-center">
             <div
               className="absolute top-0 -translate-y-1/2 left-0 right-0 h-px hidden md:block"
@@ -2123,7 +2125,7 @@ const HomePage = () => {
                 <div
                   className="flex items-center justify-center mb-10 z-50"
                   style={{
-                    animation: "fadeInUp 0.8s ease-out 0.5s both",
+                    animation: isMobile ? "none" : "fadeInUp 0.8s ease-out 0.5s both",
                   }}
                 >
                   <button
