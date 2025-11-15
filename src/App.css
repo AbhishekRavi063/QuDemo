@@ -67,15 +67,32 @@ body {
 .card-spotlight {
   position: relative;
   border-radius: 1.5rem;
-  padding: 2rem;
+  padding: 0.75rem;
   background: linear-gradient(
     180deg,
-    rgba(35, 45, 80, 0.3) 0%,
-    rgba(10, 12, 25, 0.6) 100%
+    rgba(35, 45, 80, 0.5) 0%,
+    rgba(10, 12, 25, 0.8) 100%
   );
-  backdrop-filter: blur(10px);
+  backdrop-filter: none; /* Disabled on mobile for performance */
   --mouse-x: 50%;
   --mouse-y: 50%;
+}
+
+@media (min-width: 640px) {
+  .card-spotlight {
+    padding: 2rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .card-spotlight {
+    background: linear-gradient(
+      180deg,
+      rgba(35, 45, 80, 0.3) 0%,
+      rgba(10, 12, 25, 0.6) 100%
+    );
+    backdrop-filter: blur(10px); /* Enable on desktop */
+  }
 }
 
 /* Glass border overlay - creates the glowing border effect */
@@ -117,10 +134,16 @@ body {
       rgba(71, 85, 165, 0.15),
       transparent 10%
     );
-  filter: blur(20px);
+  filter: none; /* Disabled on mobile for performance */
   pointer-events: none;
   z-index: 0;
   transition: opacity 0.3s ease;
+}
+
+@media (min-width: 768px) {
+  .card-spotlight::after {
+    filter: blur(20px); /* Enable on desktop */
+  }
 }
 
 .card-spotlight:hover::after {
@@ -139,10 +162,44 @@ body {
 
 .carousel-group {
   display: flex;
-  animation: slide-infinite 20s linear infinite; /* Adjust duration */
+  animation: none; /* Disabled on mobile for performance */
+}
+
+@media (min-width: 768px) {
+  .carousel-group {
+    animation: slide-infinite 20s linear infinite; /* Enable on desktop */
+  }
 }
 
 .carousel-group-right {
+  display: flex;
+  animation: none; /* Disabled on mobile for performance */
+}
+
+@media (min-width: 768px) {
+  .carousel-group-right {
+    animation: slide-infinite-right 20s linear infinite; /* Enable on desktop */
+  }
+}
+
+/* Logo carousel - always animate on all devices including mobile */
+.carousel-group-logos {
+  display: flex;
+  animation: slide-infinite 20s linear infinite;
+}
+
+.carousel-group-logos-right {
+  display: flex;
+  animation: slide-infinite-right 20s linear infinite;
+}
+
+/* Badge carousel - always animate on all devices including mobile */
+.carousel-group-badges {
+  display: flex;
+  animation: slide-infinite 20s linear infinite;
+}
+
+.carousel-group-badges-right {
   display: flex;
   animation: slide-infinite-right 20s linear infinite;
 }

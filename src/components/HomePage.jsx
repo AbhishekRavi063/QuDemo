@@ -28,6 +28,7 @@ import SpotlightCard from "./ui/SpotlightCard";
 import InfiniteBadges from "./ui/InfiniteBadges";
 import { Edit2, Eye, Pointer, Upload, User2 } from "lucide-react";
 import RadarScanner from "./ui/RadarScanner";
+import { useIsMobile } from "../hooks/useIsMobile";
 
 const HomePage = () => {
   const [openFAQ, setOpenFAQ] = useState(null);
@@ -35,6 +36,7 @@ const HomePage = () => {
   const [userEmail, setUserEmail] = useState("");
   const [isYearly, setIsYearly] = useState(false);
   const navigate = useNavigate();
+  const isMobile = useIsMobile(); // Detect mobile to disable heavy animations
 
   // Check authentication state on home page load
   useEffect(() => {
@@ -182,65 +184,74 @@ const HomePage = () => {
 
   return (
     <div className="h-full w-full flex flex-col relative bg-black">
-      {/* Radial gradient overlays for depth */}
-      <div
-        className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[800px] opacity-30"
-        style={{
-          background:
-            "radial-gradient(circle at center top, rgba(41, 52, 255, 0.15) 0%, transparent 70%)",
-          filter: "blur(80px)",
-        }}
-      />
-      <div
-        className="absolute top-1/3 left-1/4 w-[600px] h-[600px] opacity-20"
-        style={{
-          background:
-            "radial-gradient(circle, rgba(59, 130, 246, 0.2) 0%, transparent 70%)",
-          filter: "blur(100px)",
-        }}
-      />
-      <div
-        className="absolute top-2/3 right-1/4 w-[600px] h-[600px] opacity-20"
-        style={{
-          background:
-            "radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%)",
-          filter: "blur(100px)",
-        }}
-      />
+      {/* Radial gradient overlays for depth - hidden on mobile */}
+      {!isMobile && (
+        <>
+          <div
+            className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[800px] opacity-30"
+            style={{
+              background:
+                "radial-gradient(circle at center top, rgba(41, 52, 255, 0.15) 0%, transparent 70%)",
+              filter: "blur(80px)",
+            }}
+          />
+          <div
+            className="absolute top-1/3 left-1/4 w-[600px] h-[600px] opacity-20"
+            style={{
+              background:
+                "radial-gradient(circle, rgba(59, 130, 246, 0.2) 0%, transparent 70%)",
+              filter: "blur(100px)",
+            }}
+          />
+          <div
+            className="absolute top-2/3 right-1/4 w-[600px] h-[600px] opacity-20"
+            style={{
+              background:
+                "radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%)",
+              filter: "blur(100px)",
+            }}
+          />
+        </>
+      )}
 
-      {/* Left and Right side darkness gradients - background layer */}
-      <div
-        className="fixed left-0 top-0 bottom-0 w-1/3 pointer-events-none"
-        style={{
-          background:
-            "linear-gradient(90deg, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.5) 50%, transparent 100%)",
-          zIndex: 1,
-        }}
-      />
-      <div
-        className="fixed right-0 top-0 bottom-0 w-1/3 pointer-events-none"
-        style={{
-          background:
-            "linear-gradient(-90deg, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.5) 50%, transparent 100%)",
-          zIndex: 1,
-        }}
-      />
+      {/* Left and Right side darkness gradients - hidden on mobile */}
+      {!isMobile && (
+        <>
+          <div
+            className="fixed left-0 top-0 bottom-0 w-1/3 pointer-events-none"
+            style={{
+              background:
+                "linear-gradient(90deg, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.5) 50%, transparent 100%)",
+              zIndex: 1,
+            }}
+          />
+          <div
+            className="fixed right-0 top-0 bottom-0 w-1/3 pointer-events-none"
+            style={{
+              background:
+                "linear-gradient(-90deg, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.5) 50%, transparent 100%)",
+              zIndex: 1,
+            }}
+          />
+        </>
+      )}
 
       {/* Enhanced Navigation Bar - Outside overflow container */}
       <nav
         className="w-full fixed top-0 z-[999]"
         style={{
-          background:
-            "linear-gradient(180deg, var(--token-6d7bfc0f-867f-43f5-837b-f61a13bf9490, rgb(0, 0, 0)) -50%, rgba(0, 0, 0, 0) 170.00000000000003%)",
-          backdropFilter: "blur(5px)",
+          background: isMobile
+            ? "rgba(0, 0, 0, 0.95)"
+            : "linear-gradient(180deg, var(--token-6d7bfc0f-867f-43f5-837b-f61a13bf9490, rgb(0, 0, 0)) -50%, rgba(0, 0, 0, 0) 170.00000000000003%)",
+          backdropFilter: isMobile ? "none" : "blur(5px)",
         }}
       >
-        <div className="flex justify-between items-center max-w-7xl w-full mx-auto p-4  md:px-6">
+        <div className="flex justify-between items-center max-w-7xl w-full mx-auto p-4 px-4 sm:px-6 md:px-8">
           <div className="flex items-center">
             <img
               src="/Qudemo LP.svg"
               alt="Qudemo Logo"
-              className="cursor-pointer w-auto h-8 scale-[3.5] ml-2.5"
+              className="cursor-pointer w-auto h-6 sm:h-7 md:h-8 scale-[2.5] sm:scale-[3] md:scale-[3.5] ml-1 sm:ml-2 md:ml-2.5"
               height={36}
               onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
             />
@@ -272,8 +283,8 @@ const HomePage = () => {
                   onClick={() => navigate("/profile")}
                   className="text-white font-medium px-3 md:px-6 py-2 rounded-[20px] border text-xs md:text-sm hover:shadow-lg transition-all duration-300 cursor-pointer"
                   style={{
-                    background: "rgba(18, 20, 38, 0.6)",
-                    backdropFilter: "blur(16px)",
+                    background: isMobile ? "rgba(18, 20, 38, 0.95)" : "rgba(18, 20, 38, 0.6)",
+                    backdropFilter: isMobile ? "none" : "blur(16px)",
                     borderColor: "rgba(138, 165, 255, 0.3)",
                     boxShadow: "0 4px 24px rgba(41, 52, 255, 0.1)",
                   }}
@@ -286,7 +297,7 @@ const HomePage = () => {
                   className="text-white font-medium px-4 md:px-8 py-2 rounded-[20px] border hover:shadow-2xl transition-all duration-300 cursor-pointer text-sm md:text-base"
                   style={{
                     background: "rgba(41, 52, 255, 0.9)",
-                    backdropFilter: "blur(16px)",
+                    backdropFilter: isMobile ? "none" : "blur(16px)",
                     borderColor: "rgba(138, 165, 255, 0.5)",
                     boxShadow:
                       "0 8px 32px rgba(41, 52, 255, 0.4), inset 0 2px 4px rgba(138, 165, 255, 0.5)",
@@ -309,15 +320,17 @@ const HomePage = () => {
         {/* Hero Section */}
         <FadeInSection delay={0} className="flex flex-col z-[999]">
           <div
-            className="flex justify-center flex-col items-center pt-60 px-6 relative"
+            className="flex justify-center flex-col items-center pt-32 sm:pt-40 md:pt-48 lg:pt-60 px-4 sm:px-6 md:px-8 relative"
             style={{
               background:
                 "radial-gradient(80% 25% at 50% 7.5%,var(--token-c6d9a740-f8af-44c7-ac7a-31b27a79b7f2,#000e47)0%,var(--token-6d7bfc0f-867f-43f5-837b-f61a13bf9490,#000)100%)",
             }}
           >
-            <div className="absolute top-0 left-0 right-0 w-full h-[100vh] bottom-0 opacity-[0.2] z-50">
-              <SimpleLightRays />
-            </div>
+            {!isMobile && (
+              <div className="absolute top-0 left-0 right-0 w-full h-[100vh] bottom-0 opacity-[0.2] z-50">
+                <SimpleLightRays />
+              </div>
+            )}
             <img
               decoding="auto"
               width="513"
@@ -336,42 +349,44 @@ const HomePage = () => {
                 objectFit: "cover",
               }}
             />
-            {/* Bottom right gradient overlay */}
-            <div
-              className="absolute inset-0 pointer-events-none z-0"
-              style={{
-                background:
-                  "radial-gradient(ellipse at 90% 100%, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.7) 30%, transparent 60%)",
-              }}
-            />
+            {/* Bottom right gradient overlay - hidden on mobile */}
+            {!isMobile && (
+              <div
+                className="absolute inset-0 pointer-events-none z-0"
+                style={{
+                  background:
+                    "radial-gradient(ellipse at 90% 100%, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.7) 30%, transparent 60%)",
+                }}
+              />
+            )}
             <div className="max-w-5xl text-center relative z-50">
               {/* User Avatars Badge */}
-              <div className="flex justify-center mb-4 animate-fadeIn">
-                <div className="flex items-center gap-3">
+              <div className="flex justify-center mb-4 sm:mb-6 animate-fadeIn">
+                <div className="flex items-center gap-2 sm:gap-3">
                   {/* Avatar Stack */}
                   <div className="flex -space-x-2">
-                    <div className="w-7 h-7 rounded-full overflow-hidden bg-gradient-to-br from-purple-500 to-pink-500">
+                    <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full overflow-hidden bg-gradient-to-br from-purple-500 to-pink-500">
                       <img
                         src="https://framerusercontent.com/images/ETgoVdeITLLIYCHTFNeVuZDMyQY.png"
                         alt="User"
                         className="w-full h-full object-cover"
                       />
                     </div>
-                    <div className="w-7 h-7 rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-cyan-500">
+                    <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-cyan-500">
                       <img
                         src="https://framerusercontent.com/images/bnJJiW5Vfixlrz7M2pzoeyHBU.png"
                         alt="User"
                         className="w-full h-full object-cover"
                       />
                     </div>
-                    <div className="w-7 h-7 rounded-full overflow-hidden bg-gradient-to-br from-green-500 to-emerald-500">
+                    <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full overflow-hidden bg-gradient-to-br from-green-500 to-emerald-500">
                       <img
                         src="https://framerusercontent.com/images/rlizSNVuxrrqd6I5hGaSxwqn0Os.png"
                         alt="User"
                         className="w-full h-full object-cover"
                       />
                     </div>
-                    <div className="w-7 h-7 rounded-full overflow-hidden bg-gradient-to-br from-orange-500 to-red-500">
+                    <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full overflow-hidden bg-gradient-to-br from-orange-500 to-red-500">
                       <img
                         src="https://framerusercontent.com/images/X0pqhTmlK8gdYqPbljhuLXlyd0I.png"
                         alt="User"
@@ -380,7 +395,7 @@ const HomePage = () => {
                     </div>
                   </div>
                   {/* Join Text */}
-                  <span className="text-gray-500 text-md font-normal">
+                  <span className="text-gray-500 text-xs sm:text-sm md:text-md font-normal">
                     Join <span className="text-white font-medium">200+</span>{" "}
                     other loving customers
                   </span>
@@ -388,7 +403,7 @@ const HomePage = () => {
               </div>
 
               <h1
-                className="text-2xl md:text-3xl lg:text-7xl font-medium text-white mb-6 leading-tight tracking-tight"
+                className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-medium text-white mb-4 sm:mb-6 leading-tight tracking-tight px-2 sm:px-4"
                 style={{
                   animation: "fadeInUp 0.8s ease-out 0.2s both",
                   textShadow: "0 4px 24px rgba(41, 52, 255, 0.3)",
@@ -402,7 +417,7 @@ const HomePage = () => {
               </h1>
 
               <p
-                className="text-base md:text-lg text-gray-500 my-8 max-w-2xl mx-auto leading-relaxed font-normal"
+                className="text-sm sm:text-base md:text-lg text-gray-500 my-6 sm:my-8 max-w-2xl mx-auto leading-relaxed font-normal px-4 sm:px-6"
                 style={{
                   animation: "fadeInUp 0.8s ease-out 0.4s both",
                   fontWeight: "400",
@@ -413,14 +428,14 @@ const HomePage = () => {
 
               {/* CTA Button */}
               <div
-                className="flex items-center justify-center mb-10"
+                className="flex items-center justify-center mb-8 sm:mb-10"
                 style={{
                   animation: "fadeInUp 0.8s ease-out 0.5s both",
                 }}
               >
                 <button
                   onClick={() => navigateToCreate(navigate)}
-                  className="text-white font-medium text-base px-8 py-3.5 rounded-xl transition-all duration-300 flex items-center justify-center relative overflow-hidden group z-[999]"
+                  className="text-white font-medium text-sm sm:text-base px-6 sm:px-8 py-3 sm:py-3.5 rounded-xl transition-all duration-300 flex items-center justify-center relative overflow-hidden group z-[999]"
                   style={{
                     background: "rgba(59, 130, 246, 1)",
                     boxShadow: "0 8px 32px rgba(59, 130, 246, 0.5)",
@@ -445,21 +460,21 @@ const HomePage = () => {
         {/* Why Choose Us Section */}
         <FadeInSection delay={0.1} className="flex flex-col relative">
           <div
-            className="w-full h-32 relative overflow-hidden z-50 bg-black/20"
+            className={`w-full h-32 relative overflow-hidden z-50 ${isMobile ? '' : 'bg-black/20'}`}
             style={{
-              backdropFilter: "blur(100%)",
+              backdropFilter: isMobile ? "none" : "blur(100%)",
             }}
           >
-            {/* Horizontal glow lines */}
+            {/* Horizontal glow lines - hidden on mobile */}
             <div
-              className="absolute top-0 -translate-y-1/2 left-0 right-0 h-px"
+              className="absolute top-0 -translate-y-1/2 left-0 right-0 h-px hidden md:block"
               style={{
                 background:
                   "linear-gradient(90deg, transparent 0%, rgba(100, 150, 255, 0.2) 20%, rgba(150, 180, 255, 0.3) 50%, rgba(100, 150, 255, 0.2) 80%, transparent 100%)",
               }}
             />
             <div
-              className="absolute bottom-0 -translate-y-1/2 left-0 right-0 h-px"
+              className="absolute bottom-0 -translate-y-1/2 left-0 right-0 h-px hidden md:block"
               style={{
                 background:
                   "linear-gradient(90deg, transparent 0%, rgba(100, 150, 255, 0.2) 20%, rgba(150, 180, 255, 0.3) 50%, rgba(100, 150, 255, 0.2) 80%, transparent 100%)",
@@ -467,69 +482,75 @@ const HomePage = () => {
             />
           </div>
           <div
-            className="px-6 py-40 relative my-auto flex flex-col justify-center overflow-hidden"
+            className="sm:px-6 md:px-8 py-20 sm:py-32 md:py-40 relative my-auto flex flex-col justify-center overflow-x-hidden"
             id="benefits"
           >
-            <div className="absolute top-0 left-0 right-0 w-full h-[100vh] bottom-0 opacity-[0.2] z-50">
-              <LightRays
-                lightSpread={200}
-                rayLength={20}
-                raysColor="8aa5ff"
-                rotationSpeed={0.02}
-                fadeDistance={20}
-                numRays={8}
-                raysSpeed={1.0}
-              />
-            </div>
-            <div className="max-w-7xl mx-auto text-center flex flex-col">
-              <div
-                style={{
-                  width: "100%",
-                  height: "600px",
-                  position: "absolute",
-                  top: "16%",
-                  left: 0,
-                  right: 0,
-                  opacity: 0.6,
-                }}
-              >
-                <RadarScanner
-                  gridColor={[0.3, 0.5, 1.0]}
-                  scanColor={[0, 0, 1.0]}
-                  glowColor={[0, 0.5, 1.0]}
-                  scanSpeed={0.6}
+            {!isMobile && (
+              <div className="absolute top-0 left-0 right-0 w-full h-[100vh] bottom-0 opacity-[0.2] z-50">
+                <LightRays
+                  lightSpread={200}
+                  rayLength={20}
+                  raysColor="8aa5ff"
+                  rotationSpeed={0.02}
+                  fadeDistance={20}
+                  numRays={8}
+                  raysSpeed={1.0}
                 />
               </div>
+            )}
+            <div className="w-full max-w-7xl mx-auto text-center flex flex-col px-4 sm:px-0">
+              {!isMobile && (
+                <div
+                  style={{
+                    width: "100%",
+                    height: "600px",
+                    position: "absolute",
+                    top: "16%",
+                    left: 0,
+                    right: 0,
+                    opacity: 0.6,
+                  }}
+                >
+                  <RadarScanner
+                    gridColor={[0.3, 0.5, 1.0]}
+                    scanColor={[0, 0, 1.0]}
+                    glowColor={[0, 0.5, 1.0]}
+                    scanSpeed={0.6}
+                  />
+                </div>
+              )}
 
-              {/* Bottom glowing light effect - centered spreading mountain */}
-              <div
-                className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full h-32"
-                style={{
-                  background:
-                    "radial-gradient(ellipse 800px 150px at center bottom, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.08) 25%, rgba(255, 255, 255, 0.03) 50%, transparent 70%)",
-                  filter: "blur(40px)",
-                }}
-              />
+              {/* Bottom glowing light effect - hidden on mobile */}
+              {!isMobile && (
+                <div
+                  className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full h-32"
+                  style={{
+                    background:
+                      "radial-gradient(ellipse 800px 150px at center bottom, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.08) 25%, rgba(255, 255, 255, 0.03) 50%, transparent 70%)",
+                    filter: "blur(40px)",
+                  }}
+                />
+              )}
 
               <div className="flex justify-center">
                 <StarBorder
                   color="#2934ff"
-                  className="text-white text-sm font-semibold uppercase tracking-wide"
+                  className="text-white text-xs sm:text-sm font-semibold uppercase tracking-wide"
                 >
                   AI-DRIVEN EFFICIENCY
                 </StarBorder>
               </div>
 
-              <h2 className="text-3xl md:text-5xl font-medium text-white leading-tight mt-8 mb-4">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-medium text-white leading-tight mt-6 sm:mt-8 mb-3 sm:mb-4">
                 Create Qudemo in Minutes
               </h2>
 
-              <p className="text-md text-gray-500 mb-8 max-w-4xl mx-auto">
+              <p className="text-sm sm:text-base md:text-md text-gray-500 mb-8 sm:mb-12 max-w-4xl mx-auto">
                 Three simple steps to launch your AI video agent
               </p>
 
               {/* Benefit Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8 w-full">
                 <SpotlightCard>
                   <div className="relative w-14 h-14 rounded-xl flex items-center justify-center mb-6 bg-black border border-blue-500/30">
                     {/* Corner accent */}
@@ -544,10 +565,10 @@ const HomePage = () => {
                     <Upload className="text-blue-400 text-2xl relative z-10" />
                   </div>
                   <div className="text-left">
-                    <h3 className="text-2xl font-bold text-white mb-3">
+                    <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-white mb-2 sm:mb-3">
                       Upload Content
                     </h3>
-                    <p className="text-gray-300 text-base leading-relaxed">
+                    <p className="text-gray-300 text-sm sm:text-base leading-relaxed">
                       Add your photo and key product knowledge sources. This
                       helps Qudemo learn how you explain your product in your
                       own words.
@@ -569,10 +590,10 @@ const HomePage = () => {
                     <Edit2 className="text-blue-400 text-2xl relative z-10" />
                   </div>
                   <div className="text-left">
-                    <h3 className="text-2xl font-bold text-white mb-3">
+                    <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-white mb-2 sm:mb-3">
                       Generate Video Agent
                     </h3>
-                    <p className="text-gray-300 text-base leading-relaxed">
+                    <p className="text-gray-300 text-sm sm:text-base leading-relaxed">
                       Qudemo creates your AI video agent that talks and answers
                       like you and ready to engage website visitors with
                       real-time responses.
@@ -594,10 +615,10 @@ const HomePage = () => {
                     <FaChartLine className="text-blue-400 text-2xl relative z-10" />
                   </div>
                   <div className="text-left">
-                    <h3 className="text-2xl font-bold text-white mb-3">
+                    <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-white mb-2 sm:mb-3">
                       Add to Website
                     </h3>
-                    <p className="text-gray-300 text-base leading-relaxed">
+                    <p className="text-gray-300 text-sm sm:text-base leading-relaxed">
                       Embed it on your site and start engaging visitors
                       instantly. Your AI video agent becomes the face of your
                       product, available 24/7.
@@ -605,19 +626,19 @@ const HomePage = () => {
                   </div>
                 </SpotlightCard>
               </div>
-              <div className="flex gap-10 text-gray-300 items-center mx-auto">
-                <div className="flex gap-4">
-                  <Pointer className="text-blue-400" />
+              <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 md:gap-10 text-gray-300 items-start sm:items-center mx-auto text-sm sm:text-base px-4">
+                <div className="flex gap-3 sm:gap-4">
+                  <Pointer className="text-blue-400" size={18} />
                   <p>Instant Engagement</p>
                 </div>
-                <div className="w-[2px] h-6 bg-gray-600" />
-                <div className="flex gap-4">
-                  <User2 className="text-blue-400" />
+                <div className="hidden sm:block w-[2px] h-6 bg-gray-600" />
+                <div className="flex gap-3 sm:gap-4">
+                  <User2 className="text-blue-400" size={18} />
                   <p>Qualified Leads</p>
                 </div>
-                <div className="w-[2px] h-6 bg-gray-600" />
-                <div className="flex gap-4">
-                  <Eye className="text-blue-400" />
+                <div className="hidden sm:block w-[2px] h-6 bg-gray-600" />
+                <div className="flex gap-3 sm:gap-4">
+                  <Eye className="text-blue-400" size={18} />
                   <p>Founder Experience</p>
                 </div>
               </div>
@@ -625,46 +646,48 @@ const HomePage = () => {
           </div>
 
           <div
-            className="px-6 py-40 relative overflow-hidden flex flex-col justify-center"
+            className="sm:px-6 md:px-8 py-20 sm:py-32 md:py-40 relative overflow-x-hidden flex flex-col justify-center"
             id="why"
           >
             <div
-              className="absolute top-0 -translate-y-1/2 left-0 right-0 h-px"
+              className="absolute top-0 -translate-y-1/2 left-0 right-0 h-px hidden md:block"
               style={{
                 background:
                   "linear-gradient(90deg, transparent 0%, rgba(100, 150, 255, 0.2) 30%, rgba(150, 180, 255, 0.2) 50%, rgba(100, 150, 255, 0.2) 70%, transparent 100%)",
               }}
             />
-            {/* Bottom glowing light effect - centered spreading mountain */}
-            <div
-              className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full h-32"
-              style={{
-                background:
-                  "radial-gradient(ellipse 800px 150px at center bottom, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.08) 25%, rgba(255, 255, 255, 0.03) 50%, transparent 70%)",
-                filter: "blur(40px)",
-              }}
-            />
-            <div className="max-w-7xl mx-auto text-center flex flex-col">
-              <div className="flex justify-center mb-8">
+            {/* Bottom glowing light effect - hidden on mobile */}
+            {!isMobile && (
+              <div
+                className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full h-32"
+                style={{
+                  background:
+                    "radial-gradient(ellipse 800px 150px at center bottom, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.08) 25%, rgba(255, 255, 255, 0.03) 50%, transparent 70%)",
+                  filter: "blur(40px)",
+                }}
+              />
+            )}
+            <div className="w-full max-w-7xl mx-auto text-center flex flex-col px-4 sm:px-0">
+              <div className="flex justify-center mb-6 sm:mb-8">
                 <StarBorder
                   color="#2934ff"
-                  className="text-white text-sm font-semibold uppercase tracking-wide"
+                  className="text-white text-xs sm:text-sm font-semibold uppercase tracking-wide"
                 >
                   BENEFITS
                 </StarBorder>
               </div>
 
-              <h2 className="text-3xl md:text-5xl font-medium text-white mb-4 leading-tight">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-medium text-white mb-3 sm:mb-4 leading-tight">
                 Why Choose Us?
               </h2>
 
-              <p className="text-md text-gray-500 mb-8 max-w-4xl mx-auto">
+              <p className="text-sm sm:text-base md:text-md text-gray-500 mb-6 sm:mb-8 max-w-4xl mx-auto">
                 Transform passive viewers into engaged prospects with
                 intelligent video interactions
               </p>
 
               {/* Benefit Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8 w-full">
                 <SpotlightCard>
                   <div className="relative w-14 h-14 rounded-xl flex items-center justify-center mb-6 bg-black border border-blue-500/30">
                     {/* Corner accent */}
@@ -679,10 +702,10 @@ const HomePage = () => {
                     <FaClock className="text-blue-400 text-2xl relative z-10" />
                   </div>
                   <div className="text-left">
-                    <h3 className="text-2xl font-bold text-white mb-3">
+                    <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-white mb-2 sm:mb-3">
                       Save Time
                     </h3>
-                    <p className="text-gray-300 text-base leading-relaxed">
+                    <p className="text-gray-300 text-sm sm:text-base leading-relaxed">
                       Let viewers explore your video without watching the full
                       length, getting straight to what matters most to them.
                     </p>
@@ -703,10 +726,10 @@ const HomePage = () => {
                     <FaChartLine className="text-blue-400 text-2xl relative z-10" />
                   </div>
                   <div className="text-left">
-                    <h3 className="text-2xl font-bold text-white mb-3">
+                    <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-white mb-2 sm:mb-3">
                       Increase Engagement
                     </h3>
-                    <p className="text-gray-300 text-base leading-relaxed">
+                    <p className="text-gray-300 text-sm sm:text-base leading-relaxed">
                       Interactive videos keep viewers engaged 5x longer than
                       traditional videos with real-time Q&A capabilities.
                     </p>
@@ -727,10 +750,10 @@ const HomePage = () => {
                     <FaDollarSign className="text-blue-400 text-2xl relative z-10" />
                   </div>
                   <div className="text-left">
-                    <h3 className="text-2xl font-bold text-white mb-3">
+                    <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-white mb-2 sm:mb-3">
                       Better Conversions
                     </h3>
-                    <p className="text-gray-300 text-base leading-relaxed">
+                    <p className="text-gray-300 text-sm sm:text-base leading-relaxed">
                       Convert more prospects by allowing them to get instant
                       answers to their specific questions about your product.
                     </p>
@@ -738,6 +761,7 @@ const HomePage = () => {
                 </SpotlightCard>
               </div>
               <div
+                className="mt-12 md:mt-0"
                 style={{
                   animation: "fadeInUp 0.8s ease-out 0.6s both",
                 }}
@@ -751,7 +775,7 @@ const HomePage = () => {
         {/* Testimonials Section */}
         <FadeInSection delay={0.1} className="flex flex-col relative">
           <div
-            className="absolute top-0 -translate-y-1/2 left-0 right-0 h-px"
+            className="absolute top-0 -translate-y-1/2 left-0 right-0 h-px hidden md:block"
             style={{
               background:
                 "radial-gradient(63.671876482476385% 63.671876482476385% at 50.000000948784894% 50.000000948784894%, var(--token-6da9d50d-e927-4dcf-93ed-bf3b8039528b, rgb(138, 165, 255)) 0%, var(--token-6d7bfc0f-867f-43f5-837b-f61a13bf9490, rgb(0, 0, 0)) 100%)",
@@ -759,7 +783,7 @@ const HomePage = () => {
             }}
           />
           <div
-            className="absolute bottom-0 -translate-y-1/2 left-0 right-0 h-px"
+            className="absolute bottom-0 -translate-y-1/2 left-0 right-0 h-px hidden md:block"
             style={{
               background:
                 "radial-gradient(63.671876482476385% 63.671876482476385% at 50.000000948784894% 50.000000948784894%, var(--token-6da9d50d-e927-4dcf-93ed-bf3b8039528b, rgb(138, 165, 255)) 0%, var(--token-6d7bfc0f-867f-43f5-837b-f61a13bf9490, rgb(0, 0, 0)) 100%)",
@@ -767,51 +791,55 @@ const HomePage = () => {
             }}
           />
           <div
-            className="px-6 py-40 flex flex-col my-auto justify-center overflow-hidden"
+            className="px-4 sm:px-6 md:px-8 py-20 sm:py-32 md:py-40 flex flex-col my-auto justify-center overflow-hidden"
             id="testimonials"
             style={{
-              background: "rgba(0, 0, 0, 0.6)",
+              background: isMobile ? "transparent" : "rgba(0, 0, 0, 0.6)",
             }}
           >
-            {/* Dark overlay */}
-            <div
-              className="absolute inset-0 -z-10"
-              style={{
-                background:
-                  "linear-gradient(180deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.9) 100%)",
-              }}
-            />
+            {/* Dark overlay - hidden on mobile */}
+            {!isMobile && (
+              <div
+                className="absolute inset-0 -z-10"
+                style={{
+                  background:
+                    "linear-gradient(180deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.9) 100%)",
+                }}
+              />
+            )}
 
-            {/* Bottom glowing light effect - centered spreading mountain */}
-            <div
-              className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full h-32"
-              style={{
-                background:
-                  "radial-gradient(ellipse 800px 150px at center bottom, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.08) 25%, rgba(255, 255, 255, 0.03) 50%, transparent 70%)",
-                filter: "blur(40px)",
-              }}
-            />
+            {/* Bottom glowing light effect - hidden on mobile */}
+            {!isMobile && (
+              <div
+                className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full h-32"
+                style={{
+                  background:
+                    "radial-gradient(ellipse 800px 150px at center bottom, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.08) 25%, rgba(255, 255, 255, 0.03) 50%, transparent 70%)",
+                  filter: "blur(40px)",
+                }}
+              />
+            )}
             <div className="max-w-7xl mx-auto text-center flex flex-col">
-              <div className="flex justify-center mb-8">
+              <div className="flex justify-center mb-6 sm:mb-8 px-4">
                 <StarBorder
                   color="#2934ff"
-                  className="text-white text-sm font-semibold uppercase tracking-wide"
+                  className="text-white text-xs sm:text-sm font-semibold uppercase tracking-wide"
                 >
                   TESTIMONIALS
                 </StarBorder>
               </div>
 
-              <h2 className="text-3xl md:text-5xl font-medium text-white mb-6 leading-tight">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-medium text-white mb-4 sm:mb-6 leading-tight px-4">
                 Loved by thinkers
               </h2>
 
-              <p className="text-md text-gray-500 mb-8 max-w-4xl mx-auto">
+              <p className="text-sm sm:text-base md:text-md text-gray-500 mb-6 sm:mb-8 max-w-4xl mx-auto px-4">
                 Real testimonials from people who have transformed their demos
                 with Qudemo
               </p>
 
               {/* Testimonials Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 px-2 sm:px-4">
                 {testimonials.map((testimonial, index) => (
                   <TestimonialCard key={index} {...testimonial} />
                 ))}
@@ -860,19 +888,21 @@ const HomePage = () => {
 
         {/* Pricing Section */}
         <FadeInSection delay={0.1} className="flex flex-col relative">
-          <div className="absolute top-0 left-0 right-0 w-full bottom-0 opacity-[0.2]">
-            <LightRays
-              lightSpread={200}
-              rayLength={20}
-              raysColor="8aa5ff"
-              rotationSpeed={0.02}
-              fadeDistance={20}
-              numRays={8}
-              raysSpeed={1.0}
-            />
-          </div>
+          {!isMobile && (
+            <div className="absolute top-0 left-0 right-0 w-full bottom-0 opacity-[0.2]">
+              <LightRays
+                lightSpread={200}
+                rayLength={20}
+                raysColor="8aa5ff"
+                rotationSpeed={0.02}
+                fadeDistance={20}
+                numRays={8}
+                raysSpeed={1.0}
+              />
+            </div>
+          )}
           <div
-            className="px-6 w-full py-40 flex flex-col my-auto justify-center overflow-hidden"
+            className="px-4 sm:px-6 md:px-8 w-full py-20 sm:py-32 md:py-40 flex flex-col my-auto justify-center overflow-hidden"
             id="pricing"
           >
             <div
@@ -885,28 +915,28 @@ const HomePage = () => {
               }}
             />
             <div className="max-w-7xl mx-auto w-full text-center">
-              <div className="flex justify-center mb-8">
+              <div className="flex justify-center mb-6 sm:mb-8 px-4">
                 <StarBorder
                   color="#2934ff"
-                  className="text-white text-sm font-semibold uppercase tracking-wide"
+                  className="text-white text-xs sm:text-sm font-semibold uppercase tracking-wide"
                 >
                   PRICING
                 </StarBorder>
               </div>
 
-              <h2 className="text-3xl md:text-5xl font-medium text-white mb-4 leading-tight">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-medium text-white mb-3 sm:mb-4 leading-tight px-4">
                 Flexible Pricing Plans
               </h2>
 
-              <p className="text-md text-gray-500 mb-8 max-w-4xl mx-auto">
+              <p className="text-sm sm:text-base md:text-md text-gray-500 mb-6 sm:mb-8 max-w-4xl mx-auto px-4">
                 Choose a plan that fits your business needs and unlock the full
                 potential of our platform
               </p>
 
               {/* Pricing Toggle - Monthly/Yearly */}
-              <div className="flex items-center justify-center mb-12">
+              <div className="flex flex-col sm:flex-row items-center justify-center mb-8 sm:mb-12 gap-3 sm:gap-0 px-4">
                 <div
-                  className="inline-flex items-center gap-0 p-1.5 px-10 rounded-full relative"
+                  className="inline-flex items-center gap-0 p-1.5 px-4 sm:px-10 rounded-full relative"
                   style={{
                     background: "rgba(20, 25, 55, 0.8)",
                     border: "1px solid rgba(71, 85, 165, 0.3)",
@@ -914,7 +944,7 @@ const HomePage = () => {
                 >
                   <button
                     onClick={() => setIsYearly(false)}
-                    className={`px-8 py-3 font-medium rounded-full transition-all duration-300 text-base relative z-10 ${
+                    className={`px-4 sm:px-8 py-2 sm:py-3 font-medium rounded-full transition-all duration-300 text-sm sm:text-base relative z-10 ${
                       !isYearly
                         ? "text-white"
                         : "text-gray-500 hover:text-gray-300"
@@ -923,11 +953,11 @@ const HomePage = () => {
                     Monthly
                   </button>
 
-                  <div className="w-px h-8 bg-gray-600 opacity-30 relative z-10"></div>
+                  <div className="w-px h-6 sm:h-8 bg-gray-600 opacity-30 relative z-10"></div>
 
                   <button
                     onClick={() => setIsYearly(true)}
-                    className={`px-8 py-3 font-medium rounded-full transition-all duration-300 text-base relative z-10 ${
+                    className={`px-4 sm:px-8 py-2 sm:py-3 font-medium rounded-full transition-all duration-300 text-sm sm:text-base relative z-10 ${
                       isYearly
                         ? "text-white"
                         : "text-gray-500 hover:text-gray-300"
@@ -937,7 +967,7 @@ const HomePage = () => {
                   </button>
 
                   <span
-                    className="ml-2 px-4 py-2 text-sm font-semibold text-white rounded-full relative z-10"
+                    className="ml-2 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-white rounded-full relative z-10"
                     style={{
                       background: "rgba(59, 130, 246, 0.9)",
                     }}
@@ -959,7 +989,7 @@ const HomePage = () => {
               </div>
 
               {/* Pricing Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 max-w-5xl mx-auto z-50">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 sm:gap-6 max-w-5xl mx-auto z-50 px-2 sm:px-4">
                 <PricingCard
                   title="Starter"
                   price={isYearly ? "167" : "200"}
@@ -999,7 +1029,7 @@ const HomePage = () => {
         {/* Quote Section */}
         <FadeInSection delay={0.1} className="flex flex-col !min-h-0 relative">
           <div
-            className="absolute top-0 -translate-y-1/2 left-0 right-0 h-px"
+            className="absolute top-0 -translate-y-1/2 left-0 right-0 h-px hidden md:block"
             style={{
               background:
                 "radial-gradient(63.671876482476385% 63.671876482476385% at 50.000000948784894% 50.000000948784894%, var(--token-6da9d50d-e927-4dcf-93ed-bf3b8039528b, rgb(138, 165, 255)) 0%, var(--token-6d7bfc0f-867f-43f5-837b-f61a13bf9490, rgb(0, 0, 0)) 100%)",
@@ -1007,7 +1037,7 @@ const HomePage = () => {
             }}
           />
           <div
-            className="absolute bottom-0 -translate-y-1/2 left-0 right-0 h-px"
+            className="absolute bottom-0 -translate-y-1/2 left-0 right-0 h-px hidden md:block"
             style={{
               background:
                 "radial-gradient(63.671876482476385% 63.671876482476385% at 50.000000948784894% 50.000000948784894%, var(--token-6da9d50d-e927-4dcf-93ed-bf3b8039528b, rgb(138, 165, 255)) 0%, var(--token-6d7bfc0f-867f-43f5-837b-f61a13bf9490, rgb(0, 0, 0)) 100%)",
@@ -1068,17 +1098,19 @@ const HomePage = () => {
 
         {/* Seamless Integrations Section */}
         <FadeInSection delay={0.1} className="relative">
-          <div className="absolute top-0 left-0 right-0 w-full bottom-0 opacity-[0.2] z-50">
-            <LightRays
-              lightSpread={200}
-              rayLength={20}
-              raysColor="8aa5ff"
-              rotationSpeed={0.02}
-              fadeDistance={20}
-              numRays={8}
-              raysSpeed={1.0}
-            />
-          </div>
+          {!isMobile && (
+            <div className="absolute top-0 left-0 right-0 w-full bottom-0 opacity-[0.2] z-50">
+              <LightRays
+                lightSpread={200}
+                rayLength={20}
+                raysColor="8aa5ff"
+                rotationSpeed={0.02}
+                fadeDistance={20}
+                numRays={8}
+                raysSpeed={1.0}
+              />
+            </div>
+          )}
           <div className="px-6 relative pt-40 -mb-36 flex items-center justify-center overflow-hidden">
             <div className="max-w-7xl mx-auto text-center relative w-full">
               {/* Badge */}
@@ -1146,8 +1178,8 @@ const HomePage = () => {
                     <SpotlightCard
                       className="w-20 h-20 rounded-xl flex items-center justify-center m-auto"
                       style={{
-                        background: "rgba(18, 20, 38, 0.8)",
-                        backdropFilter: "blur(16px)",
+                        background: isMobile ? "rgba(18, 20, 38, 0.95)" : "rgba(18, 20, 38, 0.8)",
+                        backdropFilter: isMobile ? "none" : "blur(16px)",
                         border: "1px solid rgba(138, 165, 255, 0.3)",
                         boxShadow: "0 8px 32px rgba(41, 52, 255, 0.3)",
                       }}
@@ -1171,8 +1203,8 @@ const HomePage = () => {
                     <SpotlightCard
                       className="w-20 h-20 rounded-xl flex items-center justify-center m-auto"
                       style={{
-                        background: "rgba(18, 20, 38, 0.8)",
-                        backdropFilter: "blur(16px)",
+                        background: isMobile ? "rgba(18, 20, 38, 0.95)" : "rgba(18, 20, 38, 0.8)",
+                        backdropFilter: isMobile ? "none" : "blur(16px)",
                         border: "1px solid rgba(138, 165, 255, 0.3)",
                         boxShadow: "0 8px 32px rgba(41, 52, 255, 0.3)",
                       }}
@@ -1190,8 +1222,8 @@ const HomePage = () => {
                     <SpotlightCard
                       className="w-20 h-20 rounded-xl flex items-center justify-center m-auto"
                       style={{
-                        background: "rgba(18, 20, 38, 0.8)",
-                        backdropFilter: "blur(16px)",
+                        background: isMobile ? "rgba(18, 20, 38, 0.95)" : "rgba(18, 20, 38, 0.8)",
+                        backdropFilter: isMobile ? "none" : "blur(16px)",
                         border: "1px solid rgba(138, 165, 255, 0.3)",
                         boxShadow: "0 8px 32px rgba(41, 52, 255, 0.3)",
                       }}
@@ -1215,8 +1247,8 @@ const HomePage = () => {
                     <SpotlightCard
                       className="w-20 h-20 rounded-xl flex items-center justify-center m-auto"
                       style={{
-                        background: "rgba(18, 20, 38, 0.8)",
-                        backdropFilter: "blur(16px)",
+                        background: isMobile ? "rgba(18, 20, 38, 0.95)" : "rgba(18, 20, 38, 0.8)",
+                        backdropFilter: isMobile ? "none" : "blur(16px)",
                         border: "1px solid rgba(138, 165, 255, 0.3)",
                         boxShadow: "0 8px 32px rgba(41, 52, 255, 0.3)",
                       }}
@@ -1477,7 +1509,7 @@ const HomePage = () => {
             }}
           >
             <div
-              className="absolute top-1/2 bottom-0 -translate-y-1/2 left-0 right-0 h-px"
+              className="absolute top-1/2 bottom-0 -translate-y-1/2 left-0 right-0 h-px hidden md:block"
               style={{
                 background:
                   "radial-gradient(63.671876482476385% 63.671876482476385% at 50.000000948784894% 50.000000948784894%, var(--token-6da9d50d-e927-4dcf-93ed-bf3b8039528b, rgb(138, 165, 255)) 0%, var(--token-6d7bfc0f-867f-43f5-837b-f61a13bf9490, rgb(0, 0, 0)) 100%)",
@@ -1489,7 +1521,7 @@ const HomePage = () => {
             className="px-6 flex flex-col justify-center overflow-hidden"
             id="comparison"
             style={{
-              background: "rgba(0, 0, 0, 0.7)",
+              background: isMobile ? "transparent" : "rgba(0, 0, 0, 0.7)",
             }}
           >
             <div className="max-w-7xl mx-auto text-center">
@@ -1825,7 +1857,7 @@ const HomePage = () => {
             }}
           >
             <div
-              className="absolute top-1/2 bottom-0 -translate-y-1/2 left-0 right-0 h-px"
+              className="absolute top-1/2 bottom-0 -translate-y-1/2 left-0 right-0 h-px hidden md:block"
               style={{
                 background:
                   "radial-gradient(63.671876482476385% 63.671876482476385% at 50.000000948784894% 50.000000948784894%, var(--token-6da9d50d-e927-4dcf-93ed-bf3b8039528b, rgb(138, 165, 255)) 0%, var(--token-6d7bfc0f-867f-43f5-837b-f61a13bf9490, rgb(0, 0, 0)) 100%)",
@@ -1834,40 +1866,42 @@ const HomePage = () => {
             />
           </div>
           <div
-            className="px-6 pb-40 overflow-hidden"
+            className="px-4 sm:px-6 md:px-8 pb-20 sm:pb-32 md:pb-40 overflow-hidden"
             id="faq"
             style={{
-              background: "rgba(0, 0, 0, 0.7)",
+              background: isMobile ? "transparent" : "rgba(0, 0, 0, 0.7)",
             }}
           >
-            {/* Dark overlay */}
-            <div
-              className="absolute inset-0 -z-10"
-              style={{
-                background:
-                  "linear-gradient(180deg, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.95) 100%)",
-              }}
-            />
+            {/* Dark overlay - hidden on mobile */}
+            {!isMobile && (
+              <div
+                className="absolute inset-0 -z-10"
+                style={{
+                  background:
+                    "linear-gradient(180deg, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.95) 100%)",
+                }}
+              />
+            )}
             <div className="max-w-4xl mx-auto text-center">
-              <div className="flex justify-center mb-8">
+              <div className="flex justify-center mb-6 sm:mb-8 px-4">
                 <StarBorder
                   color="#2934ff"
-                  className="text-blue-100 text-sm font-medium"
+                  className="text-blue-100 text-xs sm:text-sm font-medium"
                 >
                   FAQ'S SECTION
                 </StarBorder>
               </div>
 
-              <h2 className="text-3xl md:text-5xl font-mediumum text-white">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-mediumum text-white px-4">
                 Some Common FAQ's
               </h2>
 
-              <p className="text-base font-light text-gray-500 my-4 mb-10">
+              <p className="text-sm sm:text-base font-light text-gray-500 my-3 sm:my-4 mb-8 sm:mb-10 px-4">
                 Everything you need to know about getting started with Qudemo
               </p>
 
               {/* FAQ Items */}
-              <div className="max-w-2xl mx-auto space-y-4">
+              <div className="max-w-2xl mx-auto space-y-3 sm:space-y-4 px-2 sm:px-4">
                 <SpotlightCard className="!p-0 !rounded-xl">
                   <div
                     className="flex justify-between items-center cursor-pointer p-4"
@@ -2033,33 +2067,38 @@ const HomePage = () => {
         <FadeInSection delay={0.1} className="min-h-[40vh]">
           <div className="px-6 relative min-h-[40vh] flex flex-col justify-center">
             <div
-              className="absolute top-0 -translate-y-1/2 left-0 right-0 h-px"
+              className="absolute top-0 -translate-y-1/2 left-0 right-0 h-px hidden md:block"
               style={{
                 background:
                   "radial-gradient(63.671876482476385% 63.671876482476385% at 50.000000948784894% 50.000000948784894%, var(--token-6da9d50d-e927-4dcf-93ed-bf3b8039528b, rgb(138, 165, 255)) 0%, var(--token-6d7bfc0f-867f-43f5-837b-f61a13bf9490, rgb(0, 0, 0)) 100%)",
                 opacity: 0.14,
               }}
             />
-            <div className="absolute top-0 left-0 right-0 w-full bottom-0 opacity-[0.2] z-50">
-              <LightRays
-                lightSpread={200}
-                rayLength={20}
-                raysColor="8aa5ff"
-                rotationSpeed={0.02}
-                fadeDistance={20}
-                numRays={8}
-                raysSpeed={1.0}
-              />
-            </div>
+            {!isMobile && (
+              <div className="absolute top-0 left-0 right-0 w-full bottom-0 opacity-[0.2] z-50">
+                <LightRays
+                  lightSpread={200}
+                  rayLength={20}
+                  raysColor="8aa5ff"
+                  rotationSpeed={0.02}
+                  fadeDistance={20}
+                  numRays={8}
+                  raysSpeed={1.0}
+                />
+              </div>
+            )}
             <div className="max-w-4xl mx-auto text-center relative">
-              <div
-                className="absolute inset-0 rounded-3xl"
-                style={{
-                  background:
-                    "radial-gradient(circle, rgba(41, 52, 255, 0.3) 0%, transparent 70%)",
-                  filter: "blur(60px)",
-                }}
-              />
+              {/* Radial gradient glow - hidden on mobile */}
+              {!isMobile && (
+                <div
+                  className="absolute inset-0 rounded-3xl"
+                  style={{
+                    background:
+                      "radial-gradient(circle, rgba(41, 52, 255, 0.3) 0%, transparent 70%)",
+                    filter: "blur(60px)",
+                  }}
+                />
+              )}
 
               <div className="relative z-50">
                 <div className="flex justify-center mb-8">
@@ -2111,7 +2150,7 @@ const HomePage = () => {
           }}
         >
           <div
-            className="absolute top-0 -translate-y-1/2 left-0 right-0 h-px"
+            className="absolute top-0 -translate-y-1/2 left-0 right-0 h-px hidden md:block"
             style={{
               background:
                 "radial-gradient(63.671876482476385% 63.671876482476385% at 50.000000948784894% 50.000000948784894%, var(--token-6da9d50d-e927-4dcf-93ed-bf3b8039528b, rgb(138, 165, 255)) 0%, var(--token-6d7bfc0f-867f-43f5-837b-f61a13bf9490, rgb(0, 0, 0)) 100%)",
@@ -2183,7 +2222,7 @@ const HomePage = () => {
               </div>
             </div>
           </div>
-          <footer className="py-8 px-6 relative">
+          <footer className="py-6 sm:py-8 px-4 sm:px-6 md:px-8 relative">
             <div
               className="absolute top-0 -translate-y-1/2 left-0 right-0 h-px"
               style={{
@@ -2193,14 +2232,14 @@ const HomePage = () => {
               }}
             />
             <div className="max-w-7xl mx-auto">
-              <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+              <div className="flex flex-col md:flex-row justify-between items-center gap-4 sm:gap-6">
                 {/* Copyright */}
-                <div className="text-gray-500 text-sm">
+                <div className="text-gray-500 text-xs sm:text-sm text-center md:text-left">
                   © {new Date().getFullYear()} Qudemo. All rights reserved.
                 </div>
 
                 {/* Social Media Icons */}
-                <div className="flex gap-4 items-center">
+                <div className="flex gap-3 sm:gap-4 items-center">
                   <a
                     href="https://twitter.com/qudemo"
                     target="_blank"
@@ -2209,7 +2248,7 @@ const HomePage = () => {
                     aria-label="Twitter"
                   >
                     <svg
-                      className="w-5 h-5"
+                      className="w-4 h-4 sm:w-5 sm:h-5"
                       fill="currentColor"
                       viewBox="0 0 24 24"
                     >
@@ -2224,7 +2263,7 @@ const HomePage = () => {
                     aria-label="Facebook"
                   >
                     <svg
-                      className="w-5 h-5"
+                      className="w-4 h-4 sm:w-5 sm:h-5"
                       fill="currentColor"
                       viewBox="0 0 24 24"
                     >
@@ -2239,7 +2278,7 @@ const HomePage = () => {
                     aria-label="Instagram"
                   >
                     <svg
-                      className="w-5 h-5"
+                      className="w-4 h-4 sm:w-5 sm:h-5"
                       fill="currentColor"
                       viewBox="0 0 24 24"
                     >
@@ -2249,7 +2288,7 @@ const HomePage = () => {
                 </div>
 
                 {/* Links */}
-                <div className="flex gap-6 text-sm">
+                <div className="flex flex-wrap justify-center gap-3 sm:gap-6 text-xs sm:text-sm">
                   <a
                     href="/privacy"
                     className="text-gray-500 hover:text-white transition-colors"

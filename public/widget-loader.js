@@ -1,6 +1,6 @@
 /**
  * Qudemo Widget Loader
- * This script dynamically loads a Qudemo widget as an iframe on any website
+ * Dynamically loads a Qudemo widget as an iframe on any website
  */
 
 (function() {
@@ -26,20 +26,11 @@
     return;
   }
 
-  // Get the base URL from the script src
+  // Get base URL from script src
   const scriptSrc = currentScript.src;
   const baseUrl = scriptSrc.substring(0, scriptSrc.lastIndexOf('/'));
 
-  // Size configurations
-  const sizeConfig = {
-    small: { width: '300px', height: '500px' },
-    medium: { width: '350px', height: '600px' },
-    large: { width: '400px', height: '650px' }
-  };
-
-  const widgetSize = sizeConfig[size] || sizeConfig.medium;
-
-  // Create widget container - starts as collapsed circular widget
+  // Create widget container
   const widgetContainer = document.createElement('div');
   widgetContainer.id = `qudemo-widget-container-${qudemoId}`;
   widgetContainer.style.cssText = `
@@ -54,10 +45,9 @@
     pointer-events: none;
   `;
 
-  // Create iframe - full viewport to allow widget to position itself
-  const iframe = document.createElement('iframe');
+  // Create iframe
   const embedUrl = `${baseUrl}/widget-embed/${qudemoId}?theme=${theme}&position=${position}&size=${size}&company=${encodeURIComponent(companyName)}`;
-  
+  const iframe = document.createElement('iframe');
   iframe.src = embedUrl;
   iframe.style.cssText = `
     width: 100%;
@@ -69,45 +59,27 @@
   iframe.allow = 'microphone';
   iframe.title = 'Qudemo Widget';
 
-  // Add iframe to container
   widgetContainer.appendChild(iframe);
 
-  // Add container to page when DOM is ready
-  function init() {
-    if (document.body) {
-      document.body.appendChild(widgetContainer);
-      console.log('Qudemo Widget: Loaded successfully');
-    } else {
-      setTimeout(init, 100);
-    }
-  }
+  // Initialize widget when DOM is ready
+  const init = () => {
+    document.body.appendChild(widgetContainer);
+    console.log('Qudemo Widget: Loaded successfully');
+  };
 
-  // Initialize when DOM is ready
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
   } else {
     init();
   }
 
-  // No resize handling needed - widget manages its own responsive behavior
-
   // Expose API for programmatic control
   window.QudemoWidget = window.QudemoWidget || {};
   window.QudemoWidget[qudemoId] = {
-    show: function() {
-      widgetContainer.style.display = 'block';
-    },
-    hide: function() {
-      widgetContainer.style.display = 'none';
-    },
-    toggle: function() {
-      widgetContainer.style.display = widgetContainer.style.display === 'none' ? 'block' : 'none';
-    },
-    destroy: function() {
-      if (widgetContainer && widgetContainer.parentNode) {
-        widgetContainer.parentNode.removeChild(widgetContainer);
-      }
-    }
+    show: () => widgetContainer.style.display = 'block',
+    hide: () => widgetContainer.style.display = 'none',
+    toggle: () => widgetContainer.style.display = widgetContainer.style.display === 'none' ? 'block' : 'none',
+    destroy: () => widgetContainer.remove()
   };
 
 })();
