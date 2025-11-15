@@ -159,7 +159,7 @@ const FloatingQudemoWidget = ({
         currentIsPlaying: isPlaying
       });
       setIsPlaying(true);
-      setIsMuted(true); // Ensure muted for autoplay
+      // Don't force mute here - let handleExpand control the mute state
     }
   }, [videoFlow, isExpanded, loading]);
 
@@ -2113,12 +2113,21 @@ const FloatingQudemoWidget = ({
     setIsExpanded(true);
     setIsMinimized(false);
     
-    // Unmute the video when widget is expanded
+    // Reset to intro video and start playing UNMUTED
+    setCurrentVideoIndex(0);
+    setCurrentTimestamp(0);
+    setIsMuted(false); // Start UNMUTED for reopening
+    setIsPlaying(true); // Ensure autoplay
+    
+    // Force video player to re-render with new unmuted state
+    setVideoRefreshKey(prev => prev + 1);
+    
+    // Double-check unmute after a brief delay
     setTimeout(() => {
       if (videoPlayerRef.current) {
         videoPlayerRef.current.muted = false;
       }
-    }, 100);
+    }, 200);
   };
 
   const handleMinimize = () => {
@@ -2139,19 +2148,29 @@ const FloatingQudemoWidget = ({
     setIsMinimized(false);
     setIsMaximized(false); // Reset maximized state when closing
     
-    // Mute the video when closing
+    // Clear chat session - start fresh on next open
+    setChatMessages([]);
+    setIsTyping(false);
+    
+    // Reset to intro video (first video)
+    setCurrentVideoIndex(0);
+    setCurrentTimestamp(0);
+    
+    // Reset intro shown flag so intro video plays again on reopen
+    hasShownIntroRef.current = false;
+    
+    // Pause the video when closing
+    setIsPlaying(false);
+    
+    // Mute the video element when closing
     if (videoPlayerRef.current) {
       videoPlayerRef.current.muted = true;
     }
     
-    // Clean up preloaded videos when widget is closed
-    Object.keys(videoPreloadCacheRef.current).forEach(id => {
-      const cached = videoPreloadCacheRef.current[id];
-      if (cached?.element?.parentNode) {
-        cached.element.parentNode.removeChild(cached.element);
-      }
-    });
-    videoPreloadCacheRef.current = {};
+    // Keep preloaded videos cache for faster reopening - don't clear it!
+    // User wants cache to remain for instant playback when reopened
+    // Note: isMuted state will be set to false when reopened in handleExpand
+    console.log('✅ Widget closed - session cleared, cache preserved, will reopen UNMUTED');
   };
 
   // ========== RENDER HELPERS ==========
@@ -2386,14 +2405,14 @@ const FloatingQudemoWidget = ({
                       objectPosition: 'center center'
                     }}
                     onReady={() => {
-                      console.log('✅ Widget Video Ready - forcing autoplay (muted)', {
+                      console.log('✅ Widget Video Ready - forcing autoplay', {
                         isExpanded,
                         isMuted,
                         isPlaying
                       });
                       // Force playing state when video is ready
                       setIsPlaying(true);
-                      setIsMuted(true);
+                      // Don't force mute here - preserve user's mute preference
                     }}
                      onPlay={() => {
                        setIsPlaying(true);
