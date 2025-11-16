@@ -19,9 +19,10 @@ const FloatingQudemoWidget = ({
   const [isExpanded, setIsExpanded] = useState(lockedExpanded); // Start expanded if locked
   const [isMinimized, setIsMinimized] = useState(false);
   const [isMaximized, setIsMaximized] = useState(lockedExpanded); // Start maximized if locked
-  const [videoFlow, setVideoFlow] = useState(null);
-  const [qudemoData, setQudemoData] = useState(null); // Universal Demo Qudemo data
+  const [qudemoData, setQudemoData] = useState(null); // QuDemo data from API
   const [loading, setLoading] = useState(false);
+  // Legacy state - kept for backward compatibility but not actively used
+  const [videoFlow, setVideoFlow] = useState(null);
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [currentTimestamp, setCurrentTimestamp] = useState(0);
   const [suggestedQuestions, setSuggestedQuestions] = useState([]);
@@ -108,14 +109,9 @@ const FloatingQudemoWidget = ({
     'top-left': 'top-4 left-4 md:top-6 md:left-6'
   };
 
-  // Load video thumbnail on mount (for preview)
+  // Setup on mount
   useEffect(() => {
     console.log('🚀 FloatingQudemoWidget MOUNTED', { qudemoId, companyName, isPreview });
-    
-    // Only load static video thumbnail if NOT in playground mode (no qudemoId)
-    if (!qudemoId) {
-      loadVideoThumbnail();
-    }
     
     setupSpeechRecognition();
     
@@ -148,20 +144,6 @@ const FloatingQudemoWidget = ({
     }
   }, [qudemoId]); // Run once on mount (qudemoId doesn't change)
   
-  // Trigger initial video load when videoFlow becomes available
-  useEffect(() => {
-    if (isExpanded && videoFlow && videoFlow.videos && videoFlow.videos.length > 0 && !loading) {
-      // Start playing the initial video immediately
-      console.log('🎬 Widget: Video flow loaded, ensuring autoplay', {
-        isExpanded,
-        hasVideos: videoFlow.videos.length,
-        loading,
-        currentIsPlaying: isPlaying
-      });
-      setIsPlaying(true);
-      // Don't force mute here - let handleExpand control the mute state
-    }
-  }, [videoFlow, isExpanded, loading]);
 
   // Auto-scroll chat messages
   useEffect(() => {
@@ -209,11 +191,10 @@ const FloatingQudemoWidget = ({
       isLoadingPreview,
       hasIntroVideo: !!introVideoPreview,
       hasQudemoId: !!qudemoId,
-      hasVideoFlow: !!videoFlow,
       hasVideoThumbnail: !!videoThumbnail,
       hasPreviewImage: !!previewImage
     });
-  }, [isLoadingPreview, introVideoPreview, qudemoId, videoFlow, videoThumbnail, previewImage]);
+  }, [isLoadingPreview, introVideoPreview, qudemoId, videoThumbnail, previewImage]);
 
   // Ensure preview videos are muted and play (for both intro and static)
   useEffect(() => {
@@ -229,24 +210,6 @@ const FloatingQudemoWidget = ({
   
   // Also handle static preview video (for demo on home page)
   const staticVideoRef = useRef(null);
-  useEffect(() => {
-    if (!qudemoId && videoFlow && videoFlow.videos && videoFlow.videos[0] && staticVideoRef.current && !isExpanded) {
-      console.log('🎬 Static preview video ready - attempting to play');
-      const videoElement = staticVideoRef.current;
-      videoElement.muted = true;
-      
-      // Try multiple times to ensure it plays
-      const attemptPlay = () => {
-        videoElement.play()
-          .then(() => console.log('✅ Static preview playing'))
-          .catch(err => console.log('⚠️ Static preview play prevented:', err));
-      };
-      
-      attemptPlay();
-      setTimeout(attemptPlay, 100);
-      setTimeout(attemptPlay, 500);
-    }
-  }, [qudemoId, videoFlow, isExpanded]);
 
   // Also try to fetch intro video preview directly when qudemoId/companyName are provided as props
   const hasAttemptedDirectFetchRef = useRef(false);
@@ -325,90 +288,7 @@ const FloatingQudemoWidget = ({
     setOverlayQuestions(selected);
   }, [suggestedQuestions, overlayQuestionOffset]);
 
-  // Aggressive video preloading - actually load videos into memory for instant playback
-  useEffect(() => {
-    if (!videoFlow || currentVideoIndex === null || currentVideoIndex === undefined) return;
-    
-    const videosToPreload = [];
-    
-    // Preload next video in sequence (highest priority)
-    if (currentVideoIndex + 1 < videoFlow.videos.length) {
-      videosToPreload.push(videoFlow.videos[currentVideoIndex + 1]);
-    }
-    
-    // Preload videos from current video's nextQuestions
-    const currentVideo = videoFlow.videos[currentVideoIndex];
-    if (currentVideo?.nextQuestions) {
-      currentVideo.nextQuestions.forEach(question => {
-        const result = matchQuestion(question.text);
-        if (result.matched) {
-          const matchedVideo = videoFlow.videos.find(v => v.id === result.videoId);
-          if (matchedVideo && !videosToPreload.includes(matchedVideo)) {
-            videosToPreload.push(matchedVideo);
-          }
-        }
-      });
-    }
-    
-    // Actually preload videos (limit to 3 to avoid bandwidth waste)
-    videosToPreload.slice(0, 3).forEach((video, index) => {
-      // Skip if already preloaded
-      if (videoPreloadCacheRef.current[video.id]) {
-        return;
-      }
-      
-      // Create hidden video element for preloading
-      const preloadVideo = document.createElement('video');
-      preloadVideo.src = video.url || video.src;
-      preloadVideo.preload = 'auto'; // Aggressively preload
-      preloadVideo.muted = true;
-      preloadVideo.style.display = 'none';
-      
-      // Add to DOM to trigger loading
-      document.body.appendChild(preloadVideo);
-      
-      // Track loading progress
-      preloadVideo.addEventListener('loadeddata', () => {
-        videoPreloadCacheRef.current[video.id] = {
-          element: preloadVideo,
-          ready: true,
-          src: video.url || video.src
-        };
-      });
-      
-      preloadVideo.addEventListener('error', () => {
-        if (preloadVideo.parentNode) {
-          preloadVideo.parentNode.removeChild(preloadVideo);
-        }
-      });
-      
-      // Store reference immediately (even before loaded)
-      videoPreloadCacheRef.current[video.id] = {
-        element: preloadVideo,
-        ready: false,
-        src: video.url || video.src
-      };
-    });
-    
-    // Cleanup old cached videos (keep only last 5)
-    const cachedIds = Object.keys(videoPreloadCacheRef.current);
-    if (cachedIds.length > 5) {
-      cachedIds.slice(0, cachedIds.length - 5).forEach(id => {
-        const cached = videoPreloadCacheRef.current[id];
-        if (cached?.element?.parentNode) {
-          cached.element.parentNode.removeChild(cached.element);
-        }
-        delete videoPreloadCacheRef.current[id];
-      });
-    }
-  }, [currentVideoIndex, videoFlow]);
 
-  // Update video state when currentVideoIndex changes
-  useEffect(() => {
-    if (isExpanded && videoFlow?.videos[currentVideoIndex]) {
-      // Video index changed - no need to reset ended state anymore
-    }
-  }, [currentVideoIndex, videoFlow, isExpanded]);
 
   const loadVideoThumbnail = async () => {
     try {
@@ -599,30 +479,6 @@ const FloatingQudemoWidget = ({
       console.log('🔄 Loading QuDemo data...');
       setLoading(true);
       
-      let videoFlowData = null;
-      
-      // Only load static video flow if no specific qudemoId is provided
-      if (!qudemoId) {
-        // Try to get from sessionStorage first (v2 includes Loom videos)
-        const cachedVideoFlow = sessionStorage.getItem('static_video_flow_v2');
-        if (cachedVideoFlow) {
-          console.log('⚡ Using cached static video flow (v2 with Loom)');
-          videoFlowData = JSON.parse(cachedVideoFlow);
-        } else {
-          console.log('📹 Widget: Loading static video flow from API');
-          const videoFlowResponse = await fetch('/video-flow.json');
-          videoFlowData = await videoFlowResponse.json();
-          // Cache it for future toggles
-          sessionStorage.setItem('static_video_flow_v2', JSON.stringify(videoFlowData));
-          // Clear old cache
-          sessionStorage.removeItem('static_video_flow');
-          console.log('✅ Loaded fresh video-flow.json with Loom videos');
-        }
-        setVideoFlow(videoFlowData);
-      } else {
-        console.log('🎯 Widget: Skipping static video flow (qudemoId provided)');
-      }
-      
       // Load QuDemo data (either specific QuDemo or Universal Demo)
       let loadedQudemo = null;
       try {
@@ -728,49 +584,7 @@ const FloatingQudemoWidget = ({
         console.error('❌ Widget: Failed to load qudemo:', qudemoError);
       }
       
-      // Extract suggested questions from video flow (static videos)
-      const staticQuestions = [];
-      if (videoFlowData && videoFlowData.videos && videoFlowData.videos.length > 0) {
-        // 1. Get questions from the intro video (first video)
-        const introVideo = videoFlowData.videos[0];
-        if (introVideo.nextQuestions) {
-          introVideo.nextQuestions.forEach(q => {
-            if (q.text && !staticQuestions.includes(q.text)) {
-              staticQuestions.push(q.text);
-            }
-          });
-        }
-        
-        // 2. Add Loom video questions early (they're important tutorial videos)
-        videoFlowData.videos.forEach(video => {
-          if (video.isLoomVideo && video.question && !staticQuestions.includes(video.question)) {
-            staticQuestions.push(video.question);
-            console.log('➕ Added Loom video question:', video.question);
-          }
-        });
-        
-        // 3. Add more questions from other videos' nextQuestions
-        if (staticQuestions.length < 15) {
-          videoFlowData.videos.forEach(video => {
-            if (video.nextQuestions && staticQuestions.length < 15) {
-              video.nextQuestions.forEach(q => {
-                if (q.text && !staticQuestions.includes(q.text) && staticQuestions.length < 15) {
-                  staticQuestions.push(q.text);
-                }
-              });
-            }
-          });
-        }
-        
-        console.log(`📋 Extracted ${staticQuestions.length} static questions (including Loom videos)`);
-      }
-      
-      // Set static questions immediately
-      console.log('📋 Setting static questions immediately:', staticQuestions);
-      setSuggestedQuestions(staticQuestions);
-      
-      // Fetch suggested questions from Python API ONLY for specific QuDemos (with qudemoId prop)
-      // Home page widget uses ONLY static questions from video-flow.json (includes Loom videos)
+      // Fetch suggested questions from Python API for QuDemos
       if (qudemoId && loadedQudemo && loadedQudemo.id && loadedQudemo.company_name) {
         console.log('🎯 Fetching Python API questions for specific QuDemo:', loadedQudemo.id);
         
@@ -790,12 +604,8 @@ const FloatingQudemoWidget = ({
                 return q.question || q.text || q.title || '';
               }).filter(q => q.trim() !== '');
               
-              const allQuestions = qudemoId && qudemoQuestions.length > 0 
-                ? qudemoQuestions 
-                : [...staticQuestions, ...qudemoQuestions];
-              
-              setSuggestedQuestions(allQuestions.slice(0, 15));
-              console.log('✅ Updated with cached questions:', allQuestions.length);
+              setSuggestedQuestions(qudemoQuestions.slice(0, 15));
+              console.log('✅ Updated with cached questions:', qudemoQuestions.length);
             }
           } catch (err) {
             console.error('❌ Error parsing cached questions:', err);
@@ -832,14 +642,8 @@ const FloatingQudemoWidget = ({
                   return q.question || q.text || q.title || '';
                 }).filter(q => q.trim() !== '');
                 
-                // For specific QuDemos (qudemoId prop), use ONLY QuDemo questions
-                // For Universal Demo (no qudemoId prop), combine static + QuDemo questions
-                const allQuestions = qudemoId && qudemoQuestions.length > 0 
-                  ? qudemoQuestions 
-                  : [...staticQuestions, ...qudemoQuestions];
-                
-                setSuggestedQuestions(allQuestions.slice(0, 15));
-                console.log('✅ Updated with API questions:', allQuestions.length);
+                setSuggestedQuestions(qudemoQuestions.slice(0, 15));
+                console.log('✅ Updated with API questions:', qudemoQuestions.length);
               }
             })
             .catch(error => {
@@ -981,7 +785,16 @@ const FloatingQudemoWidget = ({
       const recognition = new SpeechRecognition();
       recognition.continuous = true;
       recognition.interimResults = true;
-      recognition.lang = 'en-US';
+      
+      // AUTO-DETECT user's accent/locale, fallback to US English
+      // This supports: Indian English, British English, Australian, etc.
+      const userLocale = navigator.language || navigator.userLanguage || 'en-US';
+      const englishLocales = ['en-US', 'en-GB', 'en-IN', 'en-AU', 'en-CA', 'en-NZ', 'en-ZA', 'en-IE', 'en-SG', 'en-PH'];
+      
+      // If user's locale is an English variant, use it; otherwise default to en-US
+      recognition.lang = englishLocales.includes(userLocale) ? userLocale : 'en-US';
+      
+      console.log(`🎤 Voice recognition language set to: ${recognition.lang}`);
 
       let capturedTranscript = ''; // Store transcript for auto-send
 
