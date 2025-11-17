@@ -2157,7 +2157,7 @@ const HomePage = () => {
                 </button>
                 <span className="text-gray-700">|</span>
                 <button
-                  onClick={() => scrollToSection("benefits")}
+                  onClick={() => scrollToSection("why")}
                   className="hover:text-white transition-colors duration-200"
                 >
                   Benefits
