@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
 import { XMarkIcon, PencilIcon, TrashIcon, PlusIcon, CheckIcon } from "@heroicons/react/24/outline";
 import { useCompany } from "../context/CompanyContext";
-import { getNodeApiUrl, getApiUrl } from "../config/api";
+import { getNodeApiUrl, getApiUrl, getVideoApiUrl } from "../config/api";
 import { useNavigate } from "react-router-dom";
 import DocumentUpload from "./DocumentUpload";
+import CustomFAQModal from "./CustomFAQModal";
 
 const CreateQudemoTwoStep = () => {
   const { company, isLoading } = useCompany();
@@ -36,6 +37,10 @@ const CreateQudemoTwoStep = () => {
   const [editingFaqId, setEditingFaqId] = useState(null);
   const [editedQuestion, setEditedQuestion] = useState("");
   const [editedAnswer, setEditedAnswer] = useState("");
+  
+  // Custom FAQ states
+  const [isCustomFAQModalOpen, setIsCustomFAQModalOpen] = useState(false);
+  const [customFAQs, setCustomFAQs] = useState([]);
   
   // Video generation states
   const [presenterPhoto, setPresenterPhoto] = useState(null);
@@ -424,6 +429,85 @@ const CreateQudemoTwoStep = () => {
     
     // Start editing the new FAQ
     startEditingFaq(newFaq);
+  };
+  
+  // Custom FAQ handlers
+  const handleAddCustomFAQ = async (faqData) => {
+    if (!createdQudemoId || !company) return;
+    
+    try {
+      // Add custom FAQ via API
+      const pythonApiUrl = getVideoApiUrl('');
+      const response = await fetch(`${pythonApiUrl}/add-custom-faq/${encodeURIComponent(company.name)}/${createdQudemoId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(faqData)
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || "Failed to add custom FAQ");
+      }
+      
+      const data = await response.json();
+      console.log('✅ Custom FAQ added:', data.faq);
+      
+      // Add to custom FAQs list
+      setCustomFAQs(prev => [...prev, data.faq]);
+      
+      // Update generated FAQs to include custom FAQ
+      if (generatedFAQs) {
+        setGeneratedFAQs({
+          ...generatedFAQs,
+          content_faqs: [...generatedFAQs.content_faqs, data.faq],
+          total_content: generatedFAQs.content_faqs.length + 1,
+          total_videos: generatedFAQs.content_faqs.length + 1 + generatedFAQs.system_faqs.length
+        });
+      }
+      
+      setSuccess("✅ Custom FAQ added successfully!");
+    } catch (error) {
+      console.error('❌ Error adding custom FAQ:', error);
+      setError("Failed to add custom FAQ: " + error.message);
+    }
+  };
+  
+  const handleDeleteCustomFAQ = async (faqId) => {
+    if (!createdQudemoId || !company) return;
+    
+    if (!window.confirm("Are you sure you want to delete this custom FAQ?")) {
+      return;
+    }
+    
+    try {
+      const pythonApiUrl = getVideoApiUrl('');
+      const response = await fetch(`${pythonApiUrl}/delete-custom-faq/${encodeURIComponent(company.name)}/${createdQudemoId}/${faqId}`, {
+        method: "DELETE"
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to delete custom FAQ");
+      }
+      
+      // Remove from custom FAQs list
+      setCustomFAQs(prev => prev.filter(f => f.id !== faqId));
+      
+      // Remove from generated FAQs
+      if (generatedFAQs) {
+        const updatedContentFaqs = generatedFAQs.content_faqs.filter(faq => faq.id !== faqId);
+        setGeneratedFAQs({
+          ...generatedFAQs,
+          content_faqs: updatedContentFaqs,
+          total_content: updatedContentFaqs.length,
+          total_videos: updatedContentFaqs.length + generatedFAQs.system_faqs.length
+        });
+      }
+      
+      setSuccess("✅ Custom FAQ deleted successfully!");
+    } catch (error) {
+      console.error('❌ Error deleting custom FAQ:', error);
+      setError("Failed to delete custom FAQ: " + error.message);
+    }
   };
   
   // Save FAQs to backend (draft)
@@ -954,6 +1038,80 @@ const CreateQudemoTwoStep = () => {
               </div>
             </div>
             
+            {/* Custom FAQs Section */}
+            {customFAQs.length > 0 && (
+              <div className="mb-8">
+                <div className="mb-4">
+                  <h3 className="text-lg font-semibold text-gray-800 text-left">
+                    Custom FAQs ({customFAQs.length})
+                  </h3>
+                  <p className="text-sm text-gray-500 mt-1">
+                    User-created FAQs with custom videos or text answers
+                  </p>
+                </div>
+                
+                <div className="space-y-4">
+                  {customFAQs.map((faq, index) => (
+                    <div key={faq.id} className="border-2 border-green-200 rounded-lg p-4 bg-green-50 hover:border-green-300 transition">
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-2 mb-1">
+                            <span className="text-xs font-semibold text-green-600 uppercase px-2 py-1 bg-green-100 rounded">
+                              👤 CUSTOM
+                            </span>
+                            {faq.has_custom_video && (
+                              <span className="text-xs font-semibold text-blue-600 uppercase px-2 py-1 bg-blue-100 rounded flex items-center">
+                                🎬 VIDEO
+                              </span>
+                            )}
+                          </div>
+                          <h4 className="font-semibold text-gray-900 text-left">{faq.question}</h4>
+                        </div>
+                        <div className="flex space-x-2 ml-4">
+                          <button
+                            onClick={() => handleDeleteCustomFAQ(faq.id)}
+                            className="p-1.5 text-red-600 hover:bg-red-50 rounded"
+                            title="Delete custom FAQ"
+                          >
+                            <TrashIcon className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                      <p className="text-sm text-gray-700 whitespace-pre-line text-left">{faq.answer}</p>
+                      {faq.has_custom_video && faq.custom_video_url && (
+                        <div className="mt-2 p-2 bg-blue-50 rounded border border-blue-200">
+                          <p className="text-xs text-blue-700 font-medium">📹 Custom Video</p>
+                          <p className="text-xs text-gray-600 truncate">{faq.custom_video_url}</p>
+                        </div>
+                      )}
+                      <div className="mt-2 flex items-center space-x-4 text-xs text-gray-500">
+                        <span className="bg-green-100 px-2 py-1 rounded">{faq.category}</span>
+                        <span>{faq.answer.length} chars</span>
+                        {faq.estimated_duration && (
+                          <span>~{Math.round(faq.estimated_duration)}s</span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Add Custom FAQ Button */}
+            <div className="mb-8">
+              <button
+                onClick={() => setIsCustomFAQModalOpen(true)}
+                disabled={!createdQudemoId}
+                className="flex items-center space-x-2 px-6 py-3 border-2 border-dashed border-green-300 text-green-700 rounded-lg hover:border-green-400 hover:bg-green-50 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <PlusIcon className="h-5 w-5" />
+                <span>Add Custom Question with Video</span>
+              </button>
+              <p className="text-xs text-gray-500 mt-2">
+                Upload your own demo videos (up to 300MB) or add text-only answers
+              </p>
+            </div>
+            
             {/* System FAQs */}
             <div>
               <h3 className="text-lg font-semibold text-gray-800 text-left mb-4">System FAQs ({generatedFAQs.total_system})</h3>
@@ -1165,6 +1323,15 @@ const CreateQudemoTwoStep = () => {
           </div>
         </div>
       )}
+      
+      {/* Custom FAQ Modal */}
+      <CustomFAQModal
+        isOpen={isCustomFAQModalOpen}
+        onClose={() => setIsCustomFAQModalOpen(false)}
+        onSave={handleAddCustomFAQ}
+        companyName={company?.name}
+        qudemoId={createdQudemoId}
+      />
     </div>
   );
 };

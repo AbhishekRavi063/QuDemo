@@ -57,22 +57,22 @@ const PricingCard = ({
 
       {/* CTA Button - Positioned before features - Only show if buttonText or onButtonClick is provided */}
       {(buttonText || onButtonClick) && (
-        <button
-          onClick={onButtonClick}
-          className="w-full py-4 rounded-xl font-semibold text-base transition-all duration-300 mb-8"
-          style={{
-            background: isPopular
-              ? "rgba(67, 56, 202, 1)"
-              : "rgba(30, 58, 138, 1)",
-            boxShadow: isPopular
-              ? "0 8px 24px rgba(67, 56, 202, 0.5)"
-              : "0 4px 16px rgba(30, 58, 138, 0.3)",
-            border: "none",
-            color: "white",
-          }}
-        >
-          {buttonText}
-        </button>
+      <button
+        onClick={onButtonClick}
+        className="w-full py-4 rounded-xl font-semibold text-base transition-all duration-300 mb-8"
+        style={{
+          background: isPopular
+            ? "rgba(67, 56, 202, 1)"
+            : "rgba(30, 58, 138, 1)",
+          boxShadow: isPopular
+            ? "0 8px 24px rgba(67, 56, 202, 0.5)"
+            : "0 4px 16px rgba(30, 58, 138, 0.3)",
+          border: "none",
+          color: "white",
+        }}
+      >
+        {buttonText}
+      </button>
       )}
 
       {/* Includes Label */}

@@ -6,9 +6,9 @@ import React, { useState, useRef, useEffect, forwardRef, useImperativeHandle } f
  * Displays HeyGen-generated AI avatar videos for document-based answers.
  * Provides a modern video player with playback controls.
  */
-const AvatarVideoPlayer = forwardRef(({ avatarVideoUrl, answer, isVisible, faqId, avatarVideoCache, isMaximized = false, onVideoEnd }, ref) => {
+const AvatarVideoPlayer = forwardRef(({ avatarVideoUrl, answer, isVisible, faqId, avatarVideoCache, isMaximized = false, onVideoEnd, loop = false, forceMuted = false }, ref) => {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(false); // Try unmuted first, fallback to muted if autoplay fails
+  const [isMuted, setIsMuted] = useState(forceMuted); // Force muted for idle videos, or try unmuted first
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -34,7 +34,24 @@ const AvatarVideoPlayer = forwardRef(({ avatarVideoUrl, answer, isVisible, faqId
     const video = videoRef.current;
     if (!video) return;
 
-    // Try unmuted autoplay first, fallback to muted if blocked
+    // If forceMuted (idle video), play muted immediately
+    if (forceMuted) {
+      if (isVisible && video.paused) {
+        console.log('🔇 AvatarVideoPlayer: Playing MUTED idle video');
+        video.muted = true;
+        video
+          .play()
+          .then(() => {
+            console.log('✅ AvatarVideoPlayer: MUTED idle video playing');
+            setIsPlaying(true);
+            setIsMuted(true);
+          })
+          .catch((err) => {
+            console.error("❌ Muted idle video autoplay failed:", err);
+          });
+      }
+    } else {
+      // Try unmuted autoplay first for regular answer videos, fallback to muted if blocked
     if (isVisible && video.paused) {
       console.log('🎬 AvatarVideoPlayer: Attempting UNMUTED autoplay');
       video.muted = false; // Try unmuted first
@@ -60,6 +77,7 @@ const AvatarVideoPlayer = forwardRef(({ avatarVideoUrl, answer, isVisible, faqId
               console.error("❌ Both unmuted and muted autoplay failed:", err2);
             });
         });
+      }
     }
 
     const handleTimeUpdate = () => {
@@ -115,7 +133,7 @@ const AvatarVideoPlayer = forwardRef(({ avatarVideoUrl, answer, isVisible, faqId
       video.removeEventListener("ended", handleEnded);
       video.removeEventListener("error", handleError);
     };
-  }, [isVisible]);
+  }, [isVisible, forceMuted]);
 
   const handleSeek = (e) => {
     const video = videoRef.current;
@@ -167,6 +185,7 @@ const AvatarVideoPlayer = forwardRef(({ avatarVideoUrl, answer, isVisible, faqId
           preload="auto"
           playsInline
           crossOrigin="anonymous"
+          loop={loop}
         >
           Your browser does not support the video tag.
         </video>

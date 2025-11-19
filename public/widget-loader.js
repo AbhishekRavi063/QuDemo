@@ -63,8 +63,8 @@
 
   // Initialize widget when DOM is ready
   const init = () => {
-    document.body.appendChild(widgetContainer);
-    console.log('Qudemo Widget: Loaded successfully');
+      document.body.appendChild(widgetContainer);
+      console.log('Qudemo Widget: Loaded successfully');
   };
 
   if (document.readyState === 'loading') {

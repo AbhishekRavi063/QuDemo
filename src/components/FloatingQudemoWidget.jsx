@@ -41,7 +41,7 @@ const FloatingQudemoWidget = ({
   const [isMuted, setIsMuted] = useState(true); // Start muted for reliable autoplay across all browsers
   const [videoRefreshKey, setVideoRefreshKey] = useState(0);
   const [currentAvatarVideo, setCurrentAvatarVideo] = useState(null); // State for avatar video
-  const [introVideoPreview, setIntroVideoPreview] = useState(null); // State for intro video preview URL
+  const [introVideoPreview, setIntroVideoPreview] = useState(undefined); // State for intro video preview URL (undefined = not fetched, null = no video, string = video URL)
   const [isLoadingPreview, setIsLoadingPreview] = useState(false); // Loading state for preview (start false, only true when fetching)
   const videoPlayerRef = useRef(null);
   const previewVideoRef = useRef(null);
@@ -166,35 +166,32 @@ const FloatingQudemoWidget = ({
     }
   }, [isExpanded, qudemoData]);
 
+  // Auto-maximize widget ONLY for custom uploaded videos (not AI avatar videos)
+  useEffect(() => {
+    if (currentAvatarVideo && isExpanded && !isMaximized) {
+      // Only auto-maximize for custom uploaded videos
+      if (currentAvatarVideo.isCustom && currentAvatarVideo.hasCustomVideo) {
+        console.log('🎬 Custom uploaded video playing - auto-maximizing widget for better viewing...');
+        // Small delay to ensure smooth expansion animation
+        setTimeout(() => {
+          setIsMaximized(true);
+        }, 100);
+      } else {
+        console.log('🤖 AI avatar video playing - keeping normal compact view');
+      }
+    }
+  }, [currentAvatarVideo, isExpanded, isMaximized]);
+
   // Fetch intro video preview for collapsed state (only for specific QuDemos, not static demo)
   useEffect(() => {
     // Only fetch intro video if this is a specific QuDemo (qudemoId prop provided)
     // For static demo (no qudemoId), preview is already in videoFlow
-    if (qudemoId && qudemoData && qudemoData.id && !introVideoPreview) {
+    // Use undefined check to distinguish between "not fetched" vs "no video available"
+    if (qudemoId && qudemoData && qudemoData.id && introVideoPreview === undefined && !isLoadingPreview) {
       console.log('🎬 Triggering intro video preview fetch for specific QuDemo...');
       fetchIntroVideoPreview();
-    } else if (qudemoId && qudemoData && qudemoData.id && introVideoPreview === null && isLoadingPreview) {
-      // If we have qudemoData but still loading, give it a timeout
-      const timeout = setTimeout(() => {
-        if (isLoadingPreview && !introVideoPreview) {
-          console.log('⏱️ Intro video fetch timeout - clearing loading state');
-          setIsLoadingPreview(false);
-        }
-      }, 3000); // 3 second timeout
-      return () => clearTimeout(timeout);
     }
-  }, [qudemoData, introVideoPreview, isLoadingPreview]);
-  
-  // Debug: Log preview state changes
-  useEffect(() => {
-    console.log('🖼️ Preview state:', {
-      isLoadingPreview,
-      hasIntroVideo: !!introVideoPreview,
-      hasQudemoId: !!qudemoId,
-      hasVideoThumbnail: !!videoThumbnail,
-      hasPreviewImage: !!previewImage
-    });
-  }, [isLoadingPreview, introVideoPreview, qudemoId, videoThumbnail, previewImage]);
+  }, [qudemoId, qudemoData, introVideoPreview, isLoadingPreview]);
 
   // Ensure preview videos are muted and play (for both intro and static)
   useEffect(() => {
@@ -261,9 +258,15 @@ const FloatingQudemoWidget = ({
               const answerCacheKey = `intro_answer_${qudemoId}`;
               sessionStorage.setItem(answerCacheKey, data.answer);
             }
+          } else {
+            console.log('ℹ️ No intro video available for preview (from props)');
+            // Set to null to indicate fetch was attempted but no video found
+            setIntroVideoPreview(null);
           }
         } catch (error) {
           console.error('❌ Error fetching intro video preview (from props):', error);
+          // Set to null even on error to prevent infinite loop
+          setIntroVideoPreview(null);
         } finally {
           setIsLoadingPreview(false);
         }
@@ -416,26 +419,35 @@ const FloatingQudemoWidget = ({
         for (const faq of data.faqs) {
           // Cache FAQ data (question + answer + video URL)
           const questionKey = faq.question.toLowerCase().trim();
+          
+          // Determine if FAQ has a video (supports both regular and custom FAQs)
+          const hasVideo = (faq.video_status === 'completed' && !!faq.video_url) || 
+                          (faq.has_custom_video && !!faq.video_url) ||
+                          (faq.has_avatar_video && !!faq.video_url);
+          
           faqCache[questionKey] = {
             question: faq.question,
             answer: faq.answer,
-            videoUrl: faq.video_url,
+            videoUrl: faq.video_url || faq.custom_video_url,
             faqId: faq.id,
-            hasVideo: faq.video_status === 'completed' && !!faq.video_url
+            hasVideo: hasVideo,
+            isCustom: faq.is_custom || false,
+            hasCustomVideo: faq.has_custom_video || false
           };
           
-          // Preload video if available
-          if (faq.video_url && faq.video_status === 'completed') {
+          // Preload video if available (both regular and custom videos)
+          const videoUrl = faq.video_url || faq.custom_video_url;
+          if (videoUrl && hasVideo) {
             try {
               // Create hidden video element to trigger browser cache
               const video = document.createElement('video');
               video.preload = 'auto';
-              video.src = faq.video_url.replace(/ /g, '%20');
+              video.src = videoUrl.replace(/ /g, '%20');
               video.style.display = 'none';
               document.body.appendChild(video);
               
               // Store video URL in memory cache
-              videoPreloadRef.current[faq.question] = faq.video_url;
+              videoPreloadRef.current[faq.question] = videoUrl;
               
               // Remove from DOM after loaded
               video.addEventListener('loadeddata', () => {
@@ -447,7 +459,8 @@ const FloatingQudemoWidget = ({
               });
               
               cachedCount++;
-              console.log(`✅ Cached ${cachedCount}/${data.faqs.length}: ${faq.question.substring(0, 40)}...`);
+              const faqType = faq.is_custom ? '👤 CUSTOM' : faq.has_custom_video ? '🎬 CUSTOM VIDEO' : '🤖 AI';
+              console.log(`✅ Cached ${cachedCount}/${data.faqs.length} ${faqType}: ${faq.question.substring(0, 40)}...`);
             } catch (err) {
               console.log('⚠️ Could not cache video for:', faq.question);
             }
@@ -1002,6 +1015,13 @@ const FloatingQudemoWidget = ({
     
     if (cachedFaq) {
       console.log('⚡ INSTANT RESPONSE from cache:', cachedFaq.question);
+      console.log('📦 Cached FAQ details:', {
+        hasVideo: cachedFaq.hasVideo,
+        hasCustomVideo: cachedFaq.hasCustomVideo,
+        isCustom: cachedFaq.isCustom,
+        videoUrl: cachedFaq.videoUrl,
+        answer: cachedFaq.answer.substring(0, 50) + '...'
+      });
       
       // Add bot response from cache
       setChatMessages(prev => [...prev, { 
@@ -1013,10 +1033,14 @@ const FloatingQudemoWidget = ({
       if (cachedFaq.hasVideo && cachedFaq.videoUrl) {
         console.log('⚡ INSTANT VIDEO from cache:', cachedFaq.videoUrl);
         
+        // Clear old video first for clean transition (will show last frame briefly)
+        // Don't set to null - let the new video replace it directly
         setCurrentAvatarVideo({
           videoUrl: cachedFaq.videoUrl,
           answer: cachedFaq.answer,
-          faqId: cachedFaq.faqId
+          faqId: cachedFaq.faqId,
+          isCustom: cachedFaq.isCustom,
+          hasCustomVideo: cachedFaq.hasCustomVideo
         });
         
         // Submit interaction to backend
@@ -1024,6 +1048,8 @@ const FloatingQudemoWidget = ({
         
         // Pause any playing video
         setIsPlaying(false);
+      } else {
+        console.log('ℹ️ No video for this cached FAQ');
       }
       
       setIsTyping(false);
@@ -1088,7 +1114,9 @@ const FloatingQudemoWidget = ({
           setCurrentAvatarVideo({
             videoUrl: data.avatar_video_url,
             answer: data.answer,
-            faqId: data.faq_id
+            faqId: data.faq_id,
+            isCustom: data.is_custom || false,
+            hasCustomVideo: data.has_custom_video || false
           });
           
           console.log('✅ Avatar video state set, pausing regular video');
@@ -1598,7 +1626,10 @@ const FloatingQudemoWidget = ({
       return;
     }
     
-    console.log('ℹ️ No action taken in handleAvatarVideoEnd');
+    // Video ended - keep video visible (paused on last frame) instead of clearing
+    console.log('🔄 Avatar video ended - keeping video paused on last frame');
+    // Don't clear currentAvatarVideo - let it stay visible and paused
+    // setCurrentAvatarVideo(null); // Commented out to prevent black screen
     console.log('═══════════════════════════════════════════════════');
   };
 
@@ -1738,9 +1769,14 @@ const FloatingQudemoWidget = ({
         }
       } else {
         console.log('ℹ️ No intro video available for preview');
+        // Set to null to indicate fetch was attempted but no video found
+        // This prevents infinite loop in useEffect
+        setIntroVideoPreview(null);
       }
     } catch (error) {
       console.error('❌ Error fetching intro video preview:', error);
+      // Set to null even on error to prevent infinite loop
+      setIntroVideoPreview(null);
     } finally {
       setIsLoadingPreview(false);
     }
@@ -1795,21 +1831,8 @@ const FloatingQudemoWidget = ({
     if (!videoFlow || !videoFlow.videos) return { matched: false };
 
     // Normalize voice recognition variations
-    let normalizedQuestion = userQuestion.toLowerCase().trim();
-    
-    // Handle voice recognition variations of "Qudemo"
-    normalizedQuestion = normalizedQuestion.replace(/\bq\s*demo\b/gi, 'qudemo');
-    normalizedQuestion = normalizedQuestion.replace(/\bq\s*d\s*e\s*m\s*o\b/gi, 'qudemo');
-    normalizedQuestion = normalizedQuestion.replace(/\bque\s*demo\b/gi, 'qudemo');
-    normalizedQuestion = normalizedQuestion.replace(/\bcue\s*demo\b/gi, 'qudemo');
-    
-    // Handle voice recognition variations of "Chatwoot"
-    normalizedQuestion = normalizedQuestion.replace(/\bchat\s*wood\b/gi, 'chatwoot');
-    normalizedQuestion = normalizedQuestion.replace(/\bchatwood\b/gi, 'chatwoot');
-    normalizedQuestion = normalizedQuestion.replace(/\bchat\s*woot\b/gi, 'chatwoot');
-    normalizedQuestion = normalizedQuestion.replace(/\bchat\s*wot\b/gi, 'chatwoot');
-    normalizedQuestion = normalizedQuestion.replace(/\bchatwot\b/gi, 'chatwoot');
-    
+    // Basic normalization only (product-agnostic)
+    const normalizedQuestion = userQuestion.toLowerCase().trim();
     const lowerQuestion = normalizedQuestion;
     
     // First pass: Exact match with video questions (skip intro)
@@ -1923,8 +1946,10 @@ const FloatingQudemoWidget = ({
   };
 
   const handleExpand = () => {
-    setIsExpanded(true);
-    setIsMinimized(false);
+    console.log('🔓 Expanding widget...');
+    
+    // Clear current avatar video first
+    setCurrentAvatarVideo(null);
     
     // Reset to intro video and start playing UNMUTED
     setCurrentVideoIndex(0);
@@ -1935,12 +1960,16 @@ const FloatingQudemoWidget = ({
     // Force video player to re-render with new unmuted state
     setVideoRefreshKey(prev => prev + 1);
     
+    // Expand the widget (this will trigger the useEffect that loads intro video)
+    setIsExpanded(true);
+    setIsMinimized(false);
+    
     // Double-check unmute after a brief delay
     setTimeout(() => {
       if (videoPlayerRef.current) {
         videoPlayerRef.current.muted = false;
       }
-    }, 200);
+    }, 300);
   };
 
   const handleMinimize = () => {
@@ -1957,6 +1986,8 @@ const FloatingQudemoWidget = ({
       return;
     }
     
+    console.log('🔒 Closing widget - clearing session...');
+    
     setIsExpanded(false);
     setIsMinimized(false);
     setIsMaximized(false); // Reset maximized state when closing
@@ -1969,8 +2000,22 @@ const FloatingQudemoWidget = ({
     setCurrentVideoIndex(0);
     setCurrentTimestamp(0);
     
+    // Clear current avatar video
+    setCurrentAvatarVideo(null);
+    
     // Reset intro shown flag so intro video plays again on reopen
     hasShownIntroRef.current = false;
+    console.log('   ✅ Reset hasShownIntroRef to false - intro will play on reopen');
+    
+    // Reset collection flags so it can restart on reopen
+    collectionHasStartedRef.current = false;
+    collectionPhaseRef.current = null;
+    setCollectionPhase(null);
+    setCollectedUserData({
+      name: null,
+      email: null,
+      company: null
+    });
     
     // Pause the video when closing
     setIsPlaying(false);
@@ -1983,7 +2028,7 @@ const FloatingQudemoWidget = ({
     // Keep preloaded videos cache for faster reopening - don't clear it!
     // User wants cache to remain for instant playback when reopened
     // Note: isMuted state will be set to false when reopened in handleExpand
-    console.log('✅ Widget closed - session cleared, cache preserved, will reopen UNMUTED');
+    console.log('✅ Widget closed - session cleared, cache preserved, will reopen UNMUTED with intro video');
   };
 
   // ========== RENDER HELPERS ==========
@@ -2017,11 +2062,11 @@ const FloatingQudemoWidget = ({
         >
           {/* Circular video preview with pulse animation */}
           <div className="relative w-20 h-20 md:w-36 md:h-36 rounded-full overflow-hidden shadow-2xl border-4 border-white hover:border-blue-500 transition-all duration-300">
-            {isLoadingPreview && introVideoPreview === null && qudemoId ? (
+            {isLoadingPreview && !introVideoPreview && qudemoId ? (
               <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
                 <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-white"></div>
               </div>
-            ) : introVideoPreview ? (
+            ) : introVideoPreview && typeof introVideoPreview === 'string' ? (
               <video 
                 ref={introPreviewRef}
                 src={introVideoPreview.replace(/ /g, '%20')}
