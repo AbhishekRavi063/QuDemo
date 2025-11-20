@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCompany } from "../context/CompanyContext";
+import { getNodeApiUrl } from "../config/api";
 import {
   EyeIcon,
   ChatBubbleLeftRightIcon,
@@ -29,6 +30,30 @@ const OverviewPage = () => {
         if (!token) {
           setLoading(false);
           return;
+        }
+
+        // Check if user has any qudemos - redirect to create if none
+        if (company?.id) {
+          const qudemosResponse = await fetch(
+            getNodeApiUrl(`/api/qudemos?companyId=${company.id}`),
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            },
+          );
+
+          if (qudemosResponse.ok) {
+            const qudemosData = await qudemosResponse.json();
+            const userQudemos = qudemosData.data || [];
+            
+            // If user has no qudemos, redirect to create page
+            if (userQudemos.length === 0) {
+              console.log("No qudemos found - redirecting to create page");
+              navigate("/create", { replace: true });
+              return;
+            }
+          }
         }
 
         // Fetch overview stats from the backend
@@ -80,7 +105,7 @@ const OverviewPage = () => {
     };
 
     fetchStats();
-  }, []);
+  }, [company, navigate]);
 
   const handleCreateQudemo = () => {
     // Navigate to create qudemo page

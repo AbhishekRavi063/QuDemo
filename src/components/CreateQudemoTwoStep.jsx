@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { XMarkIcon, PencilIcon, TrashIcon, PlusIcon, CheckIcon } from "@heroicons/react/24/outline";
+import { XMarkIcon, PencilIcon, TrashIcon, PlusIcon, CheckIcon, SpeakerWaveIcon } from "@heroicons/react/24/outline";
 import { useCompany } from "../context/CompanyContext";
 import { getNodeApiUrl, getApiUrl, getVideoApiUrl } from "../config/api";
 import { useNavigate } from "react-router-dom";
@@ -25,6 +25,8 @@ const CreateQudemoTwoStep = () => {
   // Voice & User Collection
   const [voices, setVoices] = useState([]);
   const [selectedVoice, setSelectedVoice] = useState(null);
+  const [previewingVoiceId, setPreviewingVoiceId] = useState(null);
+  const [audioElement, setAudioElement] = useState(null);
   const [collectUserInfo, setCollectUserInfo] = useState(false);
   const [collectName, setCollectName] = useState(true);
   const [collectEmail, setCollectEmail] = useState(true);
@@ -60,14 +62,20 @@ const CreateQudemoTwoStep = () => {
     const fetchVoices = async () => {
       try {
         const pythonApiUrl = getApiUrl('python');
+        console.log('🎤 Fetching voices from:', `${pythonApiUrl}/heygen-voices`);
         const response = await fetch(`${pythonApiUrl}/heygen-voices`);
         const data = await response.json();
+        console.log('🎤 Voices response:', data);
         if (data.success && data.voices) {
+          console.log(`✅ Received ${data.voices.length} voices:`, data.voices.map(v => v.name));
           setVoices(data.voices);
           const defaultVoice = data.voices.find((v) => v.is_default);
           if (defaultVoice) {
+            console.log('✅ Setting default voice:', defaultVoice.name);
             setSelectedVoice(defaultVoice.id);
           }
+        } else {
+          console.error('❌ Invalid voices response:', data);
         }
       } catch (err) {
         console.error("Failed to fetch voices:", err);
@@ -75,6 +83,62 @@ const CreateQudemoTwoStep = () => {
     };
     fetchVoices();
   }, []);
+  
+  // Voice preview function
+  const handleVoicePreview = async (voiceId) => {
+    try {
+      // Stop any currently playing audio
+      if (audioElement) {
+        audioElement.pause();
+        audioElement.currentTime = 0;
+      }
+      
+      setPreviewingVoiceId(voiceId);
+      
+      // Call our backend API to get voice preview (keeps API key secure)
+      const pythonApiUrl = getApiUrl('python');
+      const response = await fetch(`${pythonApiUrl}/heygen-voice-preview/${voiceId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      const data = await response.json();
+      
+      if (data.success && data.audio_url) {
+        const audio = new Audio(data.audio_url);
+        setAudioElement(audio);
+        
+        audio.onended = () => {
+          setPreviewingVoiceId(null);
+        };
+        
+        audio.onerror = () => {
+          setPreviewingVoiceId(null);
+          console.error('Error playing audio preview');
+        };
+        
+        await audio.play();
+      } else {
+        setPreviewingVoiceId(null);
+        console.error('No audio URL in response');
+      }
+    } catch (error) {
+      console.error('Failed to preview voice:', error);
+      setPreviewingVoiceId(null);
+    }
+  };
+  
+  // Cleanup audio on unmount
+  useEffect(() => {
+    return () => {
+      if (audioElement) {
+        audioElement.pause();
+        audioElement.currentTime = 0;
+      }
+    };
+  }, [audioElement]);
   
   // URL validation functions
   const validateVideoUrl = (url) => {
@@ -159,6 +223,9 @@ const CreateQudemoTwoStep = () => {
       }
       
       // Create qudemo
+      console.log('🎤 Selected Voice ID:', selectedVoice);
+      console.log('🎤 All voices:', voices.map(v => ({ id: v.id, name: v.name })));
+      
       const qudemoData = {
         title: title || "Untitled Qudemo",
         description: "No description provided",
@@ -592,10 +659,13 @@ const CreateQudemoTwoStep = () => {
     setError("");
     
     try {
+      console.log('🎤 Sending voice ID to backend:', selectedVoice);
+      
       const formData = new FormData();
       formData.append("presenterPhoto", presenterPhoto);
       formData.append("qudemoId", createdQudemoId);
       formData.append("companyName", company.name);
+      formData.append("voiceId", selectedVoice);  // Add voice ID to FormData
       
       const pythonApiUrl = getApiUrl('python');
       const response = await fetch(`${pythonApiUrl}/trigger-video-generation-final`, {
@@ -1220,21 +1290,74 @@ const CreateQudemoTwoStep = () => {
                 Select AI Voice <span className="text-red-500">*</span>
               </label>
               <p className="text-xs text-gray-500 mb-3 text-left">
-                Choose the voice that will read your FAQ answers
+                Choose the voice that will read your FAQ answers (Click speaker icon to preview)
               </p>
-              <select
-                value={selectedVoice || ""}
-                onChange={(e) => setSelectedVoice(e.target.value)}
-                required
-                className="w-full border border-strokedark/20 px-4 py-3 rounded-lg text-left bg-white"
-              >
-                <option value="">Select a voice</option>
-                {voices.map((voice) => (
-                  <option key={voice.id} value={voice.id}>
-                    {voice.name} ({voice.gender}, {voice.language})
-                  </option>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {voices.slice(0, 6).map((voice) => (
+                  <div
+                    key={voice.id}
+                    onClick={() => {
+                      console.log(`🎤 Voice clicked: ${voice.name} (ID: ${voice.id})`);
+                      setSelectedVoice(voice.id);
+                    }}
+                    className={`relative border-2 rounded-lg p-4 cursor-pointer transition-all duration-200 ${
+                      selectedVoice === voice.id
+                        ? 'border-blue-500 bg-blue-50 shadow-md'
+                        : 'border-gray-200 bg-white hover:border-blue-300 hover:shadow-sm'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1 text-left">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h4 className="font-semibold text-gray-900">
+                            {voice.name}
+                          </h4>
+                          {voice.is_default && (
+                            <span className="px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700 rounded">
+                              Default
+                            </span>
+                          )}
+                          {selectedVoice === voice.id && (
+                            <CheckIcon className="w-5 h-5 text-blue-600" />
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-600">
+                          {voice.gender} • {voice.language}
+                        </p>
+                        {voice.accent && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            {voice.accent}
+                          </p>
+                        )}
+                      </div>
+                      
+                      {/* Preview Speaker Icon */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleVoicePreview(voice.id);
+                        }}
+                        disabled={previewingVoiceId === voice.id}
+                        className={`ml-3 p-2 rounded-full transition-all duration-200 ${
+                          previewingVoiceId === voice.id
+                            ? 'bg-blue-600 text-white animate-pulse'
+                            : 'bg-gray-100 text-gray-600 hover:bg-blue-100 hover:text-blue-600'
+                        }`}
+                        title="Preview voice"
+                      >
+                        <SpeakerWaveIcon className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </div>
                 ))}
-              </select>
+              </div>
+              
+              {!selectedVoice && (
+                <p className="text-xs text-red-500 mt-2 text-left">
+                  Please select a voice to continue
+                </p>
+              )}
             </div>
             
             {/* Presenter Photo */}
