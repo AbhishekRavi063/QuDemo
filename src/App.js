@@ -38,6 +38,7 @@ import CustomerInteractionsPage from "./components/CustomerInteractionsPage";
 import VideoChatPage from "./components/VideoChatPage";
 import FloatingWidgetDemo from "./components/FloatingWidgetDemo";
 import FloatingQudemoWidget from "./components/FloatingQudemoWidget";
+import { AIChatWidget } from "./components/AIChatWidget";
 import WidgetTokenHelper from "./components/WidgetTokenHelper";
 import WidgetPlayground from "./components/WidgetPlayground";
 import WidgetEmbed from "./components/WidgetEmbed";
@@ -262,11 +263,11 @@ function App() {
       window.removeEventListener("storage", handleStorageChange);
     };
   }, []);
-  // Component to conditionally show floating widget (uses static beta version data)
+  // Component to conditionally show AI Chat Widget
   const FloatingWidgetWrapper = () => {
     const location = useLocation();
 
-    // Only show the static demo widget on the home page
+    // Only show the AI Chat Widget on the home page
     const shouldShowWidget = location.pathname === "/";
 
     console.log("🔍 FloatingWidgetWrapper:", {
@@ -274,15 +275,7 @@ function App() {
       shouldShowWidget,
     });
 
-    return shouldShowWidget ? (
-      <FloatingQudemoWidget
-        position="bottom-right"
-        previewImage="/round.png" // Fallback image if video thumbnail fails to load
-        previewText="Watch Demo"
-        qudemoId="c4b2bfae-6fad-47a9-8ce7-a397c96317e3"
-        companyName="Sample Qudemo"
-      />
-    ) : null;
+    return shouldShowWidget ? <AIChatWidget /> : null;
   };
 
   return (

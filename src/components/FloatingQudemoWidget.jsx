@@ -3,6 +3,7 @@ import { XMarkIcon, ChevronDownIcon, ChatBubbleLeftRightIcon, ArrowsPointingOutI
 import { getNodeApiUrl, getVideoApiUrl } from '../config/api';
 import HybridVideoPlayer from './HybridVideoPlayer';
 import AvatarVideoPlayer from './AvatarVideoPlayer';
+import LiveAvatarDisplay from './LiveAvatarDisplay';
 
 const FloatingQudemoWidget = ({ 
   position = 'bottom-right',
@@ -54,6 +55,12 @@ const FloatingQudemoWidget = ({
   const hasLoadedDataRef = useRef(false); // Track if we've already loaded data
   const hasShownIntroRef = useRef(false); // Track if intro video has been shown
   const hasCachedVideosRef = useRef(false); // Track if we've already cached videos
+  
+  // LiveAvatar streaming states (NEW - for real-time avatar)
+  const [useLiveAvatar, setUseLiveAvatar] = useState(false);
+  const [liveAvatarConfig, setLiveAvatarConfig] = useState(null);
+  const liveAvatarSpeakRef = useRef(null); // Store speak function from LiveAvatarManager
+  const [isAvatarSpeaking, setIsAvatarSpeaking] = useState(false);
   
   // User data collection states
   const [collectionPhase, setCollectionPhase] = useState(null); // 'name', 'email', 'company', or null
@@ -582,6 +589,25 @@ const FloatingQudemoWidget = ({
             knowledge_sources: qudemo.knowledge_sources?.length || 0
           });
           
+          // Check for LiveAvatar configuration (NEW)
+          if (qudemo.use_live_avatar) {
+            console.log('🎬 LiveAvatar enabled for this QuDemo');
+            setUseLiveAvatar(true);
+            setLiveAvatarConfig({
+              avatarId: qudemo.live_avatar_id,
+              voiceId: qudemo.live_avatar_voice_id,
+              quality: qudemo.avatar_quality || 'medium'
+            });
+            console.log('📋 LiveAvatar config:', {
+              avatarId: qudemo.live_avatar_id,
+              voiceId: qudemo.live_avatar_voice_id,
+              quality: qudemo.avatar_quality || 'medium'
+            });
+          } else {
+            console.log('📹 Using pre-recorded avatar videos');
+            setUseLiveAvatar(false);
+          }
+          
           // Extract user data collection settings
           if (qudemo.collect_user_info) {
             console.log('👤 User data collection enabled for this QuDemo');
@@ -1095,7 +1121,36 @@ const FloatingQudemoWidget = ({
           text: data.answer
         }]);
 
-        // Check if there's an avatar video (for document-based answers)
+        // NEW: Check if using LiveAvatar streaming (takes priority)
+        if (data.use_live_avatar && useLiveAvatar && liveAvatarSpeakRef.current) {
+          console.log('🎤 Streaming answer to LiveAvatar...');
+          console.log('📋 LiveAvatar response:', {
+            use_live_avatar: data.use_live_avatar,
+            avatar_id: data.live_avatar_id,
+            voice_id: data.live_avatar_voice_id
+          });
+          
+          // Speak the answer through live avatar
+          const speakSuccess = await liveAvatarSpeakRef.current(data.answer);
+          
+          if (speakSuccess) {
+            console.log('✅ LiveAvatar speaking answer');
+            setIsAvatarSpeaking(true);
+            
+            // Submit interaction to backend
+            submitInteraction(userQuestion, data.answer, data.faq_id || 'live_avatar');
+            
+            // Pause any playing video
+            setIsPlaying(false);
+            setIsTyping(false);
+            return;
+          } else {
+            console.warn('⚠️ LiveAvatar failed to speak, falling back to pre-recorded video');
+            // Fall through to pre-recorded video logic
+          }
+        }
+
+        // FALLBACK: Check if there's a pre-recorded avatar video
         console.log('🎬 Avatar Video Check:', {
           has_avatar_video: data.has_avatar_video,
           avatar_video_url: data.avatar_video_url,
@@ -2224,8 +2279,37 @@ const FloatingQudemoWidget = ({
                     overflow: 'hidden'
                   }}
                 >
-                {/* Show avatar video if available */}
-                {currentAvatarVideo ? (
+                {/* Show LiveAvatar if enabled (NEW - real-time streaming) */}
+                {useLiveAvatar && liveAvatarConfig ? (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <LiveAvatarDisplay
+                      qudemoId={qudemoData?.id}
+                      companyName={qudemoData?.company_name || companyName}
+                      avatarId={liveAvatarConfig.avatarId}
+                      voiceId={liveAvatarConfig.voiceId}
+                      quality={liveAvatarConfig.quality}
+                      isMaximized={isMaximized}
+                      onReady={(speakFn) => {
+                        liveAvatarSpeakRef.current = speakFn;
+                        console.log('✅ LiveAvatar ready to speak');
+                      }}
+                      onStartTalking={() => {
+                        setIsAvatarSpeaking(true);
+                        console.log('🎤 LiveAvatar started talking');
+                      }}
+                      onStopTalking={() => {
+                        setIsAvatarSpeaking(false);
+                        console.log('🤐 LiveAvatar stopped talking');
+                      }}
+                      onError={(err) => {
+                        console.error('❌ LiveAvatar error:', err);
+                        // Could show error message to user here
+                      }}
+                    />
+                  </div>
+                ) : 
+                /* Show pre-recorded avatar video if available */
+                currentAvatarVideo ? (
                    <div className="w-full h-full flex items-center justify-center">
                      <AvatarVideoPlayer
                        ref={avatarVideoPlayerRef}
