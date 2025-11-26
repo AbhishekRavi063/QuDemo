@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 
-export function useDemoVideo({ room, localAudioRef, log }) {
+export function useDemoVideo({ room, localAudioRef, log, setState }) {
   const [isDemoPlaying, setIsDemoPlaying] = useState(false);
   const [currentVideoUrl, setCurrentVideoUrl] = useState('');
   const demoVideoRef = useRef(null);
@@ -15,21 +15,45 @@ export function useDemoVideo({ room, localAudioRef, log }) {
       demoVideo.load();
 
       // Wait for video to be ready before playing
-      demoVideo.addEventListener('loadeddata', () => {
-        log('DEMO', '✅ Video loaded - attempting play');
-      }, { once: true });
+      const onCanPlay = () => {
+        log('DEMO', '✅ Video ready - attempting play', {
+          videoWidth: demoVideo.videoWidth,
+          videoHeight: demoVideo.videoHeight,
+          clientWidth: demoVideo.clientWidth,
+          clientHeight: demoVideo.clientHeight,
+          offsetWidth: demoVideo.offsetWidth,
+          offsetHeight: demoVideo.offsetHeight,
+          readyState: demoVideo.readyState,
+          duration: demoVideo.duration,
+        });
+        const playPromise = demoVideo.play();
+        if (playPromise !== undefined) {
+          playPromise
+            .then(() => {
+              log('DEMO', '▶️ Demo video playing', {
+                currentTime: demoVideo.currentTime,
+                paused: demoVideo.paused,
+                videoWidth: demoVideo.videoWidth,
+                videoHeight: demoVideo.videoHeight,
+              });
+            })
+            .catch((error) => {
+              log('ERROR', 'Video play failed', {
+                error: error.message,
+                videoUrl: currentVideoUrl,
+                readyState: demoVideo.readyState,
+                networkState: demoVideo.networkState,
+              });
+              setIsDemoPlaying(false);
+            });
+        }
+      };
 
-      const playPromise = demoVideo.play();
-      if (playPromise !== undefined) {
-        playPromise
-          .then(() => {
-            log('DEMO', '▶️ Demo video playing');
-          })
-          .catch((error) => {
-            log('ERROR', 'Video play failed', { error: error.message, videoUrl: currentVideoUrl });
-            setIsDemoPlaying(false);
-          });
-      }
+      demoVideo.addEventListener('canplay', onCanPlay, { once: true });
+
+      return () => {
+        demoVideo.removeEventListener('canplay', onCanPlay);
+      };
     }
   }, [isDemoPlaying, currentVideoUrl, log]);
 
@@ -48,25 +72,38 @@ export function useDemoVideo({ room, localAudioRef, log }) {
         room.localParticipant.setMicrophoneEnabled(false);
       }
 
-      // Shrink avatar video to small overlay in bottom-right corner
-      const container = document.getElementById('live-video-container');
-      if (container) {
-        const videoElements = container.querySelectorAll('video');
-        videoElements.forEach(video => {
-          video.style.position = 'absolute';
-          video.style.bottom = '80px';
-          video.style.right = '20px';
-          video.style.width = '200px';
-          video.style.height = 'auto';
-          video.style.maxWidth = '200px';
-          video.style.borderRadius = '8px';
-          video.style.objectFit = 'contain';
-          video.style.border = '2px solid rgba(255, 255, 255, 0.8)';
-          video.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.6)';
-          video.style.zIndex = '10';
-          video.style.transition = 'all 0.5s ease';
-        });
-      }
+      // Clone avatar video to PIP container
+      setTimeout(() => {
+        const avatarContainer = document.getElementById('live-video-container');
+        const pipContainer = document.getElementById('avatar-pip');
+
+        if (avatarContainer && pipContainer) {
+          const avatarVideos = avatarContainer.querySelectorAll('video');
+
+          // Clone each video track
+          avatarVideos.forEach((originalVideo) => {
+            const clonedVideo = originalVideo.cloneNode(true);
+            clonedVideo.style.width = '100%';
+            clonedVideo.style.height = '100%';
+            clonedVideo.style.objectFit = 'cover';
+            clonedVideo.style.position = 'static';
+            clonedVideo.style.border = 'none';
+            clonedVideo.style.borderRadius = '0';
+
+            // Copy the srcObject (MediaStream) from original to clone
+            if (originalVideo.srcObject) {
+              clonedVideo.srcObject = originalVideo.srcObject;
+              clonedVideo.play().catch(e => {
+                log('ERROR', 'Failed to play cloned avatar video', e);
+              });
+            }
+
+            pipContainer.appendChild(clonedVideo);
+          });
+
+          log('DEMO', '✅ Avatar cloned to PIP');
+        }
+      }, 100);
 
       // Set state to trigger video loading in useEffect
       setCurrentVideoUrl(videoUrl);
@@ -90,21 +127,13 @@ export function useDemoVideo({ room, localAudioRef, log }) {
         room.localParticipant.setMicrophoneEnabled(true);
       }
 
-      // Restore avatar video to normal size
-      const container = document.getElementById('live-video-container');
-      if (container) {
-        const videoElements = container.querySelectorAll('video');
-        videoElements.forEach(video => {
-          video.style.position = 'static';
-          video.style.width = '100%';
-          video.style.height = '100%';
-          video.style.maxWidth = '100%';
-          video.style.border = 'none';
-          video.style.borderRadius = '0';
-          video.style.objectFit = 'contain';
-          video.style.background = '#000';
-          video.style.zIndex = 'auto';
-        });
+      // Clear PIP container
+      const pipContainer = document.getElementById('avatar-pip');
+      if (pipContainer) {
+        while (pipContainer.firstChild) {
+          pipContainer.removeChild(pipContainer.firstChild);
+        }
+        log('DEMO', '🧹 PIP container cleared');
       }
 
       // Reset demo video
@@ -115,7 +144,7 @@ export function useDemoVideo({ room, localAudioRef, log }) {
         demoVideo.src = '';
       }
 
-      log('DEMO', '✅ Demo video stopped - avatar restored');
+      log('DEMO', '✅ Demo video stopped');
 
     } catch (e) {
       log('ERROR', 'Failed to stop demo video', e);

@@ -38,6 +38,7 @@ import { getNodeApiUrl } from '../config/api';
 import { useEventLogger } from '../hooks/useEventLogger';
 import { useDemoVideo } from '../hooks/useDemoVideo';
 import { checkForDemoTrigger } from '../utils/videoTriggerMatcher';
+import videoTriggersConfig from '../config/video-triggers.json';
 
 const TypingText = ({
   text,
@@ -125,6 +126,7 @@ export const AIChatWidget = () => {
   const mountedRef = useRef(true);
   const previousAgentStateRef = useRef('idle');
   const lastAvatarSpeechRef = useRef('');
+  const preDemoWidgetStateRef = useRef(null);
 
   // Event logging hook
   const { logs, log, clearLogs } = useEventLogger();
@@ -134,7 +136,58 @@ export const AIChatWidget = () => {
     room,
     localAudioRef,
     log,
+    setState,
   });
+
+  // Helper function to handle user speech (reduces duplication)
+  const handleUserSpeech = (text, source) => {
+    if (!text) return;
+    log('USER_SPEECH', `🗣️ User said (${source})`, { text });
+    setMessages((prev) => [
+      ...prev,
+      { role: "user", content: text, isTyping: false },
+    ]);
+    setTranscripts((prev) =>
+      [
+        ...prev,
+        {
+          type: "user_speech",
+          text: text,
+          timestamp: Date.now(),
+        },
+      ].slice(-10)
+    );
+    detectIntent(text, { text }, "user");
+  };
+
+  // Helper function to handle avatar speech (reduces duplication)
+  const handleAvatarSpeech = (text, source) => {
+    if (!text) return;
+    log('AVATAR_SPEECH', `🤖 Avatar said (${source})`, { text });
+    const newMessageId = Date.now();
+    setMessages((prev) => [
+      ...prev,
+      {
+        role: "assistant",
+        content: text,
+        isTyping: true,
+        id: newMessageId,
+      },
+    ]);
+    setTypingMessageId(newMessageId);
+    setTranscripts((prev) =>
+      [
+        ...prev,
+        {
+          type: "avatar_speech",
+          text: text,
+          timestamp: Date.now(),
+        },
+      ].slice(-10)
+    );
+    lastAvatarSpeechRef.current = text; // Save for demo trigger checking
+    detectIntent(text, { text }, "avatar");
+  };
 
   useEffect(() => {
     setIsMobile(window.innerWidth < 768);
@@ -142,6 +195,15 @@ export const AIChatWidget = () => {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  // Restore widget state after demo ends
+  useEffect(() => {
+    if (!isDemoPlaying && preDemoWidgetStateRef.current !== null) {
+      log('DEMO', `Restoring widget to ${preDemoWidgetStateRef.current} state`);
+      setState(preDemoWidgetStateRef.current);
+      preDemoWidgetStateRef.current = null;
+    }
+  }, [isDemoPlaying, log]);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -542,6 +604,7 @@ export const AIChatWidget = () => {
           // Transcription handling
           else if (msgType === "transcript" || msgType === "transcription") {
             const text = parsedJson.text || parsedJson.transcript || "";
+            log('TRANSCRIPT', '📝 Generic transcript received', { text, type: msgType });
             if (text) {
               setTranscripts((prev) =>
                 [
@@ -559,23 +622,7 @@ export const AIChatWidget = () => {
           // User speech
           else if (msgType === "user_transcript" || msgType === "user_speech") {
             const text = parsedJson.text || parsedJson.transcript || "";
-            if (text) {
-              setMessages((prev) => [
-                ...prev,
-                { role: "user", content: text, isTyping: false },
-              ]);
-              setTranscripts((prev) =>
-                [
-                  ...prev,
-                  {
-                    type: "user_speech",
-                    text: text,
-                    timestamp: Date.now(),
-                  },
-                ].slice(-10)
-              );
-              detectIntent(text, parsedJson, "user");
-            }
+            handleUserSpeech(text, `type: ${msgType}`);
           }
           // Avatar responses
           else if (
@@ -584,31 +631,19 @@ export const AIChatWidget = () => {
             msgType === "llm_response"
           ) {
             const text = parsedJson.text || parsedJson.response || "";
-            if (text) {
-              const newMessageId = Date.now();
-              setMessages((prev) => [
-                ...prev,
-                {
-                  role: "assistant",
-                  content: text,
-                  isTyping: true,
-                  id: newMessageId,
-                },
-              ]);
-              setTypingMessageId(newMessageId);
-              setTranscripts((prev) =>
-                [
-                  ...prev,
-                  {
-                    type: "avatar_speech",
-                    text: text,
-                    timestamp: Date.now(),
-                  },
-                ].slice(-10)
-              );
-              lastAvatarSpeechRef.current = text; // Save for demo trigger checking
-              detectIntent(text, parsedJson, "avatar");
-            }
+            handleAvatarSpeech(text, `type: ${msgType}`);
+          }
+        } else if (parsedJson) {
+          // Fallback: Handle messages with event_type instead of type
+          if (parsedJson.event_type === 'user.transcription') {
+            const text = parsedJson.text || '';
+            handleUserSpeech(text, 'event_type: user.transcription');
+          } else if (parsedJson.event_type === 'avatar.transcription') {
+            const text = parsedJson.text || '';
+            handleAvatarSpeech(text, 'event_type: avatar.transcription');
+          } else {
+            // Log any other JSON messages we're not handling
+            log('DATA_CHANNEL', '📨 Unhandled JSON message', parsedJson);
           }
         }
       }
@@ -630,10 +665,23 @@ export const AIChatWidget = () => {
               const lastSpeech = lastAvatarSpeechRef.current;
               if (lastSpeech) {
                 log('DEMO', 'Checking for demo trigger after avatar speech', { lastSpeech });
-                const demoTrigger = checkForDemoTrigger(lastSpeech);
-                if (demoTrigger && !isDemoPlaying) {
+                const demoTrigger = checkForDemoTrigger(lastSpeech, videoTriggersConfig, log);
+                if (demoTrigger && demoTrigger.matched && !isDemoPlaying) {
                   log('DEMO', '🎬 Demo trigger detected from avatar speech', demoTrigger);
-                  playDemoVideo(demoTrigger.videoUrl);
+
+                  // Save current widget state to restore later
+                  preDemoWidgetStateRef.current = state;
+
+                  // Force maximize for best demo viewing experience
+                  if (state !== "maximized") {
+                    setState("maximized");
+                    // Wait for widget to maximize before playing video
+                    setTimeout(() => {
+                      playDemoVideo(demoTrigger.videoUrl);
+                    }, 500);
+                  } else {
+                    playDemoVideo(demoTrigger.videoUrl);
+                  }
                 }
               }
             }, 100); // Small delay to ensure all data is processed
@@ -760,9 +808,15 @@ export const AIChatWidget = () => {
     const lowerTranscript = transcript.toLowerCase();
 
     // Check for demo video triggers first
-    const demoTrigger = checkForDemoTrigger(lowerTranscript);
-    if (demoTrigger && !isDemoPlaying) {
+    const demoTrigger = checkForDemoTrigger(transcript, videoTriggersConfig, log);
+    if (demoTrigger && demoTrigger.matched && !isDemoPlaying) {
       log('DEMO', '🎬 Demo video trigger detected', demoTrigger);
+
+      // Force maximize for best demo viewing experience
+      if (state !== "maximized") {
+        setState("maximized");
+      }
+
       playDemoVideo(demoTrigger.videoUrl);
       setDetectedIntents((prev) => [...prev, 'show_demo'].slice(-5));
       return; // Don't process other intents if showing demo
@@ -1235,57 +1289,6 @@ export const AIChatWidget = () => {
                         </div>
                       </div>
                     )}
-                    
-                    {/* Demo Video Overlay */}
-                    {isDemoPlaying && (
-                      <div
-                        style={{
-                          position: "absolute",
-                          top: 0,
-                          left: 0,
-                          width: "100%",
-                          height: "100%",
-                          zIndex: 5,
-                          backgroundColor: "#000",
-                        }}
-                      >
-                        <video
-                          ref={demoVideoRef}
-                          controls
-                          autoPlay
-                          preload="metadata"
-                          style={{
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "contain",
-                          }}
-                          onEnded={stopDemoVideo}
-                          onError={(e) => {
-                            log('ERROR', 'Demo video failed to load', e);
-                            stopDemoVideo();
-                          }}
-                        />
-                        <button
-                          onClick={stopDemoVideo}
-                          style={{
-                            position: "absolute",
-                            top: "16px",
-                            right: "16px",
-                            padding: "8px 16px",
-                            background: "rgba(239, 68, 68, 0.95)",
-                            color: "white",
-                            border: "none",
-                            borderRadius: "6px",
-                            cursor: "pointer",
-                            fontWeight: "bold",
-                            fontSize: "14px",
-                            boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
-                          }}
-                        >
-                          ⏹️ Stop Demo
-                        </button>
-                      </div>
-                    )}
                   </div>
                 ) : !isVoiceMode ? (
                   <AnimatePresence mode="wait">
@@ -1557,6 +1560,94 @@ export const AIChatWidget = () => {
                         You're speaking
                       </div>
                     )}
+                  </div>
+                )}
+
+                {/* Demo Video Overlay - positioned relative to parent container */}
+                {isDemoPlaying && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      width: "100%",
+                      height: "100%",
+                      zIndex: 100,
+                      backgroundColor: "#000",
+                    }}
+                  >
+                    <video
+                      ref={demoVideoRef}
+                      controls
+                      autoPlay
+                      playsInline
+                      preload="auto"
+                      style={{
+                        display: "block",
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "contain",
+                        background: "#000",
+                      }}
+                      onEnded={stopDemoVideo}
+                      onLoadStart={() => log('DEMO', '📹 Video load started')}
+                      onLoadedMetadata={() => log('DEMO', '📹 Video metadata loaded')}
+                      onLoadedData={() => log('DEMO', '📹 Video data loaded')}
+                      onCanPlay={() => log('DEMO', '📹 Video can play')}
+                      onPlaying={() => log('DEMO', '▶️ Video is playing')}
+                      onError={(e) => {
+                        const video = demoVideoRef.current;
+                        const errorDetails = {
+                          error: e,
+                          videoSrc: video?.src,
+                          networkState: video?.networkState,
+                          readyState: video?.readyState,
+                          errorCode: video?.error?.code,
+                          errorMessage: video?.error?.message,
+                        };
+                        log('ERROR', 'Demo video failed to load', errorDetails);
+                        stopDemoVideo();
+                      }}
+                    />
+
+                    {/* Avatar Picture-in-Picture */}
+                    <div
+                      id="avatar-pip"
+                      style={{
+                        position: "absolute",
+                        bottom: "20px",
+                        right: "20px",
+                        width: "200px",
+                        height: "150px",
+                        borderRadius: "12px",
+                        overflow: "hidden",
+                        border: "3px solid rgba(255, 255, 255, 0.9)",
+                        boxShadow: "0 8px 24px rgba(0, 0, 0, 0.8)",
+                        zIndex: 101,
+                        backgroundColor: "#000",
+                      }}
+                    />
+
+                    <button
+                      onClick={stopDemoVideo}
+                      style={{
+                        position: "absolute",
+                        top: "16px",
+                        right: "16px",
+                        padding: "8px 16px",
+                        background: "rgba(239, 68, 68, 0.95)",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "6px",
+                        cursor: "pointer",
+                        fontWeight: "bold",
+                        fontSize: "14px",
+                        boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
+                        zIndex: 102,
+                      }}
+                    >
+                      ⏹️ Stop Demo
+                    </button>
                   </div>
                 )}
 
