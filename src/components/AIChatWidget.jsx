@@ -195,7 +195,7 @@ export const AIChatWidget = () => {
     new Date(Date.now() + 86400000).toISOString().split("T")[0],
     new Date(Date.now() + 172800000).toISOString().split("T")[0],
   ];
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef(null);
 
   useEffect(() => {
     if (state === "minimized") return;
