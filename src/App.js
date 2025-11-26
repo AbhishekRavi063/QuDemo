@@ -38,7 +38,6 @@ import CustomerInteractionsPage from "./components/CustomerInteractionsPage";
 import VideoChatPage from "./components/VideoChatPage";
 import FloatingWidgetDemo from "./components/FloatingWidgetDemo";
 import FloatingQudemoWidget from "./components/FloatingQudemoWidget";
-import { AIChatWidget } from "./components/AIChatWidget";
 import WidgetTokenHelper from "./components/WidgetTokenHelper";
 import WidgetPlayground from "./components/WidgetPlayground";
 import WidgetEmbed from "./components/WidgetEmbed";
@@ -263,21 +262,6 @@ function App() {
       window.removeEventListener("storage", handleStorageChange);
     };
   }, []);
-  // Component to conditionally show AI Chat Widget
-  const FloatingWidgetWrapper = () => {
-    const location = useLocation();
-
-    // Only show the AI Chat Widget on the home page
-    const shouldShowWidget = location.pathname === "/";
-
-    console.log("🔍 FloatingWidgetWrapper:", {
-      pathname: location.pathname,
-      shouldShowWidget,
-    });
-
-    return shouldShowWidget ? <AIChatWidget /> : null;
-  };
-
   return (
     <Router>
       <BackendProvider>
@@ -516,9 +500,6 @@ function App() {
               {/* Catch all route */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
-
-            {/* Floating Widget - Shows only on home page */}
-            <FloatingWidgetWrapper />
           </div>
         </NotificationProvider>
       </BackendProvider>

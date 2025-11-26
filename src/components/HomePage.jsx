@@ -29,6 +29,7 @@ import InfiniteBadges from "./ui/InfiniteBadges";
 import { Edit2, Eye, Pointer, Upload, User2 } from "lucide-react";
 import RadarScanner from "./ui/RadarScanner";
 import { useIsMobile } from "../hooks/useIsMobile";
+import { AIChatWidget } from "./AIChatWidget";
 
 const HomePage = () => {
   const [openFAQ, setOpenFAQ] = useState(null);
@@ -2310,6 +2311,9 @@ const HomePage = () => {
           animation: fadeIn 0.8s ease-out both;
         }
       `}</style>
+
+      {/* AI Chat Widget - Live Avatar */}
+      <AIChatWidget />
     </div>
   );
 };

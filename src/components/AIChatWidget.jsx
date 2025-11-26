@@ -301,8 +301,17 @@ export const AIChatWidget = () => {
         throw new Error("Failed to create session");
       }
 
-      const data = await resp.json();
-      const { livekitUrl, livekitClientToken, sessionId } = data;
+      const response = await resp.json();
+      
+      // Handle response format from backend (data is nested in response.data)
+      const data = response.data || response;
+      const livekitUrl = data.livekitUrl;
+      const livekitClientToken = data.livekitClientToken;
+      const sessionId = data.sessionId;
+
+      if (!livekitUrl || !livekitClientToken) {
+        throw new Error("Missing LiveKit credentials in response");
+      }
 
       setSessionInfo({ sessionId, livekitUrl });
 
