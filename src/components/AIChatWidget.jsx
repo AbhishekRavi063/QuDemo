@@ -39,7 +39,7 @@ import videoTriggersConfig from '../config/video-triggers.json';
 export const AIChatWidget = () => {
   const [state, setState] = useState("minimized");
   const [isMuted, setIsMuted] = useState(true);
-  const [isVoiceMode, setIsVoiceMode] = useState(true);
+  const [isVoiceMode, setIsVoiceMode] = useState(true); // AIDEV-NOTE: Always true - toggle UI removed, shows static avatar instead of LiveKit video
   const [showBookingPopup, setShowBookingPopup] = useState(false);
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
@@ -195,7 +195,9 @@ export const AIChatWidget = () => {
 
   // AIDEV-NOTE: Handles user activity tracking
   // AIDEV-NOTE: How: Currently a placeholder for future activity tracking features
+  // AIDEV-NOTE: Why: Originally managed inactivity timeout (removed), kept as placeholder for future features
   // AIDEV-NOTE: Called by: handleQuickAction, button clicks throughout UI
+  // AIDEV-REMOVED: Inactivity timeout feature (30s timeout prompt) removed - not needed for voice-first experience
   const handleActivity = () => {
     // Placeholder for future activity tracking
   };
@@ -791,11 +793,11 @@ export const AIChatWidget = () => {
   ];
 
   // AIDEV-NOTE: Handles quick action button clicks - sends predefined prompts to avatar via voice
-  // AIDEV-NOTE: How: Sends action text to avatar via LiveKit data channel, resets inactivity timer
+  // AIDEV-NOTE: How: Sends action text to avatar via LiveKit data channel, calls handleActivity (placeholder)
   // AIDEV-NOTE: Why: Provides convenient shortcuts for common questions without typing
   // AIDEV-NOTE: Called by: Quick action button clicks in UI (shown when not in live mode)
   const handleQuickAction = (action) => {
-    handleActivity(); // AIDEV-NOTE: Reset inactivity timer
+    handleActivity(); // AIDEV-NOTE: Activity tracking placeholder (inactivity timeout removed)
     // AIDEV-NOTE: Send prompt to avatar if session is active
     if (hasLiveVideo && room) {
       sendDataToAvatar(action);
@@ -1693,199 +1695,149 @@ export const AIChatWidget = () => {
                         : "16px",
                     display: "flex",
                     alignItems: "center",
-                    justifyContent: "space-between",
+                    justifyContent: "center",
                     zIndex: 10,
                   }}
                 >
-                  {/* AIDEV-NOTE: Control panel - video/voice toggle and action buttons (mic, speaker, disconnect) */}
+                  {/* AIDEV-NOTE: Control panel - action buttons (mic, speaker, disconnect) centered for better UX */}
                   {/* AIDEV-NOTE: Why button states: Red when muted/disabled, green when active/speaking, black when idle */}
-                  <>
-                      {/* AIDEV-NOTE: Video/Voice mode toggle - switches between visual avatar and audio-only mode */}
-                      <div
-                        style={{
-                          backgroundColor: "rgba(0, 0, 0, 0.7)",
-                          backdropFilter: "blur(4px)",
-                          borderRadius: "50px",
-                          border: "1px solid rgba(255, 255, 255, 0.2)",
-                          padding: "4px",
-                          display: "flex",
-                        }}
-                      >
-                        <button
-                          onClick={() => setIsVoiceMode(false)}
-                          style={{
-                            padding: "4px 8px",
-                            borderRadius: "50px",
-                            fontSize: "12px",
-                            fontWeight: "500",
-                            border: "none",
-                            cursor: "pointer",
-                            backgroundColor: !isVoiceMode
-                              ? "rgba(255, 255, 255, 0.2)"
-                              : "transparent",
-                            color: !isVoiceMode
-                              ? "white"
-                              : "rgba(255, 255, 255, 0.5)",
-                          }}
-                        >
-                          Video
-                        </button>
-                        <button
-                          onClick={() => setIsVoiceMode(true)}
-                          style={{
-                            padding: "4px 8px",
-                            borderRadius: "50px",
-                            fontSize: "12px",
-                            fontWeight: "500",
-                            border: "none",
-                            cursor: "pointer",
-                            backgroundColor: isVoiceMode
-                              ? "rgba(255, 255, 255, 0.2)"
-                              : "transparent",
-                            color: isVoiceMode
-                              ? "white"
-                              : "rgba(255, 255, 255, 0.5)",
-                          }}
-                        >
-                          Voice
-                        </button>
-                      </div>
-                      {/* AIDEV-NOTE: Action buttons - mic (user input), speaker (avatar audio), chat (sidebar), disconnect (end session) */}
-                      {/* AIDEV-NOTE: Button sizes scale with widget state - small: 40px, medium: 44px, maximized: 48px */}
-                      <div
-                        style={{
-                          display: "flex",
-                          gap:
-                            state === "small"
-                              ? "8px"
-                              : state === "medium"
-                              ? "10px"
-                              : "12px",
-                        }}
-                      >
-                        {/* AIDEV-NOTE: Mic button - toggles user input via toggleMicrophone (LiveKit) or local mute state */}
-                        {/* AIDEV-NOTE: Pulse animation plays when user is speaking to provide visual feedback */}
-                        <button
-                          onClick={
-                            hasLiveVideo
-                              ? toggleMicrophone
-                              : () => setIsMuted(!isMuted)
-                          }
-                          style={{
-                            width:
-                              state === "small"
-                                ? "40px"
-                                : state === "medium"
-                                ? "44px"
-                                : "48px",
-                            height:
-                              state === "small"
-                                ? "40px"
-                                : state === "medium"
-                                ? "44px"
-                                : "48px",
-                            backgroundColor: isMuted
-                              ? "rgba(239, 68, 68, 0.7)"
-                              : isUserSpeaking
-                              ? "rgba(34, 197, 94, 0.7)"
-                              : "rgba(0, 0, 0, 0.7)",
-                            borderRadius: "50%",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            border: "1px solid rgba(255, 255, 255, 0.2)",
-                            backdropFilter: "blur(4px)",
-                            cursor: "pointer",
-                            color: "white",
-                            animation: isUserSpeaking
-                              ? "pulse 1s infinite"
-                              : "none",
-                          }}
-                        >
-                          {isMuted ? (
-                            <MicOff style={{ width: "16px", height: "16px" }} />
-                          ) : (
-                            <Mic style={{ width: "16px", height: "16px" }} />
-                          )}
-                        </button>
+                  {/* AIDEV-REMOVED: Voice/Video mode toggle removed - widget now always in voice mode (static avatar image) */}
+                  {/* AIDEV-NOTE: Action buttons - mic (user input), speaker (avatar audio), disconnect (end session) */}
+                  {/* AIDEV-NOTE: Button sizes scale with widget state - small: 40px, medium: 44px, maximized: 48px */}
+                  <div
+                    style={{
+                      display: "flex",
+                      gap:
+                        state === "small"
+                          ? "8px"
+                          : state === "medium"
+                          ? "10px"
+                          : "12px",
+                    }}
+                  >
+                    {/* AIDEV-NOTE: Mic button - toggles user input via toggleMicrophone (LiveKit) or local mute state */}
+                    {/* AIDEV-NOTE: Pulse animation plays when user is speaking to provide visual feedback */}
+                    <button
+                      onClick={
+                        hasLiveVideo
+                          ? toggleMicrophone
+                          : () => setIsMuted(!isMuted)
+                      }
+                      style={{
+                        width:
+                          state === "small"
+                            ? "40px"
+                            : state === "medium"
+                            ? "44px"
+                            : "48px",
+                        height:
+                          state === "small"
+                            ? "40px"
+                            : state === "medium"
+                            ? "44px"
+                            : "48px",
+                        backgroundColor: isMuted
+                          ? "rgba(239, 68, 68, 0.7)"
+                          : isUserSpeaking
+                          ? "rgba(34, 197, 94, 0.7)"
+                          : "rgba(0, 0, 0, 0.7)",
+                        borderRadius: "50%",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        border: "1px solid rgba(255, 255, 255, 0.2)",
+                        backdropFilter: "blur(4px)",
+                        cursor: "pointer",
+                        color: "white",
+                        animation: isUserSpeaking
+                          ? "pulse 1s infinite"
+                          : "none",
+                      }}
+                    >
+                      {isMuted ? (
+                        <MicOff style={{ width: "16px", height: "16px" }} />
+                      ) : (
+                        <Mic style={{ width: "16px", height: "16px" }} />
+                      )}
+                    </button>
 
-                        {/* AIDEV-NOTE: Speaker button - toggles avatar audio output, only shown when hasAudio is true */}
-                        {/* AIDEV-NOTE: Green pulse when avatar is speaking, red when muted, matches mic button pattern */}
-                        {hasAudio && (
-                          <button
-                            onClick={toggleAudio}
-                            style={{
-                              width:
-                                state === "small"
-                                  ? "40px"
-                                  : state === "medium"
-                                  ? "44px"
-                                  : "48px",
-                              height:
-                                state === "small"
-                                  ? "40px"
-                                  : state === "medium"
-                                  ? "44px"
-                                  : "48px",
-                              backgroundColor: !audioEnabled
-                                ? "rgba(239, 68, 68, 0.7)"
-                                : isAvatarSpeaking
-                                ? "rgba(34, 197, 94, 0.7)"
-                                : "rgba(0, 0, 0, 0.7)",
-                              borderRadius: "50%",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              border: "1px solid rgba(255, 255, 255, 0.2)",
-                              backdropFilter: "blur(4px)",
-                              cursor: "pointer",
-                              color: "white",
-                              animation: isAvatarSpeaking
-                                ? "pulse 1s infinite"
-                                : "none",
-                            }}
-                          >
-                            {!audioEnabled ? (
-                              <VolumeX
-                                style={{ width: "16px", height: "16px" }}
-                              />
-                            ) : (
-                              <Volume2
-                                style={{ width: "16px", height: "16px" }}
-                              />
-                            )}
-                          </button>
+                    {/* AIDEV-NOTE: Speaker button - toggles avatar audio output, only shown when hasAudio is true */}
+                    {/* AIDEV-NOTE: Green pulse when avatar is speaking, red when muted, matches mic button pattern */}
+                    {hasAudio && (
+                      <button
+                        onClick={toggleAudio}
+                        style={{
+                          width:
+                            state === "small"
+                              ? "40px"
+                              : state === "medium"
+                              ? "44px"
+                              : "48px",
+                          height:
+                            state === "small"
+                              ? "40px"
+                              : state === "medium"
+                              ? "44px"
+                              : "48px",
+                          backgroundColor: !audioEnabled
+                            ? "rgba(239, 68, 68, 0.7)"
+                            : isAvatarSpeaking
+                            ? "rgba(34, 197, 94, 0.7)"
+                            : "rgba(0, 0, 0, 0.7)",
+                          borderRadius: "50%",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          border: "1px solid rgba(255, 255, 255, 0.2)",
+                          backdropFilter: "blur(4px)",
+                          cursor: "pointer",
+                          color: "white",
+                          animation: isAvatarSpeaking
+                            ? "pulse 1s infinite"
+                            : "none",
+                        }}
+                      >
+                        {!audioEnabled ? (
+                          <VolumeX
+                            style={{ width: "16px", height: "16px" }}
+                          />
+                        ) : (
+                          <Volume2
+                            style={{ width: "16px", height: "16px" }}
+                          />
                         )}
-                        {/* AIDEV-NOTE: Disconnect button - ends LiveKit session and resets widget, red color indicates destructive action */}
-                        <button
-                          onClick={handleDisconnect}
-                          style={{
-                            width:
-                              state === "small"
-                                ? "40px"
-                                : state === "medium"
-                                ? "44px"
-                                : "48px",
-                            height:
-                              state === "small"
-                                ? "40px"
-                                : state === "medium"
-                                ? "44px"
-                                : "48px",
-                            backgroundColor: "rgba(0, 0, 0, 0.7)",
-                            borderRadius: "50%",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            border: "1px solid rgba(255, 255, 255, 0.2)",
-                            cursor: "pointer",
-                            color: "#ef4444",
-                          }}
-                        >
-                          <PhoneOff style={{ width: "16px", height: "16px" }} />
-                        </button>
-                      </div>
-                    </>
+                      </button>
+                    )}
+
+                    {/* AIDEV-NOTE: Disconnect button - ends LiveKit session and resets widget, red color indicates destructive action */}
+                    <button
+                      onClick={handleDisconnect}
+                      style={{
+                        width:
+                          state === "small"
+                            ? "40px"
+                            : state === "medium"
+                            ? "44px"
+                            : "48px",
+                        height:
+                          state === "small"
+                            ? "40px"
+                            : state === "medium"
+                            ? "44px"
+                            : "48px",
+                        backgroundColor: "rgba(0, 0, 0, 0.7)",
+                        borderRadius: "50%",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        border: "1px solid rgba(255, 255, 255, 0.2)",
+                        cursor: "pointer",
+                        color: "#ef4444",
+                      }}
+                    >
+                      <PhoneOff style={{ width: "16px", height: "16px" }} />
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
