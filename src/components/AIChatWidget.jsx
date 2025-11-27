@@ -333,6 +333,29 @@ export const AIChatWidget = () => {
           });
         });
       }, 1000);
+
+      // AIDEV-NOTE: Step 7 - Auto-enable user microphone after session initialization
+      // AIDEV-NOTE: 1500ms delay ensures room is fully connected before publishing local audio track
+      // AIDEV-NOTE: Why: Better UX - user can start talking immediately without clicking mic button
+      setTimeout(async () => {
+        if (mountedRef.current && r) {
+          console.log("Auto-enabling microphone, room state:", r.state);
+          try {
+            const track = await createLocalAudioTrack({
+              echoCancellation: true,
+              noiseSuppression: true,
+              autoGainControl: true,
+            });
+            localAudioRef.current = track;
+            await r.localParticipant.publishTrack(track);
+            setIsMuted(false);
+            console.log("Microphone auto-enabled successfully");
+          } catch (e) {
+            console.error("Failed to auto-enable microphone:", e);
+            setIsMuted(true);
+          }
+        }
+      }, 1500);
     } catch (err) {
       console.error("Failed to start live session:", err);
       // AIDEV-TODO: Show error modal to user instead of silent failure
@@ -470,9 +493,14 @@ export const AIChatWidget = () => {
   // AIDEV-NOTE: Publishes user microphone without toggle logic - always enables
   // AIDEV-NOTE: How: Creates local audio track with same processing as toggleMicrophone, publishes to room
   // AIDEV-NOTE: Why: Used during session initialization to auto-enable mic, separate from toggle for clarity
-  // AIDEV-NOTE: Called by: Session initialization flow (currently unused, kept for future auto-enable feature)
+  // AIDEV-NOTE: Called by: Auto-enable in startLiveSession after room connection established
   const publishLocalAudio = async () => {
+    // AIDEV-NOTE: Guard clauses - exit if no room or track already published
     if (!room) return;
+    if (localAudioRef.current) {
+      console.log("Microphone already enabled, skipping");
+      return;
+    }
 
     try {
       const track = await createLocalAudioTrack({
