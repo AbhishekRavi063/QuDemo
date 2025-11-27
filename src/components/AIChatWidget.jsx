@@ -6,15 +6,11 @@ import {
   Minimize2,
   Volume2,
   VolumeX,
-  MessageCircle,
-  Send,
   PhoneOff,
   RefreshCw,
   Calendar,
   Mic,
   MicOff,
-  Speaker,
-  Radio,
   MessageSquare,
   Ear,
   Brain,
@@ -26,10 +22,7 @@ import {
 } from "lucide-react";
 import {
   Room,
-  RemoteParticipant,
-  RemoteTrack,
   createLocalAudioTrack,
-  LocalAudioTrack,
   RoomEvent,
   DataPacket_Kind,
   Track,
@@ -40,59 +33,12 @@ import { useDemoVideo } from '../hooks/useDemoVideo';
 import { checkForDemoTrigger } from '../utils/videoTriggerMatcher';
 import videoTriggersConfig from '../config/video-triggers.json';
 
-// AIDEV-NOTE: Typing animation component - simulates human-like word-by-word typing for assistant messages
-// AIDEV-NOTE: How: Adds random delays (200-400ms) between words, extra delay for punctuation
-// AIDEV-NOTE: Why: Creates natural conversational feel, indicates AI is "thinking" while responding
-const TypingText = ({
-  text,
-  onComplete,
-}) => {
-  const [displayText, setDisplayText] = useState("");
-  const [currentWordIndex, setCurrentWordIndex] = useState(0);
-  const [hasStarted, setHasStarted] = useState(false);
-  const words = text.split(" ");
-
-  useEffect(() => {
-    if (!hasStarted) {
-      const initialTimer = setTimeout(() => setHasStarted(true), 500);
-      return () => clearTimeout(initialTimer);
-    }
-  }, [hasStarted]);
-
-  useEffect(() => {
-    if (hasStarted && currentWordIndex < words.length) {
-      const baseDelay = 200;
-      const randomDelay = Math.random() * 200;
-      const word = words[currentWordIndex];
-      const hasPunctuation = /[.,!?;:]/.test(word);
-
-      // AIDEV-NOTE: Variable delay based on punctuation - mimics natural pauses in human speech
-      let delay = baseDelay + randomDelay;
-      if (hasPunctuation) delay += Math.random() * 150;
-
-      const timer = setTimeout(() => {
-        setDisplayText((prev) => prev + (prev ? " " : "") + word);
-        setCurrentWordIndex((prev) => prev + 1);
-      }, delay);
-      return () => clearTimeout(timer);
-    } else if (hasStarted && currentWordIndex >= words.length) {
-      onComplete();
-    }
-  }, [currentWordIndex, words, onComplete, hasStarted]);
-
-  return <span>{displayText}</span>;
-};
-
-
-
-
-// AIDEV-NOTE: Main widget component - manages LiveAvatar session, chat UI, demo playback, and intent detection
+// AIDEV-NOTE: Main widget component - manages LiveAvatar session, voice interaction, demo playback, and intent detection
 // AIDEV-NOTE: Architecture: LiveKit WebRTC for video/audio, HeyGen API for avatar session, local state for UI
 // AIDEV-NOTE: Why: Single component design keeps all LiveKit room state in one place to prevent sync issues
 // AIDEV-NOTE: Key flows: startLiveSession → wireRoomEvents → handleUserSpeech/handleAvatarSpeech → detectIntent
 export const AIChatWidget = () => {
   const [state, setState] = useState("minimized");
-  const [showChat, setShowChat] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
   const [isVoiceMode, setIsVoiceMode] = useState(true);
   const [showInactivityPrompt, setShowInactivityPrompt] = useState(false);
@@ -102,16 +48,6 @@ export const AIChatWidget = () => {
   const [selectedTime, setSelectedTime] = useState("");
   const [email, setEmail] = useState("");
   const [isMobile, setIsMobile] = useState(false);
-  const [messages, setMessages] = useState([
-    {
-      role: "assistant",
-      content:
-        "Hey, I'm Catherine your Qudemo visual Agent. What brings you to us today?",
-      isTyping: false,
-    },
-  ]);
-  const [inputValue, setInputValue] = useState("");
-  const [typingMessageId, setTypingMessageId] = useState(null);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [transitionToScreenShare, setTransitionToScreenShare] = useState(false);
@@ -148,16 +84,12 @@ export const AIChatWidget = () => {
   });
 
   // AIDEV-NOTE: Processes user speech transcripts from LiveKit data channel
-  // AIDEV-NOTE: How: Updates messages array (instant UI), transcripts array (keeps last 10), triggers intent detection
+  // AIDEV-NOTE: How: Updates transcripts array (keeps last 10), triggers intent detection
   // AIDEV-NOTE: Why: Centralized handler for both 'type' and 'event_type' message formats (HeyGen API v1/v2 compatibility)
   // AIDEV-NOTE: Called by: wireRoomEvents for user_transcript, user_speech, and user.transcription events
   const handleUserSpeech = (text, source) => {
     if (!text) return;
     log('USER_SPEECH', `🗣️ User said (${source})`, { text });
-    setMessages((prev) => [
-      ...prev,
-      { role: "user", content: text, isTyping: false },
-    ]);
     // AIDEV-NOTE: Keep only last 10 transcripts to prevent memory bloat
     setTranscripts((prev) =>
       [
@@ -172,24 +104,13 @@ export const AIChatWidget = () => {
     detectIntent(text, { text }, "user");
   };
 
-  // AIDEV-NOTE: Processes avatar speech transcripts and triggers typing animation in chat
-  // AIDEV-NOTE: How: Creates message with isTyping=true, saves text to lastAvatarSpeechRef for demo trigger detection
+  // AIDEV-NOTE: Processes avatar speech transcripts for intent detection and demo triggers
+  // AIDEV-NOTE: How: Updates transcripts array, saves text to lastAvatarSpeechRef for demo trigger detection
   // AIDEV-NOTE: Why: Centralized handler reduces duplication, lastAvatarSpeechRef enables demo check on avatar_stop_talking
   // AIDEV-NOTE: Called by: wireRoomEvents for avatar_transcript, avatar_speech, llm_response, and avatar.transcription
   const handleAvatarSpeech = (text, source) => {
     if (!text) return;
     log('AVATAR_SPEECH', `🤖 Avatar said (${source})`, { text });
-    const newMessageId = Date.now();
-    setMessages((prev) => [
-      ...prev,
-      {
-        role: "assistant",
-        content: text,
-        isTyping: true, // AIDEV-NOTE: Triggers TypingText animation in chat UI
-        id: newMessageId,
-      },
-    ]);
-    setTypingMessageId(newMessageId);
     setTranscripts((prev) =>
       [
         ...prev,
@@ -273,7 +194,6 @@ export const AIChatWidget = () => {
     new Date(Date.now() + 86400000).toISOString().split("T")[0],
     new Date(Date.now() + 172800000).toISOString().split("T")[0],
   ];
-  const messagesEndRef = useRef(null);
 
   useEffect(() => {
     if (state === "minimized") return;
@@ -288,70 +208,20 @@ export const AIChatWidget = () => {
 
   // AIDEV-NOTE: Resets inactivity timer to prevent 30s timeout prompt
   // AIDEV-NOTE: How: Updates lastActivity timestamp, hides inactivity prompt if showing
-  // AIDEV-NOTE: Why: Called on all user interactions (clicks, messages, etc) to keep widget active
-  // AIDEV-NOTE: Called by: handleSendMessage, handleQuickAction, button clicks throughout UI
+  // AIDEV-NOTE: Why: Called on all user interactions (clicks, voice, etc) to keep widget active
+  // AIDEV-NOTE: Called by: handleQuickAction, button clicks throughout UI
   const handleActivity = () => {
     setLastActivity(Date.now());
     setShowInactivityPrompt(false);
   };
 
-  // AIDEV-NOTE: Resets conversation to initial greeting message
-  // AIDEV-NOTE: How: Clears messages array back to Catherine's greeting, resets activity timer
-  // AIDEV-NOTE: Why: Allows user to start fresh conversation after inactivity timeout
+  // AIDEV-NOTE: Resets activity timer after inactivity timeout
+  // AIDEV-NOTE: How: Hides inactivity prompt, resets activity timer
+  // AIDEV-NOTE: Why: Allows user to continue voice interaction after timeout
   // AIDEV-NOTE: Called by: "Continue conversation" button in inactivity prompt overlay
   const handleCreateNewConversation = () => {
-    setMessages([
-      {
-        role: "assistant",
-        content:
-          "Hey, I'm Catherine your Qudemo visual Agent. What brings you to us today?",
-        isTyping: false,
-      },
-    ]);
     setShowInactivityPrompt(false);
     setLastActivity(Date.now());
-  };
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
-  // AIDEV-NOTE: Handles user chat message submission from input field
-  // AIDEV-NOTE: How: Adds message to UI immediately, routes to LiveAvatar via sendDataToAvatar if live, else shows fallback
-  // AIDEV-NOTE: Why: Instant UI feedback improves UX, dual-mode support (live avatar vs static fallback) for testing
-  // AIDEV-NOTE: Called by: Send button click or Enter key press in chat input field
-  const handleSendMessage = () => {
-    if (inputValue.trim()) {
-      const message = inputValue.trim();
-      // AIDEV-NOTE: Add user message immediately for instant UI feedback
-      setMessages([
-        ...messages,
-        { role: "user", content: message, isTyping: false },
-      ]);
-      setInputValue("");
-      handleActivity();
-
-      // AIDEV-NOTE: Route message based on session state - live avatar gets real interaction, fallback for testing
-      if (hasLiveVideo && room) {
-        sendDataToAvatar(message); // AIDEV-NOTE: Sends via LiveKit data channel, response comes via wireRoomEvents
-      } else {
-        // AIDEV-NOTE: Fallback for non-live mode - simulates avatar response for UI testing without LiveAvatar connection
-        setTimeout(() => {
-          const newMessageId = Date.now();
-          setMessages((prev) => [
-            ...prev,
-            {
-              role: "assistant",
-              content:
-                "Thanks for your message! I'm here to help you with any questions.",
-              isTyping: true,
-              id: newMessageId,
-            },
-          ]);
-          setTypingMessageId(newMessageId);
-        }, 1000);
-      }
-    }
   };
 
   // AIDEV-NOTE: Full session cleanup and disconnect from LiveAvatar
@@ -381,7 +251,6 @@ export const AIChatWidget = () => {
     setIsMuted(true);
     setAudioEnabled(true);
     setState("minimized");
-    setShowChat(false);
     setShowInactivityPrompt(false);
   };
 
@@ -857,17 +726,7 @@ export const AIChatWidget = () => {
         "contact me by email",
       ],
       action: () => {
-        const newMessageId = Date.now();
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: "assistant",
-            content: "I'd be happy to send you an email! Please provide your email address in the chat.",
-            isTyping: true,
-            id: newMessageId,
-          },
-        ]);
-        setTypingMessageId(newMessageId);
+        // AIDEV-NOTE: Avatar will respond via voice, no chat message needed
         setDetectedIntents((prev) => [...prev, "send_email"].slice(-5));
       },
       description: "Send email",
@@ -881,17 +740,7 @@ export const AIChatWidget = () => {
         "cost",
       ],
       action: () => {
-        const newMessageId = Date.now();
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: "assistant",
-            content: "Great question! Our pricing is flexible and depends on your needs. Would you like to schedule a call to discuss pricing options in detail?",
-            isTyping: true,
-            id: newMessageId,
-          },
-        ]);
-        setTypingMessageId(newMessageId);
+        // AIDEV-NOTE: Avatar will respond via voice, no chat message needed
         setDetectedIntents((prev) => [...prev, "show_pricing"].slice(-5));
       },
       description: "Show pricing",
@@ -966,77 +815,43 @@ export const AIChatWidget = () => {
     "What can you do?",
   ];
 
-  // AIDEV-NOTE: Handles quick action button clicks - sends predefined message to avatar
-  // AIDEV-NOTE: How: Adds message to chat UI, triggers activity, opens chat panel, routes to avatar or shows fallback
-  // AIDEV-NOTE: Why: Same flow as handleSendMessage but for predefined prompts instead of user-typed text
+  // AIDEV-NOTE: Handles quick action button clicks - sends predefined prompts to avatar via voice
+  // AIDEV-NOTE: How: Sends action text to avatar via LiveKit data channel, resets inactivity timer
+  // AIDEV-NOTE: Why: Provides convenient shortcuts for common questions without typing
   // AIDEV-NOTE: Called by: Quick action button clicks in UI (shown when not in live mode)
   const handleQuickAction = (action) => {
-    // AIDEV-NOTE: Add user message immediately for instant feedback
-    setMessages([
-      ...messages,
-      { role: "user", content: action, isTyping: false },
-    ]);
     handleActivity(); // AIDEV-NOTE: Reset inactivity timer
-    setShowChat(true); // AIDEV-NOTE: Auto-open chat panel to show response
-
-    // AIDEV-NOTE: Route based on session state - live gets real interaction, fallback for testing
+    // AIDEV-NOTE: Send prompt to avatar if session is active
     if (hasLiveVideo && room) {
       sendDataToAvatar(action);
-    } else {
-      // AIDEV-NOTE: Fallback for non-live mode - simulates avatar response
-      setTimeout(() => {
-        const newMessageId = Date.now();
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: "assistant",
-            content: "Great question! I'd be happy to help you with that.",
-            isTyping: true,
-            id: newMessageId,
-          },
-        ]);
-        setTypingMessageId(newMessageId);
-      }, 1000);
     }
   };
 
   // AIDEV-NOTE: Calculates widget width based on state and device type
-  // AIDEV-NOTE: How: Returns pixel values based on state (minimized/small/medium/maximized), isMobile, and showChat
-  // AIDEV-NOTE: Why: Responsive design - mobile uses viewport width, desktop uses fixed values, chat adds sidebar width
+  // AIDEV-NOTE: How: Returns pixel values based on state (minimized/small/medium/maximized) and isMobile
+  // AIDEV-NOTE: Why: Responsive design - mobile uses viewport width, desktop uses fixed values
   // AIDEV-NOTE: Called by: framer-motion animate prop for smooth width transitions
   const getCurrentWidth = () => {
     if (state === "minimized") return isMobile ? 80 : 120; // AIDEV-NOTE: Tiny circle for minimized state
     if (state === "small")
-      return showChat
-        ? isMobile
-          ? window.innerWidth - 32 // AIDEV-NOTE: Mobile with chat - full width minus padding
-          : 704 // AIDEV-NOTE: Desktop with chat - 320px video + 384px chat sidebar
-        : isMobile
-        ? 280 // AIDEV-NOTE: Mobile without chat - compact size
-        : 320; // AIDEV-NOTE: Desktop without chat - standard size
+      return isMobile ? 280 : 320; // AIDEV-NOTE: Compact video size
     if (state === "medium")
-      return showChat
-        ? isMobile
-          ? window.innerWidth - 32
-          : 864 // AIDEV-NOTE: Desktop medium with chat - 480px video + 384px chat sidebar
-        : isMobile
-        ? 320
-        : 480; // AIDEV-NOTE: Larger video area for medium state
+      return isMobile ? 320 : 480; // AIDEV-NOTE: Medium video size
     if (state === "maximized")
       return isMobile ? window.innerWidth - 32 : window.innerWidth * 0.8; // AIDEV-NOTE: 80% of viewport for maximized
     return isMobile ? 280 : 420; // AIDEV-NOTE: Default fallback
   };
 
   // AIDEV-NOTE: Calculates widget height based on state and device type
-  // AIDEV-NOTE: How: Returns pixel values or viewport percentages based on state, isMobile, and showChat
-  // AIDEV-NOTE: Why: Mobile uses viewport % when chat open for better mobile UX, desktop uses fixed or capped values
+  // AIDEV-NOTE: How: Returns pixel values or viewport percentages based on state and isMobile
+  // AIDEV-NOTE: Why: Responsive design for different widget states
   // AIDEV-NOTE: Called by: framer-motion animate prop for smooth height transitions
   const getCurrentHeight = () => {
     if (state === "minimized") return isMobile ? 120 : 160; // AIDEV-NOTE: Circular minimized state
     if (state === "small")
-      return isMobile ? (showChat ? window.innerHeight * 0.9 : 360) : 420; // AIDEV-NOTE: Mobile chat uses 90% viewport
+      return isMobile ? 360 : 420; // AIDEV-NOTE: Compact video size
     if (state === "medium")
-      return isMobile ? (showChat ? window.innerHeight * 0.9 : 440) : 520;
+      return isMobile ? 440 : 520; // AIDEV-NOTE: Medium video size
     if (state === "maximized")
       return isMobile
         ? window.innerHeight - 64 // AIDEV-NOTE: Full height minus top padding for mobile
@@ -1132,7 +947,7 @@ export const AIChatWidget = () => {
               width: "100%",
               height: "100%",
               display: "flex",
-              flexDirection: isMobile && showChat ? "column" : "row",
+              flexDirection: "row",
               backgroundColor: "#111827",
             }}
           >
@@ -1190,17 +1005,9 @@ export const AIChatWidget = () => {
 
             <div
               style={{
-                flex: showChat ? (state === "maximized" ? 1 : "none") : 1,
-                width: showChat
-                  ? state === "maximized"
-                    ? "50%"
-                    : isMobile
-                    ? "100%"
-                    : state === "small"
-                    ? "320px"
-                    : "480px"
-                  : "100%",
-                height: showChat && isMobile ? "55%" : "100%",
+                flex: 1,
+                width: "100%",
+                height: "100%",
                 display: "flex",
                 flexDirection: "column",
                 position: "relative",
@@ -1245,7 +1052,6 @@ export const AIChatWidget = () => {
                       <button
                         onClick={() => {
                           setState("small");
-                          setShowChat(false);
                         }}
                         style={{
                           backgroundColor: "rgba(0, 0, 0, 0.7)",
@@ -1956,20 +1762,19 @@ export const AIChatWidget = () => {
                         : state === "medium"
                         ? "12px"
                         : "16px",
-                    right: showChat
-                      ? "4px"
-                      : state === "small"
-                      ? "8px"
-                      : state === "medium"
-                      ? "12px"
-                      : "16px",
+                    right:
+                      state === "small"
+                        ? "8px"
+                        : state === "medium"
+                        ? "12px"
+                        : "16px",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "space-between",
                     zIndex: 10,
                   }}
                 >
-                  {/* AIDEV-NOTE: Control panel - video/voice toggle and action buttons (mic, speaker, chat, disconnect) */}
+                  {/* AIDEV-NOTE: Control panel - video/voice toggle and action buttons (mic, speaker, disconnect) */}
                   {/* AIDEV-NOTE: Why button states: Red when muted/disabled, green when active/speaking, black when idle */}
                   {!showInactivityPrompt && (
                     <>
@@ -2129,39 +1934,6 @@ export const AIChatWidget = () => {
                             )}
                           </button>
                         )}
-                        {/* AIDEV-NOTE: Chat button - toggles chat sidebar visibility, blue color indicates interactive feature */}
-                        <button
-                          onClick={() => {
-                            setShowChat(!showChat);
-                            handleActivity();
-                          }}
-                          style={{
-                            width:
-                              state === "small"
-                                ? "40px"
-                                : state === "medium"
-                                ? "44px"
-                                : "48px",
-                            height:
-                              state === "small"
-                                ? "40px"
-                                : state === "medium"
-                                ? "44px"
-                                : "48px",
-                            backgroundColor: "rgba(0, 0, 0, 0.7)",
-                            borderRadius: "50%",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            border: "1px solid rgba(255, 255, 255, 0.2)",
-                            cursor: "pointer",
-                            color: "#3b82f6",
-                          }}
-                        >
-                          <MessageCircle
-                            style={{ width: "16px", height: "16px" }}
-                          />
-                        </button>
                         {/* AIDEV-NOTE: Disconnect button - ends LiveKit session and resets widget, red color indicates destructive action */}
                         <button
                           onClick={handleDisconnect}
@@ -2196,208 +1968,6 @@ export const AIChatWidget = () => {
                 </div>
               </div>
             </div>
-
-            {/* AIDEV-NOTE: Chat sidebar panel - slides in from right (desktop) or bottom (mobile) with AnimatePresence */}
-            {/* AIDEV-NOTE: Why AnimatePresence: Enables smooth exit animation when showChat becomes false */}
-            {/* AIDEV-NOTE: Width responsive: 50% in maximized, 100% mobile, 384px desktop (matches getCurrentWidth logic) */}
-            <AnimatePresence>
-              {showChat &&
-                (state === "small" ||
-                  state === "medium" ||
-                  state === "maximized") && (
-                  <motion.div
-                    style={{
-                      width:
-                        state === "maximized"
-                          ? "50%"
-                          : isMobile
-                          ? "100%"
-                          : "384px",
-                      height: isMobile ? "45%" : "100%",
-                      borderLeft: isMobile ? "none" : "1px solid #374151",
-                      borderTop: isMobile ? "1px solid #374151" : "none",
-                      backgroundColor: "#1f2937",
-                      display: "flex",
-                      flexDirection: "column",
-                      flexShrink: 0,
-                    }}
-                    initial={{ width: 0, opacity: 0 }}
-                    animate={{
-                      width:
-                        state === "maximized" ? "50%" : isMobile ? "100%" : 384,
-                      opacity: 1,
-                    }}
-                    exit={{ width: 0, opacity: 0 }}
-                    transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                  >
-                    <div
-                      style={{
-                        padding: "16px",
-                        borderBottom: "1px solid #374151",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        backgroundColor: "rgba(31, 41, 55, 0.5)",
-                        backdropFilter: "blur(4px)",
-                      }}
-                    >
-                      <h3
-                        style={{
-                          fontWeight: "600",
-                          color: "#f9fafb",
-                          margin: 0,
-                        }}
-                      >
-                        Chat
-                      </h3>
-                      <button
-                        onClick={() => setShowChat(false)}
-                        style={{
-                          width: "32px",
-                          height: "32px",
-                          backgroundColor: "transparent",
-                          border: "none",
-                          borderRadius: "6px",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          cursor: "pointer",
-                          color: "#f9fafb",
-                        }}
-                      >
-                        <X style={{ width: "16px", height: "16px" }} />
-                      </button>
-                    </div>
-
-                    {/* AIDEV-NOTE: Message history container - scrollable list of chat messages with motion animations */}
-                    {/* AIDEV-NOTE: minHeight: 0 allows flex child to shrink below content size for proper scrolling */}
-                    <div
-                      style={{
-                        flex: 1,
-                        overflowY: "auto",
-                        padding: "16px",
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: "16px",
-                        backgroundColor: "#111827",
-                        minHeight: 0,
-                      }}
-                    >
-                      {/* AIDEV-NOTE: Each message animates in with staggered delay (i * 0.1s) for smooth appearance */}
-                      {messages.map((msg, i) => (
-                        <motion.div
-                          key={msg.id || i}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: i * 0.1 }}
-                          style={{
-                            display: "flex",
-                            justifyContent:
-                              msg.role === "user" ? "flex-end" : "flex-start",
-                          }}
-                        >
-                          <div
-                            style={{
-                              maxWidth: "80%",
-                              borderRadius: "16px",
-                              padding: "10px 16px",
-                              backgroundColor:
-                                msg.role === "user" ? "#3b82f6" : "#374151",
-                              color: "#f9fafb",
-                            }}
-                          >
-                            <p
-                              style={{
-                                fontSize: "14px",
-                                whiteSpace: "pre-line",
-                                margin: 0,
-                              }}
-                            >
-                              {/* AIDEV-NOTE: TypingText component shows character-by-character animation for assistant messages */}
-                              {/* AIDEV-NOTE: onComplete clears isTyping flag and typingMessageId to enable new messages */}
-                              {msg.role === "assistant" && msg.isTyping ? (
-                                <TypingText
-                                  text={msg.content}
-                                  onComplete={() => {
-                                    setMessages((prev) =>
-                                      prev.map((m) =>
-                                        m.id === msg.id
-                                          ? { ...m, isTyping: false }
-                                          : m
-                                      )
-                                    );
-                                    setTypingMessageId(null);
-                                  }}
-                                />
-                              ) : (
-                                msg.content
-                              )}
-                            </p>
-                          </div>
-                        </motion.div>
-                      ))}
-                      <div ref={messagesEndRef} />
-                    </div>
-
-                    {/* AIDEV-NOTE: Chat input footer - text input with send button, Enter key triggers send */}
-                    <div
-                      style={{
-                        padding: "16px",
-                        borderTop: "1px solid #374151",
-                        backgroundColor: "rgba(31, 41, 55, 0.5)",
-                        backdropFilter: "blur(4px)",
-                      }}
-                    >
-                      <div style={{ display: "flex", gap: "8px" }}>
-                        <input
-                          value={inputValue}
-                          onChange={(e) => setInputValue(e.target.value)}
-                          onKeyPress={(e) => {
-                            if (e.key === "Enter") {
-                              handleSendMessage();
-                            }
-                          }}
-                          placeholder="Type your message here..."
-                          style={{
-                            flex: 1,
-                            height: "40px",
-                            borderRadius: "6px",
-                            border: "1px solid #4b5563",
-                            backgroundColor: "#111827",
-                            padding: "0 12px",
-                            fontSize: "14px",
-                            color: "#f9fafb",
-                            outline: "none",
-                          }}
-                        />
-                        <button
-                          onClick={handleSendMessage}
-                          disabled={!inputValue.trim()}
-                          style={{
-                            width: "40px",
-                            height: "40px",
-                            backgroundColor: inputValue.trim()
-                              ? "#3b82f6"
-                              : "#6b7280",
-                            border: "none",
-                            borderRadius: "6px",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            cursor: inputValue.trim()
-                              ? "pointer"
-                              : "not-allowed",
-                            color: "white",
-                            flexShrink: 0,
-                          }}
-                        >
-                          <Send style={{ width: "16px", height: "16px" }} />
-                        </button>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-            </AnimatePresence>
           </div>
         )}
 
@@ -2607,19 +2177,8 @@ export const AIChatWidget = () => {
                     onClick={() => {
                       if (selectedDate && selectedTime && email) {
                         setShowBookingPopup(false);
-                        const newMessageId = Date.now();
-                        setMessages([
-                          ...messages,
-                          {
-                            role: "assistant",
-                            content: `Perfect! I've booked your meeting for ${new Date(
-                              selectedDate
-                            ).toLocaleDateString()} at ${selectedTime}. A confirmation email will be sent to ${email}.`,
-                            isTyping: true,
-                            id: newMessageId,
-                          },
-                        ]);
-                        setTypingMessageId(newMessageId);
+                        // AIDEV-NOTE: In production, this would send booking data to backend API
+                        // Avatar will confirm booking via voice response
                         setSelectedDate("");
                         setSelectedTime("");
                         setEmail("");
