@@ -663,8 +663,9 @@ export const AIChatWidget = () => {
 
   // AIDEV-NOTE: Intent detection system - keyword-based actions triggered by user/avatar speech
   // AIDEV-NOTE: How: Array of intent objects with keywords, action functions, and descriptions
-  // AIDEV-NOTE: Why: Enables conversational UI control (booking, screen size, pricing) without clicking buttons
+  // AIDEV-NOTE: Why: Enables conversational UI control for booking without clicking buttons
   // AIDEV-NOTE: Used by: detectIntent function checks transcript against all intent keywords
+  // AIDEV-REMOVED: Screen control intents (maximize/minimize), email, and pricing intents - not needed for voice-first avatar interaction
   const intentActions = [
     // AIDEV-NOTE: Book demo intent - opens booking popup for scheduling
     {
@@ -682,6 +683,7 @@ export const AIChatWidget = () => {
       },
       description: "Book demo",
     },
+    // AIDEV-NOTE: Schedule meeting intent - opens same booking popup for general meeting scheduling
     {
       keywords: [
         "set up a meet",
@@ -689,66 +691,13 @@ export const AIChatWidget = () => {
         "book a call",
         "arrange a meeting",
         "schedule a call",
+        "book a meeting",
       ],
       action: () => {
         setShowBookingPopup(true);
         setDetectedIntents((prev) => [...prev, "schedule_meeting"].slice(-5));
       },
       description: "Schedule meeting",
-    },
-    {
-      keywords: [
-        "increase screen",
-        "make bigger",
-        "full screen",
-        "maximize",
-        "larger screen",
-      ],
-      action: () => {
-        setState("maximized");
-        setDetectedIntents((prev) => [...prev, "maximize_screen"].slice(-5));
-      },
-      description: "Maximize screen",
-    },
-    {
-      keywords: [
-        "decrease screen",
-        "make smaller",
-        "minimize",
-        "smaller screen",
-      ],
-      action: () => {
-        setState("small");
-        setDetectedIntents((prev) => [...prev, "minimize_screen"].slice(-5));
-      },
-      description: "Minimize screen",
-    },
-    {
-      keywords: [
-        "send email",
-        "email me",
-        "send me an email",
-        "contact me by email",
-      ],
-      action: () => {
-        // AIDEV-NOTE: Avatar will respond via voice, no chat message needed
-        setDetectedIntents((prev) => [...prev, "send_email"].slice(-5));
-      },
-      description: "Send email",
-    },
-    {
-      keywords: [
-        "show pricing",
-        "what is the price",
-        "how much does it cost",
-        "pricing information",
-        "cost",
-      ],
-      action: () => {
-        // AIDEV-NOTE: Avatar will respond via voice, no chat message needed
-        setDetectedIntents((prev) => [...prev, "show_pricing"].slice(-5));
-      },
-      description: "Show pricing",
     },
   ];
 
