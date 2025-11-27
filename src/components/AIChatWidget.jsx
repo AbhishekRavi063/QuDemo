@@ -40,6 +40,9 @@ import { useDemoVideo } from '../hooks/useDemoVideo';
 import { checkForDemoTrigger } from '../utils/videoTriggerMatcher';
 import videoTriggersConfig from '../config/video-triggers.json';
 
+// AIDEV-NOTE: Typing animation component - simulates human-like word-by-word typing for assistant messages
+// AIDEV-NOTE: How: Adds random delays (200-400ms) between words, extra delay for punctuation
+// AIDEV-NOTE: Why: Creates natural conversational feel, indicates AI is "thinking" while responding
 const TypingText = ({
   text,
   onComplete,
@@ -63,6 +66,7 @@ const TypingText = ({
       const word = words[currentWordIndex];
       const hasPunctuation = /[.,!?;:]/.test(word);
 
+      // AIDEV-NOTE: Variable delay based on punctuation - mimics natural pauses in human speech
       let delay = baseDelay + randomDelay;
       if (hasPunctuation) delay += Math.random() * 150;
 
@@ -82,6 +86,10 @@ const TypingText = ({
 
 
 
+// AIDEV-NOTE: Main widget component - manages LiveAvatar session, chat UI, demo playback, and intent detection
+// AIDEV-NOTE: Architecture: LiveKit WebRTC for video/audio, HeyGen API for avatar session, local state for UI
+// AIDEV-NOTE: Why: Single component design keeps all LiveKit room state in one place to prevent sync issues
+// AIDEV-NOTE: Key flows: startLiveSession → wireRoomEvents → handleUserSpeech/handleAvatarSpeech → detectIntent
 export const AIChatWidget = () => {
   const [state, setState] = useState("minimized");
   const [showChat, setShowChat] = useState(false);
@@ -139,7 +147,10 @@ export const AIChatWidget = () => {
     setState,
   });
 
-  // Helper function to handle user speech (reduces duplication)
+  // AIDEV-NOTE: Processes user speech transcripts from LiveKit data channel
+  // AIDEV-NOTE: How: Updates messages array (instant UI), transcripts array (keeps last 10), triggers intent detection
+  // AIDEV-NOTE: Why: Centralized handler for both 'type' and 'event_type' message formats (HeyGen API v1/v2 compatibility)
+  // AIDEV-NOTE: Called by: wireRoomEvents for user_transcript, user_speech, and user.transcription events
   const handleUserSpeech = (text, source) => {
     if (!text) return;
     log('USER_SPEECH', `🗣️ User said (${source})`, { text });
@@ -147,6 +158,7 @@ export const AIChatWidget = () => {
       ...prev,
       { role: "user", content: text, isTyping: false },
     ]);
+    // AIDEV-NOTE: Keep only last 10 transcripts to prevent memory bloat
     setTranscripts((prev) =>
       [
         ...prev,
@@ -160,7 +172,10 @@ export const AIChatWidget = () => {
     detectIntent(text, { text }, "user");
   };
 
-  // Helper function to handle avatar speech (reduces duplication)
+  // AIDEV-NOTE: Processes avatar speech transcripts and triggers typing animation in chat
+  // AIDEV-NOTE: How: Creates message with isTyping=true, saves text to lastAvatarSpeechRef for demo trigger detection
+  // AIDEV-NOTE: Why: Centralized handler reduces duplication, lastAvatarSpeechRef enables demo check on avatar_stop_talking
+  // AIDEV-NOTE: Called by: wireRoomEvents for avatar_transcript, avatar_speech, llm_response, and avatar.transcription
   const handleAvatarSpeech = (text, source) => {
     if (!text) return;
     log('AVATAR_SPEECH', `🤖 Avatar said (${source})`, { text });
@@ -170,7 +185,7 @@ export const AIChatWidget = () => {
       {
         role: "assistant",
         content: text,
-        isTyping: true,
+        isTyping: true, // AIDEV-NOTE: Triggers TypingText animation in chat UI
         id: newMessageId,
       },
     ]);
@@ -185,7 +200,8 @@ export const AIChatWidget = () => {
         },
       ].slice(-10)
     );
-    lastAvatarSpeechRef.current = text; // Save for demo trigger checking
+    // AIDEV-NOTE: Critical for demo triggers - wireRoomEvents checks this ref on avatar_stop_talking event
+    lastAvatarSpeechRef.current = text;
     detectIntent(text, { text }, "avatar");
   };
 
@@ -270,11 +286,19 @@ export const AIChatWidget = () => {
     return () => clearInterval(checkInactivity);
   }, [lastActivity, showInactivityPrompt, state]);
 
+  // AIDEV-NOTE: Resets inactivity timer to prevent 30s timeout prompt
+  // AIDEV-NOTE: How: Updates lastActivity timestamp, hides inactivity prompt if showing
+  // AIDEV-NOTE: Why: Called on all user interactions (clicks, messages, etc) to keep widget active
+  // AIDEV-NOTE: Called by: handleSendMessage, handleQuickAction, button clicks throughout UI
   const handleActivity = () => {
     setLastActivity(Date.now());
     setShowInactivityPrompt(false);
   };
 
+  // AIDEV-NOTE: Resets conversation to initial greeting message
+  // AIDEV-NOTE: How: Clears messages array back to Catherine's greeting, resets activity timer
+  // AIDEV-NOTE: Why: Allows user to start fresh conversation after inactivity timeout
+  // AIDEV-NOTE: Called by: "Continue conversation" button in inactivity prompt overlay
   const handleCreateNewConversation = () => {
     setMessages([
       {
@@ -292,9 +316,14 @@ export const AIChatWidget = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // AIDEV-NOTE: Handles user chat message submission from input field
+  // AIDEV-NOTE: How: Adds message to UI immediately, routes to LiveAvatar via sendDataToAvatar if live, else shows fallback
+  // AIDEV-NOTE: Why: Instant UI feedback improves UX, dual-mode support (live avatar vs static fallback) for testing
+  // AIDEV-NOTE: Called by: Send button click or Enter key press in chat input field
   const handleSendMessage = () => {
     if (inputValue.trim()) {
       const message = inputValue.trim();
+      // AIDEV-NOTE: Add user message immediately for instant UI feedback
       setMessages([
         ...messages,
         { role: "user", content: message, isTyping: false },
@@ -302,11 +331,11 @@ export const AIChatWidget = () => {
       setInputValue("");
       handleActivity();
 
-      // Send to avatar if live session is active
+      // AIDEV-NOTE: Route message based on session state - live avatar gets real interaction, fallback for testing
       if (hasLiveVideo && room) {
-        sendDataToAvatar(message);
+        sendDataToAvatar(message); // AIDEV-NOTE: Sends via LiveKit data channel, response comes via wireRoomEvents
       } else {
-        // Fallback response for non-live mode
+        // AIDEV-NOTE: Fallback for non-live mode - simulates avatar response for UI testing without LiveAvatar connection
         setTimeout(() => {
           const newMessageId = Date.now();
           setMessages((prev) => [
@@ -325,7 +354,12 @@ export const AIChatWidget = () => {
     }
   };
 
+  // AIDEV-NOTE: Full session cleanup and disconnect from LiveAvatar
+  // AIDEV-NOTE: How: Disconnects room, stops all tracks, removes audio element from DOM, resets all state to defaults
+  // AIDEV-NOTE: Why: Prevents memory leaks from tracks/elements, ensures clean state for reconnection
+  // AIDEV-NOTE: Called by: Disconnect button (PhoneOff icon), component unmount useEffect cleanup
   const handleDisconnect = () => {
+    // AIDEV-NOTE: LiveKit room cleanup - disconnect and reset session state
     if (room) {
       room.disconnect();
       setRoom(null);
@@ -333,14 +367,17 @@ export const AIChatWidget = () => {
       setHasLiveVideo(false);
       setHasAudio(false);
     }
+    // AIDEV-NOTE: Stop local microphone track to release device access
     if (localAudioRef.current) {
       localAudioRef.current.stop();
       localAudioRef.current = null;
     }
+    // AIDEV-NOTE: Remove remote audio element from DOM to prevent memory leak
     if (remoteAudioRef.current) {
       document.body.removeChild(remoteAudioRef.current);
       remoteAudioRef.current = null;
     }
+    // AIDEV-NOTE: Reset UI state to initial minimized widget with default settings
     setIsMuted(true);
     setAudioEnabled(true);
     setState("minimized");
@@ -348,11 +385,18 @@ export const AIChatWidget = () => {
     setShowInactivityPrompt(false);
   };
 
+  // AIDEV-NOTE: Initializes LiveAvatar session - creates HeyGen session, connects to LiveKit room, wires all events
+  // AIDEV-NOTE: How: POST to /api/liveavatar/create-session → get LiveKit credentials → connect → wire events → attach tracks
+  // AIDEV-NOTE: Why: Multi-step async flow required by HeyGen API v2 (token → start → livekit credentials)
+  // AIDEV-NOTE: Called by: Widget expansion (minimized → small), triggered on initial click
+  // AIDEV-TODO: Add user-facing error UI instead of console.error on session creation failure
   const startLiveSession = async () => {
+    // AIDEV-NOTE: Prevent duplicate connection attempts
     if (isConnecting || room) return;
 
     setIsConnecting(true);
     try {
+      // AIDEV-NOTE: Step 1 - Create HeyGen LiveAvatar session via serverless API route
       const resp = await fetch(getNodeApiUrl("/api/liveavatar/create-session"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -364,8 +408,8 @@ export const AIChatWidget = () => {
       }
 
       const response = await resp.json();
-      
-      // Handle response format from backend (data is nested in response.data)
+
+      // AIDEV-NOTE: Handle nested response format - backend may wrap in response.data
       const data = response.data || response;
       const livekitUrl = data.livekitUrl;
       const livekitClientToken = data.livekitClientToken;
@@ -377,13 +421,16 @@ export const AIChatWidget = () => {
 
       setSessionInfo({ sessionId, livekitUrl });
 
+      // AIDEV-NOTE: Step 2 - Create LiveKit room with disabled adaptive streaming for stable avatar quality
       const r = new Room({
-        adaptiveStream: false,
-        dynacast: false,
+        adaptiveStream: false, // AIDEV-NOTE: Prevents quality changes during session
+        dynacast: false,       // AIDEV-NOTE: Disabled for avatar use case
       });
 
+      // AIDEV-NOTE: Step 3 - Connect to LiveKit room using credentials from HeyGen session
       await r.connect(livekitUrl, livekitClientToken);
 
+      // AIDEV-NOTE: Safety check - if component unmounted during async connection, cleanup and abort
       if (!mountedRef.current) {
         r.disconnect();
         setIsConnecting(false);
@@ -393,9 +440,10 @@ export const AIChatWidget = () => {
       setRoom(r);
       setHasLiveVideo(true);
 
-      // Wire up comprehensive events
+      // AIDEV-NOTE: Step 4 - Wire all room events (data channel, participant attributes, state changes)
       wireRoomEvents(r);
 
+      // AIDEV-NOTE: Step 5 - Listen for new tracks being published by avatar (video/audio)
       r.on(
         RoomEvent.TrackSubscribed,
         (
@@ -406,7 +454,7 @@ export const AIChatWidget = () => {
           console.log("Track subscribed:", track.kind, track.sid);
           if (track.kind === Track.Kind.Video) {
             console.log("Video track received, attaching...");
-            setTimeout(() => attachTrackToDom(track), 100);
+            setTimeout(() => attachTrackToDom(track), 100); // AIDEV-NOTE: 100ms delay ensures DOM ready
           } else if (track.kind === Track.Kind.Audio) {
             console.log("Audio track received, attaching...");
             attachAudioTrack(track);
@@ -414,6 +462,7 @@ export const AIChatWidget = () => {
         }
       );
 
+      // AIDEV-NOTE: Handle track removal when participant leaves or unpublishes
       r.on(RoomEvent.TrackUnsubscribed, (track) => {
         if (track.kind === Track.Kind.Video) {
           detachTrackFromDom(track);
@@ -422,9 +471,8 @@ export const AIChatWidget = () => {
         }
       });
 
-
-
-      // Check for existing tracks with delay to ensure DOM is ready
+      // AIDEV-NOTE: Step 6 - Attach already-existing tracks (handles race condition where tracks arrive before listeners)
+      // AIDEV-NOTE: 1000ms delay ensures both DOM and LiveKit room are fully ready
       setTimeout(() => {
         const existingParticipants = Array.from(r.remoteParticipants.values());
         existingParticipants.forEach((participant) => {
@@ -441,108 +489,142 @@ export const AIChatWidget = () => {
       }, 1000);
     } catch (err) {
       console.error("Failed to start live session:", err);
+      // AIDEV-TODO: Show error modal to user instead of silent failure
     }
     setIsConnecting(false);
   };
 
+  // AIDEV-NOTE: Attaches LiveKit video track to DOM - creates <video> element if needed and connects avatar video stream
+  // AIDEV-NOTE: How: Finds #live-video-container, creates <video> if missing, attaches track, forces autoplay
+  // AIDEV-NOTE: Why: Displays avatar video feed, retry logic handles race condition if DOM not ready during connection
+  // AIDEV-NOTE: Called by: TrackSubscribed event listener, existing tracks check in startLiveSession
   const attachTrackToDom = (track) => {
     const videoContainer = document.getElementById("live-video-container");
+    // AIDEV-NOTE: Retry logic - if container not found (DOM not ready), retry after 500ms
     if (!videoContainer) {
       console.log("Video container not found, retrying...");
       setTimeout(() => attachTrackToDom(track), 500);
       return;
     }
 
+    // AIDEV-NOTE: Reuse existing <video> element or create new one - prevents multiple video elements
     let videoEl = videoContainer.querySelector("video");
     if (!videoEl) {
       videoEl = document.createElement("video");
       videoEl.autoplay = true;
-      videoEl.playsInline = true;
-      videoEl.muted = false;
+      videoEl.playsInline = true; // AIDEV-NOTE: Required for iOS Safari to play inline without fullscreen
+      videoEl.muted = false;       // AIDEV-NOTE: Not muted - we want to hear avatar audio
       videoEl.style.width = "100%";
       videoEl.style.height = "100%";
-      videoEl.style.objectFit = "cover";
+      videoEl.style.objectFit = "cover"; // AIDEV-NOTE: Fills container while maintaining aspect ratio
       videoEl.style.backgroundColor = "#000";
       videoContainer.appendChild(videoEl);
       console.log("Video element created and added");
     }
 
-    track.attach(videoEl);
+    track.attach(videoEl); // AIDEV-NOTE: LiveKit method - connects MediaStreamTrack to <video> element
     setHasLiveVideo(true);
 
-    // Force video to play
+    // AIDEV-NOTE: Force video to play - sometimes autoplay is blocked by browser, explicit play() ensures playback
     videoEl.play().catch((e) => console.log("Video play failed:", e));
     console.log("Video track attached, video element:", videoEl);
   };
 
+  // AIDEV-NOTE: Detaches video track from DOM element
+  // AIDEV-NOTE: How: Calls LiveKit's track.detach() to disconnect MediaStreamTrack
+  // AIDEV-NOTE: Why: Cleanup when avatar disconnects or track is unpublished
+  // AIDEV-NOTE: Called by: TrackUnsubscribed event listener
   const detachTrackFromDom = (track) => {
     track.detach();
   };
 
+  // AIDEV-NOTE: Attaches avatar audio track to hidden <audio> element in DOM
+  // AIDEV-NOTE: How: Creates hidden <audio> in body (if not exists), attaches track, respects audioEnabled state
+  // AIDEV-NOTE: Why: Hidden element allows audio playback control, persisted in ref for mute/unmute without recreation
+  // AIDEV-NOTE: Called by: TrackSubscribed event listener, existing tracks check in startLiveSession
   const attachAudioTrack = (track) => {
+    // AIDEV-NOTE: Create audio element once and persist in ref - allows toggling without destroying/recreating
     if (!remoteAudioRef.current) {
       const audioEl = document.createElement("audio");
       audioEl.autoplay = true;
-      audioEl.style.display = "none";
-      document.body.appendChild(audioEl);
+      audioEl.style.display = "none"; // AIDEV-NOTE: Hidden - no visual representation needed for audio
+      document.body.appendChild(audioEl); // AIDEV-NOTE: Attached to body, not container - survives UI changes
       remoteAudioRef.current = audioEl;
       console.log("Audio element created");
     }
-    track.attach(remoteAudioRef.current);
+    track.attach(remoteAudioRef.current); // AIDEV-NOTE: LiveKit method - connects audio MediaStreamTrack
     setHasAudio(true);
-    remoteAudioRef.current.muted = !audioEnabled;
+    remoteAudioRef.current.muted = !audioEnabled; // AIDEV-NOTE: Respects user's audio toggle state
 
-    // Force audio to play
+    // AIDEV-NOTE: Force audio to play - ensures playback even if autoplay is blocked by browser policy
     remoteAudioRef.current
       .play()
       .catch((e) => console.log("Audio play failed:", e));
     console.log("Audio track attached, audio enabled:", audioEnabled);
   };
 
+  // AIDEV-NOTE: Detaches audio track and removes element from DOM
+  // AIDEV-NOTE: How: Calls track.detach(), removes <audio> from body, clears ref
+  // AIDEV-NOTE: Why: Complete cleanup when avatar disconnects, prevents memory leak from lingering audio element
+  // AIDEV-NOTE: Called by: TrackUnsubscribed event listener, handleDisconnect
   const detachAudioTrack = (track) => {
     track.detach();
     setHasAudio(false);
+    // AIDEV-NOTE: Remove audio element from DOM to prevent memory leak
     if (remoteAudioRef.current) {
       document.body.removeChild(remoteAudioRef.current);
       remoteAudioRef.current = null;
     }
   };
 
+  // AIDEV-NOTE: Toggles avatar audio output (speaker button) - mutes/unmutes remote audio element
+  // AIDEV-NOTE: How: Flips audioEnabled state, sets remoteAudioRef.current.muted property
+  // AIDEV-NOTE: Why: Allows user to silence avatar without disconnecting, element persists for quick toggle
+  // AIDEV-NOTE: Called by: Speaker button (Volume2/VolumeX icon) in control bar
   const toggleAudio = () => {
     setAudioEnabled(!audioEnabled);
     if (remoteAudioRef.current) {
-      remoteAudioRef.current.muted = audioEnabled;
+      remoteAudioRef.current.muted = audioEnabled; // AIDEV-NOTE: Inverts current state for toggle
     }
   };
 
+  // AIDEV-NOTE: Toggles user microphone (mic button) - publishes/unpublishes local audio track to room
+  // AIDEV-NOTE: How: If track exists → unpublish & stop, else → create track with audio processing & publish
+  // AIDEV-NOTE: Why: Full publish/unpublish cycle releases device access, audio processing improves quality
+  // AIDEV-NOTE: Called by: Microphone button (Mic/MicOff icon) in control bar
   const toggleMicrophone = async () => {
     if (!room) return;
 
     if (localAudioRef.current) {
-      // Unpublish microphone
+      // AIDEV-NOTE: Unpublish path - remove track from room and stop device access
       await room.localParticipant.unpublishTrack(
         localAudioRef.current
       );
-      localAudioRef.current.stop();
+      localAudioRef.current.stop(); // AIDEV-NOTE: Releases microphone device access
       localAudioRef.current = null;
       setIsMuted(true);
     } else {
-      // Publish microphone
+      // AIDEV-NOTE: Publish path - create track with audio processing and publish to room
       try {
         const track = await createLocalAudioTrack({
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
+          echoCancellation: true,    // AIDEV-NOTE: Removes echo for better conversation quality
+          noiseSuppression: true,    // AIDEV-NOTE: Reduces background noise
+          autoGainControl: true,     // AIDEV-NOTE: Normalizes volume levels
         });
         localAudioRef.current = track;
         await room.localParticipant.publishTrack(track);
         setIsMuted(false);
       } catch (e) {
         console.error("Failed to publish audio:", e);
+        // AIDEV-TODO: Show user-facing error if microphone permission denied
       }
     }
   };
 
+  // AIDEV-NOTE: Publishes user microphone without toggle logic - always enables
+  // AIDEV-NOTE: How: Creates local audio track with same processing as toggleMicrophone, publishes to room
+  // AIDEV-NOTE: Why: Used during session initialization to auto-enable mic, separate from toggle for clarity
+  // AIDEV-NOTE: Called by: Session initialization flow (currently unused, kept for future auto-enable feature)
   const publishLocalAudio = async () => {
     if (!room) return;
 
@@ -559,12 +641,17 @@ export const AIChatWidget = () => {
     } catch (e) {
       console.error("Failed to publish audio:", e);
       setIsMuted(true);
+      // AIDEV-TODO: Show user-facing error if microphone permission denied
     }
   };
 
-  // Comprehensive event handling from debug console
+  // AIDEV-NOTE: Wires all LiveKit room events - handles data channel messages, participant attribute changes
+  // AIDEV-NOTE: How: Listens to DataReceived (transcripts, state) and ParticipantAttributesChanged (agent state)
+  // AIDEV-NOTE: Why: Central event hub for avatar communication - processes transcripts, state changes, demo triggers
+  // AIDEV-NOTE: Called by: startLiveSession after room connection established
+  // AIDEV-QUESTION: Demo trigger logic appears both here (line 746) and in detectIntent - consider consolidating?
   const wireRoomEvents = (r) => {
-    // Data channel events for transcripts and agent state
+    // AIDEV-NOTE: DataReceived event - processes all data channel messages from avatar (transcripts, state events)
     r.on(
       RoomEvent.DataReceived,
       (
@@ -572,24 +659,27 @@ export const AIChatWidget = () => {
         participant,
         kind
       ) => {
+        // AIDEV-NOTE: Decode binary payload to text - HeyGen sends JSON messages via data channel
         let decoded;
         try {
           decoded = new TextDecoder().decode(payload);
         } catch (e) {
-          return;
+          return; // AIDEV-NOTE: Silently ignore decode errors (binary messages not meant for us)
         }
 
+        // AIDEV-NOTE: Parse JSON - all HeyGen messages are JSON structured
         let parsedJson = null;
         try {
           parsedJson = JSON.parse(decoded);
         } catch (e) {
-          return;
+          return; // AIDEV-NOTE: Silently ignore non-JSON messages
         }
 
+        // AIDEV-NOTE: Primary message format - uses 'type' field (HeyGen API v1 format)
         if (parsedJson && parsedJson.type) {
           const msgType = parsedJson.type;
 
-          // Avatar state changes
+          // AIDEV-NOTE: Avatar state changes - speaking/listening indicators for UI visual feedback
           if (msgType === "avatar_start_talking") {
             setIsAvatarSpeaking(true);
             setAvatarState("speaking");
@@ -601,7 +691,7 @@ export const AIChatWidget = () => {
           } else if (msgType === "user_stop_talking") {
             setIsUserSpeaking(false);
           }
-          // Transcription handling
+          // AIDEV-NOTE: Generic transcript handling - catches miscellaneous transcript messages
           else if (msgType === "transcript" || msgType === "transcription") {
             const text = parsedJson.text || parsedJson.transcript || "";
             log('TRANSCRIPT', '📝 Generic transcript received', { text, type: msgType });
@@ -614,17 +704,17 @@ export const AIChatWidget = () => {
                     text: text,
                     timestamp: Date.now(),
                   },
-                ].slice(-10)
+                ].slice(-10) // AIDEV-NOTE: Keep last 10 to prevent memory bloat
               );
               detectIntent(text, parsedJson, "user");
             }
           }
-          // User speech
+          // AIDEV-NOTE: User speech - routes to handleUserSpeech for centralized processing
           else if (msgType === "user_transcript" || msgType === "user_speech") {
             const text = parsedJson.text || parsedJson.transcript || "";
             handleUserSpeech(text, `type: ${msgType}`);
           }
-          // Avatar responses
+          // AIDEV-NOTE: Avatar speech - routes to handleAvatarSpeech which saves to lastAvatarSpeechRef for demo triggers
           else if (
             msgType === "avatar_transcript" ||
             msgType === "avatar_speech" ||
@@ -634,7 +724,7 @@ export const AIChatWidget = () => {
             handleAvatarSpeech(text, `type: ${msgType}`);
           }
         } else if (parsedJson) {
-          // Fallback: Handle messages with event_type instead of type
+          // AIDEV-NOTE: Fallback format - uses 'event_type' field (HeyGen API v2 format) for backward compatibility
           if (parsedJson.event_type === 'user.transcription') {
             const text = parsedJson.text || '';
             handleUserSpeech(text, 'event_type: user.transcription');
@@ -642,25 +732,28 @@ export const AIChatWidget = () => {
             const text = parsedJson.text || '';
             handleAvatarSpeech(text, 'event_type: avatar.transcription');
           } else {
-            // Log any other JSON messages we're not handling
+            // AIDEV-NOTE: Log unhandled messages for debugging new message types from HeyGen
             log('DATA_CHANNEL', '📨 Unhandled JSON message', parsedJson);
           }
         }
       }
     );
 
-    // Agent state changes
+    // AIDEV-NOTE: ParticipantAttributesChanged - tracks LiveKit agent state for demo trigger timing
     r.on(
       RoomEvent.ParticipantAttributesChanged,
       (changedAttributes, participant) => {
+        // AIDEV-NOTE: Check for agent state attribute - LiveKit sets 'lk.agent.state' on avatar participant
         if (changedAttributes && changedAttributes["lk.agent.state"]) {
           const agentState = changedAttributes["lk.agent.state"];
           setAvatarState(agentState);
-          
+
           log('AGENT_STATE', `Agent state changed: ${previousAgentStateRef.current} → ${agentState}`);
-          
-          // Check for demo triggers when avatar finishes speaking
+
+          // AIDEV-NOTE: Demo trigger on speaking→listening transition - ensures avatar finished speaking before playing demo
+          // AIDEV-NOTE: Why here: Guarantees timing (after speech complete), prevents interrupting avatar mid-sentence
           if (previousAgentStateRef.current === 'speaking' && agentState === 'listening') {
+            // AIDEV-NOTE: 100ms delay ensures all transcript data processed before checking lastAvatarSpeechRef
             setTimeout(() => {
               const lastSpeech = lastAvatarSpeechRef.current;
               if (lastSpeech) {
@@ -669,13 +762,13 @@ export const AIChatWidget = () => {
                 if (demoTrigger && demoTrigger.matched && !isDemoPlaying) {
                   log('DEMO', '🎬 Demo trigger detected from avatar speech', demoTrigger);
 
-                  // Save current widget state to restore later
+                  // AIDEV-NOTE: Save widget state before maximizing - enables restore after demo ends (see useEffect)
                   preDemoWidgetStateRef.current = state;
 
-                  // Force maximize for best demo viewing experience
+                  // AIDEV-NOTE: Maximize widget for best demo viewing, 500ms delay prevents black screen bug
+                  // AIDEV-NOTE: Why 500ms: Widget needs time to resize before video element is created/played
                   if (state !== "maximized") {
                     setState("maximized");
-                    // Wait for widget to maximize before playing video
                     setTimeout(() => {
                       playDemoVideo(demoTrigger.videoUrl);
                     }, 500);
@@ -684,17 +777,22 @@ export const AIChatWidget = () => {
                   }
                 }
               }
-            }, 100); // Small delay to ensure all data is processed
+            }, 100);
           }
-          
+
+          // AIDEV-NOTE: Track previous state for transition detection (speaking→listening)
           previousAgentStateRef.current = agentState;
         }
       }
     );
   };
 
-  // Intent detection system
+  // AIDEV-NOTE: Intent detection system - keyword-based actions triggered by user/avatar speech
+  // AIDEV-NOTE: How: Array of intent objects with keywords, action functions, and descriptions
+  // AIDEV-NOTE: Why: Enables conversational UI control (booking, screen size, pricing) without clicking buttons
+  // AIDEV-NOTE: Used by: detectIntent function checks transcript against all intent keywords
   const intentActions = [
+    // AIDEV-NOTE: Book demo intent - opens booking popup for scheduling
     {
       keywords: [
         "book a demo",
@@ -706,7 +804,7 @@ export const AIChatWidget = () => {
       ],
       action: () => {
         setShowBookingPopup(true);
-        setDetectedIntents((prev) => [...prev, "book_demo"].slice(-5));
+        setDetectedIntents((prev) => [...prev, "book_demo"].slice(-5)); // AIDEV-NOTE: Keep last 5 for history tracking
       },
       description: "Book demo",
     },
@@ -800,6 +898,10 @@ export const AIChatWidget = () => {
     },
   ];
 
+  // AIDEV-NOTE: Detects intents from transcripts and triggers corresponding actions
+  // AIDEV-NOTE: How: Checks demo triggers first (priority), then loops through intentActions for keyword matches
+  // AIDEV-NOTE: Why: Demo triggers take priority to prevent other intents from interrupting video playback
+  // AIDEV-NOTE: Called by: handleUserSpeech, handleAvatarSpeech, and generic transcript handlers in wireRoomEvents
   const detectIntent = (
     transcript,
     fullData,
@@ -807,68 +909,81 @@ export const AIChatWidget = () => {
   ) => {
     const lowerTranscript = transcript.toLowerCase();
 
-    // Check for demo video triggers first
+    // AIDEV-NOTE: Check demo triggers FIRST (priority) - early return prevents other intent conflicts
+    // AIDEV-NOTE: Uses token-based matching algorithm for more accurate trigger detection than simple keyword match
     const demoTrigger = checkForDemoTrigger(transcript, videoTriggersConfig, log);
     if (demoTrigger && demoTrigger.matched && !isDemoPlaying) {
       log('DEMO', '🎬 Demo video trigger detected', demoTrigger);
 
-      // Force maximize for best demo viewing experience
+      // AIDEV-NOTE: Maximize for demo viewing (no 500ms delay here, handled in wireRoomEvents avatar_stop_talking)
       if (state !== "maximized") {
         setState("maximized");
       }
 
       playDemoVideo(demoTrigger.videoUrl);
       setDetectedIntents((prev) => [...prev, 'show_demo'].slice(-5));
-      return; // Don't process other intents if showing demo
+      return; // AIDEV-NOTE: Early return prevents processing other intents during demo playback
     }
 
+    // AIDEV-NOTE: Process other intents - loops through intentActions array for keyword matches
     intentActions.forEach((intent) => {
       const matched = intent.keywords.some((keyword) =>
-        lowerTranscript.includes(keyword.toLowerCase())
+        lowerTranscript.includes(keyword.toLowerCase()) // AIDEV-NOTE: Case-insensitive substring match
       );
 
       if (matched) {
         log('INTENT_DETECTED', `🎯 ${intent.description}`, { transcript, source });
-        intent.action();
+        intent.action(); // AIDEV-NOTE: Executes action function (opens booking, changes size, shows message)
       }
     });
   };
 
-  // Send data to avatar
+  // AIDEV-NOTE: Sends text message to avatar via LiveKit data channel
+  // AIDEV-NOTE: How: Encodes message as UTF-8 bytes, publishes via room.localParticipant.publishData with RELIABLE delivery
+  // AIDEV-NOTE: Why: RELIABLE ensures message delivery (vs LOSSY), critical for chat messages to reach avatar
+  // AIDEV-NOTE: Called by: handleSendMessage (chat input), handleQuickAction (quick action buttons)
   const sendDataToAvatar = async (message) => {
     if (!room) return;
 
     try {
       const encoder = new TextEncoder();
-      const data = encoder.encode(message);
+      const data = encoder.encode(message); // AIDEV-NOTE: Convert string to UTF-8 byte array for LiveKit data channel
       await room.localParticipant.publishData(
         data,
-        DataPacket_Kind.RELIABLE
+        DataPacket_Kind.RELIABLE // AIDEV-NOTE: RELIABLE guarantees delivery, LOSSY would be faster but may drop messages
       );
     } catch (e) {
       console.error("Failed to send data:", e);
+      // AIDEV-TODO: Show user-facing error if message send fails
     }
   };
 
+  // AIDEV-NOTE: Predefined quick action prompts - shown as buttons above avatar to encourage engagement
+  // AIDEV-NOTE: Why: Reduces friction for users unsure what to ask, demonstrates avatar capabilities
   const quickActions = [
     "Tell me about Qudemo's pro...",
     "How can I use Qudemo?",
     "What can you do?",
   ];
 
+  // AIDEV-NOTE: Handles quick action button clicks - sends predefined message to avatar
+  // AIDEV-NOTE: How: Adds message to chat UI, triggers activity, opens chat panel, routes to avatar or shows fallback
+  // AIDEV-NOTE: Why: Same flow as handleSendMessage but for predefined prompts instead of user-typed text
+  // AIDEV-NOTE: Called by: Quick action button clicks in UI (shown when not in live mode)
   const handleQuickAction = (action) => {
+    // AIDEV-NOTE: Add user message immediately for instant feedback
     setMessages([
       ...messages,
       { role: "user", content: action, isTyping: false },
     ]);
-    handleActivity();
-    setShowChat(true);
+    handleActivity(); // AIDEV-NOTE: Reset inactivity timer
+    setShowChat(true); // AIDEV-NOTE: Auto-open chat panel to show response
 
-    // Send to avatar if live session is active
+    // AIDEV-NOTE: Route based on session state - live gets real interaction, fallback for testing
     if (hasLiveVideo && room) {
       sendDataToAvatar(action);
     } else {
-      // Fallback response
+      // AIDEV-NOTE: Fallback for non-live mode - simulates avatar response
       setTimeout(() => {
         const newMessageId = Date.now();
         setMessages((prev) => [
@@ -885,52 +1000,66 @@ export const AIChatWidget = () => {
     }
   };
 
+  // AIDEV-NOTE: Calculates widget width based on state and device type
+  // AIDEV-NOTE: How: Returns pixel values based on state (minimized/small/medium/maximized), isMobile, and showChat
+  // AIDEV-NOTE: Why: Responsive design - mobile uses viewport width, desktop uses fixed values, chat adds sidebar width
+  // AIDEV-NOTE: Called by: framer-motion animate prop for smooth width transitions
   const getCurrentWidth = () => {
-    if (state === "minimized") return isMobile ? 80 : 120;
+    if (state === "minimized") return isMobile ? 80 : 120; // AIDEV-NOTE: Tiny circle for minimized state
     if (state === "small")
       return showChat
         ? isMobile
-          ? window.innerWidth - 32
-          : 704
+          ? window.innerWidth - 32 // AIDEV-NOTE: Mobile with chat - full width minus padding
+          : 704 // AIDEV-NOTE: Desktop with chat - 320px video + 384px chat sidebar
         : isMobile
-        ? 280
-        : 320;
+        ? 280 // AIDEV-NOTE: Mobile without chat - compact size
+        : 320; // AIDEV-NOTE: Desktop without chat - standard size
     if (state === "medium")
       return showChat
         ? isMobile
           ? window.innerWidth - 32
-          : 864
+          : 864 // AIDEV-NOTE: Desktop medium with chat - 480px video + 384px chat sidebar
         : isMobile
         ? 320
-        : 480;
+        : 480; // AIDEV-NOTE: Larger video area for medium state
     if (state === "maximized")
-      return isMobile ? window.innerWidth - 32 : window.innerWidth * 0.8;
-    return isMobile ? 280 : 420;
+      return isMobile ? window.innerWidth - 32 : window.innerWidth * 0.8; // AIDEV-NOTE: 80% of viewport for maximized
+    return isMobile ? 280 : 420; // AIDEV-NOTE: Default fallback
   };
 
+  // AIDEV-NOTE: Calculates widget height based on state and device type
+  // AIDEV-NOTE: How: Returns pixel values or viewport percentages based on state, isMobile, and showChat
+  // AIDEV-NOTE: Why: Mobile uses viewport % when chat open for better mobile UX, desktop uses fixed or capped values
+  // AIDEV-NOTE: Called by: framer-motion animate prop for smooth height transitions
   const getCurrentHeight = () => {
-    if (state === "minimized") return isMobile ? 120 : 160;
+    if (state === "minimized") return isMobile ? 120 : 160; // AIDEV-NOTE: Circular minimized state
     if (state === "small")
-      return isMobile ? (showChat ? window.innerHeight * 0.9 : 360) : 420;
+      return isMobile ? (showChat ? window.innerHeight * 0.9 : 360) : 420; // AIDEV-NOTE: Mobile chat uses 90% viewport
     if (state === "medium")
       return isMobile ? (showChat ? window.innerHeight * 0.9 : 440) : 520;
     if (state === "maximized")
       return isMobile
-        ? window.innerHeight - 64
-        : Math.min(720, window.innerHeight * 0.8);
-    return 420;
+        ? window.innerHeight - 64 // AIDEV-NOTE: Full height minus top padding for mobile
+        : Math.min(720, window.innerHeight * 0.8); // AIDEV-NOTE: Desktop capped at 720px or 80% viewport
+    return 420; // AIDEV-NOTE: Default fallback
   };
 
+  // AIDEV-NOTE: Calculates widget position (bottom-right corner positioning)
+  // AIDEV-NOTE: How: Returns {bottom, right} pixel values based on state and isMobile
+  // AIDEV-NOTE: Why: Maximized state centers more (10% margin), other states stay in corner (16-32px margin)
+  // AIDEV-NOTE: Called by: framer-motion style prop for absolute positioning
   const getPosition = () => {
     if (state === "maximized") {
       return {
-        bottom: isMobile ? 16 : Math.max(32, window.innerHeight * 0.1),
-        right: isMobile ? 16 : Math.max(32, window.innerWidth * 0.1),
+        bottom: isMobile ? 16 : Math.max(32, window.innerHeight * 0.1), // AIDEV-NOTE: 10% bottom margin on desktop for centering
+        right: isMobile ? 16 : Math.max(32, window.innerWidth * 0.1), // AIDEV-NOTE: 10% right margin on desktop for centering
       };
     }
-    return { bottom: isMobile ? 16 : 32, right: isMobile ? 16 : 32 };
+    return { bottom: isMobile ? 16 : 32, right: isMobile ? 16 : 32 }; // AIDEV-NOTE: Fixed corner position for non-maximized
   };
 
+  // AIDEV-NOTE: Main render - widget container with animated size transitions using framer-motion
+  // AIDEV-NOTE: transformOrigin bottom-right ensures expansion animates from corner, not center
   return (
     <AnimatePresence>
       <motion.div
@@ -941,7 +1070,7 @@ export const AIChatWidget = () => {
           border: "1px solid #374151",
           overflow: "hidden",
           boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
-          transformOrigin: "bottom right",
+          transformOrigin: "bottom right", // AIDEV-NOTE: Critical for proper animation - expands from corner
           ...getPosition(),
         }}
         animate={{
@@ -949,9 +1078,10 @@ export const AIChatWidget = () => {
           height: getCurrentHeight(),
           borderRadius: state === "minimized" ? 16 : 24,
         }}
-        transition={{ type: "spring", damping: 25, stiffness: 200 }}
+        transition={{ type: "spring", damping: 25, stiffness: 200 }} // AIDEV-NOTE: Spring animation for natural feel
         onClick={handleActivity}
       >
+        {/* AIDEV-NOTE: Minimized view - avatar thumbnail with pulse indicator, clicks to expand and start LiveSession */}
         {state === "minimized" ? (
           <button
             onClick={() => {
@@ -1007,6 +1137,8 @@ export const AIChatWidget = () => {
             }}
           >
             <AnimatePresence>
+              {/* AIDEV-NOTE: Inactivity prompt overlay - shown after timeout to check if user is still present */}
+              {/* AIDEV-NOTE: z-index 50 keeps it above video/controls, blocks interaction until user responds */}
               {showInactivityPrompt && (
                 <motion.div
                   initial={{ opacity: 0 }}
@@ -1034,6 +1166,7 @@ export const AIChatWidget = () => {
                   >
                     Are you still here?
                   </h3>
+                  {/* AIDEV-NOTE: Continue button calls handleCreateNewConversation to reset activity timer and clear prompt */}
                   <button
                     onClick={handleCreateNewConversation}
                     style={{
@@ -1242,6 +1375,8 @@ export const AIChatWidget = () => {
                     </p>
                   </div>
                 ) : hasLiveVideo || room ? (
+                  // AIDEV-NOTE: LiveKit video container - attaches remote video tracks, shows 'waiting for video' fallback
+                  // AIDEV-NOTE: attachTrackToDom function creates <video> element inside this container
                   <div
                     id="live-video-container"
                     style={{
@@ -1418,6 +1553,8 @@ export const AIChatWidget = () => {
                   />
                 )}
 
+                {/* AIDEV-NOTE: Quick action buttons - displayed above control bar when not in live session, triggers handleQuickAction */}
+                {/* AIDEV-NOTE: Why hidden during live: User can speak directly to avatar instead of clicking suggestions */}
                 {!showInactivityPrompt && !hasLiveVideo && !isVoiceMode && (
                   <motion.div
                     style={{
@@ -1453,6 +1590,7 @@ export const AIChatWidget = () => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.3 }}
                   >
+                    {/* AIDEV-NOTE: Each button has hover/tap scale animations for tactile feedback */}
                     {quickActions.map((action, i) => (
                       <motion.button
                         key={i}
@@ -1489,6 +1627,7 @@ export const AIChatWidget = () => {
                   </motion.div>
                 )}
 
+                {/* AIDEV-NOTE: Live session status overlay - shows avatar state (speaking/listening/thinking/idle) and user speaking indicator */}
                 {hasLiveVideo && sessionInfo && (
                   <div
                     style={{
@@ -1563,7 +1702,9 @@ export const AIChatWidget = () => {
                   </div>
                 )}
 
-                {/* Demo Video Overlay - positioned relative to parent container */}
+                {/* AIDEV-NOTE: Demo video fullscreen overlay - positioned absolute to prevent shrinking, includes avatar PIP at bottom-right */}
+                {/* AIDEV-NOTE: Why absolute positioning outside live-video-container: Prevents demo video from shrinking when avatar moves to corner */}
+                {/* AIDEV-NOTE: PIP clones avatar MediaStream to maintain visibility during demo (YouTube-style) */}
                 {isDemoPlaying && (
                   <div
                     style={{
@@ -1572,7 +1713,7 @@ export const AIChatWidget = () => {
                       left: 0,
                       width: "100%",
                       height: "100%",
-                      zIndex: 100,
+                      zIndex: 100, // AIDEV-NOTE: High z-index ensures demo covers everything including avatar
                       backgroundColor: "#000",
                     }}
                   >
@@ -1651,7 +1792,7 @@ export const AIChatWidget = () => {
                   </div>
                 )}
 
-                {/* Demo Playing Indicator */}
+                {/* AIDEV-NOTE: Demo playing indicator - shows when demo video is active, informs user mic is paused */}
                 {isDemoPlaying && (
                   <div
                     style={{
@@ -1673,6 +1814,7 @@ export const AIChatWidget = () => {
                   </div>
                 )}
 
+                {/* AIDEV-NOTE: Intent detection badge - shows most recently detected intent (hidden during demo playback) */}
                 {detectedIntents.length > 0 && !isDemoPlaying && (
                   <div
                     style={{
@@ -1704,6 +1846,8 @@ export const AIChatWidget = () => {
                   </div>
                 )}
 
+                {/* AIDEV-NOTE: Transcript overlay - shows last 3 transcripts in maximized mode for debugging/visibility */}
+                {/* AIDEV-NOTE: Only in maximized state to avoid cluttering smaller widget sizes */}
                 {transcripts.length > 0 && state === "maximized" && (
                   <div
                     style={{
@@ -1825,8 +1969,11 @@ export const AIChatWidget = () => {
                     zIndex: 10,
                   }}
                 >
+                  {/* AIDEV-NOTE: Control panel - video/voice toggle and action buttons (mic, speaker, chat, disconnect) */}
+                  {/* AIDEV-NOTE: Why button states: Red when muted/disabled, green when active/speaking, black when idle */}
                   {!showInactivityPrompt && (
                     <>
+                      {/* AIDEV-NOTE: Video/Voice mode toggle - switches between visual avatar and audio-only mode */}
                       <div
                         style={{
                           backgroundColor: "rgba(0, 0, 0, 0.7)",
@@ -1876,6 +2023,8 @@ export const AIChatWidget = () => {
                           Voice
                         </button>
                       </div>
+                      {/* AIDEV-NOTE: Action buttons - mic (user input), speaker (avatar audio), chat (sidebar), disconnect (end session) */}
+                      {/* AIDEV-NOTE: Button sizes scale with widget state - small: 40px, medium: 44px, maximized: 48px */}
                       <div
                         style={{
                           display: "flex",
@@ -1887,6 +2036,8 @@ export const AIChatWidget = () => {
                               : "12px",
                         }}
                       >
+                        {/* AIDEV-NOTE: Mic button - toggles user input via toggleMicrophone (LiveKit) or local mute state */}
+                        {/* AIDEV-NOTE: Pulse animation plays when user is speaking to provide visual feedback */}
                         <button
                           onClick={
                             hasLiveVideo
@@ -1931,6 +2082,8 @@ export const AIChatWidget = () => {
                           )}
                         </button>
 
+                        {/* AIDEV-NOTE: Speaker button - toggles avatar audio output, only shown when hasAudio is true */}
+                        {/* AIDEV-NOTE: Green pulse when avatar is speaking, red when muted, matches mic button pattern */}
                         {hasAudio && (
                           <button
                             onClick={toggleAudio}
@@ -1976,6 +2129,7 @@ export const AIChatWidget = () => {
                             )}
                           </button>
                         )}
+                        {/* AIDEV-NOTE: Chat button - toggles chat sidebar visibility, blue color indicates interactive feature */}
                         <button
                           onClick={() => {
                             setShowChat(!showChat);
@@ -2008,6 +2162,7 @@ export const AIChatWidget = () => {
                             style={{ width: "16px", height: "16px" }}
                           />
                         </button>
+                        {/* AIDEV-NOTE: Disconnect button - ends LiveKit session and resets widget, red color indicates destructive action */}
                         <button
                           onClick={handleDisconnect}
                           style={{
@@ -2042,6 +2197,9 @@ export const AIChatWidget = () => {
               </div>
             </div>
 
+            {/* AIDEV-NOTE: Chat sidebar panel - slides in from right (desktop) or bottom (mobile) with AnimatePresence */}
+            {/* AIDEV-NOTE: Why AnimatePresence: Enables smooth exit animation when showChat becomes false */}
+            {/* AIDEV-NOTE: Width responsive: 50% in maximized, 100% mobile, 384px desktop (matches getCurrentWidth logic) */}
             <AnimatePresence>
               {showChat &&
                 (state === "small" ||
@@ -2111,6 +2269,8 @@ export const AIChatWidget = () => {
                       </button>
                     </div>
 
+                    {/* AIDEV-NOTE: Message history container - scrollable list of chat messages with motion animations */}
+                    {/* AIDEV-NOTE: minHeight: 0 allows flex child to shrink below content size for proper scrolling */}
                     <div
                       style={{
                         flex: 1,
@@ -2123,6 +2283,7 @@ export const AIChatWidget = () => {
                         minHeight: 0,
                       }}
                     >
+                      {/* AIDEV-NOTE: Each message animates in with staggered delay (i * 0.1s) for smooth appearance */}
                       {messages.map((msg, i) => (
                         <motion.div
                           key={msg.id || i}
@@ -2152,6 +2313,8 @@ export const AIChatWidget = () => {
                                 margin: 0,
                               }}
                             >
+                              {/* AIDEV-NOTE: TypingText component shows character-by-character animation for assistant messages */}
+                              {/* AIDEV-NOTE: onComplete clears isTyping flag and typingMessageId to enable new messages */}
                               {msg.role === "assistant" && msg.isTyping ? (
                                 <TypingText
                                   text={msg.content}
@@ -2176,6 +2339,7 @@ export const AIChatWidget = () => {
                       <div ref={messagesEndRef} />
                     </div>
 
+                    {/* AIDEV-NOTE: Chat input footer - text input with send button, Enter key triggers send */}
                     <div
                       style={{
                         padding: "16px",
@@ -2237,6 +2401,8 @@ export const AIChatWidget = () => {
           </div>
         )}
 
+        {/* AIDEV-NOTE: Booking popup modal - triggered by 'book a meeting' intent, shows contact form */}
+        {/* AIDEV-NOTE: Why AnimatePresence: Enables fade-out animation on close, z-index 50 keeps it above all other UI */}
         <AnimatePresence>
           {showBookingPopup && (
             <motion.div
@@ -2254,6 +2420,7 @@ export const AIChatWidget = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
+              {/* AIDEV-NOTE: Modal card with scale animation - starts at 90% scale for smooth pop-in effect */}
               <motion.div
                 style={{
                   backgroundColor: "white",
