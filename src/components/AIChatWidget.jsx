@@ -7,7 +7,6 @@ import {
   Volume2,
   VolumeX,
   PhoneOff,
-  RefreshCw,
   Calendar,
   Mic,
   MicOff,
@@ -41,8 +40,6 @@ export const AIChatWidget = () => {
   const [state, setState] = useState("minimized");
   const [isMuted, setIsMuted] = useState(true);
   const [isVoiceMode, setIsVoiceMode] = useState(true);
-  const [showInactivityPrompt, setShowInactivityPrompt] = useState(false);
-  const [lastActivity, setLastActivity] = useState(Date.now());
   const [showBookingPopup, setShowBookingPopup] = useState(false);
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
@@ -195,33 +192,12 @@ export const AIChatWidget = () => {
     new Date(Date.now() + 172800000).toISOString().split("T")[0],
   ];
 
-  useEffect(() => {
-    if (state === "minimized") return;
-    const checkInactivity = setInterval(() => {
-      const timeSinceLastActivity = Date.now() - lastActivity;
-      if (timeSinceLastActivity > 30000 && !showInactivityPrompt) {
-        setShowInactivityPrompt(true);
-      }
-    }, 5000);
-    return () => clearInterval(checkInactivity);
-  }, [lastActivity, showInactivityPrompt, state]);
 
-  // AIDEV-NOTE: Resets inactivity timer to prevent 30s timeout prompt
-  // AIDEV-NOTE: How: Updates lastActivity timestamp, hides inactivity prompt if showing
-  // AIDEV-NOTE: Why: Called on all user interactions (clicks, voice, etc) to keep widget active
+  // AIDEV-NOTE: Handles user activity tracking
+  // AIDEV-NOTE: How: Currently a placeholder for future activity tracking features
   // AIDEV-NOTE: Called by: handleQuickAction, button clicks throughout UI
   const handleActivity = () => {
-    setLastActivity(Date.now());
-    setShowInactivityPrompt(false);
-  };
-
-  // AIDEV-NOTE: Resets activity timer after inactivity timeout
-  // AIDEV-NOTE: How: Hides inactivity prompt, resets activity timer
-  // AIDEV-NOTE: Why: Allows user to continue voice interaction after timeout
-  // AIDEV-NOTE: Called by: "Continue conversation" button in inactivity prompt overlay
-  const handleCreateNewConversation = () => {
-    setShowInactivityPrompt(false);
-    setLastActivity(Date.now());
+    // Placeholder for future activity tracking
   };
 
   // AIDEV-NOTE: Full session cleanup and disconnect from LiveAvatar
@@ -251,7 +227,6 @@ export const AIChatWidget = () => {
     setIsMuted(true);
     setAudioEnabled(true);
     setState("minimized");
-    setShowInactivityPrompt(false);
   };
 
   // AIDEV-NOTE: Initializes LiveAvatar session - creates HeyGen session, connects to LiveKit room, wires all events
@@ -951,58 +926,6 @@ export const AIChatWidget = () => {
               backgroundColor: "#111827",
             }}
           >
-            <AnimatePresence>
-              {/* AIDEV-NOTE: Inactivity prompt overlay - shown after timeout to check if user is still present */}
-              {/* AIDEV-NOTE: z-index 50 keeps it above video/controls, blocks interaction until user responds */}
-              {showInactivityPrompt && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    backgroundColor: "rgba(17, 24, 39, 0.9)",
-                    backdropFilter: "blur(4px)",
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: "16px",
-                    zIndex: 50,
-                  }}
-                >
-                  <h3
-                    style={{
-                      fontSize: "24px",
-                      fontWeight: "600",
-                      color: "#f9fafb",
-                    }}
-                  >
-                    Are you still here?
-                  </h3>
-                  {/* AIDEV-NOTE: Continue button calls handleCreateNewConversation to reset activity timer and clear prompt */}
-                  <button
-                    onClick={handleCreateNewConversation}
-                    style={{
-                      backgroundColor: "#111827",
-                      color: "#f9fafb",
-                      border: "2px solid #374151",
-                      padding: "8px 16px",
-                      borderRadius: "6px",
-                      cursor: "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                    }}
-                  >
-                    <RefreshCw style={{ width: "16px", height: "16px" }} />
-                    Continue conversation
-                  </button>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
             <div
               style={{
                 flex: 1,
@@ -1361,7 +1284,7 @@ export const AIChatWidget = () => {
 
                 {/* AIDEV-NOTE: Quick action buttons - displayed above control bar when not in live session, triggers handleQuickAction */}
                 {/* AIDEV-NOTE: Why hidden during live: User can speak directly to avatar instead of clicking suggestions */}
-                {!showInactivityPrompt && !hasLiveVideo && !isVoiceMode && (
+                {!hasLiveVideo && !isVoiceMode && (
                   <motion.div
                     style={{
                       position: "absolute",
@@ -1776,8 +1699,7 @@ export const AIChatWidget = () => {
                 >
                   {/* AIDEV-NOTE: Control panel - video/voice toggle and action buttons (mic, speaker, disconnect) */}
                   {/* AIDEV-NOTE: Why button states: Red when muted/disabled, green when active/speaking, black when idle */}
-                  {!showInactivityPrompt && (
-                    <>
+                  <>
                       {/* AIDEV-NOTE: Video/Voice mode toggle - switches between visual avatar and audio-only mode */}
                       <div
                         style={{
@@ -1964,7 +1886,6 @@ export const AIChatWidget = () => {
                         </button>
                       </div>
                     </>
-                  )}
                 </div>
               </div>
             </div>
