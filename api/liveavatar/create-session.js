@@ -38,6 +38,7 @@ export default async function handler(req, res) {
     }
 
     console.log('Creating LiveAvatar session for user:', userId);
+    console.log('Using API key:', HEYGEN_API_KEY ? `${HEYGEN_API_KEY.substring(0, 8)}...` : 'undefined');
 
     // STEP 1: Create session token
     const tokenResponse = await fetch('https://api.liveavatar.com/v1/sessions/token', {

@@ -121,10 +121,12 @@ export function useDemoVideo({ room, localAudioRef, log, setState }) {
       setIsDemoPlaying(false);
       setCurrentVideoUrl('');
 
-      // Resume microphone
+      // AIDEV-NOTE: Keep microphone muted after demo ends - avatar should return to idle/silent state
+      // AIDEV-NOTE: User can manually unmute if they want to continue conversation
+      // AIDEV-NOTE: This prevents the "dead avatar" bug where avatar tries to respond immediately
       if (room && localAudioRef.current) {
-        log('DEMO', '🎤 Resuming microphone after demo');
-        room.localParticipant.setMicrophoneEnabled(true);
+        log('DEMO', '🎤 Keeping microphone muted after demo (avatar returns to idle)');
+        room.localParticipant.setMicrophoneEnabled(false);
       }
 
       // Clear PIP container
@@ -144,7 +146,7 @@ export function useDemoVideo({ room, localAudioRef, log, setState }) {
         demoVideo.src = '';
       }
 
-      log('DEMO', '✅ Demo video stopped');
+      log('DEMO', '✅ Demo video stopped - avatar returned to idle state');
 
     } catch (e) {
       log('ERROR', 'Failed to stop demo video', e);

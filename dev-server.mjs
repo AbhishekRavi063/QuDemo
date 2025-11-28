@@ -12,7 +12,18 @@ import { dirname } from 'path';
 import dotenv from 'dotenv';
 
 // Load .env.local file explicitly
-dotenv.config({ path: '.env.local' });
+// IMPORTANT: override: true forces .env.local values to override system environment variables
+// This prevents stale system-level env vars from interfering with development
+const result = dotenv.config({ path: '.env.local', override: true });
+
+if (result.error) {
+  console.error('❌ Error loading .env.local:', result.error);
+} else {
+  console.log('✅ Loaded environment variables from .env.local (with override)');
+  console.log('   HEYGEN_API_KEY:', process.env.HEYGEN_API_KEY ? `${process.env.HEYGEN_API_KEY.substring(0, 8)}...` : '✗ Missing');
+  console.log('   HEYGEN_AVATAR_ID:', process.env.HEYGEN_AVATAR_ID ? '✓ Set' : '✗ Missing');
+  console.log('   HEYGEN_VOICE_ID:', process.env.HEYGEN_VOICE_ID ? '✓ Set' : '✗ Missing');
+}
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
