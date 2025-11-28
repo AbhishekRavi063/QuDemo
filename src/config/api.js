@@ -77,12 +77,13 @@ const config = {
 
 // Helper function to get the appropriate API URL based on environment
 export const getApiUrl = (type = 'python') => {
-  // Use environment variables directly, fallback to production URLs
+  // Use environment variables directly without fallback to production
+  // This ensures local dev failures are caught immediately rather than silently using cloud backend
   if (type === 'node') {
-    return config.NODE_API_URL || config.PROD_NODE_API_URL;
+    return config.NODE_API_URL;
   }
-  
-  return config.PYTHON_API_URL || config.PROD_PYTHON_API_URL;
+
+  return config.PYTHON_API_URL;
 };
 
 // Helper function to build full API URLs

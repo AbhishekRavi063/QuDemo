@@ -31,6 +31,7 @@ import { useEventLogger } from '../hooks/useEventLogger';
 import { useDemoVideo } from '../hooks/useDemoVideo';
 import { checkForDemoTrigger } from '../utils/videoTriggerMatcher';
 import videoTriggersConfig from '../config/video-triggers.json';
+import bookingConfig from '../config/booking-config.json';
 
 // AIDEV-NOTE: Main widget component - manages LiveAvatar session, voice interaction, demo playback, and intent detection
 // AIDEV-NOTE: Architecture: LiveKit WebRTC for video/audio, HeyGen API for avatar session, local state for UI
@@ -62,12 +63,15 @@ export const AIChatWidget = () => {
   const [isUserSpeaking, setIsUserSpeaking] = useState(false);
   const [transcripts, setTranscripts] = useState([]);
   const [detectedIntents, setDetectedIntents] = useState([]);
+  const [showCalendly, setShowCalendly] = useState(false); // AIDEV-NOTE: Controls calendly iframe overlay display
   const localAudioRef = useRef(null);
   const remoteAudioRef = useRef(null);
   const mountedRef = useRef(true);
   const previousAgentStateRef = useRef('idle');
   const lastAvatarSpeechRef = useRef('');
   const preDemoWidgetStateRef = useRef(null);
+  const preCalendlyMutedRef = useRef(false); // AIDEV-NOTE: Saves mic mute state before calendly opens
+  const preCalendlyAudioEnabledRef = useRef(true); // AIDEV-NOTE: Saves avatar audio state before calendly opens
 
   // Event logging hook
   const { logs, log, clearLogs } = useEventLogger();
@@ -139,10 +143,80 @@ export const AIChatWidget = () => {
     }
   }, [isDemoPlaying, log]);
 
+  // AIDEV-NOTE: Clone avatar video to calendly PIP when calendly opens
+  // AIDEV-NOTE: How: Finds main video element, clones it to PIP container
+  // AIDEV-NOTE: Why: Keeps avatar visible during calendly booking, same pattern as demo video PIP
+  useEffect(() => {
+    if (showCalendly && hasLiveVideo) {
+      const sourceVideo = document.querySelector('#live-video-container video');
+      const pipContainer = document.getElementById('calendly-avatar-pip');
+
+      if (sourceVideo && pipContainer) {
+        // AIDEV-NOTE: Clone video element to PIP
+        const pipVideo = sourceVideo.cloneNode(true);
+        pipVideo.style.width = '100%';
+        pipVideo.style.height = '100%';
+        pipVideo.style.objectFit = 'cover';
+        pipVideo.muted = false; // AIDEV-NOTE: Will be muted separately via audioEnabled state
+
+        // AIDEV-NOTE: Attach same MediaStream to PIP video
+        if (sourceVideo.srcObject) {
+          pipVideo.srcObject = sourceVideo.srcObject;
+        }
+
+        pipContainer.innerHTML = '';
+        pipContainer.appendChild(pipVideo);
+        pipVideo.play().catch(e => console.log('PIP video play failed:', e));
+      }
+    }
+  }, [showCalendly, hasLiveVideo]);
+
+  // AIDEV-NOTE: Mute mic and avatar audio when calendly opens, restore when closed
+  // AIDEV-NOTE: How: Saves current audio states in refs, mutes both, restores on close
+  // AIDEV-NOTE: Why: User shouldn't be talking to avatar while booking, prevents audio interference
+  useEffect(() => {
+    if (showCalendly) {
+      // AIDEV-NOTE: Save current states before muting
+      preCalendlyMutedRef.current = isMuted;
+      preCalendlyAudioEnabledRef.current = audioEnabled;
+
+      // AIDEV-NOTE: Mute microphone if not already muted
+      if (!isMuted && localAudioRef.current && room) {
+        room.localParticipant.unpublishTrack(localAudioRef.current);
+        localAudioRef.current.stop();
+        localAudioRef.current = null;
+        setIsMuted(true);
+      }
+
+      // AIDEV-NOTE: Mute avatar audio if not already muted
+      if (audioEnabled && remoteAudioRef.current) {
+        remoteAudioRef.current.muted = true;
+        setAudioEnabled(false);
+      }
+    } else {
+      // AIDEV-NOTE: Restore audio states when calendly closes (only if user had them enabled before)
+      if (!preCalendlyMutedRef.current && room && !localAudioRef.current) {
+        // AIDEV-NOTE: Restore microphone if it was previously unmuted
+        publishLocalAudio();
+      }
+
+      if (preCalendlyAudioEnabledRef.current && remoteAudioRef.current && !audioEnabled) {
+        // AIDEV-NOTE: Restore avatar audio if it was previously enabled
+        remoteAudioRef.current.muted = false;
+        setAudioEnabled(true);
+      }
+    }
+  }, [showCalendly, isMuted, audioEnabled, room]); // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => {
     mountedRef.current = true;
     return () => {
       mountedRef.current = false;
+      // AIDEV-NOTE: Stop HeyGen session on unmount to prevent quota waste
+      // AIDEV-NOTE: This cleanup only runs on component unmount (empty dependency array)
+      if (sessionInfo?.sessionId && sessionInfo?.sessionToken) {
+        stopSession();
+      }
       if (room) {
         room.disconnect();
       }
@@ -150,7 +224,7 @@ export const AIChatWidget = () => {
         localAudioRef.current.stop();
       }
     };
-  }, [room]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     let initialTimer;
@@ -202,11 +276,67 @@ export const AIChatWidget = () => {
     // Placeholder for future activity tracking
   };
 
+  // AIDEV-NOTE: Stops HeyGen LiveAvatar session to prevent quota waste
+  // AIDEV-NOTE: How: Calls /api/liveavatar/stop-session with sessionId and sessionToken
+  // AIDEV-NOTE: Why: HeyGen charges for active sessions, must explicitly stop to avoid wasting quota
+  // AIDEV-NOTE: Called by: handleDisconnect, component unmount cleanup
+  const stopSession = async () => {
+    // AIDEV-NOTE: Only call stop-session if we have valid session credentials
+    if (!sessionInfo?.sessionId || !sessionInfo?.sessionToken) {
+      console.log("[STOP-SESSION] No session info, skipping stop-session call");
+      return;
+    }
+
+    try {
+      console.log("[STOP-SESSION] Stopping HeyGen session:", sessionInfo.sessionId);
+      console.log("[STOP-SESSION] Calling endpoint:", getNodeApiUrl("/api/liveavatar/stop-session"));
+      console.log("[STOP-SESSION] Request payload:", {
+        sessionId: sessionInfo.sessionId,
+        sessionToken: sessionInfo.sessionToken.substring(0, 20) + "...",
+      });
+
+      const response = await fetch(getNodeApiUrl("/api/liveavatar/stop-session"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sessionId: sessionInfo.sessionId,
+          sessionToken: sessionInfo.sessionToken,
+        }),
+      });
+
+      console.log("[STOP-SESSION] Response status:", response.status, response.statusText);
+
+      if (!response.ok) {
+        // AIDEV-NOTE: 404 means endpoint doesn't exist (local dev with Node backend or Netlify deployment)
+        if (response.status === 404) {
+          console.warn("[STOP-SESSION] ⚠️ Stop-session endpoint not found (404). This is expected when:");
+          console.warn("[STOP-SESSION]   - Running locally with Node.js backend");
+          console.warn("[STOP-SESSION]   - Deployed on Netlify (proxies to Render backend)");
+          console.warn("[STOP-SESSION]   - Deploy to Vercel to use serverless stop-session function");
+          console.warn("[STOP-SESSION] Session will auto-expire on HeyGen's end, but may waste quota.");
+        } else {
+          const errorData = await response.json();
+          console.error("[STOP-SESSION] Failed to stop session. Error response:", errorData);
+        }
+      } else {
+        const successData = await response.json();
+        console.log("[STOP-SESSION] ✅ Session stopped successfully!");
+        console.log("[STOP-SESSION] Server response:", successData);
+      }
+    } catch (error) {
+      console.error("[STOP-SESSION] Error calling stop-session endpoint:", error);
+      console.error("[STOP-SESSION] Error details:", error.message);
+    }
+  };
+
   // AIDEV-NOTE: Full session cleanup and disconnect from LiveAvatar
-  // AIDEV-NOTE: How: Disconnects room, stops all tracks, removes audio element from DOM, resets all state to defaults
-  // AIDEV-NOTE: Why: Prevents memory leaks from tracks/elements, ensures clean state for reconnection
+  // AIDEV-NOTE: How: Stops HeyGen session first, then disconnects room, stops all tracks, removes audio element from DOM, resets all state to defaults
+  // AIDEV-NOTE: Why: Prevents quota waste from HeyGen sessions and memory leaks from tracks/elements, ensures clean state for reconnection
   // AIDEV-NOTE: Called by: Disconnect button (PhoneOff icon), component unmount useEffect cleanup
-  const handleDisconnect = () => {
+  const handleDisconnect = async () => {
+    // AIDEV-NOTE: Stop HeyGen session first to prevent quota waste
+    await stopSession();
+
     // AIDEV-NOTE: LiveKit room cleanup - disconnect and reset session state
     if (room) {
       room.disconnect();
@@ -260,12 +390,13 @@ export const AIChatWidget = () => {
       const livekitUrl = data.livekitUrl;
       const livekitClientToken = data.livekitClientToken;
       const sessionId = data.sessionId;
+      const sessionToken = data.sessionToken; // AIDEV-NOTE: Need token for stop-session API call
 
       if (!livekitUrl || !livekitClientToken) {
         throw new Error("Missing LiveKit credentials in response");
       }
 
-      setSessionInfo({ sessionId, livekitUrl });
+      setSessionInfo({ sessionId, sessionToken, livekitUrl });
 
       // AIDEV-NOTE: Step 2 - Create LiveKit room with disabled adaptive streaming for stable avatar quality
       const r = new Room({
@@ -667,7 +798,7 @@ export const AIChatWidget = () => {
   // AIDEV-NOTE: Used by: detectIntent function checks transcript against all intent keywords
   // AIDEV-REMOVED: Screen control intents (maximize/minimize), email, and pricing intents - not needed for voice-first avatar interaction
   const intentActions = [
-    // AIDEV-NOTE: Book demo intent - opens booking popup for scheduling
+    // AIDEV-NOTE: Book demo intent - opens calendly iframe overlay for scheduling
     {
       keywords: [
         "book a demo",
@@ -678,12 +809,16 @@ export const AIChatWidget = () => {
         "demo booking",
       ],
       action: () => {
-        setShowBookingPopup(true);
+        // AIDEV-NOTE: Maximize widget for better calendly viewing experience
+        if (state !== "maximized") {
+          setState("maximized");
+        }
+        setShowCalendly(true);
         setDetectedIntents((prev) => [...prev, "book_demo"].slice(-5)); // AIDEV-NOTE: Keep last 5 for history tracking
       },
       description: "Book demo",
     },
-    // AIDEV-NOTE: Schedule meeting intent - opens same booking popup for general meeting scheduling
+    // AIDEV-NOTE: Schedule meeting intent - opens calendly iframe overlay for general meeting scheduling
     {
       keywords: [
         "set up a meet",
@@ -694,7 +829,11 @@ export const AIChatWidget = () => {
         "book a meeting",
       ],
       action: () => {
-        setShowBookingPopup(true);
+        // AIDEV-NOTE: Maximize widget for better calendly viewing experience
+        if (state !== "maximized") {
+          setState("maximized");
+        }
+        setShowCalendly(true);
         setDetectedIntents((prev) => [...prev, "schedule_meeting"].slice(-5));
       },
       description: "Schedule meeting",
@@ -791,8 +930,13 @@ export const AIChatWidget = () => {
       return isMobile ? 280 : 320; // AIDEV-NOTE: Compact video size
     if (state === "medium")
       return isMobile ? 320 : 480; // AIDEV-NOTE: Medium video size
-    if (state === "maximized")
+    if (state === "maximized") {
+      // AIDEV-NOTE: When calendly is open, use narrower width (40% viewport) for better calendly viewing
+      if (showCalendly) {
+        return isMobile ? window.innerWidth - 32 : Math.min(600, window.innerWidth * 0.4);
+      }
       return isMobile ? window.innerWidth - 32 : window.innerWidth * 0.8; // AIDEV-NOTE: 80% of viewport for maximized
+    }
     return isMobile ? 280 : 420; // AIDEV-NOTE: Default fallback
   };
 
@@ -1013,7 +1157,11 @@ export const AIChatWidget = () => {
                   <button
                     onClick={() => {
                       handleActivity();
-                      setShowBookingPopup(true);
+                      // AIDEV-NOTE: Maximize widget for better calendly viewing experience
+                      if (state !== "maximized") {
+                        setState("maximized");
+                      }
+                      setShowCalendly(true);
                     }}
                     style={{
                       backgroundColor: "#3b82f6",
@@ -1496,6 +1644,104 @@ export const AIChatWidget = () => {
                       }}
                     >
                       ⏹️ Stop Demo
+                    </button>
+                  </div>
+                )}
+
+                {/* AIDEV-NOTE: Calendly iframe overlay - fullscreen booking calendar with avatar PIP in bottom-right */}
+                {/* AIDEV-NOTE: Why similar to demo: Reuses demo video pattern for consistent UX (fullscreen overlay + avatar PIP) */}
+                {/* AIDEV-NOTE: Close button on top-right allows user to dismiss and return to normal avatar view */}
+                {showCalendly && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      width: "100%",
+                      height: "100%",
+                      zIndex: 100, // AIDEV-NOTE: High z-index ensures calendly covers everything including avatar
+                      backgroundColor: "#fff",
+                    }}
+                  >
+                    {/* AIDEV-NOTE: Calendly iframe - loads booking page from config file */}
+                    <iframe
+                      src={bookingConfig.calendlyUrl}
+                      width="100%"
+                      height="100%"
+                      frameBorder="0"
+                      style={{
+                        border: "none",
+                        width: "100%",
+                        height: "100%",
+                      }}
+                      title="Book a Meeting"
+                    />
+
+                    {/* AIDEV-NOTE: Avatar Picture-in-Picture - shows avatar in bottom-right corner during booking */}
+                    {/* AIDEV-NOTE: Why PIP: Maintains avatar presence, mimics demo video UX pattern */}
+                    <div
+                      style={{
+                        position: "absolute",
+                        bottom: "20px",
+                        right: "20px",
+                        width: isMobile ? "120px" : "200px",
+                        height: isMobile ? "90px" : "150px",
+                        borderRadius: "12px",
+                        overflow: "hidden",
+                        border: "3px solid rgba(59, 130, 246, 0.9)",
+                        boxShadow: "0 8px 24px rgba(0, 0, 0, 0.8)",
+                        zIndex: 101,
+                        backgroundColor: "#000",
+                      }}
+                    >
+                      {/* AIDEV-NOTE: PIP shows LiveKit video if active, otherwise static avatar image */}
+                      {hasLiveVideo ? (
+                        <div
+                          id="calendly-avatar-pip"
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            backgroundColor: "#000",
+                          }}
+                        />
+                      ) : (
+                        <div
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            backgroundImage: "url(/ai-avatar.jpg)",
+                            backgroundSize: "cover",
+                            backgroundPosition: "center",
+                            backgroundRepeat: "no-repeat",
+                          }}
+                        />
+                      )}
+                    </div>
+
+                    {/* AIDEV-NOTE: Close button - top-right position, dismisses calendly and returns to normal view */}
+                    <button
+                      onClick={() => setShowCalendly(false)}
+                      style={{
+                        position: "absolute",
+                        top: "16px",
+                        right: "16px",
+                        padding: "8px 16px",
+                        background: "rgba(239, 68, 68, 0.95)",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "6px",
+                        cursor: "pointer",
+                        fontWeight: "bold",
+                        fontSize: "14px",
+                        boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
+                        zIndex: 102,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                      }}
+                    >
+                      <X style={{ width: "16px", height: "16px" }} />
+                      Close
                     </button>
                   </div>
                 )}

@@ -23,8 +23,9 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Import the API handler dynamically
+// Import the API handlers dynamically
 const { default: createSessionHandler } = await import('./api/liveavatar/create-session.js');
+const { default: stopSessionHandler } = await import('./api/liveavatar/stop-session.js');
 
 // Mount the primary API route (current frontend expects this path)
 app.post('/api/liveavatar/create-session', async (req, res) => {
@@ -34,6 +35,18 @@ app.post('/api/liveavatar/create-session', async (req, res) => {
     await createSessionHandler(req, res);
   } catch (error) {
     console.error('❌ API Error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Mount the stop-session API route
+app.post('/api/liveavatar/stop-session', async (req, res) => {
+  console.log('📡 Stop Session Request received:', req.body);
+
+  try {
+    await stopSessionHandler(req, res);
+  } catch (error) {
+    console.error('❌ Stop Session API Error:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -61,8 +74,9 @@ app.listen(PORT, () => {
 🚀 Development API Server running!
 
 📡 API Endpoints:
-   - http://localhost:${PORT}/api/liveavatar/create-session (primary)
-   - http://localhost:${PORT}/api/create-liveavatar-session (alt)
+   - http://localhost:${PORT}/api/liveavatar/create-session (create session)
+   - http://localhost:${PORT}/api/liveavatar/stop-session (stop session)
+   - http://localhost:${PORT}/api/create-liveavatar-session (alt path)
 ✅ Health Check: http://localhost:${PORT}/api/health
 
 💡 Make sure to:
