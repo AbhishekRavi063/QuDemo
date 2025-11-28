@@ -1174,20 +1174,6 @@ export const AIChatWidget = () => {
                   >
                     Book a Meeting
                   </button>
-                  <div
-                    style={{
-                      backgroundColor: "rgba(0, 0, 0, 0.7)",
-                      backdropFilter: "blur(4px)",
-                      borderRadius: "50px",
-                      border: "1px solid rgba(255, 255, 255, 0.2)",
-                      padding: "4px 8px",
-                      fontSize: "12px",
-                      fontWeight: "500",
-                      color: "white",
-                    }}
-                  >
-                    Ambassador Catherine
-                  </div>
                 </div>
               </div>
 
