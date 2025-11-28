@@ -14,7 +14,6 @@ import {
   Ear,
   Brain,
   Smile,
-  Target,
   User,
   Bot,
   Video,
@@ -70,8 +69,10 @@ export const AIChatWidget = () => {
   const previousAgentStateRef = useRef('idle');
   const lastAvatarSpeechRef = useRef('');
   const preDemoWidgetStateRef = useRef(null);
+  const preCalendlyWidgetStateRef = useRef(null); // AIDEV-NOTE: Saves widget state before calendly opens
   const preCalendlyMutedRef = useRef(false); // AIDEV-NOTE: Saves mic mute state before calendly opens
   const preCalendlyAudioEnabledRef = useRef(true); // AIDEV-NOTE: Saves avatar audio state before calendly opens
+  const pendingCalendlyRef = useRef(false); // AIDEV-NOTE: Flags pending calendly open - waits for avatar to finish speaking
 
   // Event logging hook
   const { logs, log, clearLogs } = useEventLogger();
@@ -134,14 +135,62 @@ export const AIChatWidget = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Restore widget state after demo ends
+  // AIDEV-NOTE: Restore widget state after demo ends
+  // AIDEV-NOTE: Always return to "small" state (initial connected state) after demo closes
+  // AIDEV-NOTE: Same behavior as Calendly - returns to normal conversation view, not dead/disconnected state
   useEffect(() => {
     if (!isDemoPlaying && preDemoWidgetStateRef.current !== null) {
-      log('DEMO', `Restoring widget to ${preDemoWidgetStateRef.current} state`);
-      setState(preDemoWidgetStateRef.current);
+      // AIDEV-NOTE: Always return to "small" state (initial connected view) after demo closes
+      // AIDEV-NOTE: User wants to resume conversation after demo, not return to previous state
+      if (room && sessionInfo) {
+        log('DEMO', 'Returning to small state (initial connected view) after demo closed');
+        setState("small");
+      } else {
+        log('DEMO', 'No active session - keeping minimized');
+        setState("minimized");
+      }
       preDemoWidgetStateRef.current = null;
     }
-  }, [isDemoPlaying, log]);
+  }, [isDemoPlaying, log, room, sessionInfo]);
+
+  // AIDEV-NOTE: Restore widget state after calendly closes
+  // AIDEV-NOTE: Always return to "small" state (initial connected state) after calendly closes
+  // AIDEV-NOTE: This is the normal conversation view that appears when you first connect from minimized
+  useEffect(() => {
+    if (!showCalendly && preCalendlyWidgetStateRef.current !== null) {
+      // AIDEV-NOTE: Always return to "small" state (initial connected view) after calendly closes
+      // AIDEV-NOTE: User wants the normal conversation view, not previous state or maximized
+      if (room && sessionInfo) {
+        log('CALENDLY', 'Returning to small state (initial connected view) after calendly closed');
+        setState("small");
+      } else {
+        log('CALENDLY', 'No active session - keeping minimized');
+        setState("minimized");
+      }
+
+      preCalendlyWidgetStateRef.current = null;
+    }
+  }, [showCalendly, log, room, sessionInfo]);
+
+  // AIDEV-NOTE: Wait for avatar to finish speaking before opening Calendly
+  // AIDEV-NOTE: When pendingCalendlyRef is set, this effect waits until isAvatarSpeaking becomes false
+  // AIDEV-NOTE: Then opens Calendly and clears the pending flag
+  useEffect(() => {
+    if (pendingCalendlyRef.current && !isAvatarSpeaking) {
+      log('CALENDLY', 'Avatar finished speaking - opening Calendly now');
+
+      // AIDEV-NOTE: Save widget state before maximizing - enables restore after calendly closes
+      preCalendlyWidgetStateRef.current = state;
+
+      // AIDEV-NOTE: Maximize widget for better calendly viewing experience
+      if (state !== "maximized") {
+        setState("maximized");
+      }
+
+      setShowCalendly(true);
+      pendingCalendlyRef.current = false; // AIDEV-NOTE: Clear the pending flag
+    }
+  }, [isAvatarSpeaking, state, log]);
 
   // AIDEV-NOTE: Clone avatar video to calendly PIP when calendly opens
   // AIDEV-NOTE: How: Finds main video element, clones it to PIP container
@@ -194,14 +243,16 @@ export const AIChatWidget = () => {
         setAudioEnabled(false);
       }
     } else {
-      // AIDEV-NOTE: Restore audio states when calendly closes (only if user had them enabled before)
-      if (!preCalendlyMutedRef.current && room && !localAudioRef.current) {
-        // AIDEV-NOTE: Restore microphone if it was previously unmuted
+      // AIDEV-NOTE: Always unmute both microphone and speaker when calendly closes
+      // AIDEV-NOTE: User wants to resume conversation after booking, so both should be active
+      if (room && !localAudioRef.current) {
+        // AIDEV-NOTE: Enable microphone for conversation
         publishLocalAudio();
+        setIsMuted(false);
       }
 
-      if (preCalendlyAudioEnabledRef.current && remoteAudioRef.current && !audioEnabled) {
-        // AIDEV-NOTE: Restore avatar audio if it was previously enabled
+      if (remoteAudioRef.current && !audioEnabled) {
+        // AIDEV-NOTE: Enable avatar audio for conversation
         remoteAudioRef.current.muted = false;
         setAudioEnabled(true);
       }
@@ -795,28 +846,10 @@ export const AIChatWidget = () => {
   // AIDEV-NOTE: Why: Enables conversational UI control for booking without clicking buttons
   // AIDEV-NOTE: Used by: detectIntent function checks transcript against all intent keywords
   // AIDEV-REMOVED: Screen control intents (maximize/minimize), email, and pricing intents - not needed for voice-first avatar interaction
+  // AIDEV-REMOVED: "Book demo" intent - removed per user request, only meeting-related keywords should trigger calendly
   const intentActions = [
-    // AIDEV-NOTE: Book demo intent - opens calendly iframe overlay for scheduling
-    {
-      keywords: [
-        "book a demo",
-        "schedule a demo",
-        "book demo",
-        "set up demo",
-        "arrange demo",
-        "demo booking",
-      ],
-      action: () => {
-        // AIDEV-NOTE: Maximize widget for better calendly viewing experience
-        if (state !== "maximized") {
-          setState("maximized");
-        }
-        setShowCalendly(true);
-        setDetectedIntents((prev) => [...prev, "book_demo"].slice(-5)); // AIDEV-NOTE: Keep last 5 for history tracking
-      },
-      description: "Book demo",
-    },
-    // AIDEV-NOTE: Schedule meeting intent - opens calendly iframe overlay for general meeting scheduling
+    // AIDEV-NOTE: Schedule meeting intent - opens calendly iframe overlay for meeting scheduling
+    // AIDEV-NOTE: Waits for avatar to finish speaking before opening Calendly window
     {
       keywords: [
         "set up a meet",
@@ -827,11 +860,9 @@ export const AIChatWidget = () => {
         "book a meeting",
       ],
       action: () => {
-        // AIDEV-NOTE: Maximize widget for better calendly viewing experience
-        if (state !== "maximized") {
-          setState("maximized");
-        }
-        setShowCalendly(true);
+        // AIDEV-NOTE: Set pending flag - useEffect will wait for avatar to finish speaking, then open Calendly
+        log('CALENDLY', 'Schedule meeting intent detected - waiting for avatar to finish speaking');
+        pendingCalendlyRef.current = true;
         setDetectedIntents((prev) => [...prev, "schedule_meeting"].slice(-5));
       },
       description: "Schedule meeting",
@@ -929,9 +960,9 @@ export const AIChatWidget = () => {
     if (state === "medium")
       return isMobile ? 320 : 480; // AIDEV-NOTE: Medium video size
     if (state === "maximized") {
-      // AIDEV-NOTE: When calendly is open, use narrower width (40% viewport) for better calendly viewing
+      // AIDEV-NOTE: When calendly is open, use wider width (60% viewport, 900px max) for better calendly fit
       if (showCalendly) {
-        return isMobile ? window.innerWidth - 32 : Math.min(600, window.innerWidth * 0.4);
+        return isMobile ? window.innerWidth - 32 : Math.min(900, window.innerWidth * 0.6);
       }
       return isMobile ? window.innerWidth - 32 : window.innerWidth * 0.8; // AIDEV-NOTE: 80% of viewport for maximized
     }
@@ -948,10 +979,17 @@ export const AIChatWidget = () => {
       return isMobile ? 360 : 420; // AIDEV-NOTE: Compact video size
     if (state === "medium")
       return isMobile ? 440 : 520; // AIDEV-NOTE: Medium video size
-    if (state === "maximized")
+    if (state === "maximized") {
+      // AIDEV-NOTE: When calendly is open, use taller height (900px max) for better calendly fit
+      if (showCalendly) {
+        return isMobile
+          ? window.innerHeight - 64 // AIDEV-NOTE: Full height minus top padding for mobile
+          : Math.min(900, window.innerHeight * 0.85); // AIDEV-NOTE: Desktop capped at 900px or 85% viewport for calendly
+      }
       return isMobile
         ? window.innerHeight - 64 // AIDEV-NOTE: Full height minus top padding for mobile
         : Math.min(720, window.innerHeight * 0.8); // AIDEV-NOTE: Desktop capped at 720px or 80% viewport
+    }
     return 420; // AIDEV-NOTE: Default fallback
   };
 
@@ -1155,7 +1193,10 @@ export const AIChatWidget = () => {
                   <button
                     onClick={() => {
                       handleActivity();
-                      // AIDEV-NOTE: Maximize widget for better calendly viewing experience
+                      // AIDEV-NOTE: Button click opens Calendly immediately without waiting for avatar to finish speaking
+                      // AIDEV-NOTE: The useEffect that watches isAvatarSpeaking will handle muting automatically
+                      log('CALENDLY', 'Book a Meeting button clicked - opening Calendly immediately');
+                      preCalendlyWidgetStateRef.current = state;
                       if (state !== "maximized") {
                         setState("maximized");
                       }
@@ -1752,41 +1793,12 @@ export const AIChatWidget = () => {
                   </div>
                 )}
 
-                {/* AIDEV-NOTE: Intent detection badge - shows most recently detected intent (hidden during demo playback) */}
-                {detectedIntents.length > 0 && !isDemoPlaying && (
-                  <div
-                    style={{
-                      position: "absolute",
-                      top: "16px",
-                      right: "16px",
-                      backgroundColor: "rgba(255, 165, 0, 0.8)",
-                      color: "white",
-                      padding: "4px 8px",
-                      borderRadius: "12px",
-                      fontSize: "10px",
-                      backdropFilter: "blur(4px)",
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "4px",
-                      }}
-                    >
-                      <Target style={{ width: "10px", height: "10px" }} />
-                      Intent:{" "}
-                      {detectedIntents[detectedIntents.length - 1]?.replace(
-                        "_",
-                        " "
-                      )}
-                    </div>
-                  </div>
-                )}
+                {/* AIDEV-REMOVED: Intent detection badge - removed per user request, no visual intent indicators needed */}
 
                 {/* AIDEV-NOTE: Transcript overlay - shows last 3 transcripts in maximized mode for debugging/visibility */}
                 {/* AIDEV-NOTE: Only in maximized state to avoid cluttering smaller widget sizes */}
-                {transcripts.length > 0 && state === "maximized" && (
+                {/* AIDEV-NOTE: Hidden when Calendly or demo video is showing to keep UI clean */}
+                {transcripts.length > 0 && state === "maximized" && !showCalendly && !isDemoPlaying && (
                   <div
                     style={{
                       position: "absolute",
