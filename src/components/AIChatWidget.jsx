@@ -307,12 +307,10 @@ export const AIChatWidget = () => {
       console.log("[STOP-SESSION] Response status:", response.status, response.statusText);
 
       if (!response.ok) {
-        // AIDEV-NOTE: 404 means endpoint doesn't exist (local dev with Node backend or Netlify deployment)
+        // AIDEV-NOTE: 404 means endpoint doesn't exist (only on non-Vercel deployments)
         if (response.status === 404) {
-          console.warn("[STOP-SESSION] ⚠️ Stop-session endpoint not found (404). This is expected when:");
-          console.warn("[STOP-SESSION]   - Running locally with Node.js backend");
-          console.warn("[STOP-SESSION]   - Deployed on Netlify (proxies to Render backend)");
-          console.warn("[STOP-SESSION]   - Deploy to Vercel to use serverless stop-session function");
+          console.warn("[STOP-SESSION] ⚠️ Stop-session endpoint not found (404).");
+          console.warn("[STOP-SESSION] Make sure you're deploying to Vercel to use serverless functions.");
           console.warn("[STOP-SESSION] Session will auto-expire on HeyGen's end, but may waste quota.");
         } else {
           const errorData = await response.json();

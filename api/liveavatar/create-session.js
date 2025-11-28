@@ -125,6 +125,7 @@ export default async function handler(req, res) {
       sessionToken,
       livekitUrl,
       livekitClientToken,
+      _backend: 'vercel-serverless', // Identifier to confirm using Vercel
     });
 
   } catch (error) {
