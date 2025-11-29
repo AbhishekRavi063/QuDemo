@@ -222,12 +222,13 @@ const DashboardLayout = ({ children }) => {
 function App() {
   // Removed aggressive refresh prevention to fix UI refresh issues
   // Check domain on app load to prevent Vercel redirects
-  useEffect(() => {
-    const wasRedirected = checkDomainOnLoad();
-    if (wasRedirected) {
-      return;
-    }
-  }, []);
+  // DISABLED FOR VERCEL DEPLOYMENT - Uncomment only when custom domain is configured
+  // useEffect(() => {
+  //   const wasRedirected = checkDomainOnLoad();
+  //   if (wasRedirected) {
+  //     return;
+  //   }
+  // }, []);
   // Clean up hash from URL if present
   useEffect(() => {
     if (window.location.hash === "#") {
