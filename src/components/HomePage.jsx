@@ -434,7 +434,7 @@ const HomePage = () => {
                 }}
               >
                 <button
-                  onClick={() => window.open('https://cal.com/jazeem-choori-7jbaio/qudemo-intro', '_blank')}
+                  onClick={() => window.QudemoWidget?.open()}
                   className="text-white font-medium text-sm sm:text-base px-6 sm:px-8 py-3 sm:py-3.5 rounded-xl transition-all duration-300 flex items-center justify-center relative overflow-hidden group z-[999]"
                   style={{
                     background: "rgba(59, 130, 246, 1)",
