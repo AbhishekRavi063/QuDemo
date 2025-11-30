@@ -676,7 +676,7 @@ const HomePage = () => {
               </div>
 
               <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-medium text-white mb-3 sm:mb-4 leading-tight">
-                Our Clients Use it for
+              Powerful Ways to Use Qudemo
               </h2>
 
               <p className="text-sm sm:text-base md:text-md text-gray-500 mb-6 sm:mb-8 max-w-4xl mx-auto">
@@ -700,10 +700,11 @@ const HomePage = () => {
                   </div>
                   <div className="text-left">
                     <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-white mb-2 sm:mb-3">
-                      On demand demos 
+                    Instant Product Demo 
                     </h3>
                     <p className="text-gray-300 text-sm sm:text-base leading-relaxed">
-                      Enable visitors to book a demo call with your team at their convenience.
+                    Show website visitors a quick, interactive demo and answer their questions in real time so they understand your product faster.
+
                     </p>
                   </div>
                 </SpotlightCard>
@@ -723,10 +724,10 @@ const HomePage = () => {
                   </div>
                   <div className="text-left">
                     <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-white mb-2 sm:mb-3">
-                      Training and Onboarding
+                      Smart Onboarding
                     </h3>
                     <p className="text-gray-300 text-sm sm:text-base leading-relaxed">
-                     Onboard new employees with interactive training videos.
+                    Guide new customers or employees through clear steps and explain key features with simple, real-time answers.
             
                     </p>
                   </div>
@@ -747,10 +748,10 @@ const HomePage = () => {
                   </div>
                   <div className="text-left">
                     <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-white mb-2 sm:mb-3">
-                      Customer Support
+                    Interactive Training
                     </h3>
                     <p className="text-gray-300 text-sm sm:text-base leading-relaxed">
-                      Resolve customer questions instantly.
+                    Train customers or internal teams with easy walkthroughs and instant responses that help them learn at their own pace.
                     </p>
                   </div>
                 </SpotlightCard>
