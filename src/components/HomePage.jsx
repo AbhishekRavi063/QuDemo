@@ -259,13 +259,13 @@ const HomePage = () => {
           </div>
 
           {/* Navigation Links - Hidden on mobile */}
-          <div className="hidden md:flex items-center gap-8 text-gray-500">
-            <button
+         <div className="hidden md:flex items-center gap-8 text-gray-500">
+            {/* <button
               onClick={() => scrollToSection("pricing")}
               className="hover:text-blue-400 transition-colors duration-200 font-thin"
             >
               Pricing
-            </button>
+            </button> */}
             <a
   href="mailto:mail@qudemo.com"
   className="hover:text-blue-400 transition-colors duration-200 font-thin"
@@ -410,21 +410,20 @@ const HomePage = () => {
                   textShadow: "0 4px 24px rgba(41, 52, 255, 0.3)",
                 }}
               >
-                AI Interactive Video
+                Clone your best employee.
                 <br />
-                Agent for your
-                <br />
-                website.
+            
               </h1>
 
               <p
                 className="text-sm sm:text-base md:text-lg text-gray-500 my-6 sm:my-8 max-w-2xl mx-auto leading-relaxed font-normal px-4 sm:px-6"
                 style={{
+                  fontSize: "25px",
                   animation: isMobile ? "none" : "fadeInUp 0.8s ease-out 0.4s both",
                   fontWeight: "400",
                 }}
               >
-                Engage and qualify your SaaS website visitors with an AI interactive video agent that feels like you are always available.
+              Qudemo creates AI video call agents that feel like your best employee is always available.
               </p>
 
               {/* CTA Button */}
@@ -475,7 +474,7 @@ const HomePage = () => {
               }}
             />
           </div>
-          <div
+         {/* <div
             className="sm:px-6 md:px-8 py-20 sm:py-32 md:py-40 relative my-auto flex flex-col justify-center overflow-hidden"
             id="benefits"
           >
@@ -514,7 +513,7 @@ const HomePage = () => {
                 </div>
               )}
 
-              {/* Bottom glowing light effect - hidden on mobile */}
+              Bottom glowing light effect - hidden on mobile
               {!isMobile && (
                 <div
                   className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full h-32"
@@ -542,12 +541,15 @@ const HomePage = () => {
               <p className="text-sm sm:text-base md:text-md text-gray-500 mb-8 sm:mb-12 max-w-4xl mx-auto">
                 Three simple steps to launch your AI video agent
               </p>
+              
 
-              {/* Benefit Cards */}
+              // Benefit Cards
+            
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8 w-full">
                 <SpotlightCard>
                   <div className="relative w-14 h-14 rounded-xl flex items-center justify-center mb-6 bg-black border border-blue-500/30">
-                    {/* Corner accent */}
+                    // Corner accent 
+                  
                     <div
                       className="absolute top-0 right-0 w-6 h-6 rounded-br-xl"
                       style={{
@@ -572,7 +574,9 @@ const HomePage = () => {
 
                 <SpotlightCard>
                   <div className="relative w-14 h-14 rounded-xl flex items-center justify-center mb-6 bg-black border border-blue-500/30">
-                    {/* Corner accent */}
+                    
+                  //Corner accent 
+                    
                     <div
                       className="absolute top-0 right-0 w-6 h-6 rounded-br-xl"
                       style={{
@@ -597,7 +601,7 @@ const HomePage = () => {
 
                 <SpotlightCard>
                   <div className="relative w-14 h-14 rounded-xl flex items-center justify-center mb-6 bg-black border border-blue-500/30">
-                    {/* Corner accent */}
+                    //Corner accent 
                     <div
                       className="absolute top-0 right-0 w-6 h-6 rounded-br-xl"
                       style={{
@@ -637,7 +641,7 @@ const HomePage = () => {
                 </div>
               </div>
             </div>
-          </div>
+          </div>*/}
 
           <div
             className="sm:px-6 md:px-8 py-20 sm:py-32 md:py-40 relative overflow-x-hidden flex flex-col justify-center"
@@ -667,17 +671,16 @@ const HomePage = () => {
                   color="#2934ff"
                   className="text-white text-xs sm:text-sm font-semibold uppercase tracking-wide"
                 >
-                  BENEFITS
+                  Use Cases
                 </StarBorder>
               </div>
 
               <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-medium text-white mb-3 sm:mb-4 leading-tight">
-                Why Choose Us?
+                Our Clients Use it for
               </h2>
 
               <p className="text-sm sm:text-base md:text-md text-gray-500 mb-6 sm:mb-8 max-w-4xl mx-auto">
-                Transform passive viewers into engaged prospects with
-                intelligent video interactions
+                Create a personalized 24x7 expert for your customers and team.
               </p>
 
               {/* Benefit Cards */}
@@ -697,11 +700,10 @@ const HomePage = () => {
                   </div>
                   <div className="text-left">
                     <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-white mb-2 sm:mb-3">
-                      Save Time
+                      On demand demos 
                     </h3>
                     <p className="text-gray-300 text-sm sm:text-base leading-relaxed">
-                      Let viewers explore your video without watching the full
-                      length, getting straight to what matters most to them.
+                      Enable visitors to book a demo call with your team at their convenience.
                     </p>
                   </div>
                 </SpotlightCard>
@@ -721,11 +723,11 @@ const HomePage = () => {
                   </div>
                   <div className="text-left">
                     <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-white mb-2 sm:mb-3">
-                      Increase Engagement
+                      Training and Onboarding
                     </h3>
                     <p className="text-gray-300 text-sm sm:text-base leading-relaxed">
-                      Interactive videos keep viewers engaged 5x longer than
-                      traditional videos with real-time Q&A capabilities.
+                     Onboard new employees with interactive training videos.
+            
                     </p>
                   </div>
                 </SpotlightCard>
@@ -745,11 +747,10 @@ const HomePage = () => {
                   </div>
                   <div className="text-left">
                     <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-white mb-2 sm:mb-3">
-                      Better Conversions
+                      Customer Support
                     </h3>
                     <p className="text-gray-300 text-sm sm:text-base leading-relaxed">
-                      Convert more prospects by allowing them to get instant
-                      answers to their specific questions about your product.
+                      Resolve customer questions instantly.
                     </p>
                   </div>
                 </SpotlightCard>
@@ -881,6 +882,7 @@ const HomePage = () => {
         </FadeInSection>
 
         {/* Pricing Section */}
+        {/*
         <FadeInSection delay={0.1} className="flex flex-col relative" disableAnimation={isMobile}>
           {!isMobile && (
             <div className="absolute top-0 left-0 right-0 w-full bottom-0 opacity-[0.2]">
@@ -927,7 +929,7 @@ const HomePage = () => {
                 potential of our platform
               </p>
 
-              {/* Pricing Toggle - Monthly/Yearly */}
+              // Pricing Toggle - Monthly/Yearly 
               <div className="flex flex-col sm:flex-row items-center justify-center mb-8 sm:mb-12 gap-3 sm:gap-0 px-4">
                 <div
                   className="inline-flex items-center gap-0 p-1.5 px-4 sm:px-10 rounded-full relative"
@@ -969,7 +971,7 @@ const HomePage = () => {
                     20% off
                   </span>
 
-                  {/* Animated underline */}
+                  // Animated underline 
                   <div
                     className="absolute bottom-1 h-0.5 transition-all rounded duration-300 ease-out"
                     style={{
@@ -982,7 +984,7 @@ const HomePage = () => {
                 </div>
               </div>
 
-              {/* Pricing Cards */}
+              // Pricing Cards 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 sm:gap-6 max-w-5xl mx-auto z-50 px-2 sm:px-4">
                 <PricingCard
                   title="Starter"
@@ -1018,7 +1020,8 @@ const HomePage = () => {
           </div>
         </FadeInSection>
 
-        {/* Quote Section */}
+        // Quote Section */}
+        {/*
         <FadeInSection delay={0.1} className="flex flex-col !min-h-0 relative" disableAnimation={isMobile}>
           <div
             className="absolute top-0 -translate-y-1/2 left-0 right-0 h-px hidden md:block"
@@ -1087,7 +1090,7 @@ const HomePage = () => {
             </div>
           </div>
         </FadeInSection>
-
+*/}
         {/* Seamless Integrations Section - FULLY COMMENTED OUT */}
         {false && (
         <FadeInSection delay={0.1} className="relative" disableAnimation={isMobile}>
@@ -1494,6 +1497,7 @@ const HomePage = () => {
         )}
 
         {/* Comparison Section */}
+        {/*
         <FadeInSection delay={0.1} className="relative" disableAnimation={isMobile}>
           <div
             className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/2 h-72 relative"
@@ -1521,7 +1525,7 @@ const HomePage = () => {
             }}
           >
             <div className="max-w-7xl mx-auto text-center">
-              {/* Badge */}
+              // Badge - Commented Out
               <div className="flex justify-center mb-8">
                 <StarBorder
                   color="#2934ff"
@@ -1540,11 +1544,11 @@ const HomePage = () => {
                 best of both worlds
               </p>
 
-              {/* Comparison Grid */}
+              // Comparison Grid - Commented Out
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-6xl mx-auto">
-                {/* LanX/Qudemo Column */}
+                // LanX/Qudemo Column - Commented Out 
                 <div className="flex flex-col">
-                  {/* Header - Above Card */}
+                  // Header - Above Card - Commented Out
                   <div className="flex items-center justify-center mb-6">
                     <div className="flex items-center gap-2">
                       <img
@@ -1556,7 +1560,7 @@ const HomePage = () => {
                   </div>
 
                   <SpotlightCard>
-                    {/* Features List */}
+                    // Features List 
                     <div className="space-y-6 text-left">
                       <div className="flex items-start gap-3">
                         <svg
@@ -1684,9 +1688,9 @@ const HomePage = () => {
                   </SpotlightCard>
                 </div>
 
-                {/* Others Column */}
+                // Others Column - Commented Out
                 <div className="flex flex-col">
-                  {/* Header - Above Card */}
+                  // Header - Above Card - Commented Out
                   <div className="flex items-center justify-center mb-6 h-24">
                     <div className="flex items-center gap-3">
                       <svg
@@ -1709,7 +1713,7 @@ const HomePage = () => {
                   </div>
 
                   <SpotlightCard>
-                    {/* Features List */}
+                    // Features List
                     <div className="space-y-6 text-left">
                       <div className="flex items-start gap-3 relative">
                         <svg
@@ -1840,8 +1844,9 @@ const HomePage = () => {
             </div>
           </div>
         </FadeInSection>
-
+*/}
         {/* FAQ Section */}
+        {/*
         <FadeInSection delay={0.1} className="relative" disableAnimation={isMobile}>
           <div
             className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/2 h-72 relative"
@@ -1868,7 +1873,7 @@ const HomePage = () => {
               background: isMobile ? "transparent" : "rgba(0, 0, 0, 0.7)",
             }}
           >
-            {/* Dark overlay - hidden on mobile */}
+            // Dark overlay - hidden on mobile 
             {!isMobile && (
               <div
                 className="absolute inset-0 -z-10"
@@ -1896,7 +1901,7 @@ const HomePage = () => {
                 Everything you need to know about getting started with Qudemo
               </p>
 
-              {/* FAQ Items */}
+              // FAQ Items - Commented Out
               <div className="max-w-2xl mx-auto space-y-3 sm:space-y-4 px-2 sm:px-4">
                 <SpotlightCard className="!p-0 !rounded-xl">
                   <div
@@ -2058,6 +2063,7 @@ const HomePage = () => {
             </div>
           </div>
         </FadeInSection>
+        */}
 
         {/* Final Call-to-Action Section */}
         <FadeInSection delay={0.1} className="min-h-[40vh]" disableAnimation={isMobile}>
@@ -2149,12 +2155,12 @@ const HomePage = () => {
 
               {/* Navigation Links */}
               <div className="flex flex-wrap justify-center items-center gap-8 text-gray-500">
-                <button
+               {/* <button
                   onClick={() => scrollToSection("pricing")}
                   className="hover:text-white transition-colors duration-200"
                 >
                   Pricing
-                </button>
+                </button>*/}
                 <span className="text-gray-700">|</span>
                 <button
                   onClick={() => scrollToSection("why")}
