@@ -42,6 +42,7 @@ import WidgetTokenHelper from "./components/WidgetTokenHelper";
 import WidgetPlayground from "./components/WidgetPlayground";
 import WidgetEmbed from "./components/WidgetEmbed";
 import PublicQudemoShareWidget from "./components/PublicQudemoShareWidget";
+import ExtendedAvatarPage from "./components/ExtendedAvatarPage";
 import { CompanyProvider, useCompany } from "./context/CompanyContext";
 import { BackendProvider } from "./context/BackendContext";
 import { NotificationProvider } from "./context/NotificationContext";
@@ -280,14 +281,15 @@ function App() {
                 element={<PublicQudemoShare />}
               />
               <Route path="/widget-demo" element={<FloatingWidgetDemo />} />
+              <Route path="/extended" element={<ExtendedAvatarPage />} />
               <Route
                 path="/widget-playground/:qudemoId"
                 element={<WidgetPlayground />}
               />
               <Route path="/widget-embed/:qudemoId" element={<WidgetEmbed />} />
-              <Route 
-                path="/qudemo-share/:qudemoId" 
-                element={<PublicQudemoShareWidget />} 
+              <Route
+                path="/qudemo-share/:qudemoId"
+                element={<PublicQudemoShareWidget />}
               />
               {/* Protected Routes - Wrapped with CompanyProvider */}
               <Route

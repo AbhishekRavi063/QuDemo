@@ -36,8 +36,8 @@ import bookingConfig from '../config/booking-config.json';
 // AIDEV-NOTE: Architecture: LiveKit WebRTC for video/audio, HeyGen API for avatar session, local state for UI
 // AIDEV-NOTE: Why: Single component design keeps all LiveKit room state in one place to prevent sync issues
 // AIDEV-NOTE: Key flows: startLiveSession → wireRoomEvents → handleUserSpeech/handleAvatarSpeech → detectIntent
-export const AIChatWidget = () => {
-  const [state, setState] = useState("minimized");
+export const AIChatWidget = ({ onDisconnect, autoExpand = false } = {}) => {
+  const [state, setState] = useState(autoExpand ? "small" : "minimized");
   const [isMuted, setIsMuted] = useState(true);
   const [isVoiceMode, setIsVoiceMode] = useState(true); // AIDEV-NOTE: Always true - toggle UI removed, shows static avatar instead of LiveKit video
   const [showBookingPopup, setShowBookingPopup] = useState(false);
@@ -73,6 +73,7 @@ export const AIChatWidget = () => {
   const preCalendlyMutedRef = useRef(false); // AIDEV-NOTE: Saves mic mute state before calendly opens
   const preCalendlyAudioEnabledRef = useRef(true); // AIDEV-NOTE: Saves avatar audio state before calendly opens
   const pendingCalendlyRef = useRef(false); // AIDEV-NOTE: Flags pending calendly open - waits for avatar to finish speaking
+  const hasAutoExpandedRef = useRef(false); // AIDEV-NOTE: Prevents duplicate auto-expand in React Strict Mode
 
   // Event logging hook
   const { logs, log, clearLogs } = useEventLogger();
@@ -259,6 +260,15 @@ export const AIChatWidget = () => {
     }
   }, [showCalendly, isMuted, audioEnabled, room]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // AIDEV-NOTE: Auto-start session if autoExpand prop is true
+  // AIDEV-NOTE: Uses ref to prevent duplicate calls in React Strict Mode (dev only)
+  useEffect(() => {
+    if (autoExpand && !isConnecting && !room && !hasAutoExpandedRef.current) {
+      hasAutoExpandedRef.current = true;
+      startLiveSession();
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => {
     mountedRef.current = true;
     return () => {
@@ -408,6 +418,11 @@ export const AIChatWidget = () => {
     setIsMuted(true);
     setAudioEnabled(true);
     setState("minimized");
+
+    // AIDEV-NOTE: Call optional onDisconnect callback if provided (used by ExtendedAvatarPage)
+    if (onDisconnect) {
+      onDisconnect();
+    }
   };
 
   // AIDEV-NOTE: Initializes LiveAvatar session - creates HeyGen session, connects to LiveKit room, wires all events
