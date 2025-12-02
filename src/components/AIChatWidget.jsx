@@ -260,14 +260,26 @@ export const AIChatWidget = ({ onDisconnect, autoExpand = false } = {}) => {
     }
   }, [showCalendly, isMuted, audioEnabled, room]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // AIDEV-NOTE: Update state when autoExpand changes
+  useEffect(() => {
+    if (autoExpand && state === "minimized") {
+      console.log('[AUTO-EXPAND] Setting state to small');
+      setState("small");
+    }
+  }, [autoExpand, state]);
+
   // AIDEV-NOTE: Auto-start session if autoExpand prop is true
   // AIDEV-NOTE: Uses ref to prevent duplicate calls in React Strict Mode (dev only)
   useEffect(() => {
+    console.log('[AUTO-EXPAND] Effect triggered - autoExpand:', autoExpand, 'isConnecting:', isConnecting, 'room:', !!room, 'hasAutoExpandedRef:', hasAutoExpandedRef.current, 'state:', state);
     if (autoExpand && !isConnecting && !room && !hasAutoExpandedRef.current) {
+      console.log('[AUTO-EXPAND] ✅ Starting live session...');
       hasAutoExpandedRef.current = true;
       startLiveSession();
+    } else {
+      console.log('[AUTO-EXPAND] ❌ Skipping - conditions not met');
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [autoExpand]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     mountedRef.current = true;
@@ -431,9 +443,14 @@ export const AIChatWidget = ({ onDisconnect, autoExpand = false } = {}) => {
   // AIDEV-NOTE: Called by: Widget expansion (minimized → small), triggered on initial click
   // AIDEV-TODO: Add user-facing error UI instead of console.error on session creation failure
   const startLiveSession = async () => {
+    console.log('[START-SESSION] Called - isConnecting:', isConnecting, 'room:', !!room, 'autoExpand:', autoExpand);
     // AIDEV-NOTE: Prevent duplicate connection attempts
-    if (isConnecting || room) return;
+    if (isConnecting || room) {
+      console.log('[START-SESSION] ❌ Aborting - already connecting or room exists');
+      return;
+    }
 
+    console.log('[START-SESSION] ✅ Setting isConnecting=true');
     setIsConnecting(true);
     try {
       // AIDEV-NOTE: Step 1 - Create HeyGen LiveAvatar session via serverless API route
@@ -469,15 +486,19 @@ export const AIChatWidget = ({ onDisconnect, autoExpand = false } = {}) => {
       });
 
       // AIDEV-NOTE: Step 3 - Connect to LiveKit room using credentials from HeyGen session
+      console.log('[START-SESSION] Connecting to LiveKit room...');
       await r.connect(livekitUrl, livekitClientToken);
+      console.log('[START-SESSION] ✅ Connected to LiveKit room');
 
       // AIDEV-NOTE: Safety check - if component unmounted during async connection, cleanup and abort
       if (!mountedRef.current) {
+        console.log('[START-SESSION] ❌ Component unmounted, aborting');
         r.disconnect();
         setIsConnecting(false);
         return;
       }
 
+      console.log('[START-SESSION] Setting room and hasLiveVideo=true');
       setRoom(r);
       setHasLiveVideo(true);
 
@@ -555,6 +576,7 @@ export const AIChatWidget = ({ onDisconnect, autoExpand = false } = {}) => {
       console.error("Failed to start live session:", err);
       // AIDEV-TODO: Show error modal to user instead of silent failure
     }
+    console.log('[START-SESSION] ✅ Setting isConnecting=false');
     setIsConnecting(false);
   };
 
@@ -1245,7 +1267,11 @@ export const AIChatWidget = ({ onDisconnect, autoExpand = false } = {}) => {
                   minHeight: 0,
                 }}
               >
-                {isConnecting ? (
+                {(() => {
+                  console.log('[RENDER] Video container decision - isConnecting:', isConnecting, 'autoExpand:', autoExpand, 'hasLiveVideo:', hasLiveVideo, 'room:', !!room, 'isVoiceMode:', isVoiceMode);
+                  return null;
+                })()}
+                {isConnecting || (autoExpand && !room) ? (
                   <div
                     style={{
                       display: "flex",
@@ -1271,7 +1297,7 @@ export const AIChatWidget = ({ onDisconnect, autoExpand = false } = {}) => {
                     </p>
                   </div>
                 ) : hasLiveVideo || room ? (
-                  // AIDEV-NOTE: LiveKit video container - attaches remote video tracks, shows 'waiting for video' fallback
+                  // AIDEV-NOTE: LiveKit video container - attaches remote video tracks
                   // AIDEV-NOTE: attachTrackToDom function creates <video> element inside this container
                   <div
                     id="live-video-container"
@@ -1284,43 +1310,7 @@ export const AIChatWidget = ({ onDisconnect, autoExpand = false } = {}) => {
                       justifyContent: "center",
                       position: "relative",
                     }}
-                  >
-                    {!document
-                      .getElementById("live-video-container")
-                      ?.querySelector("video") && (
-                      <div
-                        style={{
-                          color: "white",
-                          fontSize: "14px",
-                          textAlign: "center",
-                        }}
-                      >
-                        <div
-                          style={{
-                            marginBottom: "8px",
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "4px",
-                          }}
-                        >
-                          <Video style={{ width: "16px", height: "16px" }} />
-                          Waiting for video...
-                        </div>
-                        <div
-                          style={{
-                            fontSize: "12px",
-                            opacity: 0.7,
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "4px",
-                          }}
-                        >
-                          <Volume2 style={{ width: "12px", height: "12px" }} />
-                          Audio
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                  />
                 ) : !isVoiceMode ? (
                   <AnimatePresence mode="wait">
                     {isTransitioning ? (

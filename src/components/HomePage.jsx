@@ -36,6 +36,7 @@ const HomePage = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userEmail, setUserEmail] = useState("");
   const [isYearly, setIsYearly] = useState(false);
+  const [triggerAvatarFullscreen, setTriggerAvatarFullscreen] = useState(false);
   const navigate = useNavigate();
   const isMobile = useIsMobile(); // Detect mobile to disable heavy animations
 
@@ -438,7 +439,7 @@ const HomePage = () => {
                 }}
               >
                 <button
-                  onClick={() => window.QudemoWidget?.open()}
+                  onClick={() => setTriggerAvatarFullscreen(true)}
                   className="text-white font-medium text-sm sm:text-base px-6 sm:px-8 py-3 sm:py-3.5 rounded-xl transition-all duration-300 flex items-center justify-center relative overflow-hidden group z-[999]"
                   style={{
                     background: "rgba(59, 130, 246, 1)",
@@ -2318,10 +2319,29 @@ const HomePage = () => {
         .animate-fadeIn {
           animation: fadeIn 0.8s ease-out both;
         }
+
+        .avatar-fullscreen-wrapper > div {
+          position: fixed !important;
+          top: 0 !important;
+          left: 0 !important;
+          right: 0 !important;
+          bottom: 0 !important;
+          width: 100vw !important;
+          height: 100vh !important;
+          transform: none !important;
+          margin: 0 !important;
+          border-radius: 0 !important;
+          z-index: 9999 !important;
+        }
       `}</style>
 
       {/* AI Chat Widget - Live Avatar */}
-      <AIChatWidget />
+      <div className={triggerAvatarFullscreen ? "avatar-fullscreen-wrapper" : ""}>
+        <AIChatWidget
+          autoExpand={triggerAvatarFullscreen}
+          onDisconnect={() => setTriggerAvatarFullscreen(false)}
+        />
+      </div>
     </div>
   );
 };
