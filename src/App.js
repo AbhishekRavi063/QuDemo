@@ -281,7 +281,7 @@ function App() {
                 element={<PublicQudemoShare />}
               />
               <Route path="/widget-demo" element={<FloatingWidgetDemo />} />
-              <Route path="/extended" element={<ExtendedAvatarPage />} />
+              <Route path="/avatar" element={<ExtendedAvatarPage />} />
               <Route
                 path="/widget-playground/:qudemoId"
                 element={<WidgetPlayground />}
