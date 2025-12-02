@@ -1146,46 +1146,13 @@ export const AIChatWidget = ({ onDisconnect, autoExpand = false } = {}) => {
                   gap: "8px",
                 }}
               >
-                <div
-                  style={{ display: "flex", alignItems: "center", gap: "8px" }}
-                >
-                  {state === "small" && (
-                    <button
-                      onClick={() => setState("medium")}
-                      style={{
-                        backgroundColor: "rgba(0, 0, 0, 0.7)",
-                        backdropFilter: "blur(4px)",
-                        border: "1px solid rgba(255, 255, 255, 0.2)",
-                        borderRadius: "6px",
-                        padding: "8px",
-                        cursor: "pointer",
-                        color: "white",
-                      }}
-                    >
-                      <Maximize2 style={{ width: "16px", height: "16px" }} />
-                    </button>
-                  )}
-
-                  {state === "medium" && (
-                    <>
+                {!autoExpand && (
+                  <div
+                    style={{ display: "flex", alignItems: "center", gap: "8px" }}
+                  >
+                    {state === "small" && (
                       <button
-                        onClick={() => {
-                          setState("small");
-                        }}
-                        style={{
-                          backgroundColor: "rgba(0, 0, 0, 0.7)",
-                          backdropFilter: "blur(4px)",
-                          border: "1px solid rgba(255, 255, 255, 0.2)",
-                          borderRadius: "6px",
-                          padding: "8px",
-                          cursor: "pointer",
-                          color: "white",
-                        }}
-                      >
-                        <Minimize2 style={{ width: "16px", height: "16px" }} />
-                      </button>
-                      <button
-                        onClick={() => setState("maximized")}
+                        onClick={() => setState("medium")}
                         style={{
                           backgroundColor: "rgba(0, 0, 0, 0.7)",
                           backdropFilter: "blur(4px)",
@@ -1198,26 +1165,61 @@ export const AIChatWidget = ({ onDisconnect, autoExpand = false } = {}) => {
                       >
                         <Maximize2 style={{ width: "16px", height: "16px" }} />
                       </button>
-                    </>
-                  )}
+                    )}
 
-                  {state === "maximized" && (
-                    <button
-                      onClick={() => setState("medium")}
-                      style={{
-                        backgroundColor: "rgba(0, 0, 0, 0.7)",
-                        backdropFilter: "blur(4px)",
-                        border: "1px solid rgba(255, 255, 255, 0.2)",
-                        borderRadius: "6px",
-                        padding: "8px",
-                        cursor: "pointer",
-                        color: "white",
-                      }}
-                    >
-                      <Minimize2 style={{ width: "16px", height: "16px" }} />
-                    </button>
-                  )}
-                </div>
+                    {state === "medium" && (
+                      <>
+                        <button
+                          onClick={() => {
+                            setState("small");
+                          }}
+                          style={{
+                            backgroundColor: "rgba(0, 0, 0, 0.7)",
+                            backdropFilter: "blur(4px)",
+                            border: "1px solid rgba(255, 255, 255, 0.2)",
+                            borderRadius: "6px",
+                            padding: "8px",
+                            cursor: "pointer",
+                            color: "white",
+                          }}
+                        >
+                          <Minimize2 style={{ width: "16px", height: "16px" }} />
+                        </button>
+                        <button
+                          onClick={() => setState("maximized")}
+                          style={{
+                            backgroundColor: "rgba(0, 0, 0, 0.7)",
+                            backdropFilter: "blur(4px)",
+                            border: "1px solid rgba(255, 255, 255, 0.2)",
+                            borderRadius: "6px",
+                            padding: "8px",
+                            cursor: "pointer",
+                            color: "white",
+                          }}
+                        >
+                          <Maximize2 style={{ width: "16px", height: "16px" }} />
+                        </button>
+                      </>
+                    )}
+
+                    {state === "maximized" && (
+                      <button
+                        onClick={() => setState("medium")}
+                        style={{
+                          backgroundColor: "rgba(0, 0, 0, 0.7)",
+                          backdropFilter: "blur(4px)",
+                          border: "1px solid rgba(255, 255, 255, 0.2)",
+                          borderRadius: "6px",
+                          padding: "8px",
+                          cursor: "pointer",
+                          color: "white",
+                        }}
+                      >
+                        <Minimize2 style={{ width: "16px", height: "16px" }} />
+                      </button>
+                    )}
+                  </div>
+                )}
 
                 <div
                   style={{
