@@ -24,3 +24,4 @@ yarn-error.log*
 
 # ignore legacy folder for now
 legacy/
+src/mobile/DEBUG-CONNECTION-ISSUE.md

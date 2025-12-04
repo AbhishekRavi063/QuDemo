@@ -34,6 +34,9 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Serve static files from build directory
+app.use(express.static('build'));
+
 // Import the API handlers dynamically
 const { default: createSessionHandler } = await import('./api/liveavatar/create-session.js');
 const { default: stopSessionHandler } = await import('./api/liveavatar/stop-session.js');
@@ -71,6 +74,23 @@ app.post('/api/create-liveavatar-session', async (req, res) => {
   } catch (error) {
     console.error('❌ API Error:', error);
     res.status(500).json({ error: error.message });
+  }
+});
+
+// Mobile logs endpoint
+app.post('/api/mobile-logs', (req, res) => {
+  try {
+    const { log, userAgent } = req.body;
+    console.log('\n📱 ========================================');
+    console.log('📱 MOBILE LOG:', log);
+    if (userAgent) {
+      console.log('📱 Device:', userAgent);
+    }
+    console.log('📱 ========================================\n');
+    res.json({ success: true });
+  } catch (error) {
+    console.error('❌ Error logging mobile data:', error);
+    res.status(500).json({ error: 'Failed to log' });
   }
 });
 

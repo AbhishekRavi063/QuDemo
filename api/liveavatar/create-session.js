@@ -24,23 +24,33 @@ export default async function handler(req, res) {
   }
 
   try {
+    console.log('\n========================================');
+    console.log('📱 MOBILE SESSION REQUEST');
+    console.log('========================================');
+
     const { userId = 'default-user' } = req.body;
+    console.log('User ID:', userId);
+    console.log('Request method:', req.method);
+    console.log('Request headers:', JSON.stringify(req.headers, null, 2));
 
     // Get HeyGen API key from environment
     const HEYGEN_API_KEY = process.env.HEYGEN_API_KEY;
 
     if (!HEYGEN_API_KEY) {
-      console.error('Missing HEYGEN_API_KEY environment variable');
+      console.error('❌ Missing HEYGEN_API_KEY environment variable');
       return res.status(500).json({
         error: 'Server configuration error',
         message: 'Missing API key'
       });
     }
 
-    console.log('Creating LiveAvatar session for user:', userId);
-    console.log('Using API key:', HEYGEN_API_KEY ? `${HEYGEN_API_KEY.substring(0, 8)}...` : 'undefined');
+    console.log('✅ API Key found:', HEYGEN_API_KEY ? `${HEYGEN_API_KEY.substring(0, 8)}...` : 'undefined');
+    console.log('Avatar ID:', process.env.HEYGEN_AVATAR_ID);
+    console.log('Voice ID:', process.env.HEYGEN_VOICE_ID);
+    console.log('Context ID:', process.env.HEYGEN_CONTEXT_ID);
 
     // STEP 1: Create session token
+    console.log('\n🔑 Step 1: Creating session token...');
     const tokenResponse = await fetch('https://api.liveavatar.com/v1/sessions/token', {
       method: 'POST',
       headers: {
@@ -61,7 +71,7 @@ export default async function handler(req, res) {
 
     if (!tokenResponse.ok) {
       const errorData = await tokenResponse.text();
-      console.error('LiveAvatar token API error:', tokenResponse.status, errorData);
+      console.error('❌ LiveAvatar token API error:', tokenResponse.status, errorData);
       return res.status(tokenResponse.status).json({
         error: 'Failed to create session token',
         details: errorData,
@@ -72,7 +82,9 @@ export default async function handler(req, res) {
     const sessionToken = tokenData?.data?.session_token;
     const sessionId = tokenData?.data?.session_id;
 
-    console.log('Session token created:', sessionId);
+    console.log('✅ Session token created successfully');
+    console.log('   Session ID:', sessionId);
+    console.log('   Token length:', sessionToken?.length || 0);
 
     if (!sessionToken || !sessionId) {
       console.error('Malformed token response:', tokenData);
@@ -83,6 +95,7 @@ export default async function handler(req, res) {
     }
 
     // STEP 2: Start session to get LiveKit credentials
+    console.log('\n🚀 Step 2: Starting session to get LiveKit credentials...');
     const startResponse = await fetch('https://api.liveavatar.com/v1/sessions/start', {
       method: 'POST',
       headers: {
@@ -97,21 +110,25 @@ export default async function handler(req, res) {
 
     if (!startResponse.ok) {
       const errorData = await startResponse.text();
-      console.error('LiveAvatar start API error:', startResponse.status, errorData);
+      console.error('❌ LiveAvatar start API error:', startResponse.status, errorData);
       return res.status(startResponse.status).json({
         error: 'Failed to start session',
         details: errorData,
       });
     }
 
+    console.log('✅ Start session API call succeeded');
+
     const startData = await startResponse.json();
     const livekitUrl = startData?.data?.livekit_url ?? startData?.livekit_url;
     const livekitClientToken = startData?.data?.livekit_client_token ?? startData?.livekit_client_token;
 
     console.log('Session started successfully with LiveKit credentials');
+    console.log('LiveKit URL:', livekitUrl ? `${livekitUrl.substring(0, 30)}...` : 'MISSING');
+    console.log('LiveKit Token:', livekitClientToken ? 'Present (length: ' + livekitClientToken.length + ')' : 'MISSING');
 
     if (!livekitUrl || !livekitClientToken) {
-      console.warn('Missing LiveKit info in start response:', startData);
+      console.warn('⚠️ Missing LiveKit info in start response:', startData);
       return res.status(200).json({
         sessionId,
         sessionToken,
@@ -119,6 +136,11 @@ export default async function handler(req, res) {
         startData,
       });
     }
+
+    console.log('✅ Returning complete session data to mobile client');
+    console.log('   Session ID:', sessionId);
+    console.log('   Has LiveKit URL:', !!livekitUrl);
+    console.log('   Has LiveKit Token:', !!livekitClientToken);
 
     // Return session credentials in the format frontend expects
     return res.status(200).json({

@@ -81,8 +81,9 @@ const MobileLandingPage = () => {
    * Epic 2 Implementation:
    * 1. Show loading state (prevents double-click)
    * 2. Unlock audio in gesture context
-   * 3. Wait 500ms (loading delay)
-   * 4. Trigger avatar fullscreen
+   * 3. Pre-create audio element for avatar (CRITICAL for mobile)
+   * 4. Wait 500ms (loading delay)
+   * 5. Trigger avatar fullscreen
    */
   const handleTalkToAgent = async () => {
     if (loading) return; // Prevent double-click
@@ -98,7 +99,31 @@ const MobileLandingPage = () => {
       // Don't block user - some browsers are more lenient
     }
 
-    // Step 2: 500ms delay (prevents UI flash, shows "Starting..." feedback)
+    // Step 2: CRITICAL - Pre-create audio element in gesture context for mobile
+    // This ensures avatar audio can play without additional user interaction
+    const audioEl = document.createElement("audio");
+    audioEl.autoplay = true;
+    audioEl.playsInline = true;
+    audioEl.setAttribute('playsinline', ''); // iOS compatibility
+    audioEl.setAttribute('webkit-playsinline', ''); // Older iOS
+    audioEl.muted = false;
+    audioEl.volume = 1.0;
+    audioEl.id = "avatar-audio-preload"; // ID so widget can find it
+    audioEl.style.display = "none";
+    document.body.appendChild(audioEl);
+
+    // Try to play silent audio to fully unlock (with timeout to prevent hanging)
+    try {
+      const playPromise = audioEl.play();
+      // Don't wait for play() - continue immediately
+      playPromise
+        .then(() => console.log('[AudioUnlock] ✅ Audio element pre-created and unlocked'))
+        .catch(e => console.warn('[AudioUnlock] Pre-created audio play failed:', e.message));
+    } catch (e) {
+      console.warn('[AudioUnlock] Pre-created audio play error:', e.message);
+    }
+
+    // Step 3: 500ms delay (prevents UI flash, shows "Starting..." feedback)
     setTimeout(() => {
       if (!mountedRef.current) return;
 

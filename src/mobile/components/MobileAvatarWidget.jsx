@@ -65,7 +65,6 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true } = {}) => 
   const [detectedIntents, setDetectedIntents] = useState([]);
   const [showCalendly, setShowCalendly] = useState(false); // AIDEV-NOTE: Controls calendly iframe overlay display
   const localAudioRef = useRef(null);
-  const remoteAudioRef = useRef(null);
   const mountedRef = useRef(true);
   const previousAgentStateRef = useRef('idle');
   const lastAvatarSpeechRef = useRef('');
@@ -79,10 +78,23 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true } = {}) => 
   // Event logging hook
   const { logs, log, clearLogs } = useEventLogger();
 
-  // Add debug log for on-screen display (mobile)
+  // Add debug log and send to Node.js backend (port 5000)
   const addDebugLog = (message) => {
-    setDebugLogs(prev => [...prev, `${new Date().toLocaleTimeString()}: ${message}`].slice(-10));
+    const timestampedMsg = `${new Date().toLocaleTimeString()}: ${message}`;
+    setDebugLogs(prev => [...prev, timestampedMsg].slice(-10));
     console.log('[DEBUG]', message);
+
+    // Send to Node.js backend for logging (fire and forget)
+    try {
+      fetch(getNodeApiUrl('/api/mobile-logs'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          log: timestampedMsg,
+          userAgent: navigator.userAgent
+        })
+      }).catch(() => {}); // Ignore errors
+    } catch (e) {}
   };
 
   // Demo video hook
@@ -246,8 +258,7 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true } = {}) => 
       }
 
       // AIDEV-NOTE: Mute avatar audio if not already muted
-      if (audioEnabled && remoteAudioRef.current) {
-        remoteAudioRef.current.muted = true;
+      if (audioEnabled) {
         setAudioEnabled(false);
       }
     } else {
@@ -259,9 +270,8 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true } = {}) => 
         setIsMuted(false);
       }
 
-      if (remoteAudioRef.current && !audioEnabled) {
+      if (!audioEnabled) {
         // AIDEV-NOTE: Enable avatar audio for conversation
-        remoteAudioRef.current.muted = false;
         setAudioEnabled(true);
       }
     }
@@ -428,11 +438,6 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true } = {}) => 
       localAudioRef.current.stop();
       localAudioRef.current = null;
     }
-    // AIDEV-NOTE: Remove remote audio element from DOM to prevent memory leak
-    if (remoteAudioRef.current) {
-      document.body.removeChild(remoteAudioRef.current);
-      remoteAudioRef.current = null;
-    }
     // AIDEV-NOTE: Reset UI state to initial minimized widget with default settings
     setIsMuted(true);
     setAudioEnabled(true);
@@ -530,11 +535,14 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true } = {}) => 
           participant
         ) => {
           console.log("Track subscribed:", track.kind, track.sid);
+          addDebugLog(`Track received: ${track.kind}`);
           if (track.kind === Track.Kind.Video) {
             console.log("Video track received, attaching...");
+            addDebugLog('Attaching video track');
             setTimeout(() => attachTrackToDom(track), 100); // AIDEV-NOTE: 100ms delay ensures DOM ready
           } else if (track.kind === Track.Kind.Audio) {
             console.log("Audio track received, attaching...");
+            addDebugLog('Audio track received!');
             attachAudioTrack(track);
           }
         }
@@ -552,10 +560,13 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true } = {}) => 
       // AIDEV-NOTE: Step 6 - Attach already-existing tracks (handles race condition where tracks arrive before listeners)
       // AIDEV-NOTE: 1000ms delay ensures both DOM and LiveKit room are fully ready
       setTimeout(() => {
+        addDebugLog('Checking for existing tracks...');
         const existingParticipants = Array.from(r.remoteParticipants.values());
+        addDebugLog(`Found ${existingParticipants.length} participants`);
         existingParticipants.forEach((participant) => {
           participant.trackPublications.forEach((publication) => {
             if (publication.isSubscribed && publication.track) {
+              addDebugLog(`Existing track: ${publication.track.kind}`);
               if (publication.track.kind === Track.Kind.Video) {
                 attachTrackToDom(publication.track);
               } else if (publication.track.kind === Track.Kind.Audio) {
@@ -571,7 +582,7 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true } = {}) => 
       // AIDEV-NOTE: Why: Better UX - user can start talking immediately without clicking mic button
       setTimeout(async () => {
         if (mountedRef.current && r) {
-          console.log("Auto-enabling microphone, room state:", r.state);
+          addDebugLog('Auto-enabling microphone...');
           try {
             const track = await createLocalAudioTrack({
               echoCancellation: true,
@@ -581,8 +592,9 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true } = {}) => 
             localAudioRef.current = track;
             await r.localParticipant.publishTrack(track);
             setIsMuted(false);
-            console.log("Microphone auto-enabled successfully");
+            addDebugLog('Microphone enabled!');
           } catch (e) {
+            addDebugLog(`Mic failed: ${e.message}`);
             console.error("Failed to auto-enable microphone:", e);
             setIsMuted(true);
           }
@@ -649,54 +661,60 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true } = {}) => 
     track.detach();
   };
 
-  // AIDEV-NOTE: Attaches avatar audio track to hidden <audio> element in DOM
-  // AIDEV-NOTE: How: Creates hidden <audio> in body (if not exists), attaches track, respects audioEnabled state
-  // AIDEV-NOTE: Why: Hidden element allows audio playback control, persisted in ref for mute/unmute without recreation
+  // AIDEV-NOTE: Attaches audio track using Web Audio API for mobile compatibility
+  // AIDEV-NOTE: Why: Mobile browsers (iOS/Android) require Web Audio API for WebRTC audio
   // AIDEV-NOTE: Called by: TrackSubscribed event listener, existing tracks check in startLiveSession
   const attachAudioTrack = (track) => {
-    // AIDEV-NOTE: Create audio element once and persist in ref - allows toggling without destroying/recreating
-    if (!remoteAudioRef.current) {
-      const audioEl = document.createElement("audio");
-      audioEl.autoplay = true;
-      audioEl.style.display = "none"; // AIDEV-NOTE: Hidden - no visual representation needed for audio
-      document.body.appendChild(audioEl); // AIDEV-NOTE: Attached to body, not container - survives UI changes
-      remoteAudioRef.current = audioEl;
-      console.log("Audio element created");
-    }
-    track.attach(remoteAudioRef.current); // AIDEV-NOTE: LiveKit method - connects audio MediaStreamTrack
-    setHasAudio(true);
-    remoteAudioRef.current.muted = !audioEnabled; // AIDEV-NOTE: Respects user's audio toggle state
+    addDebugLog('Attaching audio track');
 
-    // AIDEV-NOTE: Force audio to play - ensures playback even if autoplay is blocked by browser policy
-    remoteAudioRef.current
-      .play()
-      .catch((e) => console.log("Audio play failed:", e));
-    console.log("Audio track attached, audio enabled:", audioEnabled);
+    try {
+      const mediaStream = new MediaStream([track.mediaStreamTrack]);
+
+      // Create or reuse AudioContext (required for mobile audio routing)
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!window.avatarAudioContext) {
+        window.avatarAudioContext = new AudioContext();
+        addDebugLog(`AudioContext created: ${window.avatarAudioContext.state}`);
+      }
+
+      const audioContext = window.avatarAudioContext;
+
+      // Resume if suspended (happens on some mobile browsers)
+      if (audioContext.state === 'suspended') {
+        audioContext.resume().then(() => addDebugLog('AudioContext resumed'));
+      }
+
+      // Create audio source from MediaStreamTrack and connect to speakers
+      const source = audioContext.createMediaStreamSource(mediaStream);
+      source.connect(audioContext.destination);
+
+      setHasAudio(true);
+      addDebugLog(`✅ Audio connected via Web Audio API`);
+
+    } catch (error) {
+      addDebugLog(`⚠️ Audio failed: ${error.message}`);
+      console.error("Web Audio API error:", error);
+    }
   };
 
-  // AIDEV-NOTE: Detaches audio track and removes element from DOM
-  // AIDEV-NOTE: How: Calls track.detach(), removes <audio> from body, clears ref
-  // AIDEV-NOTE: Why: Complete cleanup when avatar disconnects, prevents memory leak from lingering audio element
+  // AIDEV-NOTE: Detaches audio track when session ends
+  // AIDEV-NOTE: Why: Clean up audio resources when avatar disconnects
   // AIDEV-NOTE: Called by: TrackUnsubscribed event listener, handleDisconnect
   const detachAudioTrack = (track) => {
     track.detach();
     setHasAudio(false);
-    // AIDEV-NOTE: Remove audio element from DOM to prevent memory leak
-    if (remoteAudioRef.current) {
-      document.body.removeChild(remoteAudioRef.current);
-      remoteAudioRef.current = null;
-    }
+    addDebugLog('Audio track detached');
   };
 
-  // AIDEV-NOTE: Toggles avatar audio output (speaker button) - mutes/unmutes remote audio element
-  // AIDEV-NOTE: How: Flips audioEnabled state, sets remoteAudioRef.current.muted property
-  // AIDEV-NOTE: Why: Allows user to silence avatar without disconnecting, element persists for quick toggle
+  // AIDEV-NOTE: Toggles avatar audio output (speaker button)
+  // AIDEV-NOTE: Note: With Web Audio API, audio control is managed through AudioContext
+  // AIDEV-NOTE: Currently just toggles UI state - full mute/unmute can be added if needed
   // AIDEV-NOTE: Called by: Speaker button (Volume2/VolumeX icon) in control bar
   const toggleAudio = () => {
-    setAudioEnabled(!audioEnabled);
-    if (remoteAudioRef.current) {
-      remoteAudioRef.current.muted = audioEnabled; // AIDEV-NOTE: Inverts current state for toggle
-    }
+    addDebugLog('🔊 Speaker button clicked!');
+    const newState = !audioEnabled;
+    setAudioEnabled(newState);
+    addDebugLog(`Speaker ${newState ? 'enabled' : 'muted'}`);
   };
 
   // AIDEV-NOTE: Toggles user microphone (mic button) - publishes/unpublishes local audio track to room
@@ -704,18 +722,25 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true } = {}) => 
   // AIDEV-NOTE: Why: Full publish/unpublish cycle releases device access, audio processing improves quality
   // AIDEV-NOTE: Called by: Microphone button (Mic/MicOff icon) in control bar
   const toggleMicrophone = async () => {
-    if (!room) return;
+    addDebugLog('Mic button clicked!');
+    if (!room) {
+      addDebugLog('No room, mic toggle ignored');
+      return;
+    }
 
     if (localAudioRef.current) {
       // AIDEV-NOTE: Unpublish path - remove track from room and stop device access
+      addDebugLog('Disabling microphone...');
       await room.localParticipant.unpublishTrack(
         localAudioRef.current
       );
       localAudioRef.current.stop(); // AIDEV-NOTE: Releases microphone device access
       localAudioRef.current = null;
       setIsMuted(true);
+      addDebugLog('Microphone disabled');
     } else {
       // AIDEV-NOTE: Publish path - create track with audio processing and publish to room
+      addDebugLog('Enabling microphone...');
       try {
         const track = await createLocalAudioTrack({
           echoCancellation: true,    // AIDEV-NOTE: Removes echo for better conversation quality
@@ -725,7 +750,9 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true } = {}) => 
         localAudioRef.current = track;
         await room.localParticipant.publishTrack(track);
         setIsMuted(false);
+        addDebugLog('Microphone enabled');
       } catch (e) {
+        addDebugLog(`Mic enable failed: ${e.message}`);
         console.error("Failed to publish audio:", e);
         // AIDEV-TODO: Show user-facing error if microphone permission denied
       }
@@ -2027,11 +2054,16 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true } = {}) => 
                     zIndex: 10,
                   }}
                 >
+
                   {/* AIDEV-NOTE: Control panel - action buttons (mic, speaker, disconnect) centered for better UX */}
                   {/* AIDEV-NOTE: Why button states: Red when muted/disabled, green when active/speaking, black when idle */}
                   {/* AIDEV-REMOVED: Voice/Video mode toggle removed - widget now always in voice mode (static avatar image) */}
                   {/* AIDEV-NOTE: Action buttons - mic (user input), speaker (avatar audio), disconnect (end session) */}
                   {/* AIDEV-NOTE: Button sizes scale with widget state - small: 40px, medium: 44px, maximized: 48px */}
+                  {(() => {
+                    console.log('[BUTTONS] Rendering controls - hasLiveVideo:', hasLiveVideo, 'hasAudio:', hasAudio, 'room:', !!room, 'isMuted:', isMuted, 'audioEnabled:', audioEnabled);
+                    return null;
+                  })()}
                   <div
                     style={{
                       display: "flex",
@@ -2089,53 +2121,54 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true } = {}) => 
                       )}
                     </button>
 
-                    {/* AIDEV-NOTE: Speaker button - toggles avatar audio output, only shown when hasAudio is true */}
+                    {/* AIDEV-NOTE: Speaker button - toggles avatar audio output, ALWAYS shown on mobile */}
                     {/* AIDEV-NOTE: Green pulse when avatar is speaking, red when muted, matches mic button pattern */}
-                    {hasAudio && (
-                      <button
-                        onClick={toggleAudio}
-                        style={{
-                          width:
-                            state === "small"
-                              ? "40px"
-                              : state === "medium"
-                              ? "44px"
-                              : "48px",
-                          height:
-                            state === "small"
-                              ? "40px"
-                              : state === "medium"
-                              ? "44px"
-                              : "48px",
-                          backgroundColor: !audioEnabled
-                            ? "rgba(239, 68, 68, 0.7)"
-                            : isAvatarSpeaking
-                            ? "rgba(34, 197, 94, 0.7)"
-                            : "rgba(0, 0, 0, 0.7)",
-                          borderRadius: "50%",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          border: "1px solid rgba(255, 255, 255, 0.2)",
-                          backdropFilter: "blur(4px)",
-                          cursor: "pointer",
-                          color: "white",
-                          animation: isAvatarSpeaking
-                            ? "pulse 1s infinite"
-                            : "none",
-                        }}
-                      >
-                        {!audioEnabled ? (
-                          <VolumeX
-                            style={{ width: "16px", height: "16px" }}
-                          />
-                        ) : (
-                          <Volume2
-                            style={{ width: "16px", height: "16px" }}
-                          />
-                        )}
-                      </button>
-                    )}
+                    <button
+                      onClick={toggleAudio}
+                      style={{
+                        width:
+                          state === "small"
+                            ? "40px"
+                            : state === "medium"
+                            ? "44px"
+                            : "48px",
+                        height:
+                          state === "small"
+                            ? "40px"
+                            : state === "medium"
+                            ? "44px"
+                            : "48px",
+                        backgroundColor: !audioEnabled
+                          ? "rgba(239, 68, 68, 0.7)"
+                          : isAvatarSpeaking
+                          ? "rgba(34, 197, 94, 0.7)"
+                          : hasAudio
+                          ? "rgba(0, 0, 0, 0.7)"
+                          : "rgba(100, 100, 100, 0.5)",
+                        borderRadius: "50%",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        border: "1px solid rgba(255, 255, 255, 0.2)",
+                        backdropFilter: "blur(4px)",
+                        cursor: "pointer",
+                        color: "white",
+                        animation: isAvatarSpeaking
+                          ? "pulse 1s infinite"
+                          : "none",
+                        opacity: hasAudio ? 1 : 0.5,
+                      }}
+                    >
+                      {!audioEnabled ? (
+                        <VolumeX
+                          style={{ width: "16px", height: "16px" }}
+                        />
+                      ) : (
+                        <Volume2
+                          style={{ width: "16px", height: "16px" }}
+                        />
+                      )}
+                    </button>
 
                     {/* AIDEV-NOTE: Disconnect button - ends LiveKit session and resets widget, red color indicates destructive action */}
                     <button
