@@ -268,17 +268,18 @@ function App() {
       window.removeEventListener("storage", handleStorageChange);
     };
   }, []);
-  // Mobile route wrapper component
   const HomeRoute = () => {
     const isMobile = isMobileDevice();
 
     if (isMobile) {
       return (
-        <Suspense fallback={
-          <div className="flex items-center justify-center h-screen">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div>
-          </div>
-        }>
+        <Suspense
+          fallback={
+            <div className="flex items-center justify-center h-screen">
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div>
+            </div>
+          }
+        >
           <MobileLandingPage />
         </Suspense>
       );

@@ -21,6 +21,8 @@ import InfiniteScroll from "../components/ui/InfiniteScroll";
 import TestimonialCard from "../components/ui/TestimonialCard";
 import PricingCard from "../components/ui/PricingCard";
 import IntegrationCard from "../components/ui/IntegrationCard";
+import LightRays from "../components/ui/LightRays";
+import SimpleLightRays from "../components/ui/SimpleLightRays";
 import { navigateToCreate } from "../utils/navigation";
 import SpotlightCard from "../components/ui/SpotlightCard";
 import InfiniteBadges from "../components/ui/InfiniteBadges";
@@ -263,7 +265,7 @@ const MobileLandingPage = () => {
         style={{ overflowX: "clip" }}
       >
         {/* Hero Section */}
-        <FadeInSection delay={0} className="flex flex-col z-[999]" disableAnimation={true}>
+        <FadeInSection delay={0} className="flex flex-col z-[999]" disableAnimation={isMobile}>
           <div
             className="flex justify-center flex-col items-center pt-32 sm:pt-40 md:pt-48 lg:pt-60 px-4 sm:px-6 md:px-8 relative"
             style={{
@@ -271,6 +273,11 @@ const MobileLandingPage = () => {
                 "radial-gradient(80% 25% at 50% 7.5%,var(--token-c6d9a740-f8af-44c7-ac7a-31b27a79b7f2,#000e47)0%,var(--token-6d7bfc0f-867f-43f5-837b-f61a13bf9490,#000)100%)",
             }}
           >
+            {!isMobile && (
+              <div className="absolute top-0 left-0 right-0 w-full h-[100vh] bottom-0 opacity-[0.2] z-50">
+                <SimpleLightRays />
+              </div>
+            )}
             <img
               decoding="auto"
               width="513"
@@ -290,9 +297,18 @@ const MobileLandingPage = () => {
               }}
             />
             {/* Bottom right gradient overlay - hidden on mobile */}
+            {!isMobile && (
+              <div
+                className="absolute inset-0 pointer-events-none z-0"
+                style={{
+                  background:
+                    "radial-gradient(ellipse at 90% 100%, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.7) 30%, transparent 60%)",
+                }}
+              />
+            )}
             <div className="max-w-5xl text-center relative z-50">
               {/* User Avatars Badge */}
-              <div className={`flex justify-center mb-4 sm:mb-6 ${''}`}>
+              <div className={`flex justify-center mb-4 sm:mb-6 ${isMobile ? '' : 'animate-fadeIn'}`}>
                 <div className="flex items-center gap-2 sm:gap-3">
                   {/* Avatar Stack */}
                   <div className="flex -space-x-2">
@@ -336,7 +352,7 @@ const MobileLandingPage = () => {
               <h1
                 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-medium text-white mb-4 sm:mb-6 leading-tight tracking-tight px-2 sm:px-4"
                 style={{
-                  animation: "none",
+                  animation: isMobile ? "none" : "fadeInUp 0.8s ease-out 0.2s both",
                   textShadow: "0 4px 24px rgba(41, 52, 255, 0.3)",
                 }}
               >
@@ -349,7 +365,7 @@ const MobileLandingPage = () => {
                 className="text-sm sm:text-base md:text-lg text-gray-500 my-6 sm:my-8 max-w-2xl mx-auto leading-relaxed font-normal px-4 sm:px-6"
                 style={{
                   fontSize: "25px",
-                  animation: "none",
+                  animation: isMobile ? "none" : "fadeInUp 0.8s ease-out 0.4s both",
                   fontWeight: "400",
                 }}
               >
@@ -360,7 +376,7 @@ const MobileLandingPage = () => {
               <div
                 className="flex items-center justify-center"
                 style={{
-                  animation: "none",
+                  animation: isMobile ? "none" : "fadeInUp 0.8s ease-out 0.5s both",
                 }}
               >
                 <button
@@ -379,7 +395,7 @@ const MobileLandingPage = () => {
             </div>
             {/*<div
               style={{
-                animation: "none",
+                animation: isMobile ? "none" : "fadeInUp 0.8s ease-out 0.6s both",
               }}
             >
               <InfiniteScroll />
@@ -388,11 +404,11 @@ const MobileLandingPage = () => {
         </FadeInSection>
 
         {/* Why Choose Us Section */}
-        <FadeInSection delay={0.1} className="flex flex-col relative" disableAnimation={true}>
+        <FadeInSection delay={0.1} className="flex flex-col relative" disableAnimation={isMobile}>
           <div
-            className={`w-full h- relative overflow-hidden z-50 ${''}`}
+            className={`w-full h- relative overflow-hidden z-50 ${isMobile ? '' : 'bg-black/20'}`}
             style={{
-              backdropFilter: "none",
+              backdropFilter: isMobile ? "none" : "blur(100%)",
             }}
           >
             {/* Single horizontal glow line separator - hidden on mobile */}
@@ -408,9 +424,52 @@ const MobileLandingPage = () => {
             className="sm:px-6 md:px-8 py-20 sm:py-32 md:py-40 relative my-auto flex flex-col justify-center overflow-hidden"
             id="benefits"
           >
+            {!isMobile && (
+              <div className="absolute top-0 left-0 right-0 w-full h-[100vh] bottom-0 opacity-[0.2] z-50">
+                <LightRays
+                  lightSpread={200}
+                  rayLength={20}
+                  raysColor="8aa5ff"
+                  rotationSpeed={0.02}
+                  fadeDistance={20}
+                  numRays={8}
+                  raysSpeed={1.0}
+                />
+              </div>
+            )}
             <div className="w-full max-w-7xl mx-auto text-center flex flex-col px-4 sm:px-0">
+              {!isMobile && (
+                <div
+                  style={{
+                    width: "100%",
+                    height: "600px",
+                    position: "absolute",
+                    top: "16%",
+                    left: 0,
+                    right: 0,
+                    opacity: 0.6,
+                  }}
+                >
+                  <RadarScanner
+                    gridColor={[0.3, 0.5, 1.0]}
+                    scanColor={[0, 0, 1.0]}
+                    glowColor={[0, 0.5, 1.0]}
+                    scanSpeed={0.6}
+                  />
+                </div>
+              )}
 
               Bottom glowing light effect - hidden on mobile
+              {!isMobile && (
+                <div
+                  className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full h-32"
+                  style={{
+                    background:
+                      "radial-gradient(ellipse 800px 150px at center bottom, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.08) 25%, rgba(255, 255, 255, 0.03) 50%, transparent 70%)",
+                    filter: "blur(40px)",
+                  }}
+                />
+              )}
 
               <div className="flex justify-center">
                 <StarBorder
@@ -542,6 +601,16 @@ const MobileLandingPage = () => {
               }}
             />
             {/* Bottom glowing light effect - hidden on mobile */}
+            {!isMobile && (
+              <div
+                className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full h-32"
+                style={{
+                  background:
+                    "radial-gradient(ellipse 800px 150px at center bottom, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.08) 25%, rgba(255, 255, 255, 0.03) 50%, transparent 70%)",
+                  filter: "blur(40px)",
+                }}
+              />
+            )}
             <div className="w-full max-w-7xl mx-auto text-center flex flex-col px-4 sm:px-0">
               <div className="flex justify-center mb-6 sm:mb-8">
                 <StarBorder
@@ -636,7 +705,7 @@ const MobileLandingPage = () => {
               <div
                 className="mt-12 md:mt-0"
                 style={{
-                  animation: "none",
+                  animation: isMobile ? "none" : "fadeInUp 0.8s ease-out 0.6s both",
                 }}
               >
                 <InfiniteBadges />
@@ -646,7 +715,7 @@ const MobileLandingPage = () => {
         </FadeInSection>
 
         {/* Testimonials Section */}
-        <FadeInSection delay={0.1} className="flex flex-col relative" disableAnimation={true}>
+        <FadeInSection delay={0.1} className="flex flex-col relative" disableAnimation={isMobile}>
           <div
             className="absolute top-0 -translate-y-1/2 left-0 right-0 h-px hidden md:block"
             style={{
@@ -667,12 +736,31 @@ const MobileLandingPage = () => {
             className="px-4 sm:px-6 md:px-8 py-20 sm:py-32 md:py-40 flex flex-col my-auto justify-center overflow-hidden"
             id="testimonials"
             style={{
-              background: "transparent",
+              background: isMobile ? "transparent" : "rgba(0, 0, 0, 0.6)",
             }}
           >
             {/* Dark overlay - hidden on mobile */}
+            {!isMobile && (
+              <div
+                className="absolute inset-0 -z-10"
+                style={{
+                  background:
+                    "linear-gradient(180deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.9) 100%)",
+                }}
+              />
+            )}
 
             {/* Bottom glowing light effect - hidden on mobile */}
+            {!isMobile && (
+              <div
+                className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full h-32"
+                style={{
+                  background:
+                    "radial-gradient(ellipse 800px 150px at center bottom, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.08) 25%, rgba(255, 255, 255, 0.03) 50%, transparent 70%)",
+                  filter: "blur(40px)",
+                }}
+              />
+            )}
             <div className="max-w-7xl mx-auto text-center flex flex-col">
               <div className="flex justify-center mb-6 sm:mb-8 px-4">
                 <StarBorder
@@ -742,7 +830,20 @@ const MobileLandingPage = () => {
 
         {/* Pricing Section */}
         {/*
-        <FadeInSection delay={0.1} className="flex flex-col relative" disableAnimation={true}>
+        <FadeInSection delay={0.1} className="flex flex-col relative" disableAnimation={isMobile}>
+          {!isMobile && (
+            <div className="absolute top-0 left-0 right-0 w-full bottom-0 opacity-[0.2]">
+              <LightRays
+                lightSpread={200}
+                rayLength={20}
+                raysColor="8aa5ff"
+                rotationSpeed={0.02}
+                fadeDistance={20}
+                numRays={8}
+                raysSpeed={1.0}
+              />
+            </div>
+          )}
           <div
             className="px-4 sm:px-6 md:px-8 w-full py-20 sm:py-32 md:py-40 flex flex-col my-auto justify-center overflow-hidden"
             id="pricing"
@@ -868,7 +969,7 @@ const MobileLandingPage = () => {
 
         // Quote Section */}
         {/*
-        <FadeInSection delay={0.1} className="flex flex-col !min-h-0 relative" disableAnimation={true}>
+        <FadeInSection delay={0.1} className="flex flex-col !min-h-0 relative" disableAnimation={isMobile}>
           <div
             className="absolute top-0 -translate-y-1/2 left-0 right-0 h-px hidden md:block"
             style={{
@@ -939,7 +1040,20 @@ const MobileLandingPage = () => {
 */}
         {/* Seamless Integrations Section - FULLY COMMENTED OUT */}
         {false && (
-        <FadeInSection delay={0.1} className="relative" disableAnimation={true}>
+        <FadeInSection delay={0.1} className="relative" disableAnimation={isMobile}>
+          {!isMobile && (
+            <div className="absolute top-0 left-0 right-0 w-full bottom-0 opacity-[0.2] z-50">
+              <LightRays
+                lightSpread={200}
+                rayLength={20}
+                raysColor="8aa5ff"
+                rotationSpeed={0.02}
+                fadeDistance={20}
+                numRays={8}
+                raysSpeed={1.0}
+              />
+            </div>
+          )}
           <div className="px-6 relative pt-40 -mb-36 flex items-center justify-center overflow-hidden">
             <div className="max-w-7xl mx-auto text-center relative w-full">
               {/* Badge */}
@@ -968,6 +1082,19 @@ const MobileLandingPage = () => {
                 {/* Center Logo with Wave Animations */}
                 <div className="absolute top-[40%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
                   {/* Multiple Concentric Wave Circles - 3 waves - hidden on mobile */}
+                  {!isMobile && [...Array(3)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full"
+                      style={{
+                        width: "46px",
+                        height: "46px",
+                        background: `radial-gradient(circle, transparent 60%, rgba(59, 130, 246, ${0.4 - i * 0.05}) 70%, transparent 100%)`,
+                        animation: `waveRipple 6s ease-out infinite`,
+                        animationDelay: `${i * 1}s`,
+                      }}
+                    />
+                  ))}
 
                   {/* Center Logo */}
                   <div
@@ -994,8 +1121,8 @@ const MobileLandingPage = () => {
                     <SpotlightCard
                       className="w-20 h-20 rounded-xl flex items-center justify-center m-auto"
                       style={{
-                        background: "rgba(18, 20, 38, 0.95)",
-                        backdropFilter: "none",
+                        background: isMobile ? "rgba(18, 20, 38, 0.95)" : "rgba(18, 20, 38, 0.8)",
+                        backdropFilter: isMobile ? "none" : "blur(16px)",
                         border: "1px solid rgba(138, 165, 255, 0.3)",
                         boxShadow: "0 8px 32px rgba(41, 52, 255, 0.3)",
                       }}
@@ -1019,8 +1146,8 @@ const MobileLandingPage = () => {
                     <SpotlightCard
                       className="w-20 h-20 rounded-xl flex items-center justify-center m-auto"
                       style={{
-                        background: "rgba(18, 20, 38, 0.95)",
-                        backdropFilter: "none",
+                        background: isMobile ? "rgba(18, 20, 38, 0.95)" : "rgba(18, 20, 38, 0.8)",
+                        backdropFilter: isMobile ? "none" : "blur(16px)",
                         border: "1px solid rgba(138, 165, 255, 0.3)",
                         boxShadow: "0 8px 32px rgba(41, 52, 255, 0.3)",
                       }}
@@ -1038,8 +1165,8 @@ const MobileLandingPage = () => {
                     <SpotlightCard
                       className="w-20 h-20 rounded-xl flex items-center justify-center m-auto"
                       style={{
-                        background: "rgba(18, 20, 38, 0.95)",
-                        backdropFilter: "none",
+                        background: isMobile ? "rgba(18, 20, 38, 0.95)" : "rgba(18, 20, 38, 0.8)",
+                        backdropFilter: isMobile ? "none" : "blur(16px)",
                         border: "1px solid rgba(138, 165, 255, 0.3)",
                         boxShadow: "0 8px 32px rgba(41, 52, 255, 0.3)",
                       }}
@@ -1063,8 +1190,8 @@ const MobileLandingPage = () => {
                     <SpotlightCard
                       className="w-20 h-20 rounded-xl flex items-center justify-center m-auto"
                       style={{
-                        background: "rgba(18, 20, 38, 0.95)",
-                        backdropFilter: "none",
+                        background: isMobile ? "rgba(18, 20, 38, 0.95)" : "rgba(18, 20, 38, 0.8)",
+                        backdropFilter: isMobile ? "none" : "blur(16px)",
                         border: "1px solid rgba(138, 165, 255, 0.3)",
                         boxShadow: "0 8px 32px rgba(41, 52, 255, 0.3)",
                       }}
@@ -1085,6 +1212,205 @@ const MobileLandingPage = () => {
                 </div>
 
                 {/* Connecting Lines with Animated Line Beams - hidden on mobile */}
+                {!isMobile && (
+                  <svg
+                    className="absolute inset-0 w-full h-full pointer-events-none"
+                    style={{ zIndex: 1 }}
+                  >
+                  {/* Vertical Line - Top */}
+                  <line
+                    x1="50%"
+                    y1="40%"
+                    x2="50%"
+                    y2="0%"
+                    stroke="rgba(59, 130, 246, 0.1)"
+                    strokeWidth="2"
+                  />
+
+                  {/* Horizontal Line - Right */}
+                  <line
+                    x1="50%"
+                    y1="40%"
+                    x2="80%"
+                    y2="40%"
+                    stroke="rgba(59, 130, 246, 0.1)"
+                    strokeWidth="2"
+                  />
+
+                  {/* Vertical Line - Bottom */}
+                  <line
+                    x1="50%"
+                    y1="40%"
+                    x2="50%"
+                    y2="60%"
+                    stroke="rgba(59, 130, 246, 0.1)"
+                    strokeWidth="2"
+                  />
+
+                  {/* Horizontal Line - Left */}
+                  <line
+                    x1="50%"
+                    y1="40%"
+                    x2="20%"
+                    y2="40%"
+                    stroke="rgba(59, 130, 246, 0.1)"
+                    strokeWidth="2"
+                  />
+
+                  {/* Animated Line Beams - Small moving line segments */}
+                  {/* Beam to Top */}
+                  <line
+                    stroke="rgba(59, 130, 246, 0.8)"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  >
+                    <animate
+                      attributeName="x1"
+                      values="50%;50%"
+                      dur="3s"
+                      repeatCount="indefinite"
+                    />
+                    <animate
+                      attributeName="y1"
+                      values="40%;38%;36%;34%;32%;30%;28%;26%;24%;22%;20%;18%;16%;14%;12%;10%;8%;6%;4%;2%;0%"
+                      dur="3s"
+                      repeatCount="indefinite"
+                    />
+                    <animate
+                      attributeName="x2"
+                      values="50%;50%"
+                      dur="3s"
+                      repeatCount="indefinite"
+                    />
+                    <animate
+                      attributeName="y2"
+                      values="38%;36%;34%;32%;30%;28%;26%;24%;22%;20%;18%;16%;14%;12%;10%;8%;6%;4%;2%;0%;0%"
+                      dur="3s"
+                      repeatCount="indefinite"
+                    />
+                    <animate
+                      attributeName="opacity"
+                      values="0;0.8;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;0.5;0"
+                      dur="3s"
+                      repeatCount="indefinite"
+                    />
+                  </line>
+
+                  {/* Beam to Right */}
+                  <line
+                    stroke="rgba(59, 130, 246, 0.8)"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  >
+                    <animate
+                      attributeName="x1"
+                      values="50%;52%;54%;56%;58%;60%;62%;64%;66%;68%;70%;72%;74%;76%;78%;80%"
+                      dur="3s"
+                      repeatCount="indefinite"
+                    />
+                    <animate
+                      attributeName="y1"
+                      values="40%;40%"
+                      dur="3s"
+                      repeatCount="indefinite"
+                    />
+                    <animate
+                      attributeName="x2"
+                      values="52%;54%;56%;58%;60%;62%;64%;66%;68%;70%;72%;74%;76%;78%;80%;80%"
+                      dur="3s"
+                      repeatCount="indefinite"
+                    />
+                    <animate
+                      attributeName="y2"
+                      values="40%;40%"
+                      dur="3s"
+                      repeatCount="indefinite"
+                    />
+                    <animate
+                      attributeName="opacity"
+                      values="0;0.8;1;1;1;1;1;1;1;1;1;1;1;1;0.5;0"
+                      dur="3s"
+                      repeatCount="indefinite"
+                    />
+                  </line>
+
+                  {/* Beam to Bottom */}
+                  <line
+                    stroke="rgba(59, 130, 246, 0.8)"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  >
+                    <animate
+                      attributeName="x1"
+                      values="50%;50%"
+                      dur="3.5s"
+                      repeatCount="indefinite"
+                    />
+                    <animate
+                      attributeName="y1"
+                      values="40%;42%;44%;46%;48%;50%;52%;54%;56%;58%;60%"
+                      dur="3.5s"
+                      repeatCount="indefinite"
+                    />
+                    <animate
+                      attributeName="x2"
+                      values="50%;50%"
+                      dur="3.5s"
+                      repeatCount="indefinite"
+                    />
+                    <animate
+                      attributeName="y2"
+                      values="42%;44%;46%;48%;50%;52%;54%;56%;58%;60%;60%"
+                      dur="3.5s"
+                      repeatCount="indefinite"
+                    />
+                    <animate
+                      attributeName="opacity"
+                      values="0;0.8;1;1;1;1;1;1;1;0.5;0"
+                      dur="3.5s"
+                      repeatCount="indefinite"
+                    />
+                  </line>
+
+                  {/* Beam to Left */}
+                  <line
+                    stroke="rgba(59, 130, 246, 0.8)"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  >
+                    <animate
+                      attributeName="x1"
+                      values="50%;48%;46%;44%;42%;40%;38%;36%;34%;32%;30%;28%;26%;24%;22%;20%"
+                      dur="4.8s"
+                      repeatCount="indefinite"
+                    />
+                    <animate
+                      attributeName="y1"
+                      values="40%;40%"
+                      dur="4.8s"
+                      repeatCount="indefinite"
+                    />
+                    <animate
+                      attributeName="x2"
+                      values="48%;46%;44%;42%;40%;38%;36%;34%;32%;30%;28%;26%;24%;22%;20%;20%"
+                      dur="4.8s"
+                      repeatCount="indefinite"
+                    />
+                    <animate
+                      attributeName="y2"
+                      values="40%;40%"
+                      dur="4.8s"
+                      repeatCount="indefinite"
+                    />
+                    <animate
+                      attributeName="opacity"
+                      values="0;0.8;1;1;1;1;1;1;1;1;1;1;1;1;0.5;0"
+                      dur="4.8s"
+                      repeatCount="indefinite"
+                    />
+                  </line>
+                </svg>
+                )}
               </div>
             </div>
 
@@ -1119,7 +1445,7 @@ const MobileLandingPage = () => {
 
         {/* Comparison Section */}
         {/*
-        <FadeInSection delay={0.1} className="relative" disableAnimation={true}>
+        <FadeInSection delay={0.1} className="relative" disableAnimation={isMobile}>
           <div
             className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/2 h-72 relative"
             style={{
@@ -1142,7 +1468,7 @@ const MobileLandingPage = () => {
             className="px-6 flex flex-col justify-center overflow-hidden"
             id="comparison"
             style={{
-              background: "transparent",
+              background: isMobile ? "transparent" : "rgba(0, 0, 0, 0.7)",
             }}
           >
             <div className="max-w-7xl mx-auto text-center">
@@ -1468,7 +1794,7 @@ const MobileLandingPage = () => {
 */}
         {/* FAQ Section */}
         {/*
-        <FadeInSection delay={0.1} className="relative" disableAnimation={true}>
+        <FadeInSection delay={0.1} className="relative" disableAnimation={isMobile}>
           <div
             className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/2 h-72 relative"
             style={{
@@ -1491,10 +1817,19 @@ const MobileLandingPage = () => {
             className="px-4 sm:px-6 md:px-8 pb-20 sm:pb-32 md:pb-40 overflow-hidden"
             id="faq"
             style={{
-              background: "transparent",
+              background: isMobile ? "transparent" : "rgba(0, 0, 0, 0.7)",
             }}
           >
             // Dark overlay - hidden on mobile 
+            {!isMobile && (
+              <div
+                className="absolute inset-0 -z-10"
+                style={{
+                  background:
+                    "linear-gradient(180deg, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.95) 100%)",
+                }}
+              />
+            )}
             <div className="max-w-4xl mx-auto text-center">
               <div className="flex justify-center mb-6 sm:mb-8 px-4">
                 <StarBorder
@@ -1678,7 +2013,7 @@ const MobileLandingPage = () => {
         */}
 
         {/* Final Call-to-Action Section */}
-        <FadeInSection delay={0.1} className="min-h-[40vh]" disableAnimation={true}>
+        <FadeInSection delay={0.1} className="min-h-[40vh]" disableAnimation={isMobile}>
           <div className="px-6 relative min-h-[40vh] flex flex-col justify-center">
             <div
               className="absolute top-0 -translate-y-1/2 left-0 right-0 h-px hidden md:block"
@@ -1688,8 +2023,31 @@ const MobileLandingPage = () => {
                 opacity: 0.14,
               }}
             />
+            {!isMobile && (
+              <div className="absolute top-0 left-0 right-0 w-full bottom-0 opacity-[0.2] z-50">
+                <LightRays
+                  lightSpread={200}
+                  rayLength={20}
+                  raysColor="8aa5ff"
+                  rotationSpeed={0.02}
+                  fadeDistance={20}
+                  numRays={8}
+                  raysSpeed={1.0}
+                />
+              </div>
+            )}
             <div className="max-w-4xl mx-auto text-center relative">
               {/* Radial gradient glow - hidden on mobile */}
+              {!isMobile && (
+                <div
+                  className="absolute inset-0 rounded-3xl"
+                  style={{
+                    background:
+                      "radial-gradient(circle, rgba(41, 52, 255, 0.3) 0%, transparent 70%)",
+                    filter: "blur(60px)",
+                  }}
+                />
+              )}
 
               <div className="relative z-50">
                 <div className="flex justify-center mb-8">
