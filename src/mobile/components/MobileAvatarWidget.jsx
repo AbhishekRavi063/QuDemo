@@ -35,8 +35,8 @@ import bookingConfig from '../config/booking-config.json';
 // Mobile Avatar Widget - Complete copy of desktop AIChatWidget with mobile optimizations
 // CRITICAL: Complete code independence - NO imports from desktop components
 // Mobile-specific: Removed animations, fullscreen by default, 100dvh viewport
-export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true } = {}) => {
-  const [state, setState] = useState(autoExpand ? "small" : "minimized");
+export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand } = {}) => {
+  const [state, setState] = useState(autoExpand ? "maximized" : "minimized");
   const [isMuted, setIsMuted] = useState(true);
   const [isVoiceMode, setIsVoiceMode] = useState(true); // AIDEV-NOTE: Always true - toggle UI removed, shows static avatar instead of LiveKit video
   const [showBookingPopup, setShowBookingPopup] = useState(false);
@@ -1051,9 +1051,9 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true } = {}) => 
     if (state === "maximized") {
       // AIDEV-NOTE: When calendly is open, use wider width (60% viewport, 900px max) for better calendly fit
       if (showCalendly) {
-        return isMobile ? window.innerWidth - 32 : Math.min(900, window.innerWidth * 0.6);
+        return isMobile ? window.innerWidth : Math.min(900, window.innerWidth * 0.6);
       }
-      return isMobile ? window.innerWidth - 32 : window.innerWidth * 0.8; // AIDEV-NOTE: 80% of viewport for maximized
+      return isMobile ? window.innerWidth : window.innerWidth * 0.8; // AIDEV-NOTE: True fullscreen width on mobile for no scrolling
     }
     return isMobile ? 280 : 420; // AIDEV-NOTE: Default fallback
   };
@@ -1072,11 +1072,11 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true } = {}) => 
       // AIDEV-NOTE: When calendly is open, use taller height (900px max) for better calendly fit
       if (showCalendly) {
         return isMobile
-          ? window.innerHeight - 64 // AIDEV-NOTE: Full height minus top padding for mobile
+          ? window.innerHeight // AIDEV-NOTE: True fullscreen for mobile - buttons positioned absolutely inside
           : Math.min(900, window.innerHeight * 0.85); // AIDEV-NOTE: Desktop capped at 900px or 85% viewport for calendly
       }
       return isMobile
-        ? window.innerHeight - 64 // AIDEV-NOTE: Full height minus top padding for mobile
+        ? window.innerHeight // AIDEV-NOTE: True fullscreen for mobile - no scrolling, buttons always visible
         : Math.min(720, window.innerHeight * 0.8); // AIDEV-NOTE: Desktop capped at 720px or 80% viewport
     }
     return 420; // AIDEV-NOTE: Default fallback
@@ -1089,8 +1089,8 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true } = {}) => 
   const getPosition = () => {
     if (state === "maximized") {
       return {
-        bottom: isMobile ? 16 : Math.max(32, window.innerHeight * 0.1), // AIDEV-NOTE: 10% bottom margin on desktop for centering
-        right: isMobile ? 16 : Math.max(32, window.innerWidth * 0.1), // AIDEV-NOTE: 10% right margin on desktop for centering
+        bottom: isMobile ? 0 : Math.max(32, window.innerHeight * 0.1), // AIDEV-NOTE: True fullscreen (0 margin) on mobile for no scrolling
+        right: isMobile ? 0 : Math.max(32, window.innerWidth * 0.1), // AIDEV-NOTE: True fullscreen (0 margin) on mobile for no scrolling
       };
     }
     return { bottom: isMobile ? 16 : 32, right: isMobile ? 16 : 32 }; // AIDEV-NOTE: Fixed corner position for non-maximized
@@ -1106,7 +1106,7 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true } = {}) => 
           zIndex: 50,
           backgroundColor: "#1f2937",
           border: "1px solid #374151",
-          overflow: "hidden",
+          overflow: state === "maximized" ? "visible" : "hidden",
           boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
           transformOrigin: "bottom right", // AIDEV-NOTE: Critical for proper animation - expands from corner
           ...getPosition(),
@@ -1123,8 +1123,12 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true } = {}) => 
         {state === "minimized" ? (
           <button
             onClick={() => {
-              setState("small");
-              startLiveSession();
+              if (onExpand) {
+                onExpand();
+              } else {
+                setState("small");
+                startLiveSession();
+              }
             }}
             style={{
               width: "100%",
@@ -1442,6 +1446,7 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true } = {}) => 
                       alignItems: "center",
                       justifyContent: "center",
                       position: "relative",
+                      zIndex: 1,
                     }}
                   />
                 ) : !isVoiceMode ? (
@@ -1940,7 +1945,7 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true } = {}) => 
                   <div
                     style={{
                       position: "absolute",
-                      bottom: "100px",
+                      bottom: "130px",
                       left: "16px",
                       right: "16px",
                       backgroundColor: "rgba(0, 0, 0, 0.8)",
@@ -1949,7 +1954,7 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true } = {}) => 
                       borderRadius: "8px",
                       fontSize: "11px",
                       backdropFilter: "blur(4px)",
-                      maxHeight: "120px",
+                      maxHeight: "100px",
                       overflowY: "auto",
                     }}
                   >
@@ -1996,7 +2001,7 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true } = {}) => 
                     bottom: "2px",
                     left: "50%",
                     transform: "translateX(-50%)",
-                    zIndex: 10,
+                    zIndex: 999,
                   }}
                 >
                   <span
@@ -2034,24 +2039,14 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true } = {}) => 
 
                 <div
                   style={{
-                    position: "absolute",
-                    bottom: "16px",
-                    left:
-                      state === "small"
-                        ? "8px"
-                        : state === "medium"
-                        ? "12px"
-                        : "16px",
-                    right:
-                      state === "small"
-                        ? "8px"
-                        : state === "medium"
-                        ? "12px"
-                        : "16px",
+                    position: "fixed",
+                    bottom: "20px",
+                    left: "50%",
+                    transform: "translateX(-50%)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    zIndex: 10,
+                    zIndex: 99999,
                   }}
                 >
 
@@ -2060,10 +2055,6 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true } = {}) => 
                   {/* AIDEV-REMOVED: Voice/Video mode toggle removed - widget now always in voice mode (static avatar image) */}
                   {/* AIDEV-NOTE: Action buttons - mic (user input), speaker (avatar audio), disconnect (end session) */}
                   {/* AIDEV-NOTE: Button sizes scale with widget state - small: 40px, medium: 44px, maximized: 48px */}
-                  {(() => {
-                    console.log('[BUTTONS] Rendering controls - hasLiveVideo:', hasLiveVideo, 'hasAudio:', hasAudio, 'room:', !!room, 'isMuted:', isMuted, 'audioEnabled:', audioEnabled);
-                    return null;
-                  })()}
                   <div
                     style={{
                       display: "flex",

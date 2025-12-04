@@ -1915,6 +1915,15 @@ const MobileLandingPage = () => {
           margin: 0 !important;
           border-radius: 0 !important;
           z-index: 9999 !important;
+          overflow: visible !important;
+        }
+
+        /* Prevent body scrolling when avatar is fullscreen */
+        body:has(.avatar-fullscreen-wrapper) {
+          overflow: hidden !important;
+          position: fixed !important;
+          width: 100% !important;
+          height: 100% !important;
         }
       `}</style>
 
@@ -1923,6 +1932,7 @@ const MobileLandingPage = () => {
         <MobileAvatarWidget
           autoExpand={triggerAvatarFullscreen}
           onDisconnect={() => setTriggerAvatarFullscreen(false)}
+          onExpand={() => setTriggerAvatarFullscreen(true)}
         />
       </div>
     </div>
