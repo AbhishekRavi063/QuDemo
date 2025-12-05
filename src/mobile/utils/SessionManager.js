@@ -35,6 +35,7 @@ class SessionManager {
     // DOM references
     this.videoElement = null;
     this.videoContainer = null;
+    this.audioElement = null; // Add audio element reference
   }
 
   /**
@@ -153,13 +154,34 @@ class SessionManager {
     this.log(`Attaching audio track: ${track.sid}`);
 
     try {
-      // AIDEV-NOTE: CRITICAL FIX - Use LiveKit's native audio playback
-      // AIDEV-NOTE: Do NOT use custom AudioManager - it conflicts with room.startAudio()
-      // AIDEV-NOTE: LiveKit handles audio internally after room.startAudio() is called
-      // AIDEV-NOTE: We just need to track that we have the audio track
+      // AIDEV-NOTE: CRITICAL FIX - Attach track to HTML audio element
+      // AIDEV-NOTE: room.startAudio() unlocks AudioContext, but we must attach track to <audio> element
+      // AIDEV-NOTE: This is required for audio to actually play through device speakers on mobile
 
+      // Create audio element if it doesn't exist
+      if (!this.audioElement) {
+        this.audioElement = document.createElement('audio');
+        this.audioElement.autoplay = true;
+        this.audioElement.playsInline = true;
+        this.audioElement.style.display = 'none'; // Hidden audio element
+        document.body.appendChild(this.audioElement);
+        this.log('Audio element created and added to DOM');
+      }
+
+      // Attach track to audio element
+      track.attach(this.audioElement);
       this.audioTrack = track;
-      this.log('✅ Audio track attached - LiveKit handles playback natively');
+
+      // Force play (should work because room.startAudio() was called)
+      await this.audioElement.play().catch(e =>
+        this.log(`Audio play error (may be ok): ${e.message}`)
+      );
+
+      this.log('✅ Audio track attached to <audio> element and playing', {
+        paused: this.audioElement.paused,
+        volume: this.audioElement.volume,
+        muted: this.audioElement.muted
+      });
 
       // Resolve ready promise
       if (this.audioReadyResolve) {
@@ -259,9 +281,21 @@ class SessionManager {
    */
   detachAudio() {
     if (this.audioTrack) {
-      // AIDEV-NOTE: Just clear reference - LiveKit handles cleanup
+      // Detach track from audio element
+      this.audioTrack.detach();
       this.audioTrack = null;
       this.log('Audio track detached');
+    }
+
+    // Clean up audio element
+    if (this.audioElement) {
+      this.audioElement.pause();
+      this.audioElement.srcObject = null;
+      if (this.audioElement.parentNode) {
+        this.audioElement.parentNode.removeChild(this.audioElement);
+      }
+      this.audioElement = null;
+      this.log('Audio element removed from DOM');
     }
   }
 

@@ -571,11 +571,30 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand }
     addDebugLog('Setting isConnecting=true');
     setIsConnecting(true);
 
-    // AIDEV-NOTE: Step 0 - DO NOT initialize AudioManager here!
-    // AIDEV-NOTE: Race condition: AudioManager.initialize() consumes user gesture
-    // AIDEV-NOTE: But room.startAudio() (called later) ALSO needs user gesture
-    // AIDEV-NOTE: Solution: Call room.startAudio() first, then AudioManager.initialize()
-    log('SYSTEM', '⏭️ Skipping early AudioManager.initialize() to preserve user gesture for LiveKit');
+    // AIDEV-NOTE: Step 0 - CRITICAL: Create Room and call startAudio() IMMEDIATELY
+    // AIDEV-NOTE: Must be called SYNCHRONOUSLY during user gesture (before any await)
+    // AIDEV-NOTE: LiveKit docs: https://docs.livekit.io/reference/client-sdk-js/
+    // AIDEV-NOTE: startAudio() unlocks the audio system for the session
+    const r = new Room({
+      adaptiveStream: false,
+      dynacast: false,
+    });
+
+    // Call startAudio() immediately - this MUST be in user gesture context
+    log('SYSTEM', '🔊 [AUDIO-FIX] Calling room.startAudio() IMMEDIATELY in user gesture context');
+    r.startAudio().then(() => {
+      log('SYSTEM', '✅ [AUDIO-FIX] room.startAudio() succeeded - audio unlocked!', {
+        canPlaybackAudio: r.canPlaybackAudio
+      });
+    }).catch((error) => {
+      log('ERROR', '❌ [AUDIO-FIX] room.startAudio() failed', {
+        error: error.message,
+        errorName: error.name,
+        canPlaybackAudio: r.canPlaybackAudio
+      });
+    });
+
+    // Note: Don't await startAudio() - let it run in parallel with API call below
 
     try {
       // AIDEV-NOTE: Step 1 - Create HeyGen LiveAvatar session via serverless API route
@@ -612,35 +631,14 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand }
 
       setSessionInfo({ sessionId, sessionToken, livekitUrl });
 
-      // AIDEV-NOTE: Step 2 - Create LiveKit room with disabled adaptive streaming for stable avatar quality
-      const r = new Room({
-        adaptiveStream: false, // AIDEV-NOTE: Prevents quality changes during session
-        dynacast: false,       // AIDEV-NOTE: Disabled for avatar use case
-      });
-
-      // AIDEV-NOTE: Step 3 - Connect to LiveKit room using credentials from HeyGen session
+      // AIDEV-NOTE: Step 2 - Connect to LiveKit room using credentials from HeyGen session
+      // AIDEV-NOTE: room.startAudio() already called at top of function (line 585) during user gesture
       addDebugLog('Connecting to LiveKit...');
       await r.connect(livekitUrl, livekitClientToken);
       addDebugLog('Connected to LiveKit!');
-
-      // AIDEV-NOTE: Step 3.1 - CRITICAL: Call room.startAudio() immediately after connect
-      // AIDEV-NOTE: This uses the user gesture from "Talk to Agent" button tap
-      // AIDEV-NOTE: LiveKit handles ALL audio playback internally - no custom AudioManager needed
-      log('SYSTEM', '🔊 [AUDIO-FIX] Calling room.startAudio() to unlock audio (user gesture)');
-      try {
-        await r.startAudio();
-        log('SYSTEM', '✅ [AUDIO-FIX] room.startAudio() succeeded - LiveKit audio enabled', {
-          canPlaybackAudio: r.canPlaybackAudio
-        });
-      } catch (startAudioError) {
-        log('ERROR', '❌ [AUDIO-FIX] room.startAudio() failed', {
-          error: startAudioError.message,
-          errorName: startAudioError.name,
-          canPlaybackAudio: r.canPlaybackAudio
-        });
-      }
-
-      // AIDEV-NOTE: No AudioManager.initialize() - LiveKit handles audio natively
+      log('SYSTEM', '✅ LiveKit connected - audio should be unlocked from earlier startAudio() call', {
+        canPlaybackAudio: r.canPlaybackAudio
+      });
 
       // AIDEV-NOTE: Safety check - if component unmounted during async connection, cleanup and abort
       if (!mountedRef.current) {
