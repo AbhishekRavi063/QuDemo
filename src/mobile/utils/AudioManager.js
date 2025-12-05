@@ -159,9 +159,23 @@ class AudioManager {
     this.log('Cleaning up AudioManager');
     this.detachTrack();
 
-    // Don't close AudioContext - reuse it for next session
-    // Closing and recreating can cause issues on some mobile browsers
-    // Keep isInitialized as true since we're keeping the AudioContext ready
+    // AIDEV-NOTE: Critical fix for reconnection issue
+    // AIDEV-NOTE: We must close and reset AudioContext on cleanup
+    // AIDEV-NOTE: Keeping old AudioContext causes second connection to fail
+    // AIDEV-NOTE: LiveKit's room.startAudio() needs to unlock a FRESH AudioContext
+    if (this.audioContext) {
+      try {
+        this.log('Closing AudioContext for clean reconnection');
+        this.audioContext.close();
+      } catch (e) {
+        this.log(`AudioContext close error: ${e.message}`);
+      }
+      this.audioContext = null;
+    }
+
+    // Reset initialization flag so next connection starts fresh
+    this.isInitialized = false;
+    this.log('✅ AudioManager fully reset for reconnection');
   }
 
   /**

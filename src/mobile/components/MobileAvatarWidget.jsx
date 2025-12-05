@@ -236,19 +236,36 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand }
   // AIDEV-NOTE: Always return to "small" state (initial connected state) after demo closes
   // AIDEV-NOTE: Same behavior as Calendly - returns to normal conversation view, not dead/disconnected state
   useEffect(() => {
+    log('DEMO', '🔄 [RESTORE] State restoration effect triggered', {
+      isDemoPlaying,
+      hasSavedState: preDemoWidgetStateRef.current !== null,
+      savedState: preDemoWidgetStateRef.current,
+      currentState: state,
+      hasRoom: !!room,
+      hasSessionInfo: !!sessionInfo
+    });
+
     if (!isDemoPlaying && preDemoWidgetStateRef.current !== null) {
       // AIDEV-NOTE: Always return to "small" state (initial connected view) after demo closes
       // AIDEV-NOTE: User wants to resume conversation after demo, not return to previous state
       if (room && sessionInfo) {
-        log('DEMO', 'Returning to small state (initial connected view) after demo closed');
+        log('DEMO', '✅ [RESTORE] Returning to small state (initial connected view) after demo closed', {
+          previousState: preDemoWidgetStateRef.current
+        });
         setState("small");
       } else {
-        log('DEMO', 'No active session - keeping minimized');
+        log('DEMO', '⚠️ [RESTORE] No active session - keeping minimized', {
+          hasRoom: !!room,
+          hasSessionInfo: !!sessionInfo
+        });
         setState("minimized");
       }
+      log('DEMO', '🧹 [RESTORE] Clearing saved state ref');
       preDemoWidgetStateRef.current = null;
+    } else {
+      log('DEMO', '⏭️ [RESTORE] Skipping restoration - conditions not met');
     }
-  }, [isDemoPlaying, log, room, sessionInfo]);
+  }, [isDemoPlaying, log, room, sessionInfo, state]);
 
   // AIDEV-NOTE: Restore widget state after calendly closes
   // AIDEV-NOTE: Always return to "small" state (initial connected state) after calendly closes
@@ -316,6 +333,9 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand }
       }
     }
   }, [showCalendly, hasLiveVideo]);
+
+  // AIDEV-NOTE: Demo video PiP cloning is handled by useDemoVideo hook (lines 76-106)
+  // AIDEV-NOTE: No additional useEffect needed - hook handles cloning automatically
 
   // AIDEV-NOTE: Mute mic and avatar audio when calendly opens, restore when closed
   // AIDEV-NOTE: How: Saves current audio states in refs, mutes both, restores on close
@@ -551,14 +571,11 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand }
     addDebugLog('Setting isConnecting=true');
     setIsConnecting(true);
 
-    // AIDEV-NOTE: Step 0 - Initialize AudioManager FIRST (requires user interaction)
-    addDebugLog('Initializing audio system...');
-    const audioReady = await AudioManager.initialize();
-    if (!audioReady) {
-      addDebugLog('⚠️ Audio initialization failed, but continuing...');
-    } else {
-      addDebugLog('✅ Audio system ready');
-    }
+    // AIDEV-NOTE: Step 0 - DO NOT initialize AudioManager here!
+    // AIDEV-NOTE: Race condition: AudioManager.initialize() consumes user gesture
+    // AIDEV-NOTE: But room.startAudio() (called later) ALSO needs user gesture
+    // AIDEV-NOTE: Solution: Call room.startAudio() first, then AudioManager.initialize()
+    log('SYSTEM', '⏭️ Skipping early AudioManager.initialize() to preserve user gesture for LiveKit');
 
     try {
       // AIDEV-NOTE: Step 1 - Create HeyGen LiveAvatar session via serverless API route
@@ -606,6 +623,25 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand }
       await r.connect(livekitUrl, livekitClientToken);
       addDebugLog('Connected to LiveKit!');
 
+      // AIDEV-NOTE: Step 3.1 - CRITICAL: Call room.startAudio() immediately after connect
+      // AIDEV-NOTE: This uses the user gesture from "Talk to Agent" button tap
+      // AIDEV-NOTE: LiveKit handles ALL audio playback internally - no custom AudioManager needed
+      log('SYSTEM', '🔊 [AUDIO-FIX] Calling room.startAudio() to unlock audio (user gesture)');
+      try {
+        await r.startAudio();
+        log('SYSTEM', '✅ [AUDIO-FIX] room.startAudio() succeeded - LiveKit audio enabled', {
+          canPlaybackAudio: r.canPlaybackAudio
+        });
+      } catch (startAudioError) {
+        log('ERROR', '❌ [AUDIO-FIX] room.startAudio() failed', {
+          error: startAudioError.message,
+          errorName: startAudioError.name,
+          canPlaybackAudio: r.canPlaybackAudio
+        });
+      }
+
+      // AIDEV-NOTE: No AudioManager.initialize() - LiveKit handles audio natively
+
       // AIDEV-NOTE: Safety check - if component unmounted during async connection, cleanup and abort
       if (!mountedRef.current) {
         console.log('[START-SESSION] ❌ Component unmounted, aborting');
@@ -638,6 +674,7 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand }
             await SessionManager.attachVideoTrack(track);
           } else if (track.kind === Track.Kind.Audio) {
             await SessionManager.attachAudioTrack(track);
+            // AIDEV-NOTE: room.startAudio() already called earlier (line 632) - no need to call again
           }
         }
       );
@@ -668,6 +705,7 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand }
                 await SessionManager.attachVideoTrack(track);
               } else if (track.kind === Track.Kind.Audio) {
                 await SessionManager.attachAudioTrack(track);
+                // AIDEV-NOTE: room.startAudio() already called earlier (line 632) - no need to call again
               }
             }
           }
@@ -723,8 +761,7 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand }
   };
 
   // AIDEV-NOTE: Toggles avatar audio output (speaker button)
-  // AIDEV-NOTE: Note: With Web Audio API, audio control is managed through AudioContext
-  // AIDEV-NOTE: Currently just toggles UI state - full mute/unmute can be added if needed
+  // AIDEV-NOTE: Changes audioEnabled state, which triggers useEffect to control AudioManager
   // AIDEV-NOTE: Called by: Speaker button (Volume2/VolumeX icon) in control bar
   const toggleAudio = () => {
     addDebugLog('🔊 Speaker button clicked!');
@@ -1633,6 +1670,7 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand }
                       ref={demoVideoRef}
                       controls
                       autoPlay
+                      muted
                       playsInline
                       preload="auto"
                       style={{
@@ -1667,17 +1705,17 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand }
                     <div
                       id="avatar-pip"
                       style={{
-                        position: "absolute",
-                        bottom: "20px",
-                        right: "20px",
-                        width: "200px",
-                        height: "150px",
-                        borderRadius: "12px",
+                        position: "fixed",
+                        bottom: "150px",
+                        right: "16px",
+                        width: "120px",
+                        height: "90px",
+                        borderRadius: "8px",
                         overflow: "hidden",
-                        border: "3px solid rgba(255, 255, 255, 0.9)",
-                        boxShadow: "0 8px 24px rgba(0, 0, 0, 0.8)",
-                        zIndex: 101,
-                        backgroundColor: "#000",
+                        border: "2px solid rgba(255, 255, 255, 0.9)",
+                        boxShadow: "0 4px 16px rgba(0, 0, 0, 0.8)",
+                        zIndex: 10001,
+                        backgroundColor: "transparent",
                       }}
                     />
 

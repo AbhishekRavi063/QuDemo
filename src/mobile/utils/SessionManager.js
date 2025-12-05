@@ -140,7 +140,7 @@ class SessionManager {
   }
 
   /**
-   * Attach audio track - idempotent, delegates to AudioManager
+   * Attach audio track - idempotent, uses LiveKit native audio playback
    * Returns: boolean - true if attached, false if already attached or failed
    */
   async attachAudioTrack(track) {
@@ -153,22 +153,21 @@ class SessionManager {
     this.log(`Attaching audio track: ${track.sid}`);
 
     try {
-      const success = await AudioManager.attachTrack(track);
+      // AIDEV-NOTE: CRITICAL FIX - Use LiveKit's native audio playback
+      // AIDEV-NOTE: Do NOT use custom AudioManager - it conflicts with room.startAudio()
+      // AIDEV-NOTE: LiveKit handles audio internally after room.startAudio() is called
+      // AIDEV-NOTE: We just need to track that we have the audio track
 
-      if (success) {
-        this.audioTrack = track;
-        this.log('✅ Audio track attached via AudioManager');
+      this.audioTrack = track;
+      this.log('✅ Audio track attached - LiveKit handles playback natively');
 
-        // Resolve ready promise
-        if (this.audioReadyResolve) {
-          this.audioReadyResolve();
-          this.audioReadyResolve = null;
-        }
-
-        return true;
+      // Resolve ready promise
+      if (this.audioReadyResolve) {
+        this.audioReadyResolve();
+        this.audioReadyResolve = null;
       }
 
-      return false;
+      return true;
 
     } catch (error) {
       this.log(`❌ Failed to attach audio track: ${error.message}`);
@@ -260,7 +259,7 @@ class SessionManager {
    */
   detachAudio() {
     if (this.audioTrack) {
-      AudioManager.detachTrack();
+      // AIDEV-NOTE: Just clear reference - LiveKit handles cleanup
       this.audioTrack = null;
       this.log('Audio track detached');
     }
@@ -274,7 +273,7 @@ class SessionManager {
 
     this.detachVideo();
     this.detachAudio();
-    AudioManager.cleanup();
+    // AIDEV-NOTE: No need to cleanup AudioManager - not using it anymore
 
     this.room = null;
     this.videoContainer = null;
