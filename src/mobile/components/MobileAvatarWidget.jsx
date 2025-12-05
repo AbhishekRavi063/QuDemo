@@ -31,6 +31,7 @@ import { useDemoVideo } from '../hooks/useDemoVideo';
 import { checkForDemoTrigger } from '../utils/videoTriggerMatcher';
 import videoTriggersConfig from '../config/video-triggers.json';
 import bookingConfig from '../config/booking-config.json';
+import AudioManager from '../utils/AudioManager';
 
 // Mobile Avatar Widget - Complete copy of desktop AIChatWidget with mobile optimizations
 // CRITICAL: Complete code independence - NO imports from desktop components
@@ -96,6 +97,11 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand }
       }).catch(() => {}); // Ignore errors
     } catch (e) {}
   };
+
+  // Initialize AudioManager with logger
+  useEffect(() => {
+    AudioManager.setLogger(addDebugLog);
+  }, []);
 
   // Demo video hook
   const { isDemoPlaying, currentVideoUrl, demoVideoRef, playDemoVideo, stopDemoVideo } = useDemoVideo({
@@ -425,6 +431,9 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand }
     // AIDEV-NOTE: Stop HeyGen session first to prevent quota waste
     await stopSession();
 
+    // AIDEV-NOTE: Clean up audio via AudioManager
+    AudioManager.cleanup();
+
     // AIDEV-NOTE: LiveKit room cleanup - disconnect and reset session state
     if (room) {
       room.disconnect();
@@ -442,6 +451,9 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand }
     setIsMuted(true);
     setAudioEnabled(true);
     setState("minimized");
+
+    // AIDEV-NOTE: Reset auto-expand ref to allow reconnection
+    hasAutoExpandedRef.current = false;
 
     // AIDEV-NOTE: Call optional onDisconnect callback if provided (used by ExtendedAvatarPage)
     if (onDisconnect) {
@@ -464,6 +476,16 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand }
 
     addDebugLog('Setting isConnecting=true');
     setIsConnecting(true);
+
+    // AIDEV-NOTE: Step 0 - Initialize AudioManager FIRST (requires user interaction)
+    addDebugLog('Initializing audio system...');
+    const audioReady = await AudioManager.initialize();
+    if (!audioReady) {
+      addDebugLog('⚠️ Audio initialization failed, but continuing...');
+    } else {
+      addDebugLog('✅ Audio system ready');
+    }
+
     try {
       // AIDEV-NOTE: Step 1 - Create HeyGen LiveAvatar session via serverless API route
       const apiUrl = getNodeApiUrl("/api/liveavatar/create-session");
@@ -529,7 +551,7 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand }
       // AIDEV-NOTE: Step 5 - Listen for new tracks being published by avatar (video/audio)
       r.on(
         RoomEvent.TrackSubscribed,
-        (
+        async (
           track,
           publication,
           participant
@@ -543,7 +565,7 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand }
           } else if (track.kind === Track.Kind.Audio) {
             console.log("Audio track received, attaching...");
             addDebugLog('Audio track received!');
-            attachAudioTrack(track);
+            await attachAudioTrack(track);
           }
         }
       );
@@ -559,22 +581,31 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand }
 
       // AIDEV-NOTE: Step 6 - Attach already-existing tracks (handles race condition where tracks arrive before listeners)
       // AIDEV-NOTE: 1000ms delay ensures both DOM and LiveKit room are fully ready
-      setTimeout(() => {
+      setTimeout(async () => {
         addDebugLog('Checking for existing tracks...');
         const existingParticipants = Array.from(r.remoteParticipants.values());
         addDebugLog(`Found ${existingParticipants.length} participants`);
-        existingParticipants.forEach((participant) => {
-          participant.trackPublications.forEach((publication) => {
+
+        // AIDEV-NOTE: Only attach tracks from first participant (the avatar)
+        // Multiple participants may exist but we only want avatar's video/audio
+        let audioAttached = false;
+        let videoAttached = false;
+
+        for (const participant of existingParticipants) {
+          for (const publication of participant.trackPublications.values()) {
             if (publication.isSubscribed && publication.track) {
-              addDebugLog(`Existing track: ${publication.track.kind}`);
-              if (publication.track.kind === Track.Kind.Video) {
+              addDebugLog(`Existing track: ${publication.track.kind} from ${participant.identity}`);
+
+              if (publication.track.kind === Track.Kind.Video && !videoAttached) {
                 attachTrackToDom(publication.track);
-              } else if (publication.track.kind === Track.Kind.Audio) {
-                attachAudioTrack(publication.track);
+                videoAttached = true;
+              } else if (publication.track.kind === Track.Kind.Audio && !audioAttached) {
+                await attachAudioTrack(publication.track);
+                audioAttached = true;
               }
             }
-          });
-        });
+          }
+        }
       }, 1000);
 
       // AIDEV-NOTE: Step 7 - Auto-enable user microphone after session initialization
@@ -636,7 +667,7 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand }
       videoEl = document.createElement("video");
       videoEl.autoplay = true;
       videoEl.playsInline = true; // AIDEV-NOTE: Required for iOS Safari to play inline without fullscreen
-      videoEl.muted = false;       // AIDEV-NOTE: Not muted - we want to hear avatar audio
+      videoEl.muted = true;        // AIDEV-NOTE: Muted because audio is handled separately via Web Audio API to prevent dual audio
       videoEl.style.width = "100%";
       videoEl.style.height = "100%";
       videoEl.style.objectFit = "cover"; // AIDEV-NOTE: Fills container while maintaining aspect ratio
@@ -661,39 +692,13 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand }
     track.detach();
   };
 
-  // AIDEV-NOTE: Attaches audio track using Web Audio API for mobile compatibility
-  // AIDEV-NOTE: Why: Mobile browsers (iOS/Android) require Web Audio API for WebRTC audio
+  // AIDEV-NOTE: Attaches audio track using AudioManager
+  // AIDEV-NOTE: Why: Proper lifecycle management with cleanup and state handling
   // AIDEV-NOTE: Called by: TrackSubscribed event listener, existing tracks check in startLiveSession
-  const attachAudioTrack = (track) => {
-    addDebugLog('Attaching audio track');
-
-    try {
-      const mediaStream = new MediaStream([track.mediaStreamTrack]);
-
-      // Create or reuse AudioContext (required for mobile audio routing)
-      const AudioContext = window.AudioContext || window.webkitAudioContext;
-      if (!window.avatarAudioContext) {
-        window.avatarAudioContext = new AudioContext();
-        addDebugLog(`AudioContext created: ${window.avatarAudioContext.state}`);
-      }
-
-      const audioContext = window.avatarAudioContext;
-
-      // Resume if suspended (happens on some mobile browsers)
-      if (audioContext.state === 'suspended') {
-        audioContext.resume().then(() => addDebugLog('AudioContext resumed'));
-      }
-
-      // Create audio source from MediaStreamTrack and connect to speakers
-      const source = audioContext.createMediaStreamSource(mediaStream);
-      source.connect(audioContext.destination);
-
+  const attachAudioTrack = async (track) => {
+    const success = await AudioManager.attachTrack(track);
+    if (success) {
       setHasAudio(true);
-      addDebugLog(`✅ Audio connected via Web Audio API`);
-
-    } catch (error) {
-      addDebugLog(`⚠️ Audio failed: ${error.message}`);
-      console.error("Web Audio API error:", error);
     }
   };
 
@@ -701,9 +706,9 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand }
   // AIDEV-NOTE: Why: Clean up audio resources when avatar disconnects
   // AIDEV-NOTE: Called by: TrackUnsubscribed event listener, handleDisconnect
   const detachAudioTrack = (track) => {
+    AudioManager.detachTrack();
     track.detach();
     setHasAudio(false);
-    addDebugLog('Audio track detached');
   };
 
   // AIDEV-NOTE: Toggles avatar audio output (speaker button)
