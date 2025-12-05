@@ -32,6 +32,8 @@ import { checkForDemoTrigger } from '../utils/videoTriggerMatcher';
 import videoTriggersConfig from '../config/video-triggers.json';
 import bookingConfig from '../config/booking-config.json';
 import AudioManager from '../utils/AudioManager';
+import SessionManager from '../utils/SessionManager';
+import LiveKitEventManager from '../utils/LiveKitEventManager';
 
 // Mobile Avatar Widget - Complete copy of desktop AIChatWidget with mobile optimizations
 // CRITICAL: Complete code independence - NO imports from desktop components
@@ -67,8 +69,7 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand }
   const [showCalendly, setShowCalendly] = useState(false); // AIDEV-NOTE: Controls calendly iframe overlay display
   const localAudioRef = useRef(null);
   const mountedRef = useRef(true);
-  const previousAgentStateRef = useRef('idle');
-  const lastAvatarSpeechRef = useRef('');
+  const lastAvatarSpeechRef = useRef(''); // AIDEV-NOTE: Used by handleAvatarSpeech, read by LiveKitEventManager callbacks
   const preDemoWidgetStateRef = useRef(null);
   const preCalendlyWidgetStateRef = useRef(null); // AIDEV-NOTE: Saves widget state before calendly opens
   const preCalendlyMutedRef = useRef(false); // AIDEV-NOTE: Saves mic mute state before calendly opens
@@ -98,12 +99,7 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand }
     } catch (e) {}
   };
 
-  // Initialize AudioManager with logger
-  useEffect(() => {
-    AudioManager.setLogger(addDebugLog);
-  }, []);
-
-  // Demo video hook
+  // Demo video hook - must be defined before useEffect that uses it
   const { isDemoPlaying, currentVideoUrl, demoVideoRef, playDemoVideo, stopDemoVideo } = useDemoVideo({
     room,
     localAudioRef,
@@ -111,10 +107,85 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand }
     setState,
   });
 
+  // Initialize AudioManager, SessionManager, and LiveKitEventManager with logger
+  useEffect(() => {
+    AudioManager.setLogger(addDebugLog);
+    SessionManager.setLogger(addDebugLog);
+    LiveKitEventManager.setLogger(log);
+
+    // Setup LiveKitEventManager callbacks
+    LiveKitEventManager.setCallbacks({
+      onAvatarStartSpeaking: () => {
+        setIsAvatarSpeaking(true);
+        setAvatarState("speaking");
+      },
+      onAvatarStopSpeaking: () => {
+        setIsAvatarSpeaking(false);
+        setAvatarState("listening");
+      },
+      onUserStartSpeaking: () => {
+        setIsUserSpeaking(true);
+      },
+      onUserStopSpeaking: () => {
+        setIsUserSpeaking(false);
+      },
+      onUserTranscript: (text, source) => {
+        handleUserSpeech(text, source);
+      },
+      onAvatarTranscript: (text, source) => {
+        handleAvatarSpeech(text, source);
+      },
+      onGenericTranscript: (text, fullData) => {
+        setTranscripts((prev) =>
+          [
+            ...prev,
+            {
+              type: "transcript",
+              text: text,
+              timestamp: Date.now(),
+            },
+          ].slice(-10)
+        );
+        detectIntent(text, fullData, "user");
+      },
+      onAgentStateChange: (newState, prevState, lastSpeech) => {
+        setAvatarState(newState);
+        log('AGENT_STATE', `Agent state changed: ${prevState} → ${newState}`);
+
+        // Demo trigger on speaking→listening transition
+        if (prevState === 'speaking' && newState === 'listening') {
+          setTimeout(() => {
+            if (lastSpeech) {
+              log('DEMO', 'Checking for demo trigger after avatar speech', { lastSpeech });
+              const demoTrigger = checkForDemoTrigger(lastSpeech, videoTriggersConfig, log);
+              if (demoTrigger && demoTrigger.matched && !isDemoPlaying) {
+                log('DEMO', '🎬 Demo trigger detected from avatar speech', demoTrigger);
+
+                preDemoWidgetStateRef.current = state;
+
+                if (state !== "maximized") {
+                  setState("maximized");
+                  setTimeout(() => {
+                    playDemoVideo(demoTrigger.videoUrl);
+                  }, 500);
+                } else {
+                  playDemoVideo(demoTrigger.videoUrl);
+                }
+              }
+            }
+          }, 100);
+        }
+      },
+      onUnhandledMessage: (msg) => {
+        log('DATA_CHANNEL', '📨 Unhandled message', msg);
+      }
+    });
+  }, [isDemoPlaying, state, log]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // AIDEV-NOTE: Processes user speech transcripts from LiveKit data channel
   // AIDEV-NOTE: How: Updates transcripts array (keeps last 10), triggers intent detection
   // AIDEV-NOTE: Why: Centralized handler for both 'type' and 'event_type' message formats (HeyGen API v1/v2 compatibility)
-  // AIDEV-NOTE: Called by: wireRoomEvents for user_transcript, user_speech, and user.transcription events
+  // AIDEV-NOTE: Called by: LiveKitEventManager.onUserTranscript callback
   const handleUserSpeech = (text, source) => {
     if (!text) return;
     log('USER_SPEECH', `🗣️ User said (${source})`, { text });
@@ -134,8 +205,8 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand }
 
   // AIDEV-NOTE: Processes avatar speech transcripts for intent detection and demo triggers
   // AIDEV-NOTE: How: Updates transcripts array, saves text to lastAvatarSpeechRef for demo trigger detection
-  // AIDEV-NOTE: Why: Centralized handler reduces duplication, lastAvatarSpeechRef enables demo check on avatar_stop_talking
-  // AIDEV-NOTE: Called by: wireRoomEvents for avatar_transcript, avatar_speech, llm_response, and avatar.transcription
+  // AIDEV-NOTE: Why: Centralized handler reduces duplication, lastAvatarSpeechRef read by LiveKitEventManager callbacks
+  // AIDEV-NOTE: Called by: LiveKitEventManager.onAvatarTranscript callback
   const handleAvatarSpeech = (text, source) => {
     if (!text) return;
     log('AVATAR_SPEECH', `🤖 Avatar said (${source})`, { text });
@@ -431,8 +502,11 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand }
     // AIDEV-NOTE: Stop HeyGen session first to prevent quota waste
     await stopSession();
 
-    // AIDEV-NOTE: Clean up audio via AudioManager
-    AudioManager.cleanup();
+    // AIDEV-NOTE: Clean up session via SessionManager (handles both audio and video)
+    SessionManager.cleanup();
+
+    // AIDEV-NOTE: Detach LiveKitEventManager from room
+    LiveKitEventManager.detachFromRoom();
 
     // AIDEV-NOTE: LiveKit room cleanup - disconnect and reset session state
     if (room) {
@@ -540,15 +614,16 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand }
         return;
       }
 
-      console.log('[START-SESSION] Setting room and hasLiveVideo=true');
+      console.log('[START-SESSION] Setting room');
       setRoom(r);
-      setHasLiveVideo(true);
-      setIsConnecting(false); // Stop showing "Connecting" spinner
 
-      // AIDEV-NOTE: Step 4 - Wire all room events (data channel, participant attributes, state changes)
-      wireRoomEvents(r);
+      // AIDEV-NOTE: Step 4 - Initialize SessionManager to handle all tracks
+      await SessionManager.initialize(r, 'live-video-container');
 
-      // AIDEV-NOTE: Step 5 - Listen for new tracks being published by avatar (video/audio)
+      // AIDEV-NOTE: Step 5 - Wire all room events via LiveKitEventManager
+      LiveKitEventManager.attachToRoom(r);
+
+      // AIDEV-NOTE: Step 6 - Listen for new tracks being published by avatar (video/audio)
       r.on(
         RoomEvent.TrackSubscribed,
         async (
@@ -557,15 +632,12 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand }
           participant
         ) => {
           console.log("Track subscribed:", track.kind, track.sid);
-          addDebugLog(`Track received: ${track.kind}`);
+          addDebugLog(`Track received: ${track.kind} from ${participant.identity}`);
+
           if (track.kind === Track.Kind.Video) {
-            console.log("Video track received, attaching...");
-            addDebugLog('Attaching video track');
-            setTimeout(() => attachTrackToDom(track), 100); // AIDEV-NOTE: 100ms delay ensures DOM ready
+            await SessionManager.attachVideoTrack(track);
           } else if (track.kind === Track.Kind.Audio) {
-            console.log("Audio track received, attaching...");
-            addDebugLog('Audio track received!');
-            await attachAudioTrack(track);
+            await SessionManager.attachAudioTrack(track);
           }
         }
       );
@@ -573,40 +645,42 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand }
       // AIDEV-NOTE: Handle track removal when participant leaves or unpublishes
       r.on(RoomEvent.TrackUnsubscribed, (track) => {
         if (track.kind === Track.Kind.Video) {
-          detachTrackFromDom(track);
+          SessionManager.detachVideo();
         } else if (track.kind === Track.Kind.Audio) {
-          detachAudioTrack(track);
+          SessionManager.detachAudio();
         }
       });
 
-      // AIDEV-NOTE: Step 6 - Attach already-existing tracks (handles race condition where tracks arrive before listeners)
-      // AIDEV-NOTE: 1000ms delay ensures both DOM and LiveKit room are fully ready
+      // AIDEV-NOTE: Step 7 - Attach already-existing tracks (handles race condition)
+      // Check existing tracks after a short delay to ensure DOM ready
       setTimeout(async () => {
         addDebugLog('Checking for existing tracks...');
         const existingParticipants = Array.from(r.remoteParticipants.values());
         addDebugLog(`Found ${existingParticipants.length} participants`);
 
-        // AIDEV-NOTE: Only attach tracks from first participant (the avatar)
-        // Multiple participants may exist but we only want avatar's video/audio
-        let audioAttached = false;
-        let videoAttached = false;
-
         for (const participant of existingParticipants) {
           for (const publication of participant.trackPublications.values()) {
             if (publication.isSubscribed && publication.track) {
-              addDebugLog(`Existing track: ${publication.track.kind} from ${participant.identity}`);
+              const track = publication.track;
+              addDebugLog(`Existing track: ${track.kind} from ${participant.identity}`);
 
-              if (publication.track.kind === Track.Kind.Video && !videoAttached) {
-                attachTrackToDom(publication.track);
-                videoAttached = true;
-              } else if (publication.track.kind === Track.Kind.Audio && !audioAttached) {
-                await attachAudioTrack(publication.track);
-                audioAttached = true;
+              if (track.kind === Track.Kind.Video) {
+                await SessionManager.attachVideoTrack(track);
+              } else if (track.kind === Track.Kind.Audio) {
+                await SessionManager.attachAudioTrack(track);
               }
             }
           }
         }
-      }, 1000);
+
+        // AIDEV-NOTE: Step 8 - Wait for session to be fully ready, then hide spinner
+        addDebugLog('Waiting for session to be ready...');
+        await SessionManager.waitForReady();
+        setHasLiveVideo(true);
+        setHasAudio(true);
+        setIsConnecting(false);
+        addDebugLog('✅ Session fully ready!');
+      }, 500);
 
       // AIDEV-NOTE: Step 7 - Auto-enable user microphone after session initialization
       // AIDEV-NOTE: 1500ms delay ensures room is fully connected before publishing local audio track
@@ -646,69 +720,6 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand }
     setDebugLogs([]); // Clear old logs
     hasAutoExpandedRef.current = false; // Reset to allow retry
     startLiveSession();
-  };
-
-  // AIDEV-NOTE: Attaches LiveKit video track to DOM - creates <video> element if needed and connects avatar video stream
-  // AIDEV-NOTE: How: Finds #live-video-container, creates <video> if missing, attaches track, forces autoplay
-  // AIDEV-NOTE: Why: Displays avatar video feed, retry logic handles race condition if DOM not ready during connection
-  // AIDEV-NOTE: Called by: TrackSubscribed event listener, existing tracks check in startLiveSession
-  const attachTrackToDom = (track) => {
-    const videoContainer = document.getElementById("live-video-container");
-    // AIDEV-NOTE: Retry logic - if container not found (DOM not ready), retry after 500ms
-    if (!videoContainer) {
-      console.log("Video container not found, retrying...");
-      setTimeout(() => attachTrackToDom(track), 500);
-      return;
-    }
-
-    // AIDEV-NOTE: Reuse existing <video> element or create new one - prevents multiple video elements
-    let videoEl = videoContainer.querySelector("video");
-    if (!videoEl) {
-      videoEl = document.createElement("video");
-      videoEl.autoplay = true;
-      videoEl.playsInline = true; // AIDEV-NOTE: Required for iOS Safari to play inline without fullscreen
-      videoEl.muted = true;        // AIDEV-NOTE: Muted because audio is handled separately via Web Audio API to prevent dual audio
-      videoEl.style.width = "100%";
-      videoEl.style.height = "100%";
-      videoEl.style.objectFit = "cover"; // AIDEV-NOTE: Fills container while maintaining aspect ratio
-      videoEl.style.backgroundColor = "#000";
-      videoContainer.appendChild(videoEl);
-      console.log("Video element created and added");
-    }
-
-    track.attach(videoEl); // AIDEV-NOTE: LiveKit method - connects MediaStreamTrack to <video> element
-    setHasLiveVideo(true);
-
-    // AIDEV-NOTE: Force video to play - sometimes autoplay is blocked by browser, explicit play() ensures playback
-    videoEl.play().catch((e) => console.log("Video play failed:", e));
-    console.log("Video track attached, video element:", videoEl);
-  };
-
-  // AIDEV-NOTE: Detaches video track from DOM element
-  // AIDEV-NOTE: How: Calls LiveKit's track.detach() to disconnect MediaStreamTrack
-  // AIDEV-NOTE: Why: Cleanup when avatar disconnects or track is unpublished
-  // AIDEV-NOTE: Called by: TrackUnsubscribed event listener
-  const detachTrackFromDom = (track) => {
-    track.detach();
-  };
-
-  // AIDEV-NOTE: Attaches audio track using AudioManager
-  // AIDEV-NOTE: Why: Proper lifecycle management with cleanup and state handling
-  // AIDEV-NOTE: Called by: TrackSubscribed event listener, existing tracks check in startLiveSession
-  const attachAudioTrack = async (track) => {
-    const success = await AudioManager.attachTrack(track);
-    if (success) {
-      setHasAudio(true);
-    }
-  };
-
-  // AIDEV-NOTE: Detaches audio track when session ends
-  // AIDEV-NOTE: Why: Clean up audio resources when avatar disconnects
-  // AIDEV-NOTE: Called by: TrackUnsubscribed event listener, handleDisconnect
-  const detachAudioTrack = (track) => {
-    AudioManager.detachTrack();
-    track.detach();
-    setHasAudio(false);
   };
 
   // AIDEV-NOTE: Toggles avatar audio output (speaker button)
@@ -793,147 +804,9 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand }
     }
   };
 
-  // AIDEV-NOTE: Wires all LiveKit room events - handles data channel messages, participant attribute changes
-  // AIDEV-NOTE: How: Listens to DataReceived (transcripts, state) and ParticipantAttributesChanged (agent state)
-  // AIDEV-NOTE: Why: Central event hub for avatar communication - processes transcripts, state changes, demo triggers
-  // AIDEV-NOTE: Called by: startLiveSession after room connection established
-  // AIDEV-QUESTION: Demo trigger logic appears both here (line 746) and in detectIntent - consider consolidating?
-  const wireRoomEvents = (r) => {
-    // AIDEV-NOTE: DataReceived event - processes all data channel messages from avatar (transcripts, state events)
-    r.on(
-      RoomEvent.DataReceived,
-      (
-        payload,
-        participant,
-        kind
-      ) => {
-        // AIDEV-NOTE: Decode binary payload to text - HeyGen sends JSON messages via data channel
-        let decoded;
-        try {
-          decoded = new TextDecoder().decode(payload);
-        } catch (e) {
-          return; // AIDEV-NOTE: Silently ignore decode errors (binary messages not meant for us)
-        }
-
-        // AIDEV-NOTE: Parse JSON - all HeyGen messages are JSON structured
-        let parsedJson = null;
-        try {
-          parsedJson = JSON.parse(decoded);
-        } catch (e) {
-          return; // AIDEV-NOTE: Silently ignore non-JSON messages
-        }
-
-        // AIDEV-NOTE: Primary message format - uses 'type' field (HeyGen API v1 format)
-        if (parsedJson && parsedJson.type) {
-          const msgType = parsedJson.type;
-
-          // AIDEV-NOTE: Avatar state changes - speaking/listening indicators for UI visual feedback
-          if (msgType === "avatar_start_talking") {
-            setIsAvatarSpeaking(true);
-            setAvatarState("speaking");
-          } else if (msgType === "avatar_stop_talking") {
-            setIsAvatarSpeaking(false);
-            setAvatarState("listening");
-          } else if (msgType === "user_start_talking") {
-            setIsUserSpeaking(true);
-          } else if (msgType === "user_stop_talking") {
-            setIsUserSpeaking(false);
-          }
-          // AIDEV-NOTE: Generic transcript handling - catches miscellaneous transcript messages
-          else if (msgType === "transcript" || msgType === "transcription") {
-            const text = parsedJson.text || parsedJson.transcript || "";
-            log('TRANSCRIPT', '📝 Generic transcript received', { text, type: msgType });
-            if (text) {
-              setTranscripts((prev) =>
-                [
-                  ...prev,
-                  {
-                    type: "transcript",
-                    text: text,
-                    timestamp: Date.now(),
-                  },
-                ].slice(-10) // AIDEV-NOTE: Keep last 10 to prevent memory bloat
-              );
-              detectIntent(text, parsedJson, "user");
-            }
-          }
-          // AIDEV-NOTE: User speech - routes to handleUserSpeech for centralized processing
-          else if (msgType === "user_transcript" || msgType === "user_speech") {
-            const text = parsedJson.text || parsedJson.transcript || "";
-            handleUserSpeech(text, `type: ${msgType}`);
-          }
-          // AIDEV-NOTE: Avatar speech - routes to handleAvatarSpeech which saves to lastAvatarSpeechRef for demo triggers
-          else if (
-            msgType === "avatar_transcript" ||
-            msgType === "avatar_speech" ||
-            msgType === "llm_response"
-          ) {
-            const text = parsedJson.text || parsedJson.response || "";
-            handleAvatarSpeech(text, `type: ${msgType}`);
-          }
-        } else if (parsedJson) {
-          // AIDEV-NOTE: Fallback format - uses 'event_type' field (HeyGen API v2 format) for backward compatibility
-          if (parsedJson.event_type === 'user.transcription') {
-            const text = parsedJson.text || '';
-            handleUserSpeech(text, 'event_type: user.transcription');
-          } else if (parsedJson.event_type === 'avatar.transcription') {
-            const text = parsedJson.text || '';
-            handleAvatarSpeech(text, 'event_type: avatar.transcription');
-          } else {
-            // AIDEV-NOTE: Log unhandled messages for debugging new message types from HeyGen
-            log('DATA_CHANNEL', '📨 Unhandled JSON message', parsedJson);
-          }
-        }
-      }
-    );
-
-    // AIDEV-NOTE: ParticipantAttributesChanged - tracks LiveKit agent state for demo trigger timing
-    r.on(
-      RoomEvent.ParticipantAttributesChanged,
-      (changedAttributes, participant) => {
-        // AIDEV-NOTE: Check for agent state attribute - LiveKit sets 'lk.agent.state' on avatar participant
-        if (changedAttributes && changedAttributes["lk.agent.state"]) {
-          const agentState = changedAttributes["lk.agent.state"];
-          setAvatarState(agentState);
-
-          log('AGENT_STATE', `Agent state changed: ${previousAgentStateRef.current} → ${agentState}`);
-
-          // AIDEV-NOTE: Demo trigger on speaking→listening transition - ensures avatar finished speaking before playing demo
-          // AIDEV-NOTE: Why here: Guarantees timing (after speech complete), prevents interrupting avatar mid-sentence
-          if (previousAgentStateRef.current === 'speaking' && agentState === 'listening') {
-            // AIDEV-NOTE: 100ms delay ensures all transcript data processed before checking lastAvatarSpeechRef
-            setTimeout(() => {
-              const lastSpeech = lastAvatarSpeechRef.current;
-              if (lastSpeech) {
-                log('DEMO', 'Checking for demo trigger after avatar speech', { lastSpeech });
-                const demoTrigger = checkForDemoTrigger(lastSpeech, videoTriggersConfig, log);
-                if (demoTrigger && demoTrigger.matched && !isDemoPlaying) {
-                  log('DEMO', '🎬 Demo trigger detected from avatar speech', demoTrigger);
-
-                  // AIDEV-NOTE: Save widget state before maximizing - enables restore after demo ends (see useEffect)
-                  preDemoWidgetStateRef.current = state;
-
-                  // AIDEV-NOTE: Maximize widget for best demo viewing, 500ms delay prevents black screen bug
-                  // AIDEV-NOTE: Why 500ms: Widget needs time to resize before video element is created/played
-                  if (state !== "maximized") {
-                    setState("maximized");
-                    setTimeout(() => {
-                      playDemoVideo(demoTrigger.videoUrl);
-                    }, 500);
-                  } else {
-                    playDemoVideo(demoTrigger.videoUrl);
-                  }
-                }
-              }
-            }, 100);
-          }
-
-          // AIDEV-NOTE: Track previous state for transition detection (speaking→listening)
-          previousAgentStateRef.current = agentState;
-        }
-      }
-    );
-  };
+  // AIDEV-NOTE: wireRoomEvents function removed - replaced by LiveKitEventManager
+  // AIDEV-NOTE: See LiveKitEventManager.js for all event handling logic
+  // AIDEV-NOTE: Event callbacks configured in useEffect at top of component
 
   // AIDEV-NOTE: Intent detection system - keyword-based actions triggered by user/avatar speech
   // AIDEV-NOTE: How: Array of intent objects with keywords, action functions, and descriptions
@@ -1413,34 +1286,9 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand }
                       ← Go Back
                     </button>
                   </div>
-                ) : isConnecting || (autoExpand && !room) ? (
-                  <div
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      color: "white",
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: "32px",
-                        height: "32px",
-                        border: "2px solid white",
-                        borderTop: "2px solid transparent",
-                        borderRadius: "50%",
-                        animation: "spin 1s linear infinite",
-                        marginBottom: "8px",
-                      }}
-                    />
-                    <p style={{ fontSize: "14px" }}>
-                      Qudemo Connecting
-                    </p>
-                  </div>
-                ) : hasLiveVideo || room ? (
-                  // AIDEV-NOTE: LiveKit video container - attaches remote video tracks
-                  // AIDEV-NOTE: attachTrackToDom function creates <video> element inside this container
+                ) : isConnecting || room ? (
+                  // AIDEV-NOTE: LiveKit video container - must exist during connecting phase for SessionManager
+                  // AIDEV-NOTE: Shows spinner overlay while connecting, then video tracks attach here
                   <div
                     id="live-video-container"
                     style={{
@@ -1453,7 +1301,42 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand }
                       position: "relative",
                       zIndex: 1,
                     }}
-                  />
+                  >
+                    {/* AIDEV-NOTE: Show spinner overlay while connecting, hidden once video ready */}
+                    {isConnecting && (
+                      <div
+                        style={{
+                          position: "absolute",
+                          top: 0,
+                          left: 0,
+                          width: "100%",
+                          height: "100%",
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          color: "white",
+                          backgroundColor: "#000",
+                          zIndex: 10,
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: "32px",
+                            height: "32px",
+                            border: "2px solid white",
+                            borderTop: "2px solid transparent",
+                            borderRadius: "50%",
+                            animation: "spin 1s linear infinite",
+                            marginBottom: "8px",
+                          }}
+                        />
+                        <p style={{ fontSize: "14px" }}>
+                          Qudemo Connecting
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 ) : !isVoiceMode ? (
                   <AnimatePresence mode="wait">
                     {isTransitioning ? (

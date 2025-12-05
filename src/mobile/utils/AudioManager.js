@@ -60,6 +60,15 @@ class AudioManager {
         this.log(`AudioContext already running: state=${this.audioContext.state}`);
       }
 
+      // AIDEV-NOTE: On mobile, even after AudioContext.resume() returns, the audio system
+      // may not be immediately ready. Add delay on first initialization to ensure
+      // the audio pipeline is fully established before first track attachment.
+      // 300ms delay ensures audio hardware is ready on iOS/Chrome mobile browsers.
+      if (!this.isInitialized) {
+        this.log('First initialization - waiting 300ms for audio system to stabilize...');
+        await new Promise(resolve => setTimeout(resolve, 300));
+      }
+
       this.isInitialized = true;
       this.log('✅ AudioManager initialized successfully');
       return true;
