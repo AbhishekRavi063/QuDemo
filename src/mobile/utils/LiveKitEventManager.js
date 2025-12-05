@@ -302,6 +302,11 @@ class LiveKitEventManager {
   }
 }
 
-// Export singleton instance
-const liveKitEventManagerInstance = new LiveKitEventManager();
-export default liveKitEventManagerInstance;
+// AIDEV-NOTE: CRITICAL FIX - Export class, not singleton
+// AIDEV-NOTE: Each connection needs its own LiveKitEventManager instance
+// AIDEV-NOTE: Singleton causes state corruption:
+// AIDEV-NOTE: - lastAvatarSpeech shared between users
+// AIDEV-NOTE: - previousAgentState shared between users
+// AIDEV-NOTE: - callbacks overwritten when second user connects
+// AIDEV-NOTE: User A connects → User B connects → User A gets User B's events!
+export default LiveKitEventManager;

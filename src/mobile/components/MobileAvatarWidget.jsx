@@ -31,7 +31,6 @@ import { useDemoVideo } from '../hooks/useDemoVideo';
 import { checkForDemoTrigger } from '../utils/videoTriggerMatcher';
 import videoTriggersConfig from '../config/video-triggers.json';
 import bookingConfig from '../config/booking-config.json';
-import AudioManager from '../utils/AudioManager';
 import SessionManager from '../utils/SessionManager';
 import LiveKitEventManager from '../utils/LiveKitEventManager';
 
@@ -39,6 +38,7 @@ import LiveKitEventManager from '../utils/LiveKitEventManager';
 // CRITICAL: Complete code independence - NO imports from desktop components
 // Mobile-specific: Removed animations, fullscreen by default, 100dvh viewport
 export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand } = {}) => {
+  console.log('[WIDGET-RENDER] MobileAvatarWidget rendering - autoExpand:', autoExpand, 'hasOnExpand:', !!onExpand);
   const [state, setState] = useState(autoExpand ? "maximized" : "minimized");
   const [isMuted, setIsMuted] = useState(true);
   const [isVoiceMode, setIsVoiceMode] = useState(true); // AIDEV-NOTE: Always true - toggle UI removed, shows static avatar instead of LiveKit video
@@ -77,6 +77,19 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand }
   const pendingCalendlyRef = useRef(false); // AIDEV-NOTE: Flags pending calendly open - waits for avatar to finish speaking
   const hasAutoExpandedRef = useRef(false); // AIDEV-NOTE: Prevents duplicate auto-expand in React Strict Mode
 
+  // AIDEV-NOTE: CRITICAL FIX - Create SessionManager instance per connection
+  // AIDEV-NOTE: Each connection needs its own SessionManager to avoid state corruption
+  const sessionManagerRef = useRef(null);
+
+  // AIDEV-NOTE: CRITICAL FIX - Create LiveKitEventManager instance per connection
+  // AIDEV-NOTE: Singleton was causing shared state: lastAvatarSpeech, previousAgentState, callbacks
+  // AIDEV-NOTE: User A connects → User B connects → User A receives User B's events!
+  const liveKitEventManagerRef = useRef(null);
+
+  // AIDEV-NOTE: Refs for page unload cleanup - avoid stale closure
+  const roomRef = useRef(null);
+  const sessionInfoRef = useRef(null);
+
   // Event logging hook
   const { logs, log, clearLogs } = useEventLogger();
 
@@ -107,14 +120,17 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand }
     setState,
   });
 
-  // Initialize AudioManager, SessionManager, and LiveKitEventManager with logger
+  // AIDEV-NOTE: Setup LiveKitEventManager callbacks whenever dependencies change
+  // AIDEV-NOTE: Instance creation moved to startLiveSession() for fresh state on each connection
+  // AIDEV-NOTE: This useEffect only updates callbacks when state handlers change
   useEffect(() => {
-    AudioManager.setLogger(addDebugLog);
-    SessionManager.setLogger(addDebugLog);
-    LiveKitEventManager.setLogger(log);
+    // Only setup callbacks if instance exists (created in startLiveSession)
+    if (!liveKitEventManagerRef.current) {
+      return;
+    }
 
     // Setup LiveKitEventManager callbacks
-    LiveKitEventManager.setCallbacks({
+    liveKitEventManagerRef.current.setCallbacks({
       onAvatarStartSpeaking: () => {
         setIsAvatarSpeaking(true);
         setAvatarState("speaking");
@@ -236,36 +252,20 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand }
   // AIDEV-NOTE: Always return to "small" state (initial connected state) after demo closes
   // AIDEV-NOTE: Same behavior as Calendly - returns to normal conversation view, not dead/disconnected state
   useEffect(() => {
-    log('DEMO', '🔄 [RESTORE] State restoration effect triggered', {
-      isDemoPlaying,
-      hasSavedState: preDemoWidgetStateRef.current !== null,
-      savedState: preDemoWidgetStateRef.current,
-      currentState: state,
-      hasRoom: !!room,
-      hasSessionInfo: !!sessionInfo
-    });
-
     if (!isDemoPlaying && preDemoWidgetStateRef.current !== null) {
       // AIDEV-NOTE: Always return to "small" state (initial connected view) after demo closes
       // AIDEV-NOTE: User wants to resume conversation after demo, not return to previous state
       if (room && sessionInfo) {
-        log('DEMO', '✅ [RESTORE] Returning to small state (initial connected view) after demo closed', {
-          previousState: preDemoWidgetStateRef.current
-        });
+        log('DEMO', '✅ [RESTORE] Returning to small state after demo closed');
         setState("small");
       } else {
-        log('DEMO', '⚠️ [RESTORE] No active session - keeping minimized', {
-          hasRoom: !!room,
-          hasSessionInfo: !!sessionInfo
-        });
+        log('DEMO', '⚠️ [RESTORE] No active session - keeping minimized');
         setState("minimized");
       }
       log('DEMO', '🧹 [RESTORE] Clearing saved state ref');
       preDemoWidgetStateRef.current = null;
-    } else {
-      log('DEMO', '⏭️ [RESTORE] Skipping restoration - conditions not met');
     }
-  }, [isDemoPlaying, log, room, sessionInfo, state]);
+  }, [isDemoPlaying, log, room, sessionInfo]); // AIDEV-NOTE: Removed 'state' to prevent re-render loops
 
   // AIDEV-NOTE: Restore widget state after calendly closes
   // AIDEV-NOTE: Always return to "small" state (initial connected state) after calendly closes
@@ -374,6 +374,29 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand }
     }
   }, [showCalendly, isMuted, audioEnabled, room]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // AIDEV-NOTE: CRITICAL FIX - Control audio element muted state via SessionManager
+  // AIDEV-NOTE: Links audioEnabled React state → actual <audio> element muted property
+  // AIDEV-NOTE: Without this, speaker button only changes UI, not actual audio output
+  // AIDEV-NOTE: Runs when audioEnabled changes OR when hasAudio changes (audio element created)
+  // AIDEV-NOTE: IMPORTANT: Check actual audioElement exists, not just hasAudio state
+  useEffect(() => {
+    addDebugLog(`🔍 [SYNC-EFFECT] Triggered: audioEnabled=${audioEnabled}, hasAudio=${hasAudio}`);
+
+    const hasAudioElement = sessionManagerRef.current?.audioElement;
+    const hasSessionManager = !!sessionManagerRef.current;
+
+    addDebugLog(`🔍 [SYNC-EFFECT] hasSessionManager=${hasSessionManager}, hasAudioElement=${hasAudioElement}`);
+
+    if (hasAudioElement) {
+      addDebugLog(`✅ [SYNC-EFFECT] Calling setAudioMuted(${!audioEnabled})`);
+      sessionManagerRef.current.setAudioMuted(!audioEnabled);
+    } else if (hasAudio) {
+      addDebugLog(`⚠️ [SYNC-EFFECT] MISMATCH: hasAudio=true but no audioElement! hasSessionManager=${hasSessionManager}`);
+    } else {
+      addDebugLog(`ℹ️ [SYNC-EFFECT] No audio yet, skipping`);
+    }
+  }, [audioEnabled, hasAudio]);
+
   // AIDEV-NOTE: Update state when autoExpand changes
   useEffect(() => {
     if (autoExpand && state === "minimized") {
@@ -385,33 +408,128 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand }
   // AIDEV-NOTE: Auto-start session if autoExpand prop is true
   // AIDEV-NOTE: Uses ref to prevent duplicate calls in React Strict Mode (dev only)
   useEffect(() => {
-    console.log('[AUTO-EXPAND] Effect triggered - autoExpand:', autoExpand, 'isConnecting:', isConnecting, 'room:', !!room, 'hasAutoExpandedRef:', hasAutoExpandedRef.current, 'state:', state);
+    const debugInfo = {
+      autoExpand,
+      isConnecting,
+      hasRoom: !!room,
+      hasAutoExpanded: hasAutoExpandedRef.current,
+      state,
+      sessionInfo: !!sessionInfo
+    };
+    console.log('[AUTO-EXPAND] Effect triggered', debugInfo);
+    addDebugLog(`[AUTO-EXPAND] Effect - ${JSON.stringify(debugInfo)}`);
+
     if (autoExpand && !isConnecting && !room && !hasAutoExpandedRef.current) {
       console.log('[AUTO-EXPAND] ✅ Starting live session...');
+      addDebugLog('[AUTO-EXPAND] ✅ Starting live session');
       hasAutoExpandedRef.current = true;
       startLiveSession();
     } else {
-      console.log('[AUTO-EXPAND] ❌ Skipping - conditions not met');
+      const skipReason = !autoExpand ? 'autoExpand=false' :
+                         isConnecting ? 'isConnecting=true' :
+                         room ? 'room exists' :
+                         hasAutoExpandedRef.current ? 'already expanded' : 'unknown';
+      console.log('[AUTO-EXPAND] ❌ Skipping - reason:', skipReason);
+      addDebugLog(`[AUTO-EXPAND] ❌ Skipping - ${skipReason}`);
     }
   }, [autoExpand]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // AIDEV-NOTE: Keep refs in sync with state for page unload cleanup
+  // AIDEV-NOTE: Combined into single effect to reduce re-renders
   useEffect(() => {
+    roomRef.current = room;
+    sessionInfoRef.current = sessionInfo;
+  }, [room, sessionInfo]);
+
+  useEffect(() => {
+    console.log('[COMPONENT-LIFECYCLE] useEffect [] running - ENTRY POINT');
     mountedRef.current = true;
-    return () => {
-      mountedRef.current = false;
-      // AIDEV-NOTE: Stop HeyGen session on unmount to prevent quota waste
-      // AIDEV-NOTE: This cleanup only runs on component unmount (empty dependency array)
-      if (sessionInfo?.sessionId && sessionInfo?.sessionToken) {
-        stopSession();
+    addDebugLog('[COMPONENT-LIFECYCLE] 🟢 Component MOUNTED');
+    console.log('[COMPONENT-LIFECYCLE] addDebugLog called successfully');
+
+    // AIDEV-NOTE: Handle page refresh/close - cleanup session to prevent quota waste
+    // AIDEV-NOTE: Uses refs to avoid stale closure values
+    const handlePageUnload = () => {
+      console.log('[PAGE-UNLOAD] handlePageUnload function called');
+      addDebugLog('[PAGE-UNLOAD] handlePageUnload triggered!');
+
+      // Use sendBeacon for guaranteed delivery during page unload
+      const currentSessionInfo = sessionInfoRef.current;
+      if (currentSessionInfo?.sessionId && currentSessionInfo?.sessionToken) {
+        const payload = JSON.stringify({
+          sessionId: currentSessionInfo.sessionId,
+          sessionToken: currentSessionInfo.sessionToken,
+        });
+        navigator.sendBeacon(
+          getNodeApiUrl("/api/liveavatar/stop-session"),
+          new Blob([payload], { type: 'application/json' })
+        );
       }
-      if (room) {
-        room.disconnect();
+
+      // Cleanup SessionManager
+      if (sessionManagerRef.current) {
+        addDebugLog('[PAGE-UNLOAD] Cleaning up SessionManager');
+        sessionManagerRef.current.cleanup();
       }
+
+      // Cleanup LiveKitEventManager
+      if (liveKitEventManagerRef.current) {
+        liveKitEventManagerRef.current.detachFromRoom();
+      }
+
+      // Disconnect room
+      const currentRoom = roomRef.current;
+      if (currentRoom) {
+        currentRoom.disconnect();
+      }
+
+      // Stop local audio
       if (localAudioRef.current) {
         localAudioRef.current.stop();
       }
     };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Register page unload handlers
+    window.addEventListener('beforeunload', handlePageUnload);
+    window.addEventListener('pagehide', handlePageUnload); // For mobile Safari
+
+    return () => {
+      addDebugLog('[COMPONENT-LIFECYCLE] 🔴 Component UNMOUNTING');
+      mountedRef.current = false;
+
+      // Remove page unload handlers
+      window.removeEventListener('beforeunload', handlePageUnload);
+      window.removeEventListener('pagehide', handlePageUnload);
+
+      // Component unmount cleanup - MUST use refs to avoid stale closure
+      const currentSessionInfo = sessionInfoRef.current;
+      const currentRoom = roomRef.current;
+
+      if (currentSessionInfo?.sessionId && currentSessionInfo?.sessionToken) {
+        stopSession();
+      }
+
+      if (sessionManagerRef.current) {
+        addDebugLog('[COMPONENT-LIFECYCLE] Cleaning up SessionManager from unmount');
+        sessionManagerRef.current.cleanup();
+        // AIDEV-NOTE: Do NOT set to null - ref must persist for StrictMode remount
+      }
+
+      if (liveKitEventManagerRef.current) {
+        liveKitEventManagerRef.current.detachFromRoom();
+        // AIDEV-NOTE: Do NOT set to null - ref must persist for StrictMode remount
+      }
+
+      if (currentRoom) {
+        currentRoom.disconnect();
+      }
+
+      if (localAudioRef.current) {
+        localAudioRef.current.stop();
+        localAudioRef.current = null;
+      }
+    };
+  }, []); // AIDEV-NOTE: Empty deps - cleanup uses refs to avoid stale closures
 
   useEffect(() => {
     let initialTimer;
@@ -468,9 +586,11 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand }
   // AIDEV-NOTE: Why: HeyGen charges for active sessions, must explicitly stop to avoid wasting quota
   // AIDEV-NOTE: Called by: handleDisconnect, component unmount cleanup
   const stopSession = async () => {
+    addDebugLog('[STOP-SESSION] stopSession() called!');
     // AIDEV-NOTE: Only call stop-session if we have valid session credentials
     if (!sessionInfo?.sessionId || !sessionInfo?.sessionToken) {
       console.log("[STOP-SESSION] No session info, skipping stop-session call");
+      addDebugLog('[STOP-SESSION] No session info, skipping');
       return;
     }
 
@@ -519,14 +639,30 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand }
   // AIDEV-NOTE: Why: Prevents quota waste from HeyGen sessions and memory leaks from tracks/elements, ensures clean state for reconnection
   // AIDEV-NOTE: Called by: Disconnect button (PhoneOff icon), component unmount useEffect cleanup
   const handleDisconnect = async () => {
+    addDebugLog('[DISCONNECT] handleDisconnect called!');
     // AIDEV-NOTE: Stop HeyGen session first to prevent quota waste
     await stopSession();
 
-    // AIDEV-NOTE: Clean up session via SessionManager (handles both audio and video)
-    SessionManager.cleanup();
+    // AIDEV-NOTE: Stop any active overlays before cleanup
+    if (isDemoPlaying) {
+      stopDemoVideo();
+    }
+    if (showCalendly) {
+      setShowCalendly(false);
+    }
+
+    // AIDEV-NOTE: Clean up SessionManager instance (handles audio/video tracks and elements)
+    if (sessionManagerRef.current) {
+      addDebugLog('[DISCONNECT] Cleaning up SessionManager from handleDisconnect');
+      sessionManagerRef.current.cleanup();
+      // AIDEV-NOTE: Do NOT set to null - will be replaced with new instance on reconnect
+    }
 
     // AIDEV-NOTE: Detach LiveKitEventManager from room
-    LiveKitEventManager.detachFromRoom();
+    if (liveKitEventManagerRef.current) {
+      liveKitEventManagerRef.current.detachFromRoom();
+      // AIDEV-NOTE: Do NOT set to null - will be replaced with new instance on reconnect
+    }
 
     // AIDEV-NOTE: LiveKit room cleanup - disconnect and reset session state
     if (room) {
@@ -536,20 +672,37 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand }
       setHasLiveVideo(false);
       setHasAudio(false);
     }
+
     // AIDEV-NOTE: Stop local microphone track to release device access
     if (localAudioRef.current) {
       localAudioRef.current.stop();
       localAudioRef.current = null;
     }
-    // AIDEV-NOTE: Reset UI state to initial minimized widget with default settings
+
+    // AIDEV-NOTE: Reset ALL UI state to defaults
     setIsMuted(true);
     setAudioEnabled(true);
     setState("minimized");
+    setIsConnecting(false);
+    setConnectionError(null);
+    setDebugLogs([]);
+    setTranscripts([]);
+    setDetectedIntents([]);
+    setAvatarState("idle");
+    setIsAvatarSpeaking(false);
+    setIsUserSpeaking(false);
 
-    // AIDEV-NOTE: Reset auto-expand ref to allow reconnection
+    // AIDEV-NOTE: Clear ALL refs to prevent stale closures
+    lastAvatarSpeechRef.current = '';
+    preDemoWidgetStateRef.current = null;
+    preCalendlyWidgetStateRef.current = null;
+    preCalendlyMutedRef.current = false;
+    preCalendlyAudioEnabledRef.current = true;
+    pendingCalendlyRef.current = false;
+    screenShareRef.current = false;
     hasAutoExpandedRef.current = false;
 
-    // AIDEV-NOTE: Call optional onDisconnect callback if provided (used by ExtendedAvatarPage)
+    // AIDEV-NOTE: Call optional onDisconnect callback if provided
     if (onDisconnect) {
       onDisconnect();
     }
@@ -651,13 +804,96 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand }
       console.log('[START-SESSION] Setting room');
       setRoom(r);
 
-      // AIDEV-NOTE: Step 4 - Initialize SessionManager to handle all tracks
-      await SessionManager.initialize(r, 'live-video-container');
+      // AIDEV-NOTE: Step 4 - Create NEW SessionManager instance for this connection
+      // AIDEV-NOTE: CRITICAL FIX - Fresh instance on every connection prevents stale state from swipe-to-refresh
+      // AIDEV-NOTE: Old approach: Reused instance from ref → stale audioElement with wrong muted state
+      // AIDEV-NOTE: New approach: Fresh instance → guaranteed clean state every connection
+      sessionManagerRef.current = new SessionManager();
+      sessionManagerRef.current.setLogger(addDebugLog);
+      await sessionManagerRef.current.initialize(r, 'live-video-container');
 
-      // AIDEV-NOTE: Step 5 - Wire all room events via LiveKitEventManager
-      LiveKitEventManager.attachToRoom(r);
+      // AIDEV-NOTE: Step 5 - Create NEW LiveKitEventManager instance for this connection
+      // AIDEV-NOTE: CRITICAL FIX - Fresh instance on every connection prevents stale state
+      // AIDEV-NOTE: Old approach: Created once in useEffect, reused → stale lastAvatarSpeech, previousAgentState
+      // AIDEV-NOTE: New approach: Fresh instance → guaranteed clean state every connection
+      liveKitEventManagerRef.current = new LiveKitEventManager();
+      liveKitEventManagerRef.current.setLogger(log);
+
+      // AIDEV-NOTE: Setup callbacks immediately after instance creation
+      // AIDEV-NOTE: Callbacks will also be updated by useEffect when dependencies change
+      liveKitEventManagerRef.current.setCallbacks({
+        onAvatarStartSpeaking: () => {
+          setIsAvatarSpeaking(true);
+          setAvatarState("speaking");
+        },
+        onAvatarStopSpeaking: () => {
+          setIsAvatarSpeaking(false);
+          setAvatarState("listening");
+        },
+        onUserStartSpeaking: () => {
+          setIsUserSpeaking(true);
+        },
+        onUserStopSpeaking: () => {
+          setIsUserSpeaking(false);
+        },
+        onUserTranscript: (text, source) => {
+          handleUserSpeech(text, source);
+        },
+        onAvatarTranscript: (text, source) => {
+          handleAvatarSpeech(text, source);
+        },
+        onGenericTranscript: (text, fullData) => {
+          setTranscripts((prev) =>
+            [
+              ...prev,
+              {
+                type: "transcript",
+                text: text,
+                timestamp: Date.now(),
+              },
+            ].slice(-10)
+          );
+          detectIntent(text, fullData, "user");
+        },
+        onAgentStateChange: (newState, prevState, lastSpeech) => {
+          setAvatarState(newState);
+          log('AGENT_STATE', `Agent state changed: ${prevState} → ${newState}`);
+
+          // Demo trigger on speaking→listening transition
+          if (prevState === 'speaking' && newState === 'listening') {
+            setTimeout(() => {
+              if (lastSpeech) {
+                log('DEMO', 'Checking for demo trigger after avatar speech', { lastSpeech });
+                const demoTrigger = checkForDemoTrigger(lastSpeech, videoTriggersConfig, log);
+                if (demoTrigger && demoTrigger.matched && !isDemoPlaying) {
+                  log('DEMO', '🎬 Demo trigger detected from avatar speech', demoTrigger);
+
+                  preDemoWidgetStateRef.current = state;
+
+                  if (state !== "maximized") {
+                    setState("maximized");
+                    setTimeout(() => {
+                      playDemoVideo(demoTrigger.videoUrl);
+                    }, 500);
+                  } else {
+                    playDemoVideo(demoTrigger.videoUrl);
+                  }
+                }
+              }
+            }, 100);
+          }
+        },
+        onUnhandledMessage: (msg) => {
+          log('DATA_CHANNEL', '📨 Unhandled message', msg);
+        }
+      });
+
+      // Attach to room
+      liveKitEventManagerRef.current.attachToRoom(r);
 
       // AIDEV-NOTE: Step 6 - Listen for new tracks being published by avatar (video/audio)
+      // AIDEV-NOTE: CRITICAL - Only attach audio from 'heygen' participant, not from 'agent-*'
+      // AIDEV-NOTE: 'agent-*' audio tracks are for voice activity detection, not the actual avatar voice
       r.on(
         RoomEvent.TrackSubscribed,
         async (
@@ -668,11 +904,29 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand }
           console.log("Track subscribed:", track.kind, track.sid);
           addDebugLog(`Track received: ${track.kind} from ${participant.identity}`);
 
+          // AIDEV-NOTE: Verify sessionManagerRef is not null before attaching tracks
+          if (!sessionManagerRef.current) {
+            addDebugLog(`⚠️ ERROR: sessionManagerRef.current is NULL when trying to attach ${track.kind} track!`);
+            console.error('sessionManagerRef.current is NULL');
+            return;
+          }
+
           if (track.kind === Track.Kind.Video) {
-            await SessionManager.attachVideoTrack(track);
+            addDebugLog(`✓ Attaching video track from ${participant.identity}`);
+            await sessionManagerRef.current.attachVideoTrack(track);
           } else if (track.kind === Track.Kind.Audio) {
-            await SessionManager.attachAudioTrack(track);
-            // AIDEV-NOTE: room.startAudio() already called earlier (line 632) - no need to call again
+            // AIDEV-NOTE: CRITICAL FIX - Only attach audio from 'heygen' participant
+            // AIDEV-NOTE: 'agent-*' participants send VAD/echo audio, not the avatar's voice
+            if (participant.identity === 'heygen') {
+              addDebugLog(`✓ Attaching HEYGEN audio track (the avatar voice)`);
+              await sessionManagerRef.current.attachAudioTrack(track);
+              // AIDEV-NOTE: Immediately sync audio muted state after track attachment
+              addDebugLog(`🔊 [AUDIO-SYNC] Track attached - syncing muted state immediately. audioEnabled=${audioEnabled}`);
+              sessionManagerRef.current.setAudioMuted(!audioEnabled);
+              setHasAudio(true);
+            } else {
+              addDebugLog(`⏭️ Skipping audio from ${participant.identity} (not heygen - likely VAD/agent audio)`);
+            }
           }
         }
       );
@@ -680,18 +934,19 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand }
       // AIDEV-NOTE: Handle track removal when participant leaves or unpublishes
       r.on(RoomEvent.TrackUnsubscribed, (track) => {
         if (track.kind === Track.Kind.Video) {
-          SessionManager.detachVideo();
+          sessionManagerRef.current?.detachVideo();
         } else if (track.kind === Track.Kind.Audio) {
-          SessionManager.detachAudio();
+          sessionManagerRef.current?.detachAudio();
         }
       });
 
       // AIDEV-NOTE: Step 7 - Attach already-existing tracks (handles race condition)
+      // AIDEV-NOTE: CRITICAL - Only attach audio from 'heygen' participant, not from 'agent-*'
       // Check existing tracks after a short delay to ensure DOM ready
       setTimeout(async () => {
         addDebugLog('Checking for existing tracks...');
         const existingParticipants = Array.from(r.remoteParticipants.values());
-        addDebugLog(`Found ${existingParticipants.length} participants`);
+        addDebugLog(`Found ${existingParticipants.length} participants: ${existingParticipants.map(p => p.identity).join(', ')}`);
 
         for (const participant of existingParticipants) {
           for (const publication of participant.trackPublications.values()) {
@@ -699,11 +954,29 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand }
               const track = publication.track;
               addDebugLog(`Existing track: ${track.kind} from ${participant.identity}`);
 
+              // AIDEV-NOTE: Verify sessionManagerRef is not null before attaching existing tracks
+              if (!sessionManagerRef.current) {
+                addDebugLog(`⚠️ CRITICAL ERROR: sessionManagerRef.current is NULL for EXISTING ${track.kind} track!`);
+                console.error('sessionManagerRef.current is NULL for existing track');
+                continue;
+              }
+
               if (track.kind === Track.Kind.Video) {
-                await SessionManager.attachVideoTrack(track);
+                addDebugLog(`✓ Attaching existing video track from ${participant.identity}`);
+                await sessionManagerRef.current.attachVideoTrack(track);
               } else if (track.kind === Track.Kind.Audio) {
-                await SessionManager.attachAudioTrack(track);
-                // AIDEV-NOTE: room.startAudio() already called earlier (line 632) - no need to call again
+                // AIDEV-NOTE: CRITICAL FIX - Only attach audio from 'heygen' participant
+                // AIDEV-NOTE: 'agent-*' participants send VAD/echo audio, not the avatar's voice
+                if (participant.identity === 'heygen') {
+                  addDebugLog(`✓ Attaching existing HEYGEN audio track (the avatar voice)`);
+                  await sessionManagerRef.current.attachAudioTrack(track);
+                  // AIDEV-NOTE: Immediately sync audio muted state after track attachment
+                  addDebugLog(`🔊 [AUDIO-SYNC] Existing track attached - syncing muted state immediately. audioEnabled=${audioEnabled}`);
+                  sessionManagerRef.current.setAudioMuted(!audioEnabled);
+                  setHasAudio(true);
+                } else {
+                  addDebugLog(`⏭️ Skipping existing audio from ${participant.identity} (not heygen)`);
+                }
               }
             }
           }
@@ -711,9 +984,9 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand }
 
         // AIDEV-NOTE: Step 8 - Wait for session to be fully ready, then hide spinner
         addDebugLog('Waiting for session to be ready...');
-        await SessionManager.waitForReady();
+        await sessionManagerRef.current?.waitForReady();
         setHasLiveVideo(true);
-        setHasAudio(true);
+        // AIDEV-NOTE: hasAudio already set when track attached - don't set again here
         setIsConnecting(false);
         addDebugLog('✅ Session fully ready!');
       }, 500);
@@ -1036,9 +1309,12 @@ export const MobileAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand }
         {state === "minimized" ? (
           <button
             onClick={() => {
+              console.log('[FLOATING-WIDGET] Button clicked - onExpand:', !!onExpand, 'state:', state);
               if (onExpand) {
+                console.log('[FLOATING-WIDGET] Calling onExpand()');
                 onExpand();
               } else {
+                console.log('[FLOATING-WIDGET] No onExpand - calling startLiveSession directly');
                 setState("small");
                 startLiveSession();
               }

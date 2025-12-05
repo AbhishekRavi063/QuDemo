@@ -12,14 +12,13 @@
  * - Single source of truth for session state
  * - Idempotent track attachment - safe to call multiple times
  * - Promise-based readiness - await until fully ready
- * - Delegates audio to AudioManager, manages video directly
+ * - Manages both video and audio tracks with native HTML elements
  * - Clean lifecycle: initialize → waitForReady → cleanup
  */
 
-import AudioManager from './AudioManager';
-
 class SessionManager {
   constructor() {
+    this.instanceId = Math.random().toString(36).substring(7); // Unique ID for tracking
     this.room = null;
     this.videoTrack = null;
     this.audioTrack = null;
@@ -53,11 +52,23 @@ class SessionManager {
   }
 
   /**
+   * Log with call stack - shows who called this function
+   */
+  logWithStack(message) {
+    const stack = new Error().stack;
+    const lines = stack.split('\n');
+    // Line 0 is "Error", Line 1 is logWithStack, Line 2 is the method that called logWithStack, Line 3 is the ACTUAL caller
+    const caller = lines[3] || 'unknown';
+    const callerInfo = caller.trim().replace(/^at\s+/, '');
+    this.log(`${message} | CALLED FROM: ${callerInfo}`);
+  }
+
+  /**
    * Initialize session manager with LiveKit room
    * Sets up all event listeners and prepares for tracks
    */
   async initialize(room, videoContainerId = 'live-video-container') {
-    this.log('Initializing SessionManager...');
+    this.log(`[${this.instanceId}] Initializing SessionManager...`);
 
     this.room = room;
     this.videoContainer = document.getElementById(videoContainerId);
@@ -85,6 +96,8 @@ class SessionManager {
    * Returns: boolean - true if attached, false if already attached or failed
    */
   async attachVideoTrack(track) {
+    this.logWithStack(`[${this.instanceId}] attachVideoTrack() called`);
+
     // Already have video? Skip
     if (this.videoTrack) {
       this.log('Video track already attached, skipping');
@@ -106,7 +119,7 @@ class SessionManager {
         videoEl = document.createElement('video');
         videoEl.autoplay = true;
         videoEl.playsInline = true;
-        videoEl.muted = true; // Audio handled separately via AudioManager
+        videoEl.muted = true; // Audio handled separately via audio track attachment
         videoEl.style.width = '100%';
         videoEl.style.height = '100%';
         videoEl.style.objectFit = 'cover';
@@ -145,6 +158,8 @@ class SessionManager {
    * Returns: boolean - true if attached, false if already attached or failed
    */
   async attachAudioTrack(track) {
+    this.logWithStack(`[${this.instanceId}] attachAudioTrack() called`);
+
     // Already have audio? Skip
     if (this.audioTrack) {
       this.log('Audio track already attached, skipping');
@@ -163,6 +178,8 @@ class SessionManager {
         this.audioElement = document.createElement('audio');
         this.audioElement.autoplay = true;
         this.audioElement.playsInline = true;
+        this.audioElement.muted = false; // CRITICAL: Must be unmuted to hear audio
+        this.audioElement.volume = 1.0; // Set volume to maximum
         this.audioElement.style.display = 'none'; // Hidden audio element
         document.body.appendChild(this.audioElement);
         this.log('Audio element created and added to DOM');
@@ -172,16 +189,36 @@ class SessionManager {
       track.attach(this.audioElement);
       this.audioTrack = track;
 
-      // Force play (should work because room.startAudio() was called)
-      await this.audioElement.play().catch(e =>
-        this.log(`Audio play error (may be ok): ${e.message}`)
-      );
+      this.log(`📊 Audio BEFORE play: muted=${this.audioElement.muted}, volume=${this.audioElement.volume}, paused=${this.audioElement.paused}, readyState=${this.audioElement.readyState}, hasSrcObject=${!!this.audioElement.srcObject}`);
 
-      this.log('✅ Audio track attached to <audio> element and playing', {
-        paused: this.audioElement.paused,
-        volume: this.audioElement.volume,
-        muted: this.audioElement.muted
-      });
+      // Force play (should work because room.startAudio() was called)
+      try {
+        await this.audioElement.play();
+        this.log('✅ audioElement.play() succeeded');
+      } catch (e) {
+        this.log(`⚠️ audioElement.play() error: ${e.name} - ${e.message}`);
+      }
+
+      this.log(`📊 Audio AFTER play: muted=${this.audioElement.muted}, volume=${this.audioElement.volume}, paused=${this.audioElement.paused}, readyState=${this.audioElement.readyState}`);
+
+      // AIDEV-NOTE: CRITICAL FIX - Ensure audio is unmuted after attachment
+      // AIDEV-NOTE: iOS Safari may reset muted state during track attachment
+      // AIDEV-NOTE: Force unmute here to guarantee audio plays on first connection
+      if (this.audioElement.muted) {
+        this.log('⚠️ Audio element was muted after attachment - forcing unmute');
+        this.audioElement.muted = false;
+      }
+
+      // AIDEV-NOTE: iOS Chrome fix - ensure audio is playing and not paused
+      if (this.audioElement.paused) {
+        this.log('⚠️ Audio element is paused after play() - retrying play()');
+        try {
+          await this.audioElement.play();
+          this.log(`📊 Retry play result: paused=${this.audioElement.paused}`);
+        } catch (e) {
+          this.log(`⚠️ Retry play error: ${e.name} - ${e.message}`);
+        }
+      }
 
       // Resolve ready promise
       if (this.audioReadyResolve) {
@@ -277,6 +314,36 @@ class SessionManager {
   }
 
   /**
+   * Mute/unmute audio output (speaker control)
+   */
+  setAudioMuted(muted) {
+    this.logWithStack(`🔊 setAudioMuted(${muted}) called`);
+
+    if (this.audioElement) {
+      this.log(`📊 BEFORE setAudioMuted(${muted}): muted=${this.audioElement.muted}, volume=${this.audioElement.volume}, paused=${this.audioElement.paused}`);
+
+      this.audioElement.muted = muted;
+
+      this.log(`✅ AFTER setAudioMuted(${muted}): muted=${this.audioElement.muted}, volume=${this.audioElement.volume}, paused=${this.audioElement.paused}`);
+
+      // AIDEV-NOTE: If unmuting and audio is paused, try to play
+      if (!muted && this.audioElement.paused) {
+        this.log('⚠️ Audio is paused while unmuting - attempting play()');
+        this.audioElement.play().then(() => {
+          this.log(`✅ play() after unmute succeeded: paused=${this.audioElement.paused}`);
+        }).catch(e => {
+          this.log(`⚠️ play() after unmute failed: ${e.name} - ${e.message}`);
+        });
+      }
+
+      return true;
+    } else {
+      this.log('⚠️ Cannot set audio muted - no audio element');
+      return false;
+    }
+  }
+
+  /**
    * Detach audio track
    */
   detachAudio() {
@@ -303,11 +370,19 @@ class SessionManager {
    * Complete cleanup - call when session ends
    */
   cleanup() {
-    this.log('Cleaning up SessionManager');
+    this.logWithStack(`[${this.instanceId}] cleanup() called`);
+
+    // AIDEV-NOTE: GUARD - Don't cleanup if we haven't attached any tracks yet
+    // AIDEV-NOTE: This prevents premature cleanup before session is ready
+    if (!this.videoTrack && !this.audioTrack) {
+      this.log(`[${this.instanceId}] ⚠️ Cleanup called but no tracks attached yet - IGNORING`);
+      return;
+    }
+
+    this.log(`[${this.instanceId}] Cleaning up SessionManager`);
 
     this.detachVideo();
     this.detachAudio();
-    // AIDEV-NOTE: No need to cleanup AudioManager - not using it anymore
 
     this.room = null;
     this.videoContainer = null;
@@ -335,11 +410,13 @@ class SessionManager {
       audioTrackId: this.audioTrack?.sid || null,
       hasRoom: !!this.room,
       hasVideoContainer: !!this.videoContainer,
-      audioManager: AudioManager.getState()
+      hasAudioElement: !!this.audioElement
     };
   }
 }
 
-// Export singleton instance
-const sessionManagerInstance = new SessionManager();
-export default sessionManagerInstance;
+// AIDEV-NOTE: CRITICAL FIX - Export class, not singleton
+// AIDEV-NOTE: Each connection needs its own SessionManager instance
+// AIDEV-NOTE: Singleton was causing state corruption between different users/devices
+// AIDEV-NOTE: User A (iOS) → User B (Android) → corrupted audio element → User A fails
+export default SessionManager;
