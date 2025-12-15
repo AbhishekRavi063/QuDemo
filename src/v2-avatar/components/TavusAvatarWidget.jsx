@@ -21,8 +21,6 @@ import {
 import { getApiUrl, getCreateConversationUrl, getEndConversationUrl } from '../config/api';
 import { useEventLogger } from '../hooks/useEventLogger';
 import { useDemoVideo } from '../hooks/useDemoVideo';
-import { checkForDemoTrigger } from '../../mobile/utils/videoTriggerMatcher';
-import videoTriggersConfig from '../config/video-triggers.json';
 import bookingConfig from '../config/booking-config.json';
 import TavusSessionManager from '../utils/TavusSessionManager';
 import DailyEventManager from '../utils/DailyEventManager';
@@ -58,6 +56,7 @@ export const TavusAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand } 
   const [transcripts, setTranscripts] = useState([]);
   const [detectedIntents, setDetectedIntents] = useState([]);
   const [showCalendly, setShowCalendly] = useState(false);
+  const [calendlyUrl, setCalendlyUrl] = useState('');
 
   const mountedRef = useRef(true);
   const lastAvatarSpeechRef = useRef('');
@@ -96,7 +95,7 @@ export const TavusAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand } 
   };
 
   // Demo video hook
-  const { isDemoPlaying, currentVideoUrl, demoVideoRef, playDemoVideo, stopDemoVideo } = useDemoVideo({
+  const { isDemoPlaying, currentVideoUrl, isYouTube, youTubeEmbedUrl, demoVideoRef, playDemoVideo, stopDemoVideo } = useDemoVideo({
     sessionManager: sessionManagerRef.current,
     log,
     setState,
@@ -116,28 +115,7 @@ export const TavusAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand } 
       onReplicaStopSpeaking: (lastSpeech, interrupted) => {
         setIsAvatarSpeaking(false);
         setAvatarState("listening");
-
-        // Check for demo triggers when replica stops speaking
-        if (lastSpeech && !interrupted) {
-          setTimeout(() => {
-            log('DEMO', 'Checking for demo trigger after replica speech', { lastSpeech });
-            const demoTrigger = checkForDemoTrigger(lastSpeech, videoTriggersConfig, log);
-            if (demoTrigger && demoTrigger.matched && !isDemoPlaying) {
-              log('DEMO', 'Demo trigger detected from replica speech', demoTrigger);
-
-              preDemoWidgetStateRef.current = state;
-
-              if (state !== "maximized") {
-                setState("maximized");
-                setTimeout(() => {
-                  playDemoVideo(demoTrigger.videoUrl);
-                }, 500);
-              } else {
-                playDemoVideo(demoTrigger.videoUrl);
-              }
-            }
-          }, 100);
-        }
+        // Demo triggers are handled via tool calls in Tavus, no speech detection needed
       },
       onUserStartSpeaking: () => {
         setIsUserSpeaking(true);
@@ -153,7 +131,6 @@ export const TavusAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand } 
       },
       onToolCall: (name, args, properties) => {
         log('TOOL_CALL', `Tool called: ${name}`, { args });
-        // Handle tool calls here (e.g., booking, navigation)
         handleToolCall(name, args);
       },
       onReplicaJoined: (replicaId) => {
@@ -163,7 +140,7 @@ export const TavusAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand } 
         log('DATA_CHANNEL', 'Unhandled message', msg);
       }
     });
-  }, [isDemoPlaying, state, log]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [log]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Handle user speech
   const handleUserSpeech = (text, source) => {
@@ -205,12 +182,51 @@ export const TavusAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand } 
     switch (name) {
       case 'schedule_meeting':
       case 'book_call':
-        log('TOOL_CALL', 'Scheduling meeting via tool call');
+        log('TOOL_CALL', 'Scheduling meeting via tool call', { calendly_url: args.calendly_url });
+
+        // Send echo message to acknowledge the request
+        if (dailyEventManagerRef.current) {
+          dailyEventManagerRef.current.sendEchoMessage("Opening the calendar for you now.");
+        }
+
+        // Use URL from tool args, or fall back to config
+        const meetingUrl = args.calendly_url || bookingConfig.calendlyUrl;
+        if (meetingUrl) {
+          setCalendlyUrl(meetingUrl);
+        }
+
         pendingCalendlyRef.current = true;
         break;
       case 'show_demo':
         if (args.videoUrl) {
           playDemoVideo(args.videoUrl);
+        }
+        break;
+      case 'show_demo_video':
+        // Handle show_demo_video tool call from Tavus persona
+        log('TOOL_CALL', 'show_demo_video triggered', { url: args.url, title: args.title });
+
+        // Send echo message to make avatar say "Loading the video"
+        if (dailyEventManagerRef.current) {
+          dailyEventManagerRef.current.sendEchoMessage("Loading the video for you now.");
+        }
+
+        // Play video in PIP mode after a short delay (let echo message start)
+        if (args.url) {
+          setTimeout(() => {
+            // Save current state for restoration later
+            preDemoWidgetStateRef.current = state;
+
+            // Maximize if not already
+            if (state !== "maximized") {
+              setState("maximized");
+              setTimeout(() => {
+                playDemoVideo(args.url);
+              }, 500);
+            } else {
+              playDemoVideo(args.url);
+            }
+          }, 500);
         }
         break;
       default:
@@ -493,6 +509,9 @@ export const TavusAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand } 
     pendingCalendlyRef.current = false;
     hasAutoExpandedRef.current = false;
 
+    // Clear dynamic URL
+    setCalendlyUrl('');
+
     if (onDisconnect) {
       onDisconnect();
     }
@@ -564,31 +583,15 @@ export const TavusAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand } 
       dailyEventManagerRef.current = new DailyEventManager();
       dailyEventManagerRef.current.setLogger(log);
 
-      // Setup callbacks
+      // Setup callbacks - demo triggers handled via tool calls, no speech detection needed
       dailyEventManagerRef.current.setCallbacks({
         onReplicaStartSpeaking: () => {
           setIsAvatarSpeaking(true);
           setAvatarState("speaking");
         },
-        onReplicaStopSpeaking: (lastSpeech, interrupted) => {
+        onReplicaStopSpeaking: () => {
           setIsAvatarSpeaking(false);
           setAvatarState("listening");
-
-          if (lastSpeech && !interrupted) {
-            setTimeout(() => {
-              const demoTrigger = checkForDemoTrigger(lastSpeech, videoTriggersConfig, log);
-              if (demoTrigger && demoTrigger.matched && !isDemoPlaying) {
-                log('DEMO', 'Demo trigger detected', demoTrigger);
-                preDemoWidgetStateRef.current = state;
-                if (state !== "maximized") {
-                  setState("maximized");
-                  setTimeout(() => playDemoVideo(demoTrigger.videoUrl), 500);
-                } else {
-                  playDemoVideo(demoTrigger.videoUrl);
-                }
-              }
-            }, 100);
-          }
         },
         onUserStartSpeaking: () => setIsUserSpeaking(true),
         onUserStopSpeaking: () => setIsUserSpeaking(false),
@@ -688,19 +691,8 @@ export const TavusAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand } 
   const detectIntent = (transcript, fullData, source) => {
     const lowerTranscript = transcript.toLowerCase();
 
-    // Check demo triggers first
-    const demoTrigger = checkForDemoTrigger(transcript, videoTriggersConfig, log);
-    if (demoTrigger && demoTrigger.matched && !isDemoPlaying) {
-      log('DEMO', 'Demo video trigger detected', demoTrigger);
-      if (state !== "maximized") {
-        setState("maximized");
-      }
-      playDemoVideo(demoTrigger.videoUrl);
-      setDetectedIntents((prev) => [...prev, 'show_demo'].slice(-5));
-      return;
-    }
-
-    // Process other intents
+    // Demo triggers are handled via Tavus tool calls (show_demo_video)
+    // Only process scheduling intents here as fallback for speech-based detection
     intentActions.forEach((intent) => {
       const matched = intent.keywords.some((keyword) =>
         lowerTranscript.includes(keyword.toLowerCase())
@@ -847,14 +839,26 @@ export const TavusAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand } 
 
       {/* Demo video overlay */}
       {isDemoPlaying && (
-        <div className="absolute inset-0 z-10">
-          <video
-            ref={demoVideoRef}
-            className="w-full h-full object-cover"
-            playsInline
-            muted
-            onClick={() => stopDemoVideo()}
-          />
+        <div className="absolute inset-0 z-10 bg-black">
+          {/* YouTube iframe or regular video element */}
+          {isYouTube && youTubeEmbedUrl ? (
+            <iframe
+              src={youTubeEmbedUrl}
+              className="w-full h-full"
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              title="Demo Video"
+            />
+          ) : (
+            <video
+              ref={demoVideoRef}
+              className="w-full h-full object-cover"
+              playsInline
+              muted
+              onClick={() => stopDemoVideo()}
+            />
+          )}
           {/* PIP container for avatar during demo */}
           <div
             id="avatar-pip"
@@ -863,7 +867,7 @@ export const TavusAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand } 
           {/* Close demo button */}
           <button
             onClick={() => stopDemoVideo()}
-            className="absolute top-4 right-4 p-2 rounded-full bg-black/50 text-white"
+            className="absolute top-4 right-4 p-2 rounded-full bg-black/50 text-white z-20"
           >
             <X className="w-5 h-5" />
           </button>
@@ -881,7 +885,7 @@ export const TavusAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand } 
             />
             {/* Calendly iframe */}
             <iframe
-              src={bookingConfig.calendlyUrl}
+              src={calendlyUrl || bookingConfig.calendlyUrl}
               className="w-full h-full"
               frameBorder="0"
               title="Schedule Meeting"

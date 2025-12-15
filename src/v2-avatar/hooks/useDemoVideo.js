@@ -4,25 +4,60 @@ import { useState, useRef, useEffect } from 'react';
  * useDemoVideo - Hook for managing demo video playback during Tavus conversations
  *
  * Adapted from mobile version for Daily.co/Tavus integration
+ * Supports both direct video URLs and YouTube embeds
  *
  * @param {object} params
  * @param {object} params.sessionManager - TavusSessionManager instance
  * @param {function} params.log - Logging function
  * @param {function} params.setState - State setter for widget state
  */
+
+// Helper to detect and convert YouTube URLs to embed format
+const getYouTubeEmbedUrl = (url) => {
+  if (!url) return null;
+
+  // Match various YouTube URL formats
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,
+    /youtube\.com\/v\/([a-zA-Z0-9_-]{11})/,
+  ];
+
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match && match[1]) {
+      return `https://www.youtube.com/embed/${match[1]}?autoplay=1&rel=0`;
+    }
+  }
+
+  return null;
+};
+
+const isYouTubeUrl = (url) => {
+  return url && (url.includes('youtube.com') || url.includes('youtu.be'));
+};
+
 export function useDemoVideo({ sessionManager, log, setState }) {
   const [isDemoPlaying, setIsDemoPlaying] = useState(false);
   const [currentVideoUrl, setCurrentVideoUrl] = useState('');
+  const [isYouTube, setIsYouTube] = useState(false);
+  const [youTubeEmbedUrl, setYouTubeEmbedUrl] = useState('');
   const demoVideoRef = useRef(null);
 
-  // Effect to handle video loading when demo starts playing
+  // Effect to handle video loading when demo starts playing (non-YouTube only)
   useEffect(() => {
     log('DEMO', '🔄 [EFFECT] Video loading effect triggered', {
       isDemoPlaying,
       hasVideoUrl: !!currentVideoUrl,
       hasDemoVideoRef: !!demoVideoRef.current,
-      videoUrl: currentVideoUrl
+      videoUrl: currentVideoUrl,
+      isYouTube
     });
+
+    // Skip video element loading for YouTube - it uses iframe
+    if (isYouTube) {
+      log('DEMO', '⏭️ [EFFECT] Skipping video element - YouTube uses iframe');
+      return;
+    }
 
     if (isDemoPlaying && currentVideoUrl && demoVideoRef.current) {
       const demoVideo = demoVideoRef.current;
@@ -142,10 +177,23 @@ export function useDemoVideo({ sessionManager, log, setState }) {
     }
 
     try {
+      // Check if this is a YouTube URL
+      const ytUrl = isYouTubeUrl(videoUrl);
+      const embedUrl = ytUrl ? getYouTubeEmbedUrl(videoUrl) : null;
+
       log('DEMO', '🎬 [START] playDemoVideo called', {
         videoUrl,
+        isYouTube: ytUrl,
+        youTubeEmbedUrl: embedUrl,
         hasSessionManager: !!sessionManager
       });
+
+      // Set YouTube state
+      setIsYouTube(ytUrl);
+      if (embedUrl) {
+        setYouTubeEmbedUrl(embedUrl);
+        log('DEMO', '📺 [YOUTUBE] Converted to embed URL', { embedUrl });
+      }
 
       // Mute microphone during demo (via TavusSessionManager)
       if (sessionManager) {
@@ -247,6 +295,8 @@ export function useDemoVideo({ sessionManager, log, setState }) {
       log('DEMO', '📹 [STOP] Setting isDemoPlaying=false');
       setIsDemoPlaying(false);
       setCurrentVideoUrl('');
+      setIsYouTube(false);
+      setYouTubeEmbedUrl('');
       log('DEMO', '📹 [STOP] State updated');
 
       // Unmute microphone after demo ends
@@ -306,6 +356,8 @@ export function useDemoVideo({ sessionManager, log, setState }) {
   return {
     isDemoPlaying,
     currentVideoUrl,
+    isYouTube,
+    youTubeEmbedUrl,
     demoVideoRef,
     playDemoVideo,
     stopDemoVideo,

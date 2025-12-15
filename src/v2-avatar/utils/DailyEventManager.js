@@ -126,6 +126,11 @@ class DailyEventManager {
     const eventType = data.event_type;
     const properties = data.properties || {};
 
+    // Log raw data for debugging
+    console.log(`\n========== TAVUS EVENT: ${eventType} ==========`);
+    console.log('RAW DATA:', JSON.stringify(data, null, 2));
+    console.log('================================================\n');
+
     this.log('APP_MESSAGE', `📨 Received: ${eventType}`, { properties });
 
     switch (eventType) {
