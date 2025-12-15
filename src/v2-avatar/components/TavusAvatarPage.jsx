@@ -35,8 +35,8 @@ const TavusAvatarPage = () => {
           />
 
           <div className={styles.textContainer}>
-            <h1 className={styles.title}>Tavus AI Assistant</h1>
-            <p className={styles.subtitle}>Powered by Tavus CVI - Click below to start your conversation</p>
+            <h1 className={styles.title}>Qudemo AI Agent</h1>
+            <p className={styles.subtitle}>Click below to start your conversation</p>
           </div>
 
           <button
@@ -46,10 +46,6 @@ const TavusAvatarPage = () => {
           >
             {isLoading ? 'Connecting...' : 'Start Conversation'}
           </button>
-
-          <div className={styles.badge}>
-            <span className={styles.badgeText}>Tavus CVI + Daily.co</span>
-          </div>
         </div>
       ) : (
         <div className={styles.widgetContainer}>

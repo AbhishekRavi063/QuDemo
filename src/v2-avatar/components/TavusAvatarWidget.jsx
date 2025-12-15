@@ -796,7 +796,7 @@ export const TavusAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand } 
   const renderConnectingState = () => (
     <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 text-white p-4">
       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mb-4"></div>
-      <p className="text-sm mb-4">Connecting to Tavus...</p>
+      <p className="text-sm mb-4">Connecting...</p>
 
       {/* Debug logs */}
       <div className="w-full max-h-40 overflow-y-auto text-xs font-mono bg-black/50 rounded p-2">
