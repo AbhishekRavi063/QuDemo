@@ -794,16 +794,102 @@ export const TavusAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand } 
   );
 
   const renderConnectingState = () => (
-    <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 text-white p-4">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mb-4"></div>
-      <p className="text-sm mb-4">Connecting...</p>
-
-      {/* Debug logs */}
-      <div className="w-full max-h-40 overflow-y-auto text-xs font-mono bg-black/50 rounded p-2">
-        {debugLogs.map((log, i) => (
-          <div key={i} className="text-green-400">{log}</div>
+    <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-gray-900 via-blue-900/20 to-gray-900 text-white p-4 overflow-hidden">
+      {/* Animated background rings */}
+      <div className="absolute inset-0 flex items-center justify-center">
+        {[...Array(4)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute rounded-full border border-blue-500/20"
+            style={{
+              width: `${150 + i * 80}px`,
+              height: `${150 + i * 80}px`,
+              animation: `pulse-ring ${2 + i * 0.5}s ease-in-out infinite`,
+              animationDelay: `${i * 0.3}s`,
+              opacity: 0.3 - i * 0.05,
+            }}
+          />
         ))}
       </div>
+
+      {/* Central animated element */}
+      <div className="relative z-10 flex flex-col items-center">
+        {/* Outer glow ring */}
+        <div className="relative">
+          <div
+            className="absolute inset-0 rounded-full bg-blue-500/30 blur-xl"
+            style={{ animation: 'glow-pulse 2s ease-in-out infinite' }}
+          />
+
+          {/* Avatar silhouette / icon container */}
+          <div className="relative w-24 h-24 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center shadow-2xl">
+            {/* Inner spinning ring */}
+            <div
+              className="absolute inset-0 rounded-full border-2 border-transparent border-t-white/50 border-r-white/30"
+              style={{ animation: 'spin 1.5s linear infinite' }}
+            />
+
+            {/* Pulsing dots */}
+            <div className="flex gap-1.5">
+              {[0, 1, 2].map((i) => (
+                <div
+                  key={i}
+                  className="w-2.5 h-2.5 rounded-full bg-white"
+                  style={{
+                    animation: 'bounce-dot 1.4s ease-in-out infinite',
+                    animationDelay: `${i * 0.16}s`,
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Text with fade animation */}
+        <motion.p
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="mt-8 text-lg font-medium text-white/90"
+        >
+          Connecting
+          <span className="inline-flex ml-1">
+            {[0, 1, 2].map((i) => (
+              <span
+                key={i}
+                className="opacity-0"
+                style={{
+                  animation: 'dot-fade 1.5s ease-in-out infinite',
+                  animationDelay: `${i * 0.3}s`,
+                }}
+              >
+                .
+              </span>
+            ))}
+          </span>
+        </motion.p>
+
+      </div>
+
+      {/* CSS animations */}
+      <style>{`
+        @keyframes pulse-ring {
+          0%, 100% { transform: scale(1); opacity: 0.3; }
+          50% { transform: scale(1.05); opacity: 0.1; }
+        }
+        @keyframes glow-pulse {
+          0%, 100% { transform: scale(1); opacity: 0.5; }
+          50% { transform: scale(1.2); opacity: 0.8; }
+        }
+        @keyframes bounce-dot {
+          0%, 80%, 100% { transform: translateY(0); }
+          40% { transform: translateY(-8px); }
+        }
+        @keyframes dot-fade {
+          0%, 20% { opacity: 0; }
+          40%, 100% { opacity: 1; }
+        }
+      `}</style>
     </div>
   );
 
@@ -904,61 +990,59 @@ export const TavusAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand } 
   );
 
   const renderControlBar = () => (
-    <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent z-30">
-      <div className="flex items-center justify-between">
-        {/* Left: State indicator */}
-        <div className="flex items-center gap-2">
-          <div className={`flex items-center gap-1 px-2 py-1 rounded-full ${getStateColor()} text-white text-xs`}>
-            {getStateIcon()}
-            <span className="capitalize">{avatarState}</span>
+    <div className="absolute bottom-0 left-0 right-0 p-4 pb-8 bg-gradient-to-t from-black/80 to-transparent z-30">
+      {/* State indicators - top row */}
+      <div className="flex items-center justify-center gap-2 mb-4">
+        <div className={`flex items-center gap-1 px-2 py-1 rounded-full ${getStateColor()} text-white text-xs`}>
+          {getStateIcon()}
+          <span className="capitalize">{avatarState}</span>
+        </div>
+        {isUserSpeaking && (
+          <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-purple-500 text-white text-xs">
+            <User className="w-3 h-3" />
+            <span>Speaking</span>
           </div>
-          {isUserSpeaking && (
-            <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-purple-500 text-white text-xs">
-              <User className="w-3 h-3" />
-              <span>Speaking</span>
-            </div>
-          )}
-        </div>
+        )}
+      </div>
 
-        {/* Right: Control buttons */}
-        <div className="flex items-center gap-2">
-          {/* Mic toggle */}
-          <button
-            onClick={toggleMicrophone}
-            className={`p-3 rounded-full ${isMuted ? 'bg-red-500' : 'bg-gray-700'} text-white`}
-          >
-            {isMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
-          </button>
+      {/* Control buttons - centered */}
+      <div className="flex items-center justify-center gap-4">
+        {/* Mic toggle */}
+        <button
+          onClick={toggleMicrophone}
+          className={`p-3 rounded-full ${isMuted ? 'bg-red-500' : 'bg-gray-700'} text-white hover:opacity-80 transition-opacity`}
+        >
+          {isMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+        </button>
 
-          {/* Speaker toggle */}
-          <button
-            onClick={toggleAudio}
-            className={`p-3 rounded-full ${!audioEnabled ? 'bg-red-500' : 'bg-gray-700'} text-white`}
-          >
-            {audioEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
-          </button>
+        {/* Speaker toggle */}
+        <button
+          onClick={toggleAudio}
+          className={`p-3 rounded-full ${!audioEnabled ? 'bg-red-500' : 'bg-gray-700'} text-white hover:opacity-80 transition-opacity`}
+        >
+          {audioEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
+        </button>
 
-          {/* Expand/minimize */}
-          <button
-            onClick={handleExpand}
-            className="p-3 rounded-full bg-gray-700 text-white"
-          >
-            {state === "maximized" ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
-          </button>
+        {/* Disconnect - larger and red */}
+        <button
+          onClick={handleDisconnect}
+          className="p-4 rounded-full bg-red-600 text-white hover:bg-red-700 transition-colors"
+        >
+          <PhoneOff className="w-6 h-6" />
+        </button>
 
-          {/* Disconnect */}
-          <button
-            onClick={handleDisconnect}
-            className="p-3 rounded-full bg-red-600 text-white"
-          >
-            <PhoneOff className="w-5 h-5" />
-          </button>
-        </div>
+        {/* Expand/minimize */}
+        <button
+          onClick={handleExpand}
+          className="p-3 rounded-full bg-gray-700 text-white hover:opacity-80 transition-opacity"
+        >
+          {state === "maximized" ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
+        </button>
       </div>
 
       {/* Transcripts */}
       {transcripts.length > 0 && (
-        <div className="mt-2 max-h-24 overflow-y-auto">
+        <div className="mt-4 max-h-24 overflow-y-auto max-w-md mx-auto">
           {transcripts.slice(-3).map((t, i) => (
             <div
               key={i}
