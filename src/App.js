@@ -44,6 +44,7 @@ import WidgetPlayground from "./components/WidgetPlayground";
 import WidgetEmbed from "./components/WidgetEmbed";
 import PublicQudemoShareWidget from "./components/PublicQudemoShareWidget";
 import ExtendedAvatarPage from "./components/ExtendedAvatarPage";
+import TavusAvatarPage from "./v2-avatar/components/TavusAvatarPage";
 import { CompanyProvider, useCompany } from "./context/CompanyContext";
 import { BackendProvider } from "./context/BackendContext";
 import { NotificationProvider } from "./context/NotificationContext";
@@ -306,6 +307,7 @@ function App() {
               />
               <Route path="/widget-demo" element={<FloatingWidgetDemo />} />
               <Route path="/avatar" element={<ExtendedAvatarPage />} />
+              <Route path="/v2-avatar" element={<TavusAvatarPage />} />
               <Route
                 path="/widget-playground/:qudemoId"
                 element={<WidgetPlayground />}

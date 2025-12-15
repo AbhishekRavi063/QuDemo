@@ -23,6 +23,8 @@ if (result.error) {
   console.log('   HEYGEN_API_KEY:', process.env.HEYGEN_API_KEY ? `${process.env.HEYGEN_API_KEY.substring(0, 8)}...` : '✗ Missing');
   console.log('   HEYGEN_AVATAR_ID:', process.env.HEYGEN_AVATAR_ID ? '✓ Set' : '✗ Missing');
   console.log('   HEYGEN_VOICE_ID:', process.env.HEYGEN_VOICE_ID ? '✓ Set' : '✗ Missing');
+  console.log('   TAVUS_API_KEY:', process.env.TAVUS_API_KEY ? `${process.env.TAVUS_API_KEY.substring(0, 8)}...` : '✗ Missing');
+  console.log('   TAVUS_PERSONA_ID:', process.env.TAVUS_PERSONA_ID ? '✓ Set' : '✗ Missing');
 }
 
 const __filename = fileURLToPath(import.meta.url);
@@ -40,6 +42,10 @@ app.use(express.static('build'));
 // Import the API handlers dynamically
 const { default: createSessionHandler } = await import('./api/liveavatar/create-session.js');
 const { default: stopSessionHandler } = await import('./api/liveavatar/stop-session.js');
+
+// Import Tavus API handlers
+const { default: tavusCreateConversationHandler } = await import('./api/tavus/create-conversation.js');
+const { default: tavusEndConversationHandler } = await import('./api/tavus/end-conversation.js');
 
 // Mount the primary API route (current frontend expects this path)
 app.post('/api/liveavatar/create-session', async (req, res) => {
@@ -94,6 +100,29 @@ app.post('/api/mobile-logs', (req, res) => {
   }
 });
 
+// Tavus API endpoints
+app.post('/api/tavus/create-conversation', async (req, res) => {
+  console.log('📡 Tavus Create Conversation Request received:', req.body);
+
+  try {
+    await tavusCreateConversationHandler(req, res);
+  } catch (error) {
+    console.error('❌ Tavus Create Conversation Error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/tavus/end-conversation', async (req, res) => {
+  console.log('📡 Tavus End Conversation Request received:', req.body);
+
+  try {
+    await tavusEndConversationHandler(req, res);
+  } catch (error) {
+    console.error('❌ Tavus End Conversation Error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Dev server running!' });
@@ -104,14 +133,19 @@ app.listen(PORT, () => {
   console.log(`
 🚀 Development API Server running!
 
-📡 API Endpoints:
+📡 HeyGen API Endpoints:
    - http://localhost:${PORT}/api/liveavatar/create-session (create session)
    - http://localhost:${PORT}/api/liveavatar/stop-session (stop session)
    - http://localhost:${PORT}/api/create-liveavatar-session (alt path)
+
+📡 Tavus API Endpoints:
+   - http://localhost:${PORT}/api/tavus/create-conversation (create conversation)
+   - http://localhost:${PORT}/api/tavus/end-conversation (end conversation)
+
 ✅ Health Check: http://localhost:${PORT}/api/health
 
 💡 Make sure to:
-1. Set environment variables in .env.local
+1. Set environment variables in .env.local (HEYGEN_* and TAVUS_*)
 2. Run React app: npm start (in another terminal)
 3. Both servers must run simultaneously
 

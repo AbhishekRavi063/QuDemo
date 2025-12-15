@@ -1,0 +1,163 @@
+/* Fullscreen Tavus avatar page styles for /v2-avatar route */
+
+/* Container styles */
+.container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: #111827;
+  overflow: hidden;
+}
+
+/* Landing page styles */
+.landingContainer {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+  padding: 20px;
+}
+
+.avatarPreview {
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background-size: cover;
+  background-position: center;
+  background-color: #374151;
+  border: 4px solid #8b5cf6;
+  box-shadow: 0 25px 50px -12px rgba(139, 92, 246, 0.5);
+}
+
+.textContainer {
+  text-align: center;
+  color: white;
+}
+
+.title {
+  font-size: 36px;
+  font-weight: bold;
+  margin-bottom: 12px;
+  background: linear-gradient(to right, #8b5cf6, #06b6d4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.subtitle {
+  font-size: 18px;
+  color: #9ca3af;
+  padding: 0 20px;
+}
+
+.startButton {
+  padding: 16px 48px;
+  font-size: 18px;
+  font-weight: 600;
+  color: white;
+  background: linear-gradient(to right, #8b5cf6, #06b6d4);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: 0 10px 25px -5px rgba(139, 92, 246, 0.5);
+  transition: all 0.2s;
+}
+
+.startButton:hover {
+  transform: scale(1.05);
+  box-shadow: 0 15px 30px -5px rgba(139, 92, 246, 0.6);
+}
+
+.startButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.startButton:disabled:hover {
+  transform: none;
+  box-shadow: 0 10px 25px -5px rgba(139, 92, 246, 0.5);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 16px;
+  background-color: rgba(139, 92, 246, 0.1);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  border-radius: 9999px;
+}
+
+.badgeText {
+  font-size: 12px;
+  color: #a78bfa;
+  font-weight: 500;
+}
+
+/* Widget container styles */
+.widgetContainer {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+/* Force widget to fullscreen */
+.widgetContainer :global(.tavus-avatar-wrapper > div) {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  transform: none !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+}
+
+/* Responsive styles for tablet */
+@media (max-width: 768px) {
+  .avatarPreview {
+    width: 150px;
+    height: 150px;
+  }
+
+  .title {
+    font-size: 28px;
+  }
+
+  .subtitle {
+    font-size: 16px;
+  }
+
+  .startButton {
+    padding: 14px 36px;
+    font-size: 16px;
+  }
+}
+
+/* Responsive styles for mobile */
+@media (max-width: 480px) {
+  .avatarPreview {
+    width: 120px;
+    height: 120px;
+  }
+
+  .title {
+    font-size: 24px;
+  }
+
+  .subtitle {
+    font-size: 14px;
+  }
+
+  .startButton {
+    padding: 12px 32px;
+    font-size: 16px;
+  }
+}
