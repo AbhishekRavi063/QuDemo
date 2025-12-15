@@ -30,18 +30,21 @@ export default async function handler(req, res) {
 
     const {
       userId = 'default-user',
+      personaId,
       customGreeting,
       conversationalContext,
       language = 'english'
     } = req.body;
 
     console.log('User ID:', userId);
+    console.log('Persona ID from request:', personaId);
     console.log('Request method:', req.method);
-    console.log('Request headers:', JSON.stringify(req.headers, null, 2));
 
     // Get Tavus API key from environment
     const TAVUS_API_KEY = process.env.TAVUS_API_KEY;
-    const TAVUS_PERSONA_ID = process.env.TAVUS_PERSONA_ID;
+
+    // Use persona_id from request body, fall back to env var if not provided
+    const TAVUS_PERSONA_ID = personaId || process.env.TAVUS_PERSONA_ID;
 
     if (!TAVUS_API_KEY) {
       console.error('❌ Missing TAVUS_API_KEY environment variable');
@@ -52,15 +55,15 @@ export default async function handler(req, res) {
     }
 
     if (!TAVUS_PERSONA_ID) {
-      console.error('❌ Missing TAVUS_PERSONA_ID environment variable');
-      return res.status(500).json({
-        error: 'Server configuration error',
-        message: 'Missing Tavus Persona ID'
+      console.error('❌ Missing persona_id in request and no TAVUS_PERSONA_ID env var');
+      return res.status(400).json({
+        error: 'Bad request',
+        message: 'Missing persona_id - provide it in URL path (/v2-avatar/:personaId) or set TAVUS_PERSONA_ID env var'
       });
     }
 
     console.log('✅ API Key found:', TAVUS_API_KEY ? `${TAVUS_API_KEY.substring(0, 8)}...` : 'undefined');
-    console.log('✅ Persona ID:', TAVUS_PERSONA_ID);
+    console.log('✅ Using Persona ID:', TAVUS_PERSONA_ID);
 
     // Build request payload
     const payload = {

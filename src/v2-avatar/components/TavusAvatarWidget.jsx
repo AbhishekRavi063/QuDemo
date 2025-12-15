@@ -30,8 +30,8 @@ import DailyEventManager from '../utils/DailyEventManager';
  *
  * Adapted from MobileAvatarWidget for Tavus/Daily.co instead of HeyGen/LiveKit
  */
-export const TavusAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand } = {}) => {
-  console.log('[TAVUS-WIDGET] TavusAvatarWidget rendering - autoExpand:', autoExpand, 'hasOnExpand:', !!onExpand);
+export const TavusAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand, personaId } = {}) => {
+  console.log('[TAVUS-WIDGET] TavusAvatarWidget rendering - autoExpand:', autoExpand, 'personaId:', personaId, 'hasOnExpand:', !!onExpand);
 
   const [state, setState] = useState(autoExpand ? "maximized" : "minimized");
   const [isMuted, setIsMuted] = useState(true);
@@ -537,7 +537,7 @@ export const TavusAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand } 
       const resp = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({}),
+        body: JSON.stringify({ personaId }),
       });
 
       addDebugLog(`API Status: ${resp.status}`);

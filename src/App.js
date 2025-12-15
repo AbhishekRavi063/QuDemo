@@ -307,7 +307,7 @@ function App() {
               />
               <Route path="/widget-demo" element={<FloatingWidgetDemo />} />
               <Route path="/avatar" element={<ExtendedAvatarPage />} />
-              <Route path="/v2-avatar" element={<TavusAvatarPage />} />
+              <Route path="/v2-avatar/:personaId?" element={<TavusAvatarPage />} />
               <Route
                 path="/widget-playground/:qudemoId"
                 element={<WidgetPlayground />}

@@ -106,19 +106,7 @@
   height: 100%;
 }
 
-/* Force widget to fullscreen */
-.widgetContainer :global(.tavus-avatar-wrapper > div) {
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  width: 100vw !important;
-  height: 100vh !important;
-  transform: none !important;
-  margin: 0 !important;
-  border-radius: 0 !important;
-}
+/* Let the widget handle its own positioning - removed force fullscreen override */
 
 /* Responsive styles for tablet */
 @media (max-width: 768px) {

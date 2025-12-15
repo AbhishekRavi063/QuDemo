@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useParams } from 'react-router-dom';
 import { TavusAvatarWidget } from './TavusAvatarWidget';
 import styles from './TavusAvatarPage.module.css';
 
@@ -8,6 +9,7 @@ import styles from './TavusAvatarPage.module.css';
  * Equivalent to ExtendedAvatarPage but using Tavus/Daily.co instead of HeyGen/LiveKit
  */
 const TavusAvatarPage = () => {
+  const { personaId } = useParams();
   const [isStarted, setIsStarted] = useState(false);
   const [sessionKey, setSessionKey] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
@@ -50,7 +52,7 @@ const TavusAvatarPage = () => {
       ) : (
         <div className={styles.widgetContainer}>
           <div className="tavus-avatar-wrapper">
-            <TavusAvatarWidget key={sessionKey} onDisconnect={handleDisconnect} autoExpand={true} />
+            <TavusAvatarWidget key={sessionKey} onDisconnect={handleDisconnect} autoExpand={true} personaId={personaId} />
           </div>
         </div>
       )}
