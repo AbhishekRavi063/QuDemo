@@ -755,13 +755,13 @@ export const TavusAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand } 
   const getStateColor = () => {
     switch (avatarState) {
       case "speaking":
-        return "bg-green-500";
+        return "bg-emerald-500/80 border border-emerald-400/30";
       case "listening":
-        return "bg-blue-500";
+        return "bg-sky-500/80 border border-sky-400/30";
       case "thinking":
-        return "bg-yellow-500";
+        return "bg-amber-500/80 border border-amber-400/30";
       default:
-        return "bg-gray-400";
+        return "bg-white/10 border border-white/20";
     }
   };
 
@@ -990,75 +990,85 @@ export const TavusAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand } 
   );
 
   const renderControlBar = () => (
-    <div className="absolute bottom-0 left-0 right-0 p-4 pb-8 bg-gradient-to-t from-black/80 to-transparent z-30">
-      {/* State indicators - top row */}
-      <div className="flex items-center justify-center gap-2 mb-4">
-        <div className={`flex items-center gap-1 px-2 py-1 rounded-full ${getStateColor()} text-white text-xs`}>
+    <>
+      {/* State indicators - top left */}
+      <div className="absolute top-4 left-4 z-30 flex flex-col gap-2">
+        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full backdrop-blur-md ${getStateColor()} text-white text-xs font-medium shadow-lg`}>
           {getStateIcon()}
           <span className="capitalize">{avatarState}</span>
         </div>
         {isUserSpeaking && (
-          <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-purple-500 text-white text-xs">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full backdrop-blur-md bg-white/10 border border-white/20 text-white text-xs font-medium shadow-lg">
             <User className="w-3 h-3" />
-            <span>Speaking</span>
+            <span>You're speaking</span>
           </div>
         )}
       </div>
 
-      {/* Control buttons - centered */}
-      <div className="flex items-center justify-center gap-4">
-        {/* Mic toggle */}
-        <button
-          onClick={toggleMicrophone}
-          className={`p-3 rounded-full ${isMuted ? 'bg-red-500' : 'bg-gray-700'} text-white hover:opacity-80 transition-opacity`}
-        >
-          {isMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
-        </button>
+      {/* Control buttons - bottom center */}
+      <div className="absolute bottom-0 left-0 right-0 p-4 pb-8 bg-gradient-to-t from-black/60 to-transparent z-30">
+        <div className="flex items-center justify-center gap-3">
+          {/* Mic toggle */}
+          <button
+            onClick={toggleMicrophone}
+            className={`p-3.5 rounded-full backdrop-blur-md transition-all ${
+              isMuted
+                ? 'bg-red-500/80 border border-red-400/30 text-white'
+                : 'bg-white/10 border border-white/20 text-white hover:bg-white/20'
+            }`}
+          >
+            {isMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+          </button>
 
-        {/* Speaker toggle */}
-        <button
-          onClick={toggleAudio}
-          className={`p-3 rounded-full ${!audioEnabled ? 'bg-red-500' : 'bg-gray-700'} text-white hover:opacity-80 transition-opacity`}
-        >
-          {audioEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
-        </button>
+          {/* Speaker toggle */}
+          <button
+            onClick={toggleAudio}
+            className={`p-3.5 rounded-full backdrop-blur-md transition-all ${
+              !audioEnabled
+                ? 'bg-red-500/80 border border-red-400/30 text-white'
+                : 'bg-white/10 border border-white/20 text-white hover:bg-white/20'
+            }`}
+          >
+            {audioEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
+          </button>
 
-        {/* Disconnect - larger and red */}
-        <button
-          onClick={handleDisconnect}
-          className="p-4 rounded-full bg-red-600 text-white hover:bg-red-700 transition-colors"
-        >
-          <PhoneOff className="w-6 h-6" />
-        </button>
+          {/* Disconnect */}
+          <button
+            onClick={handleDisconnect}
+            className="p-3.5 rounded-full backdrop-blur-md bg-red-500/80 border border-red-400/30 text-white hover:bg-red-600/80 transition-all"
+          >
+            <PhoneOff className="w-5 h-5" />
+          </button>
 
-        {/* Expand/minimize */}
-        <button
-          onClick={handleExpand}
-          className="p-3 rounded-full bg-gray-700 text-white hover:opacity-80 transition-opacity"
-        >
-          {state === "maximized" ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
-        </button>
-      </div>
-
-      {/* Transcripts */}
-      {transcripts.length > 0 && (
-        <div className="mt-4 max-h-24 overflow-y-auto max-w-md mx-auto">
-          {transcripts.slice(-3).map((t, i) => (
-            <div
-              key={i}
-              className={`text-xs py-1 px-2 rounded mb-1 ${
-                t.type === 'user_speech'
-                  ? 'bg-purple-500/30 text-purple-100'
-                  : 'bg-green-500/30 text-green-100'
-              }`}
-            >
-              {t.type === 'user_speech' ? '👤 ' : '🤖 '}
-              {t.text}
-            </div>
-          ))}
+          {/* Expand/minimize */}
+          <button
+            onClick={handleExpand}
+            className="p-3.5 rounded-full backdrop-blur-md bg-white/10 border border-white/20 text-white hover:bg-white/20 transition-all"
+          >
+            {state === "maximized" ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
+          </button>
         </div>
-      )}
-    </div>
+
+        {/* Transcripts */}
+        {transcripts.length > 0 && (
+          <div className="mt-4 max-h-24 overflow-y-auto max-w-md mx-auto">
+            {transcripts.slice(-3).map((t, i) => (
+              <div
+                key={i}
+                className={`text-xs py-1 px-2 rounded mb-1 ${
+                  t.type === 'user_speech'
+                    ? 'bg-white/10 text-white/80'
+                    : 'bg-white/5 text-white/70'
+                }`}
+              >
+                {t.type === 'user_speech' ? '👤 ' : '🤖 '}
+                {t.text}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </>
   );
 
   // Render expanded state (small or maximized)
