@@ -126,6 +126,30 @@ class DailyEventManager {
     const eventType = data.event_type;
     const properties = data.properties || {};
 
+    // Check for tool_calls at top level (some Tavus versions)
+    if (data.tool_calls && Array.isArray(data.tool_calls)) {
+      console.log('[DailyEventManager] Found tool_calls at top level:', data.tool_calls);
+      data.tool_calls.forEach(tc => {
+        const toolName = tc.function?.name || tc.name;
+        const toolArgs = tc.function?.arguments || tc.arguments;
+        if (toolName) {
+          this._handleToolCall({ name: toolName, arguments: toolArgs });
+        }
+      });
+    }
+
+    // Check for tool_calls in properties (some Tavus versions nest it here)
+    if (properties.tool_calls && Array.isArray(properties.tool_calls)) {
+      console.log('[DailyEventManager] Found tool_calls in properties:', properties.tool_calls);
+      properties.tool_calls.forEach(tc => {
+        const toolName = tc.function?.name || tc.name;
+        const toolArgs = tc.function?.arguments || tc.arguments;
+        if (toolName) {
+          this._handleToolCall({ name: toolName, arguments: toolArgs });
+        }
+      });
+    }
+
     // Log raw data for debugging
     console.log(`\n========== TAVUS EVENT: ${eventType} ==========`);
     console.log('RAW DATA:', JSON.stringify(data, null, 2));
@@ -184,6 +208,8 @@ class DailyEventManager {
 
       // Tool calls (function calling)
       case 'conversation.tool_call':
+      case 'tool_call':
+      case 'function_call':
         this._handleToolCall(properties);
         break;
 
@@ -200,7 +226,19 @@ class DailyEventManager {
    * Handle utterance (transcript) events
    */
   _handleUtterance(properties) {
-    const { role, speech } = properties;
+    const { role, speech, tool_calls } = properties;
+
+    // Check for tool_calls nested in utterance (some Tavus versions)
+    if (tool_calls && Array.isArray(tool_calls)) {
+      console.log('[DailyEventManager] Found tool_calls in utterance:', tool_calls);
+      tool_calls.forEach(tc => {
+        const toolName = tc.function?.name || tc.name;
+        const toolArgs = tc.function?.arguments || tc.arguments;
+        if (toolName) {
+          this._handleToolCall({ name: toolName, arguments: toolArgs });
+        }
+      });
+    }
 
     if (!speech) {
       return;

@@ -58,6 +58,7 @@ export const TavusAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand, p
   const [calendlyUrl, setCalendlyUrl] = useState('');
   const [showPdf, setShowPdf] = useState(false);
   const [pdfUrl, setPdfUrl] = useState('');
+  const [pendingPdfUrl, setPendingPdfUrl] = useState(null);
 
   const mountedRef = useRef(true);
   const lastAvatarSpeechRef = useRef('');
@@ -67,7 +68,6 @@ export const TavusAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand, p
   const preCalendlyAudioEnabledRef = useRef(true);
   const pendingCalendlyRef = useRef(false);
   const pendingDemoVideoRef = useRef(null); // Store pending video URL
-  const pendingPdfRef = useRef(null); // Store pending PDF URL
   const prePdfWidgetStateRef = useRef(null);
   const hasAutoExpandedRef = useRef(false);
 
@@ -209,19 +209,29 @@ export const TavusAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand, p
         // Handle show_demo_video tool call from Tavus persona
         log('TOOL_CALL', 'show_demo_video triggered', { url: args.url, title: args.title });
 
+        // Send echo message to announce the video
+        if (dailyEventManagerRef.current) {
+          dailyEventManagerRef.current.sendEchoMessage("Absolutely, here's the video you requested.");
+        }
+
         // Store the video URL and wait for avatar to finish speaking
         if (args.url) {
           pendingDemoVideoRef.current = args.url;
-          log('DEMO', 'Video pending - waiting for avatar to finish speaking');
+          log('DEMO', 'Video pending - waiting for user and avatar to finish speaking');
         }
         break;
       case 'show_pdf':
         // Handle show_pdf tool call from Tavus persona
         log('TOOL_CALL', 'show_pdf triggered', { url: args.url, title: args.title });
 
+        // Send echo message to announce the PDF
+        if (dailyEventManagerRef.current) {
+          dailyEventManagerRef.current.sendEchoMessage("Sure, here's the document you requested.");
+        }
+
         // Store the PDF URL and wait for avatar to finish speaking
         if (args.url) {
-          pendingPdfRef.current = args.url;
+          setPendingPdfUrl(args.url);
           log('PDF', 'PDF pending - waiting for avatar to finish speaking');
         }
         break;
@@ -245,8 +255,8 @@ export const TavusAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand, p
       log('DEMO', 'Demo ended - restoring avatar audio');
 
       if (sessionManagerRef.current?.isInitialized) {
-        log('DEMO', 'Returning to small state after demo closed');
-        setState("small");
+        log('DEMO', 'Returning to maximized state after demo closed');
+        setState("maximized");
       } else {
         log('DEMO', 'No active session - keeping minimized');
         setState("minimized");
@@ -259,8 +269,8 @@ export const TavusAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand, p
   useEffect(() => {
     if (!showCalendly && preCalendlyWidgetStateRef.current !== null) {
       if (sessionManagerRef.current?.isInitialized) {
-        log('CALENDLY', 'Returning to small state after calendly closed');
-        setState("small");
+        log('CALENDLY', 'Returning to maximized state after calendly closed');
+        setState("maximized");
       } else {
         log('CALENDLY', 'No active session - keeping minimized');
         setState("minimized");
@@ -269,10 +279,10 @@ export const TavusAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand, p
     }
   }, [showCalendly, log]);
 
-  // Wait for avatar to finish speaking before opening Calendly
+  // Wait for both user and avatar to finish speaking before opening Calendly
   useEffect(() => {
-    if (pendingCalendlyRef.current && !isAvatarSpeaking) {
-      log('CALENDLY', 'Replica finished speaking - opening Calendly now');
+    if (pendingCalendlyRef.current && !isAvatarSpeaking && !isUserSpeaking) {
+      log('CALENDLY', 'Both user and replica finished speaking - opening Calendly now');
       preCalendlyWidgetStateRef.current = state;
       if (state !== "maximized") {
         setState("maximized");
@@ -280,13 +290,13 @@ export const TavusAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand, p
       setShowCalendly(true);
       pendingCalendlyRef.current = false;
     }
-  }, [isAvatarSpeaking, state, log]);
+  }, [isAvatarSpeaking, isUserSpeaking, state, log]);
 
-  // Wait for avatar to finish speaking before playing demo video
+  // Wait for both user and avatar to finish speaking before playing demo video
   useEffect(() => {
-    if (pendingDemoVideoRef.current && !isAvatarSpeaking) {
+    if (pendingDemoVideoRef.current && !isAvatarSpeaking && !isUserSpeaking) {
       const videoUrl = pendingDemoVideoRef.current;
-      log('DEMO', 'Replica finished speaking - playing video now');
+      log('DEMO', 'Both user and replica finished speaking - playing video now');
 
       // Mute avatar audio before playing video
       setAudioEnabled(false);
@@ -306,13 +316,12 @@ export const TavusAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand, p
 
       pendingDemoVideoRef.current = null;
     }
-  }, [isAvatarSpeaking, state, log, playDemoVideo]);
+  }, [isAvatarSpeaking, isUserSpeaking, state, log, playDemoVideo]);
 
-  // Wait for avatar to finish speaking before showing PDF
+  // Wait for both user and avatar to finish speaking before showing PDF
   useEffect(() => {
-    if (pendingPdfRef.current && !isAvatarSpeaking) {
-      const url = pendingPdfRef.current;
-      log('PDF', 'Replica finished speaking - showing PDF now');
+    if (pendingPdfUrl && !isAvatarSpeaking && !isUserSpeaking) {
+      log('PDF', 'Both user and replica finished speaking - showing PDF now');
 
       // Save current state for restoration later
       prePdfWidgetStateRef.current = state;
@@ -321,24 +330,24 @@ export const TavusAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand, p
       if (state !== "maximized") {
         setState("maximized");
         setTimeout(() => {
-          setPdfUrl(url);
+          setPdfUrl(pendingPdfUrl);
           setShowPdf(true);
+          setPendingPdfUrl(null);
         }, 300);
       } else {
-        setPdfUrl(url);
+        setPdfUrl(pendingPdfUrl);
         setShowPdf(true);
+        setPendingPdfUrl(null);
       }
-
-      pendingPdfRef.current = null;
     }
-  }, [isAvatarSpeaking, state, log]);
+  }, [isAvatarSpeaking, isUserSpeaking, pendingPdfUrl, state, log]);
 
   // Restore widget state after PDF closes
   useEffect(() => {
     if (!showPdf && prePdfWidgetStateRef.current !== null) {
       if (sessionManagerRef.current?.isInitialized) {
-        log('PDF', 'Returning to small state after PDF closed');
-        setState("small");
+        log('PDF', 'Returning to maximized state after PDF closed');
+        setState("maximized");
       } else {
         log('PDF', 'No active session - keeping minimized');
         setState("minimized");
@@ -600,13 +609,13 @@ export const TavusAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand, p
     preCalendlyAudioEnabledRef.current = true;
     pendingCalendlyRef.current = false;
     pendingDemoVideoRef.current = null;
-    pendingPdfRef.current = null;
     prePdfWidgetStateRef.current = null;
     hasAutoExpandedRef.current = false;
 
-    // Clear dynamic URLs
+    // Clear dynamic URLs and pending states
     setCalendlyUrl('');
     setPdfUrl('');
+    setPendingPdfUrl(null);
 
     if (onDisconnect) {
       onDisconnect();

@@ -42,7 +42,7 @@ curl --location --request PATCH 'https://tavusapi.com/v2/personas/YOUR_PERSONA_I
               "properties": {
                 "url": {
                   "type": "string",
-                  "description": "The YouTube or video URL to display. Example: https://www.youtube.com/watch?v=YOUR_VIDEO_ID"
+                  "description": "Always use: https://www.youtube.com/watch?v=YOUR_VIDEO_ID"
                 },
                 "title": {
                   "type": "string",
@@ -63,7 +63,7 @@ curl --location --request PATCH 'https://tavusapi.com/v2/personas/YOUR_PERSONA_I
               "properties": {
                 "calendly_url": {
                   "type": "string",
-                  "description": "The Calendly or Cal.com URL. Example: https://cal.com/your-team/meeting"
+                  "description": "Always use: https://cal.com/your-team/meeting"
                 },
                 "purpose": {
                   "type": "string",
@@ -84,7 +84,7 @@ curl --location --request PATCH 'https://tavusapi.com/v2/personas/YOUR_PERSONA_I
               "properties": {
                 "url": {
                   "type": "string",
-                  "description": "The URL of the PDF document to display. Must be publicly accessible."
+                  "description": "Always use: https://YOUR_DOMAIN.com/path/to/document.pdf"
                 },
                 "title": {
                   "type": "string",
@@ -136,19 +136,6 @@ Example: "Let me show you our product demo video" then call show_demo_video
 ```
 
 ## Frontend Configuration
-
-### Calendly URL
-
-The default Calendly URL is configured in:
-```
-src/v2-avatar/config/booking-config.json
-```
-
-```json
-{
-  "calendlyUrl": "https://calendly.com/your-team/30min"
-}
-```
 
 ### Tool Handler Location
 
