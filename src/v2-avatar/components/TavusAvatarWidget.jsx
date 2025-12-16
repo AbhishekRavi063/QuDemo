@@ -21,7 +21,6 @@ import {
 import { getApiUrl, getCreateConversationUrl, getEndConversationUrl } from '../config/api';
 import { useEventLogger } from '../hooks/useEventLogger';
 import { useDemoVideo } from '../hooks/useDemoVideo';
-import bookingConfig from '../config/booking-config.json';
 import TavusSessionManager from '../utils/TavusSessionManager';
 import DailyEventManager from '../utils/DailyEventManager';
 
@@ -57,6 +56,8 @@ export const TavusAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand, p
   const [detectedIntents, setDetectedIntents] = useState([]);
   const [showCalendly, setShowCalendly] = useState(false);
   const [calendlyUrl, setCalendlyUrl] = useState('');
+  const [showPdf, setShowPdf] = useState(false);
+  const [pdfUrl, setPdfUrl] = useState('');
 
   const mountedRef = useRef(true);
   const lastAvatarSpeechRef = useRef('');
@@ -65,6 +66,9 @@ export const TavusAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand, p
   const preCalendlyMutedRef = useRef(false);
   const preCalendlyAudioEnabledRef = useRef(true);
   const pendingCalendlyRef = useRef(false);
+  const pendingDemoVideoRef = useRef(null); // Store pending video URL
+  const pendingPdfRef = useRef(null); // Store pending PDF URL
+  const prePdfWidgetStateRef = useRef(null);
   const hasAutoExpandedRef = useRef(false);
 
   // Session manager and event manager refs
@@ -189,10 +193,9 @@ export const TavusAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand, p
           dailyEventManagerRef.current.sendEchoMessage("Opening the calendar for you now.");
         }
 
-        // Use URL from tool args, or fall back to config
-        const meetingUrl = args.calendly_url || bookingConfig.calendlyUrl;
-        if (meetingUrl) {
-          setCalendlyUrl(meetingUrl);
+        // Use URL from tool args
+        if (args.calendly_url) {
+          setCalendlyUrl(args.calendly_url);
         }
 
         pendingCalendlyRef.current = true;
@@ -206,27 +209,20 @@ export const TavusAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand, p
         // Handle show_demo_video tool call from Tavus persona
         log('TOOL_CALL', 'show_demo_video triggered', { url: args.url, title: args.title });
 
-        // Send echo message to make avatar say "Loading the video"
-        if (dailyEventManagerRef.current) {
-          dailyEventManagerRef.current.sendEchoMessage("Loading the video for you now.");
-        }
-
-        // Play video in PIP mode after a short delay (let echo message start)
+        // Store the video URL and wait for avatar to finish speaking
         if (args.url) {
-          setTimeout(() => {
-            // Save current state for restoration later
-            preDemoWidgetStateRef.current = state;
+          pendingDemoVideoRef.current = args.url;
+          log('DEMO', 'Video pending - waiting for avatar to finish speaking');
+        }
+        break;
+      case 'show_pdf':
+        // Handle show_pdf tool call from Tavus persona
+        log('TOOL_CALL', 'show_pdf triggered', { url: args.url, title: args.title });
 
-            // Maximize if not already
-            if (state !== "maximized") {
-              setState("maximized");
-              setTimeout(() => {
-                playDemoVideo(args.url);
-              }, 500);
-            } else {
-              playDemoVideo(args.url);
-            }
-          }, 500);
+        // Store the PDF URL and wait for avatar to finish speaking
+        if (args.url) {
+          pendingPdfRef.current = args.url;
+          log('PDF', 'PDF pending - waiting for avatar to finish speaking');
         }
         break;
       default:
@@ -244,6 +240,10 @@ export const TavusAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand, p
   // Restore widget state after demo ends
   useEffect(() => {
     if (!isDemoPlaying && preDemoWidgetStateRef.current !== null) {
+      // Restore avatar audio
+      setAudioEnabled(true);
+      log('DEMO', 'Demo ended - restoring avatar audio');
+
       if (sessionManagerRef.current?.isInitialized) {
         log('DEMO', 'Returning to small state after demo closed');
         setState("small");
@@ -281,6 +281,95 @@ export const TavusAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand, p
       pendingCalendlyRef.current = false;
     }
   }, [isAvatarSpeaking, state, log]);
+
+  // Wait for avatar to finish speaking before playing demo video
+  useEffect(() => {
+    if (pendingDemoVideoRef.current && !isAvatarSpeaking) {
+      const videoUrl = pendingDemoVideoRef.current;
+      log('DEMO', 'Replica finished speaking - playing video now');
+
+      // Mute avatar audio before playing video
+      setAudioEnabled(false);
+
+      // Save current state for restoration later
+      preDemoWidgetStateRef.current = state;
+
+      // Maximize if not already, then play
+      if (state !== "maximized") {
+        setState("maximized");
+        setTimeout(() => {
+          playDemoVideo(videoUrl);
+        }, 300);
+      } else {
+        playDemoVideo(videoUrl);
+      }
+
+      pendingDemoVideoRef.current = null;
+    }
+  }, [isAvatarSpeaking, state, log, playDemoVideo]);
+
+  // Wait for avatar to finish speaking before showing PDF
+  useEffect(() => {
+    if (pendingPdfRef.current && !isAvatarSpeaking) {
+      const url = pendingPdfRef.current;
+      log('PDF', 'Replica finished speaking - showing PDF now');
+
+      // Save current state for restoration later
+      prePdfWidgetStateRef.current = state;
+
+      // Maximize if not already, then show PDF
+      if (state !== "maximized") {
+        setState("maximized");
+        setTimeout(() => {
+          setPdfUrl(url);
+          setShowPdf(true);
+        }, 300);
+      } else {
+        setPdfUrl(url);
+        setShowPdf(true);
+      }
+
+      pendingPdfRef.current = null;
+    }
+  }, [isAvatarSpeaking, state, log]);
+
+  // Restore widget state after PDF closes
+  useEffect(() => {
+    if (!showPdf && prePdfWidgetStateRef.current !== null) {
+      if (sessionManagerRef.current?.isInitialized) {
+        log('PDF', 'Returning to small state after PDF closed');
+        setState("small");
+      } else {
+        log('PDF', 'No active session - keeping minimized');
+        setState("minimized");
+      }
+      prePdfWidgetStateRef.current = null;
+    }
+  }, [showPdf, log]);
+
+  // Clone avatar video to PDF PIP
+  useEffect(() => {
+    if (showPdf && hasLiveVideo) {
+      const sourceVideo = document.querySelector('#tavus-video-container video');
+      const pipContainer = document.getElementById('pdf-avatar-pip');
+
+      if (sourceVideo && pipContainer) {
+        const pipVideo = sourceVideo.cloneNode(true);
+        pipVideo.style.width = '100%';
+        pipVideo.style.height = '100%';
+        pipVideo.style.objectFit = 'cover';
+        pipVideo.muted = false;
+
+        if (sourceVideo.srcObject) {
+          pipVideo.srcObject = sourceVideo.srcObject;
+        }
+
+        pipContainer.innerHTML = '';
+        pipContainer.appendChild(pipVideo);
+        pipVideo.play().catch(e => console.log('PDF PIP video play failed:', e));
+      }
+    }
+  }, [showPdf, hasLiveVideo]);
 
   // Clone avatar video to calendly PIP
   useEffect(() => {
@@ -472,6 +561,9 @@ export const TavusAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand, p
     if (showCalendly) {
       setShowCalendly(false);
     }
+    if (showPdf) {
+      setShowPdf(false);
+    }
 
     // Cleanup session manager
     if (sessionManagerRef.current) {
@@ -507,10 +599,14 @@ export const TavusAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand, p
     preCalendlyMutedRef.current = false;
     preCalendlyAudioEnabledRef.current = true;
     pendingCalendlyRef.current = false;
+    pendingDemoVideoRef.current = null;
+    pendingPdfRef.current = null;
+    prePdfWidgetStateRef.current = null;
     hasAutoExpandedRef.current = false;
 
-    // Clear dynamic URL
+    // Clear dynamic URLs
     setCalendlyUrl('');
+    setPdfUrl('');
 
     if (onDisconnect) {
       onDisconnect();
@@ -926,67 +1022,148 @@ export const TavusAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand, p
       {/* Demo video overlay */}
       {isDemoPlaying && (
         <div className="absolute inset-0 z-10 bg-black">
-          {/* YouTube iframe or regular video element */}
-          {isYouTube && youTubeEmbedUrl ? (
-            <iframe
-              src={youTubeEmbedUrl}
-              className="w-full h-full"
-              frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              title="Demo Video"
-            />
-          ) : (
-            <video
-              ref={demoVideoRef}
-              className="w-full h-full object-cover"
-              playsInline
-              muted
+          {/* Main Video - centered, landscape */}
+          <div className="absolute inset-6 right-[420px] rounded-2xl overflow-hidden border border-white/30 shadow-[0_0_60px_rgba(255,255,255,0.25)]">
+            {/* YouTube iframe or regular video element */}
+            {isYouTube && youTubeEmbedUrl ? (
+              <iframe
+                src={youTubeEmbedUrl}
+                className="w-full h-full"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                title="Demo Video"
+              />
+            ) : (
+              <video
+                ref={demoVideoRef}
+                className="w-full h-full object-cover"
+                playsInline
+                muted
+                onClick={() => stopDemoVideo()}
+              />
+            )}
+            {/* Close demo button */}
+            <button
               onClick={() => stopDemoVideo()}
-            />
-          )}
-          {/* PIP container for avatar during demo */}
+              className="absolute top-4 right-4 p-2 rounded-full bg-black/50 text-white z-20 border border-white/30 hover:bg-black/70 transition-all"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+          {/* Avatar PIP - bottom right, exact same position as "small" widget state */}
           <div
             id="avatar-pip"
-            className="absolute bottom-20 right-4 w-24 h-24 rounded-lg overflow-hidden shadow-lg border-2 border-white/20"
-          />
-          {/* Close demo button */}
-          <button
-            onClick={() => stopDemoVideo()}
-            className="absolute top-4 right-4 p-2 rounded-full bg-black/50 text-white z-20"
+            className={`absolute bottom-4 right-4 overflow-hidden rounded-2xl border border-white/30 shadow-[0_0_50px_rgba(255,255,255,0.2)] bg-black ${
+              isMobile ? 'w-80 h-96' : 'w-96 h-[500px]'
+            }`}
           >
-            <X className="w-5 h-5" />
-          </button>
+            {/* PIP controls inside avatar */}
+            {renderPipControlBar()}
+          </div>
         </div>
       )}
 
       {/* Calendly overlay */}
       {showCalendly && (
-        <div className="absolute inset-0 z-20 bg-white">
-          <div className="relative w-full h-full">
-            {/* PIP container for avatar during calendly */}
-            <div
-              id="calendly-avatar-pip"
-              className="absolute top-4 right-4 w-24 h-24 rounded-lg overflow-hidden shadow-lg border-2 border-gray-200 z-30"
-            />
+        <div className="absolute inset-0 z-20 bg-black">
+          {/* Calendly - main area, landscape */}
+          <div className="absolute inset-6 right-[420px] rounded-2xl overflow-hidden border border-white/30 shadow-[0_0_60px_rgba(255,255,255,0.25)] bg-white">
             {/* Calendly iframe */}
             <iframe
-              src={calendlyUrl || bookingConfig.calendlyUrl}
+              src={calendlyUrl}
               className="w-full h-full"
-              frameBorder="0"
+              style={{ border: 'none' }}
               title="Schedule Meeting"
             />
             {/* Close calendly button */}
             <button
               onClick={() => setShowCalendly(false)}
-              className="absolute top-4 left-4 p-2 rounded-full bg-black/50 text-white z-30"
+              className="absolute top-4 left-4 p-2 rounded-full bg-black/50 text-white z-30 border border-white/30 hover:bg-black/70 transition-all"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
+          {/* Avatar PIP - bottom right, exact same position as "small" widget state */}
+          <div
+            id="calendly-avatar-pip"
+            className={`absolute bottom-4 right-4 overflow-hidden rounded-2xl border border-white/30 shadow-[0_0_50px_rgba(255,255,255,0.2)] bg-black ${
+              isMobile ? 'w-80 h-96' : 'w-96 h-[500px]'
+            }`}
+          >
+            {/* PIP controls inside avatar */}
+            {renderPipControlBar()}
+          </div>
+        </div>
+      )}
+
+      {/* PDF overlay */}
+      {showPdf && (
+        <div className="absolute inset-0 z-20 bg-black">
+          {/* PDF - main area, landscape */}
+          <div className="absolute inset-6 right-[420px] rounded-2xl overflow-hidden border border-white/30 shadow-[0_0_60px_rgba(255,255,255,0.25)] bg-white">
+            {/* PDF iframe using Google Docs viewer for better compatibility */}
+            <iframe
+              src={`https://docs.google.com/viewer?url=${encodeURIComponent(pdfUrl)}&embedded=true`}
+              className="w-full h-full"
+              style={{ border: 'none' }}
+              title="PDF Document"
+            />
+            {/* Close PDF button */}
+            <button
+              onClick={() => setShowPdf(false)}
+              className="absolute top-4 left-4 p-2 rounded-full bg-black/50 text-white z-30 border border-white/30 hover:bg-black/70 transition-all"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+          {/* Avatar PIP - bottom right, exact same position as "small" widget state */}
+          <div
+            id="pdf-avatar-pip"
+            className={`absolute bottom-4 right-4 overflow-hidden rounded-2xl border border-white/30 shadow-[0_0_50px_rgba(255,255,255,0.2)] bg-black ${
+              isMobile ? 'w-80 h-96' : 'w-96 h-[500px]'
+            }`}
+          >
+            {/* PIP controls inside avatar */}
+            {renderPipControlBar()}
+          </div>
         </div>
       )}
     </>
+  );
+
+  // Compact control bar for PIP mode (inside avatar during video/calendly)
+  const renderPipControlBar = () => (
+    <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 to-transparent z-30">
+      <div className="flex items-center justify-center gap-2">
+        <button
+          onClick={toggleMicrophone}
+          className={`p-2.5 rounded-full backdrop-blur-md transition-all ${
+            isMuted
+              ? 'bg-red-500/80 border border-red-400/30 text-white'
+              : 'bg-white/10 border border-white/20 text-white hover:bg-white/20'
+          }`}
+        >
+          {isMuted ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+        </button>
+        <button
+          onClick={toggleAudio}
+          className={`p-2.5 rounded-full backdrop-blur-md transition-all ${
+            !audioEnabled
+              ? 'bg-red-500/80 border border-red-400/30 text-white'
+              : 'bg-white/10 border border-white/20 text-white hover:bg-white/20'
+          }`}
+        >
+          {audioEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+        </button>
+        <button
+          onClick={handleDisconnect}
+          className="p-2.5 rounded-full backdrop-blur-md bg-red-500/80 border border-red-400/30 text-white hover:bg-red-600/80 transition-all"
+        >
+          <PhoneOff className="w-4 h-4" />
+        </button>
+      </div>
+    </div>
   );
 
   const renderControlBar = () => (
@@ -1106,8 +1283,8 @@ export const TavusAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand, p
         {isConnecting && renderConnectingState()}
         {connectionError && renderErrorState()}
 
-        {/* Control bar - only show when connected */}
-        {!isConnecting && !connectionError && renderControlBar()}
+        {/* Control bar - only show when connected and NOT in PIP mode (demo/calendly/pdf) */}
+        {!isConnecting && !connectionError && !isDemoPlaying && !showCalendly && !showPdf && renderControlBar()}
       </motion.div>
     );
   };
