@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
@@ -70,6 +70,9 @@ export const TavusAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand, p
   const pendingDemoVideoRef = useRef(null); // Store pending video URL
   const prePdfWidgetStateRef = useRef(null);
   const hasAutoExpandedRef = useRef(false);
+  const proactiveTimeoutRef = useRef(null); // Timeout for proactive continuation
+  const isUserSpeakingRef = useRef(false); // Ref for user speaking state
+  const isAvatarSpeakingRef = useRef(false); // Ref for avatar speaking state
 
   // Session manager and event manager refs
   const sessionManagerRef = useRef(null);
@@ -98,6 +101,27 @@ export const TavusAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand, p
     } catch (e) {}
   };
 
+  // Trigger proactive continuation after 5 seconds of silence
+  const triggerProactiveContinuation = useCallback(() => {
+    // Clear any existing timeout
+    if (proactiveTimeoutRef.current) {
+      clearTimeout(proactiveTimeoutRef.current);
+      proactiveTimeoutRef.current = null;
+    }
+
+    // Set timeout for 5 seconds
+    proactiveTimeoutRef.current = setTimeout(() => {
+      // Check if user hasn't spoken and avatar isn't speaking (use refs for current values)
+      if (!isUserSpeakingRef.current && !isAvatarSpeakingRef.current && dailyEventManagerRef.current) {
+        addDebugLog('[PROACTIVE] 5 seconds passed, triggering continuation');
+        // Send a message to trigger proactive continuation
+        // Using respond message to trigger LLM to continue conversation
+        dailyEventManagerRef.current.sendRespondMessage("Continue the conversation naturally with a related topic or question.");
+      }
+      proactiveTimeoutRef.current = null;
+    }, 5000);
+  }, [addDebugLog]);
+
   // Demo video hook
   const { isDemoPlaying, currentVideoUrl, isYouTube, youTubeEmbedUrl, demoVideoRef, playDemoVideo, stopDemoVideo } = useDemoVideo({
     sessionManager: sessionManagerRef.current,
@@ -114,18 +138,26 @@ export const TavusAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand, p
     dailyEventManagerRef.current.setCallbacks({
       onReplicaStartSpeaking: () => {
         setIsAvatarSpeaking(true);
+        isAvatarSpeakingRef.current = true;
         setAvatarState("speaking");
       },
       onReplicaStopSpeaking: (lastSpeech, interrupted) => {
         setIsAvatarSpeaking(false);
+        isAvatarSpeakingRef.current = false;
         setAvatarState("listening");
         // Demo triggers are handled via tool calls in Tavus, no speech detection needed
+        // Trigger proactive continuation after 5 seconds if user doesn't speak
+        if (!interrupted) {
+          triggerProactiveContinuation();
+        }
       },
       onUserStartSpeaking: () => {
         setIsUserSpeaking(true);
+        isUserSpeakingRef.current = true;
       },
       onUserStopSpeaking: () => {
         setIsUserSpeaking(false);
+        isUserSpeakingRef.current = false;
       },
       onUserTranscript: (text, source) => {
         handleUserSpeech(text, source);
@@ -144,7 +176,7 @@ export const TavusAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand, p
         log('DATA_CHANNEL', 'Unhandled message', msg);
       }
     });
-  }, [log]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [log, triggerProactiveContinuation]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Handle user speech
   const handleUserSpeech = (text, source) => {
@@ -529,6 +561,12 @@ export const TavusAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand, p
       if (dailyEventManagerRef.current) {
         dailyEventManagerRef.current.detachFromDaily();
       }
+
+      // Clear proactive timeout
+      if (proactiveTimeoutRef.current) {
+        clearTimeout(proactiveTimeoutRef.current);
+        proactiveTimeoutRef.current = null;
+      }
     };
   }, []);
 
@@ -616,6 +654,12 @@ export const TavusAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand, p
     setCalendlyUrl('');
     setPdfUrl('');
     setPendingPdfUrl(null);
+
+    // Clear proactive timeout
+    if (proactiveTimeoutRef.current) {
+      clearTimeout(proactiveTimeoutRef.current);
+      proactiveTimeoutRef.current = null;
+    }
 
     if (onDisconnect) {
       onDisconnect();
@@ -826,6 +870,15 @@ export const TavusAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand, p
       dailyEventManagerRef.current.interruptReplica();
     }
   };
+
+  // Clear proactive timeout when user starts speaking
+  useEffect(() => {
+    if (isUserSpeaking && proactiveTimeoutRef.current) {
+      clearTimeout(proactiveTimeoutRef.current);
+      proactiveTimeoutRef.current = null;
+      addDebugLog('[PROACTIVE] User started speaking, cleared proactive timeout');
+    }
+  }, [isUserSpeaking]);
 
   // Handle activity
   const handleActivity = () => {

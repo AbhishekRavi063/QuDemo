@@ -14,7 +14,7 @@ import dotenv from 'dotenv';
 // Load .env.local file explicitly
 // IMPORTANT: override: true forces .env.local values to override system environment variables
 // This prevents stale system-level env vars from interfering with development
-const result = dotenv.config({ path: '.env.local', override: true });
+const result = dotenv.config({ path: '.env', override: true });
 
 if (result.error) {
   console.error('❌ Error loading .env.local:', result.error);
@@ -40,12 +40,12 @@ app.use(express.json());
 app.use(express.static('build'));
 
 // Import the API handlers dynamically
-const { default: createSessionHandler } = await import('./api/liveavatar/create-session.js');
-const { default: stopSessionHandler } = await import('./api/liveavatar/stop-session.js');
+const { default: createSessionHandler } = await import('./api/liveavatar/create-session.mjs');
+const { default: stopSessionHandler } = await import('./api/liveavatar/stop-session.mjs');
 
 // Import Tavus API handlers
-const { default: tavusCreateConversationHandler } = await import('./api/tavus/create-conversation.js');
-const { default: tavusEndConversationHandler } = await import('./api/tavus/end-conversation.js');
+const { default: tavusCreateConversationHandler } = await import('./api/tavus/create-conversation.mjs');
+const { default: tavusEndConversationHandler } = await import('./api/tavus/end-conversation.mjs');
 
 // Mount the primary API route (current frontend expects this path)
 app.post('/api/liveavatar/create-session', async (req, res) => {
