@@ -122,12 +122,39 @@ export const TavusAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand, p
     }, 5000);
   }, [addDebugLog]);
 
+  // Ref to track video playing state for callbacks
+  const isDemoPlayingRef = useRef(false);
+
   // Demo video hook
   const { isDemoPlaying, currentVideoUrl, isYouTube, youTubeEmbedUrl, demoVideoRef, playDemoVideo, stopDemoVideo } = useDemoVideo({
     sessionManager: sessionManagerRef.current,
     log,
     setState,
+    onVideoStart: () => {
+      // Interrupt avatar if speaking
+      if (dailyEventManagerRef.current && isAvatarSpeaking) {
+        addDebugLog('[DEMO] Interrupting avatar speech for video playback');
+        dailyEventManagerRef.current.interruptReplica();
+      }
+      // Mute avatar audio when video starts
+      addDebugLog('[DEMO] Muting avatar audio for video playback');
+      setAudioEnabled(false);
+      // Reset speaking state
+      setIsAvatarSpeaking(false);
+      isAvatarSpeakingRef.current = false;
+      setAvatarState("listening");
+    },
+    onVideoStop: () => {
+      // Restore avatar audio when video stops
+      addDebugLog('[DEMO] Restoring avatar audio after video playback');
+      setAudioEnabled(true);
+    },
   });
+
+  // Update ref when isDemoPlaying changes
+  useEffect(() => {
+    isDemoPlayingRef.current = isDemoPlaying;
+  }, [isDemoPlaying]);
 
   // Setup DailyEventManager callbacks
   useEffect(() => {
@@ -137,11 +164,21 @@ export const TavusAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand, p
 
     dailyEventManagerRef.current.setCallbacks({
       onReplicaStartSpeaking: () => {
+        // Ignore avatar speech when video is playing
+        if (isDemoPlayingRef.current) {
+          addDebugLog('[DEMO] Ignoring avatar speech - video is playing');
+          return;
+        }
         setIsAvatarSpeaking(true);
         isAvatarSpeakingRef.current = true;
         setAvatarState("speaking");
       },
       onReplicaStopSpeaking: (lastSpeech, interrupted) => {
+        // Ignore avatar speech when video is playing
+        if (isDemoPlayingRef.current) {
+          addDebugLog('[DEMO] Ignoring avatar speech end - video is playing');
+          return;
+        }
         setIsAvatarSpeaking(false);
         isAvatarSpeakingRef.current = false;
         setAvatarState("listening");
@@ -152,20 +189,45 @@ export const TavusAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand, p
         }
       },
       onUserStartSpeaking: () => {
+        // Ignore user speech when video is playing (mic is muted anyway)
+        if (isDemoPlayingRef.current) {
+          addDebugLog('[DEMO] Ignoring user speech - video is playing');
+          return;
+        }
         setIsUserSpeaking(true);
         isUserSpeakingRef.current = true;
       },
       onUserStopSpeaking: () => {
+        // Ignore user speech when video is playing
+        if (isDemoPlayingRef.current) {
+          return;
+        }
         setIsUserSpeaking(false);
         isUserSpeakingRef.current = false;
       },
       onUserTranscript: (text, source) => {
+        // Ignore user transcripts when video is playing
+        if (isDemoPlayingRef.current) {
+          addDebugLog('[DEMO] Ignoring user transcript - video is playing');
+          return;
+        }
         handleUserSpeech(text, source);
       },
       onReplicaTranscript: (text, source) => {
+        // Ignore avatar transcripts when video is playing
+        if (isDemoPlayingRef.current) {
+          addDebugLog('[DEMO] Ignoring avatar transcript - video is playing');
+          return;
+        }
         handleReplicaSpeech(text, source);
       },
       onToolCall: (name, args, properties) => {
+        // Allow tool calls even during video (e.g., to close video)
+        // But prevent new video from starting if one is already playing
+        if (isDemoPlayingRef.current && name === 'show_demo_video') {
+          addDebugLog('[DEMO] Ignoring show_demo_video tool call - video already playing');
+          return;
+        }
         log('TOOL_CALL', `Tool called: ${name}`, { args });
         handleToolCall(name, args);
       },
@@ -282,9 +344,8 @@ export const TavusAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand, p
   // Restore widget state after demo ends
   useEffect(() => {
     if (!isDemoPlaying && preDemoWidgetStateRef.current !== null) {
-      // Restore avatar audio
-      setAudioEnabled(true);
-      log('DEMO', 'Demo ended - restoring avatar audio');
+      // Note: Avatar audio is restored by onVideoStop callback in useDemoVideo
+      log('DEMO', 'Demo ended - state will be restored');
 
       if (sessionManagerRef.current?.isInitialized) {
         log('DEMO', 'Returning to maximized state after demo closed');
@@ -330,13 +391,11 @@ export const TavusAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand, p
       const videoUrl = pendingDemoVideoRef.current;
       log('DEMO', 'Both user and replica finished speaking - playing video now');
 
-      // Mute avatar audio before playing video
-      setAudioEnabled(false);
-
       // Save current state for restoration later
       preDemoWidgetStateRef.current = state;
 
       // Maximize if not already, then play
+      // Note: Avatar audio will be muted by onVideoStart callback in useDemoVideo
       if (state !== "maximized") {
         setState("maximized");
         setTimeout(() => {
@@ -735,18 +794,54 @@ export const TavusAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand, p
       // Setup callbacks - demo triggers handled via tool calls, no speech detection needed
       dailyEventManagerRef.current.setCallbacks({
         onReplicaStartSpeaking: () => {
+          // Ignore avatar speech when video is playing
+          if (isDemoPlayingRef.current) {
+            log('DEMO', 'Ignoring avatar speech - video is playing');
+            return;
+          }
           setIsAvatarSpeaking(true);
           setAvatarState("speaking");
         },
         onReplicaStopSpeaking: () => {
+          // Ignore avatar speech when video is playing
+          if (isDemoPlayingRef.current) {
+            log('DEMO', 'Ignoring avatar speech end - video is playing');
+            return;
+          }
           setIsAvatarSpeaking(false);
           setAvatarState("listening");
         },
-        onUserStartSpeaking: () => setIsUserSpeaking(true),
-        onUserStopSpeaking: () => setIsUserSpeaking(false),
-        onUserTranscript: handleUserSpeech,
-        onReplicaTranscript: handleReplicaSpeech,
-        onToolCall: handleToolCall,
+        onUserStartSpeaking: () => {
+          if (isDemoPlayingRef.current) return;
+          setIsUserSpeaking(true);
+        },
+        onUserStopSpeaking: () => {
+          if (isDemoPlayingRef.current) return;
+          setIsUserSpeaking(false);
+        },
+        onUserTranscript: (text, source) => {
+          if (isDemoPlayingRef.current) {
+            log('DEMO', 'Ignoring user transcript - video is playing');
+            return;
+          }
+          handleUserSpeech(text, source);
+        },
+        onReplicaTranscript: (text, source) => {
+          if (isDemoPlayingRef.current) {
+            log('DEMO', 'Ignoring avatar transcript - video is playing');
+            return;
+          }
+          handleReplicaSpeech(text, source);
+        },
+        onToolCall: (name, args) => {
+          // Allow tool calls even during video (e.g., to close video)
+          // But prevent new video from starting if one is already playing
+          if (isDemoPlayingRef.current && name === 'show_demo_video') {
+            log('DEMO', 'Ignoring show_demo_video tool call - video already playing');
+            return;
+          }
+          handleToolCall(name, args);
+        },
         onReplicaJoined: (replicaId) => log('SYSTEM', 'Replica joined', { replicaId }),
         onUnhandledMessage: (msg) => log('DATA_CHANNEL', 'Unhandled message', msg)
       });
@@ -1092,9 +1187,15 @@ export const TavusAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand, p
                 src={youTubeEmbedUrl}
                 className="w-full h-full"
                 frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 allowFullScreen
                 title="Demo Video"
+                onError={(e) => {
+                  log('ERROR', '❌ YouTube iframe error', { error: e, url: youTubeEmbedUrl });
+                }}
+                onLoad={() => {
+                  log('DEMO', '✅ YouTube iframe loaded successfully', { url: youTubeEmbedUrl });
+                }}
               />
             ) : (
               <video

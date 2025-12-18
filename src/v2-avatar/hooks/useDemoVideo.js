@@ -25,7 +25,22 @@ const getYouTubeEmbedUrl = (url) => {
   for (const pattern of patterns) {
     const match = url.match(pattern);
     if (match && match[1]) {
-      return `https://www.youtube.com/embed/${match[1]}?autoplay=1&rel=0`;
+      const videoId = match[1];
+      // Get origin safely
+      const origin = typeof window !== 'undefined' && window.location ? window.location.origin : '';
+      
+      // Try regular youtube.com first (more compatible), fallback to nocookie if needed
+      // Use youtube.com for better compatibility - some videos don't work with nocookie
+      const embedUrl = `https://www.youtube.com/embed/${videoId}?` +
+        `autoplay=1&` +
+        `rel=0&` + // Don't show related videos from other channels
+        `modestbranding=1&` + // Minimal branding
+        `controls=1&` + // Show controls
+        `fs=1&` + // Allow fullscreen
+        `playsinline=1&` + // Play inline on mobile
+        `enablejsapi=1` + // Enable JS API
+        (origin ? `&origin=${encodeURIComponent(origin)}&widget_referrer=${encodeURIComponent(origin)}` : '');
+      return embedUrl;
     }
   }
 
@@ -36,7 +51,7 @@ const isYouTubeUrl = (url) => {
   return url && (url.includes('youtube.com') || url.includes('youtu.be'));
 };
 
-export function useDemoVideo({ sessionManager, log, setState }) {
+export function useDemoVideo({ sessionManager, log, setState, onVideoStart, onVideoStop }) {
   const [isDemoPlaying, setIsDemoPlaying] = useState(false);
   const [currentVideoUrl, setCurrentVideoUrl] = useState('');
   const [isYouTube, setIsYouTube] = useState(false);
@@ -195,13 +210,19 @@ export function useDemoVideo({ sessionManager, log, setState }) {
         log('DEMO', '📺 [YOUTUBE] Converted to embed URL', { embedUrl });
       }
 
-      // Mute microphone during demo (via TavusSessionManager)
+      // Mute microphone and avatar audio during demo
       if (sessionManager) {
         log('DEMO', '🎤 [MIC] Muting microphone during demo');
         sessionManager.setMicrophoneMuted(true);
         log('DEMO', '🎤 [MIC] Microphone muted successfully');
       } else {
         log('DEMO', '⚠️ [MIC] Cannot mute - sessionManager not ready');
+      }
+
+      // Notify parent component to mute avatar audio
+      if (onVideoStart) {
+        log('DEMO', '🔊 [AUDIO] Notifying parent to mute avatar audio');
+        onVideoStart();
       }
 
       // Clone avatar video to PIP container
@@ -299,13 +320,19 @@ export function useDemoVideo({ sessionManager, log, setState }) {
       setYouTubeEmbedUrl('');
       log('DEMO', '📹 [STOP] State updated');
 
-      // Unmute microphone after demo ends
+      // Unmute microphone and restore avatar audio after demo ends
       if (sessionManager) {
         log('DEMO', '🎤 [STOP] Unmuting microphone after demo ends');
         sessionManager.setMicrophoneMuted(false);
         log('DEMO', '🎤 [STOP] Microphone unmuted - ready for conversation');
       } else {
         log('DEMO', '⚠️ [STOP] Cannot unmute - sessionManager not ready');
+      }
+
+      // Notify parent component to restore avatar audio
+      if (onVideoStop) {
+        log('DEMO', '🔊 [AUDIO] Notifying parent to restore avatar audio');
+        onVideoStop();
       }
 
       // Clear PIP container
