@@ -244,16 +244,15 @@ export const TavusAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand, p
   const handleUserSpeech = (text, source) => {
     if (!text) return;
     log('USER_SPEECH', `User said (${source})`, { text });
-    setTranscripts((prev) =>
-      [
-        ...prev,
-        {
-          type: "user_speech",
-          text: text,
-          timestamp: Date.now(),
-        },
-      ].slice(-10)
-    );
+    // When user starts a new question, clear old transcripts and start fresh
+    // Only show the current conversation: new user question (avatar response will be added when it speaks)
+    setTranscripts([
+      {
+        type: "user_speech",
+        text: text,
+        timestamp: Date.now(),
+      },
+    ]);
     detectIntent(text, { text }, "user");
   };
 
@@ -261,16 +260,21 @@ export const TavusAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand, p
   const handleReplicaSpeech = (text, source) => {
     if (!text) return;
     log('REPLICA_SPEECH', `Replica said (${source})`, { text });
-    setTranscripts((prev) =>
-      [
-        ...prev,
+    // Update transcripts: keep the last user question and add/update current avatar response
+    // Only show current conversation: last user question + current avatar response
+    setTranscripts((prev) => {
+      // Find the last user question (should be the most recent one)
+      const lastUser = prev.filter(t => t.type === 'user_speech').slice(-1);
+      // Keep only: last user question + current avatar response
+      return [
+        ...lastUser,
         {
           type: "avatar_speech",
           text: text,
           timestamp: Date.now(),
         },
-      ].slice(-10)
-    );
+      ];
+    });
     lastAvatarSpeechRef.current = text;
     detectIntent(text, { text }, "avatar");
   };
@@ -741,19 +745,28 @@ export const TavusAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand, p
       // Step 1: Create Tavus conversation via API
       const apiUrl = getCreateConversationUrl();
       addDebugLog(`Calling API: ${apiUrl}`);
+      addDebugLog(`Persona ID: ${personaId}`);
 
-      const resp = await fetch(apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ personaId }),
-      });
+      let resp;
+      try {
+        resp = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ personaId }),
+        });
+      } catch (fetchError) {
+        addDebugLog(`Network Error: ${fetchError.message}`);
+        addDebugLog(`This usually means the dev server at ${apiUrl} is not running`);
+        addDebugLog(`Please start it with: cd frontend && node dev-server.mjs`);
+        throw new Error(`Failed to connect to API server: ${fetchError.message}. Make sure dev-server.mjs is running on port 5000.`);
+      }
 
       addDebugLog(`API Status: ${resp.status}`);
 
       if (!resp.ok) {
         const errorText = await resp.text();
-        addDebugLog(`API Error: ${errorText.substring(0, 50)}`);
-        throw new Error(`API returned ${resp.status}: ${errorText.substring(0, 100)}`);
+        addDebugLog(`API Error: ${errorText.substring(0, 100)}`);
+        throw new Error(`API returned ${resp.status}: ${errorText.substring(0, 200)}`);
       }
 
       const response = await resp.json();
@@ -1389,13 +1402,13 @@ export const TavusAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand, p
           </button>
         </div>
 
-        {/* Transcripts */}
+        {/* Transcripts - Only show current conversation (last user + current avatar) */}
         {transcripts.length > 0 && (
-          <div className="mt-4 max-h-24 overflow-y-auto max-w-md mx-auto">
-            {transcripts.slice(-3).map((t, i) => (
+          <div className="mt-4 max-h-32 overflow-y-auto max-w-md mx-auto">
+            {transcripts.map((t, i) => (
               <div
-                key={i}
-                className={`text-xs py-1 px-2 rounded mb-1 ${
+                key={`${t.timestamp}-${i}`}
+                className={`text-xs py-1.5 px-3 rounded mb-1.5 ${
                   t.type === 'user_speech'
                     ? 'bg-white/10 text-white/80'
                     : 'bg-white/5 text-white/70'
