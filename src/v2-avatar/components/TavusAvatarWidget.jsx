@@ -1273,19 +1273,39 @@ export const TavusAvatarWidget = ({ onDisconnect, autoExpand = true, onExpand, p
         </div>
       )}
 
-      {/* PDF overlay */}
+      {/* PDF/Image overlay */}
       {showPdf && (
         <div className="absolute inset-0 z-20 bg-black">
-          {/* PDF - main area, landscape */}
-          <div className="absolute inset-6 right-[420px] rounded-2xl overflow-hidden border border-white/30 shadow-[0_0_60px_rgba(255,255,255,0.25)] bg-white">
-            {/* PDF iframe using Google Docs viewer for better compatibility */}
-            <iframe
-              src={`https://docs.google.com/viewer?url=${encodeURIComponent(pdfUrl)}&embedded=true`}
-              className="w-full h-full"
-              style={{ border: 'none' }}
-              title="PDF Document"
-            />
-            {/* Close PDF button */}
+          {/* PDF/Image - main area, landscape */}
+          <div className="absolute inset-6 right-[420px] rounded-2xl overflow-hidden border border-white/30 shadow-[0_0_60px_rgba(255,255,255,0.25)] bg-white flex items-center justify-center">
+            {/* Check if it's an image file */}
+            {pdfUrl.match(/\.(jpg|jpeg|png|gif|webp|svg)(\?|$)/i) ? (
+              // Display image directly
+              <img
+                src={pdfUrl.startsWith('/') ? pdfUrl : pdfUrl.replace(/^https?:\/\/[^/]+/, '')}
+                alt="Document"
+                className="max-w-full max-h-full object-contain"
+                style={{ width: '100%', height: '100%' }}
+              />
+            ) : pdfUrl.startsWith('/') || pdfUrl.includes('localhost') ? (
+              // PDF iframe for relative/localhost URLs
+              <iframe
+                src={pdfUrl.startsWith('/') ? pdfUrl : pdfUrl.replace(/^https?:\/\/[^/]+/, '')}
+                className="w-full h-full"
+                style={{ border: 'none' }}
+                title="PDF Document"
+                type="application/pdf"
+              />
+            ) : (
+              // PDF iframe using Google Docs viewer for public URLs
+              <iframe
+                src={`https://docs.google.com/viewer?url=${encodeURIComponent(pdfUrl)}&embedded=true`}
+                className="w-full h-full"
+                style={{ border: 'none' }}
+                title="PDF Document"
+              />
+            )}
+            {/* Close PDF/Image button */}
             <button
               onClick={() => setShowPdf(false)}
               className="absolute top-4 left-4 p-2 rounded-full bg-black/50 text-white z-30 border border-white/30 hover:bg-black/70 transition-all"
